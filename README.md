@@ -1,8 +1,9 @@
-My rust play ground of network management
+Goal:
+ * Provide C/Python/Rust binding to query linux network status
+ * Provide netlink interface for querying linux networks status
 
 TODO:
  * Varlink interface
     * Query
-    * Set
-    * Notification
  * Iface plugin design
+ * Bond, bridge
