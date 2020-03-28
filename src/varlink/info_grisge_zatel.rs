@@ -151,6 +151,17 @@ pub trait Call_Get: VarlinkCallError {
     fn reply(&mut self, r#net_state: NetState) -> varlink::Result<()> {
         self.reply_struct(Get_Reply { r#net_state }.into())
     }
+
+    // TODO: Need better stuff
+    fn fail(&mut self, msg: &str) -> varlink::Result<()> {
+        self.reply_struct(varlink::Reply {
+            continues: None,
+            error: Some(
+                format!("info.grisge.zatel.InternalError: {}", msg).into(),
+            ),
+            parameters: None,
+        })
+    }
 }
 impl<'a> Call_Get for varlink::Call<'a> {}
 pub trait VarlinkInterface {

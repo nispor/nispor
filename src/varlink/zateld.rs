@@ -3,6 +3,7 @@ use varlink::VarlinkService;
 
 use crate::info_grisge_zatel::*;
 use zatel::get_state;
+use zatel::ZatelError;
 
 mod info_grisge_zatel;
 
@@ -28,7 +29,10 @@ struct MyInfoGrisgeZatel {}
 
 impl VarlinkInterface for MyInfoGrisgeZatel {
     fn get(&self, call: &mut dyn Call_Get) -> varlink::Result<()> {
-        return call.reply(get_state().unwrap());
+        match get_state() {
+            Ok(s) => call.reply(s),
+            Err(e) => call.fail(&e.msg),
+        }
     }
 }
 

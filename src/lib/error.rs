@@ -1,6 +1,6 @@
 #[derive(Debug, Clone)]
 pub struct ZatelError {
-    msg: String,
+    pub msg: String,
 }
 
 impl std::fmt::Display for ZatelError {
