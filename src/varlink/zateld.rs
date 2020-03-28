@@ -3,7 +3,6 @@ use varlink::VarlinkService;
 
 use crate::info_grisge_zatel::*;
 use zatel::get_state;
-use zatel::ZatelError;
 
 mod info_grisge_zatel;
 
