@@ -1,13 +1,3 @@
-<!-- vim-markdown-toc GFM -->
-
-* [Usage](#usage)
-    * [Varlink service](#varlink-service)
-    * [Varlink client](#varlink-client)
-* [Goal](#goal)
-* [TODO:](#todo)
-
-<!-- vim-markdown-toc -->
-
 ## Usage
 
 ### Varlink service
@@ -22,7 +12,6 @@ make srv
 # Please install `libvarlink-util` pacakge beforehand
 make cli
 ```
-
 
 ## Goal
 
