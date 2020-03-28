@@ -1,3 +1,4 @@
 /target
 *.swp
 src/info_grisge_zatel.rs
+Cargo.lock

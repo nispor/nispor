@@ -1,0 +1,17 @@
+interface info.grisge.zatel
+
+type IfaceState (
+    name: string,
+    iface_type: string,
+    state: (UP, DOWN, UNKNOWN),
+    mtu: int
+)
+
+type NetState (
+    iface_states: [string]IfaceState
+)
+
+
+method Get() -> (net_state: NetState)
+
+error InternalError(msg: string)
