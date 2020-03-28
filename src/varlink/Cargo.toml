@@ -1,0 +1,17 @@
+[package]
+name = "zateld"
+version = "0.1.0"
+authors = ["Gris Ge <cnfourt@gmail.com>"]
+edition = "2018"
+
+[[bin]]
+name = "zateld"
+path = "zateld.rs"
+
+[dependencies]
+varlink = "10"
+getopts = "0.2"
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+zatel = { path = "../lib" }

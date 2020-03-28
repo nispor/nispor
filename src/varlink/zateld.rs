@@ -1,8 +1,9 @@
-use std::collections::HashMap;
 use std::process::exit;
 use varlink::VarlinkService;
 
 use crate::info_grisge_zatel::*;
+use zatel::get_state;
+
 mod info_grisge_zatel;
 
 const IDEAL_TIMEOUT: u64 = 0;
@@ -27,17 +28,7 @@ struct MyInfoGrisgeZatel {}
 
 impl VarlinkInterface for MyInfoGrisgeZatel {
     fn get(&self, call: &mut dyn Call_Get) -> varlink::Result<()> {
-        let iface_state = IfaceState {
-            name: "test".to_string(),
-            iface_type: "unknown".to_string(),
-            state: info_grisge_zatel::IfaceState_state::UP,
-            mtu: 0i64,
-        };
-        let mut iface_states: HashMap<String, IfaceState> = HashMap::new();
-        iface_states.insert("test".to_string(), iface_state);
-        return call.reply(NetState {
-            iface_states: iface_states,
-        });
+        return call.reply(get_state().unwrap());
     }
 }
 

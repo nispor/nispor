@@ -30,7 +30,5 @@ make cli
  * Provide netlink interface for querying linux networks status
 
 ## TODO:
- * Varlink interface
-    * Query
  * Iface plugin design
  * Bond, bridge
