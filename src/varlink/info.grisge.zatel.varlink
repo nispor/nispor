@@ -1,6 +1,6 @@
 interface info.grisge.zatel
 
-type IfaceState (
+type Iface (
     name: string,
     iface_type: string,
     state: (UP, DOWN, UNKNOWN),
@@ -8,7 +8,7 @@ type IfaceState (
 )
 
 type NetState (
-    iface_states: [string]IfaceState
+    ifaces: [string]Iface
 )
 
 method Get() -> (net_state: NetState)
