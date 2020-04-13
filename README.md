@@ -16,7 +16,7 @@ make cli
 ## Goal
 
  * Provide C/Python/Rust binding to query linux network status
- * Provide netlink interface for querying linux networks status
+ * Provide varlink interface for querying linux networks status
 
 ## TODO:
  * Iface plugin design
