@@ -1,0 +1,13 @@
+[package]
+name = "zatel-cli"
+version = "0.1.0"
+authors = ["Gris Ge <cnfourt@gmail.com>"]
+edition = "2018"
+
+[[bin]]
+name = "zc"
+path = "zc.rs"
+
+[dependencies]
+serde_json = "1.0"
+zatel = { path = "../lib" }

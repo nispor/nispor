@@ -1,5 +1,10 @@
 EXEC="./target/debug/zateld"
+CLI_EXEC="./target/debug/zc"
 SOCKET_ADDR="unix:/tmp/zatel.so"
+
+debug:
+	cargo build --all
+	$(CLI_EXEC) $(ARGS)
 
 srv:
 	cargo build --all

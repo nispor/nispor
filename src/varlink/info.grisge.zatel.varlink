@@ -1,10 +1,16 @@
 interface info.grisge.zatel
 
+type BondIface (
+    slaves: []string,
+    options: [string]string
+)
+
 type Iface (
     name: string,
     iface_type: string,
     state: (UP, DOWN, UNKNOWN),
-    mtu: int
+    mtu: int,
+    ?bond: BondIface
 )
 
 type NetState (

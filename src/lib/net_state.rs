@@ -1,6 +1,6 @@
 use crate::error::ZatelError;
-use crate::iface_state::get_ifaces;
-use crate::iface_state::Iface;
+use crate::ifaces::get_ifaces;
+use crate::ifaces::Iface;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 

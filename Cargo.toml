@@ -2,4 +2,5 @@
 members = [
     "src/varlink",
     "src/lib",
+    "src/cli",
 ]
