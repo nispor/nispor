@@ -30,6 +30,14 @@ async fn _get_ifaces() -> Result<HashMap<String, Iface>, Error> {
             if let Nla::Mtu(mtu) = nla {
                 iface_state.mtu = *mtu as i64;
             }
+            if let Nla::Address(mac) = nla {
+                let mut mac_str = String::new();
+                for octet in mac.iter() {
+                    mac_str.push_str(&format!("{:02X?}:", octet));
+                }
+                mac_str.pop();
+                iface_state.mac_address = mac_str;
+            }
             if let Nla::OperState(state) = nla {
                 iface_state.state = match state {
                     nlas::State::Up => IfaceState::Up,

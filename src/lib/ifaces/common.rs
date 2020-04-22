@@ -33,6 +33,7 @@ pub struct Iface {
     pub iface_type: IfaceType,
     pub state: IfaceState,
     pub mtu: i64,
+    pub mac_address: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bond_conf: Option<BondConf>,
 }
