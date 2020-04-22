@@ -1,14 +1,14 @@
 #[derive(Debug, Clone)]
-pub struct ZatelError {
+pub struct NisporError {
     pub msg: String,
 }
 
-impl std::fmt::Display for ZatelError {
+impl std::fmt::Display for NisporError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.msg)
     }
 }
 
-impl std::error::Error for ZatelError {
+impl std::error::Error for NisporError {
     /* TODO */
 }

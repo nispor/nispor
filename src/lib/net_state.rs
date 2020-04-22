@@ -1,4 +1,4 @@
-use crate::error::ZatelError;
+use crate::error::NisporError;
 use crate::ifaces::get_ifaces;
 use crate::ifaces::Iface;
 use serde_derive::{Deserialize, Serialize};
@@ -9,7 +9,7 @@ pub struct NetState {
     pub ifaces: HashMap<String, Iface>,
 }
 
-pub fn get_state() -> Result<NetState, ZatelError> {
+pub fn get_state() -> Result<NetState, NisporError> {
     Ok(NetState {
         ifaces: get_ifaces(),
     })

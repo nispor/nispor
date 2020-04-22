@@ -1,10 +1,10 @@
 use std::process::exit;
 use varlink::VarlinkService;
 
-use crate::info_grisge_zatel::*;
-use zatel::get_state;
+use crate::info_grisge_nispor::*;
+use nispor::get_state;
 
-mod info_grisge_zatel;
+mod info_grisge_nispor;
 
 const IDEAL_TIMEOUT: u64 = 0;
 const INITIAL_WORKER_THREADS: usize = 1;
@@ -24,9 +24,9 @@ fn main() {
     exit(0);
 }
 
-struct MyInfoGrisgeZatel {}
+struct MyInfoGrisgeNispor {}
 
-impl VarlinkInterface for MyInfoGrisgeZatel {
+impl VarlinkInterface for MyInfoGrisgeNispor {
     fn get(&self, call: &mut dyn Call_Get) -> varlink::Result<()> {
         match get_state() {
             Ok(s) => call.reply(s),
@@ -37,12 +37,12 @@ impl VarlinkInterface for MyInfoGrisgeZatel {
 
 fn run_server(address: &str) -> varlink::Result<()> {
     let my_varlink_iface =
-        info_grisge_zatel::new(Box::new(MyInfoGrisgeZatel {}));
+        info_grisge_nispor::new(Box::new(MyInfoGrisgeNispor {}));
     let service = VarlinkService::new(
-        "info.grisge.zatel",
+        "info.grisge.nispor",
         "Network status query service",
         "0.1",
-        "http://zatel.grisge.info",
+        "http://nispor.grisge.info",
         vec![Box::new(my_varlink_iface)],
     );
     varlink::listen(

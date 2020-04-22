@@ -1,4 +1,4 @@
-interface info.grisge.zatel
+interface info.grisge.nispor
 
 type BondIface (
     slaves: []string,

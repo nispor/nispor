@@ -1,6 +1,6 @@
-EXEC="./target/debug/zateld"
-CLI_EXEC="./target/debug/zc"
-SOCKET_ADDR="unix:/tmp/zatel.so"
+VARLINK_SRV_EXEC="./target/debug/npd"
+CLI_EXEC="./target/debug/npc"
+SOCKET_ADDR="unix:/tmp/nispor.so"
 
 debug:
 	cargo build --all
@@ -8,11 +8,11 @@ debug:
 
 srv:
 	cargo build --all
-	$(EXEC) $(SOCKET_ADDR)
+	$(VARLINK_SRV_EXEC) $(SOCKET_ADDR)
 
 cli:
 	cargo build --all
-	varlink call $(SOCKET_ADDR)/info.grisge.zatel.Get
+	varlink call $(SOCKET_ADDR)/info.grisge.nispor.Get
 
 clean:
 	cargo clean

@@ -1,6 +1,6 @@
 use serde_json;
 use std::env::args;
-use zatel::get_state;
+use nispor::get_state;
 
 fn main() {
     let argv: Vec<String> = args().collect();

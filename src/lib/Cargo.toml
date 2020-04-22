@@ -1,11 +1,11 @@
 [package]
-name = "zatel"
+name = "nispor"
 version = "0.1.0"
 authors = ["Gris Ge <cnfourt@gmail.com>"]
 edition = "2018"
 
 [lib]
-name = "zatel"
+name = "nispor"
 path = "lib.rs"
 crate-type = ["lib"]
 
