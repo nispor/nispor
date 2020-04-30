@@ -64,8 +64,6 @@ async fn _get_ifaces() -> Result<HashMap<String, Iface>, Error> {
                             _ => IfaceType::Unknown,
                         };
                     }
-                }
-                for info in infos {
                     if let nlas::Info::Data(d) = info {
                         match iface_state.iface_type {
                             IfaceType::Bond => {
