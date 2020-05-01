@@ -2,16 +2,16 @@ VARLINK_SRV_EXEC="./target/debug/npd"
 CLI_EXEC="./target/debug/npc"
 SOCKET_ADDR="unix:/tmp/nispor.so"
 
-debug:
-	cargo build --all
+debug: $(CLI_EXEC)
 	$(CLI_EXEC) $(ARGS)
 
-srv:
+$(CLI_EXEC) $(VARLINK_SRV_EXEC):
 	cargo build --all
+
+srv:
 	$(VARLINK_SRV_EXEC) $(SOCKET_ADDR)
 
 cli:
-	cargo build --all
 	varlink call $(SOCKET_ADDR)/info.grisge.nispor.Get
 
 clean:

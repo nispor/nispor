@@ -47,7 +47,11 @@ make cli
  * Provide C/Python/Rust binding to query linux network status
  * Provide varlink interface for querying linux networks status
 
+## Done
+ * Bond options
+
 ## TODO:
- * Bond
+ * Bond slave list
+ * Convert bond active_slave from kernel link index to interface name
  * Bridge
  * Plugin design
