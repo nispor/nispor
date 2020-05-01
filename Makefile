@@ -8,6 +8,9 @@ debug: $(CLI_EXEC)
 $(CLI_EXEC) $(VARLINK_SRV_EXEC):
 	cargo build --all
 
+test:
+	cargo test -- --test-threads=1
+
 srv:
 	$(VARLINK_SRV_EXEC) $(SOCKET_ADDR)
 
