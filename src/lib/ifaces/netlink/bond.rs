@@ -329,6 +329,7 @@ const NL_ATTR_HDR_LEN: usize = 4;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 struct NetLinkAttrHeader {
+    data_len: usize,
     nla_len: usize,
     nla_type: u16,
 }
@@ -336,7 +337,7 @@ struct NetLinkAttrHeader {
 const NLA_ALIGNTO: usize = 4;
 
 fn parse_nla_header(data: *const u8) -> NetLinkAttrHeader {
-    let mut nla_len: usize = unsafe {
+    let mut data_len: usize = unsafe {
         transmute::<[u8; 2], u16>([*data, *(data.wrapping_offset(1))])
     }
     .into();
@@ -348,8 +349,13 @@ fn parse_nla_header(data: *const u8) -> NetLinkAttrHeader {
     };
 
     // Align nla_len by NLA_ALIGNTO
-    nla_len = ((nla_len + NLA_ALIGNTO - 1) / NLA_ALIGNTO) * NLA_ALIGNTO;
-    NetLinkAttrHeader { nla_len, nla_type }
+    let nla_len = ((data_len + NLA_ALIGNTO - 1) / NLA_ALIGNTO) * NLA_ALIGNTO;
+    data_len = data_len - NL_ATTR_HDR_LEN;
+    NetLinkAttrHeader {
+        data_len,
+        nla_len,
+        nla_type,
+    }
 }
 
 fn parse_as_u8(data: &[u8]) -> u8 {
@@ -394,8 +400,11 @@ fn ipv4_addr_array_to_string(addrs: &[Ipv4Addr]) -> String {
 }
 
 fn parse_as_48_bits_mac(data: &[u8]) -> String {
+    parse_as_mac(6, data)
+}
+
+fn parse_as_mac(mac_len: usize, data: &[u8]) -> String {
     let mut rt = String::new();
-    let mac_len: usize = 6;
     for i in 0..mac_len {
         rt.push_str(&format!("{:X}", data[i]));
         if i != mac_len - 1 {
@@ -426,20 +435,20 @@ fn parse_ad_info(data: &[u8]) -> BondAdInfo {
         match hdr.nla_type {
             IFLA_BOND_AD_INFO_AGGREGATOR => {
                 ad_info.aggregator = parse_as_u16(data)
-            },
+            }
             IFLA_BOND_AD_INFO_NUM_PORTS => {
                 ad_info.num_ports = parse_as_u16(data)
-            },
+            }
             IFLA_BOND_AD_INFO_ACTOR_KEY => {
                 ad_info.actor_key = parse_as_u16(data)
-            },
+            }
             IFLA_BOND_AD_INFO_PARTNER_KEY => {
                 ad_info.partner_key = parse_as_u16(data)
-            },
+            }
             IFLA_BOND_AD_INFO_PARTNER_MAC => {
                 ad_info.partner_mac = parse_as_48_bits_mac(data)
-            },
-            _ => ()
+            }
+            _ => (),
         }
         i = i + hdr.nla_len;
     }
@@ -450,6 +459,7 @@ pub(crate) fn parse_bond_info(raw: &[u8]) -> HashMap<String, String> {
     let mut i: usize = 0;
     let mut bond_options: HashMap<String, String> = HashMap::new();
 
+    // TODO: Convert this into a iterator or better dedup way
     while i < raw.len() {
         let hdr_ptr = raw.as_ptr().wrapping_offset(i.try_into().unwrap());
         let hdr = parse_nla_header(hdr_ptr);
@@ -570,19 +580,24 @@ pub(crate) fn parse_bond_info(raw: &[u8]) -> HashMap<String, String> {
                 let ad_info = parse_ad_info(data);
                 bond_options.insert(
                     "ad_aggregator".into(),
-                    format!("{}", ad_info.aggregator));
+                    format!("{}", ad_info.aggregator),
+                );
                 bond_options.insert(
                     "ad_num_ports".into(),
-                    format!("{}", ad_info.num_ports));
+                    format!("{}", ad_info.num_ports),
+                );
                 bond_options.insert(
                     "ad_actor_key".into(),
-                    format!("{}", ad_info.actor_key));
+                    format!("{}", ad_info.actor_key),
+                );
                 bond_options.insert(
                     "ad_partner_key".into(),
-                    format!("{}", ad_info.partner_key));
+                    format!("{}", ad_info.partner_key),
+                );
                 bond_options.insert(
                     "ad_partner_mac".into(),
-                    format!("{}", &ad_info.partner_mac))
+                    format!("{}", &ad_info.partner_mac),
+                )
             }
             _ => bond_options
                 .insert(format!("{}", hdr.nla_type), format!("{:?}", data)),
@@ -591,4 +606,132 @@ pub(crate) fn parse_bond_info(raw: &[u8]) -> HashMap<String, String> {
     }
 
     bond_options
+}
+
+const IFLA_BOND_SLAVE_STATE: u16 = 1;
+const IFLA_BOND_SLAVE_MII_STATUS: u16 = 2;
+const IFLA_BOND_SLAVE_LINK_FAILURE_COUNT: u16 = 3;
+const IFLA_BOND_SLAVE_PERM_HWADDR: u16 = 4;
+const IFLA_BOND_SLAVE_QUEUE_ID: u16 = 5;
+const IFLA_BOND_SLAVE_AD_AGGREGATOR_ID: u16 = 6;
+const IFLA_BOND_SLAVE_AD_ACTOR_OPER_PORT_STATE: u16 = 7;
+const IFLA_BOND_SLAVE_AD_PARTNER_OPER_PORT_STATE: u16 = 8;
+
+#[repr(u8)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub enum BondSlaveState {
+    Active,
+    Backup,
+    Unknown = std::u8::MAX,
+}
+
+const _LAST_BOND_SLAVE_STATE: BondSlaveState = BondSlaveState::Backup;
+
+impl From<u8> for BondSlaveState {
+    fn from(d: u8) -> Self {
+        if d <= _LAST_BOND_SLAVE_STATE as u8 {
+            unsafe { transmute(d as u8) }
+        } else {
+            BondSlaveState::Unknown
+        }
+    }
+}
+
+#[repr(u8)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub enum BondMiiStatus {
+    LinkUp,
+    LinkFail,
+    LinkDown,
+    LinkBack,
+    Unknown = std::u8::MAX,
+}
+
+const _LAST_MII_STATUS: BondMiiStatus = BondMiiStatus::LinkBack;
+
+impl From<u8> for BondMiiStatus {
+    fn from(d: u8) -> Self {
+        if d <= _LAST_MII_STATUS as u8 {
+            unsafe { transmute(d as u8) }
+        } else {
+            BondMiiStatus::Unknown
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct BondSlaveInfo {
+    pub slave_state: BondSlaveState,
+    pub mii_status: BondMiiStatus,
+    pub link_failure_count: u32,
+    pub perm_hwaddr: String,
+    pub queue_id: u16,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ad_aggregator_id: Option<u16>,
+    // 802.3ad port state definitions (43.4.2.2 in the 802.3ad standard)
+    // bit map of LACP_STATE_XXX
+    // TODO: Find a rust way of showing it.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ad_actor_oper_port_state: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ad_partner_oper_port_state: Option<u16>,
+}
+
+pub(crate) fn parse_bond_slave_info(raw: &[u8]) -> BondSlaveInfo {
+    let mut i: usize = 0;
+
+    let mut slave_state = BondSlaveState::Unknown;
+    let mut mii_status = BondMiiStatus::Unknown;
+    let mut link_failure_count = std::u32::MAX;
+    let mut perm_hwaddr = String::new();
+    let mut queue_id = std::u16::MAX;
+    let mut ad_aggregator_id = None;
+    let mut ad_actor_oper_port_state = None;
+    let mut ad_partner_oper_port_state = None;
+
+    while i < raw.len() {
+        let hdr_ptr = raw.as_ptr().wrapping_offset(i.try_into().unwrap());
+        let hdr = parse_nla_header(hdr_ptr);
+        let data_ptr = raw
+            .as_ptr()
+            .wrapping_offset((i + NL_ATTR_HDR_LEN).try_into().unwrap());
+        let data = unsafe {
+            slice::from_raw_parts(data_ptr, hdr.nla_len - NL_ATTR_HDR_LEN)
+        };
+        match hdr.nla_type {
+            IFLA_BOND_SLAVE_STATE => slave_state = parse_as_u8(data).into(),
+            IFLA_BOND_SLAVE_MII_STATUS => mii_status = parse_as_u8(data).into(),
+            IFLA_BOND_SLAVE_LINK_FAILURE_COUNT => {
+                link_failure_count = parse_as_u32(data)
+            }
+            IFLA_BOND_SLAVE_PERM_HWADDR => {
+                perm_hwaddr = parse_as_mac(hdr.data_len, data);
+            }
+            IFLA_BOND_SLAVE_QUEUE_ID => queue_id = parse_as_u16(data),
+            IFLA_BOND_SLAVE_AD_AGGREGATOR_ID => {
+                ad_aggregator_id = Some(parse_as_u16(data));
+            }
+            IFLA_BOND_SLAVE_AD_ACTOR_OPER_PORT_STATE => {
+                ad_actor_oper_port_state = Some(parse_as_u8(data));
+            }
+            IFLA_BOND_SLAVE_AD_PARTNER_OPER_PORT_STATE => {
+                ad_partner_oper_port_state = Some(parse_as_u16(data));
+            }
+            _ => {
+                eprintln!("unknown nla_type {} data: {:?}", hdr.nla_type, data);
+            }
+        }
+        i = i + hdr.nla_len;
+    }
+
+    BondSlaveInfo {
+        slave_state,
+        mii_status,
+        link_failure_count,
+        perm_hwaddr,
+        queue_id,
+        ad_aggregator_id,
+        ad_actor_oper_port_state,
+        ad_partner_oper_port_state,
+    }
 }

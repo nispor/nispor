@@ -1,16 +1,20 @@
 interface info.grisge.nispor
 
-type BondIface (
+type BondInfo (
     slaves: []string,
+    mode: []string,
     options: [string]string
 )
 
 type Iface (
     name: string,
     iface_type: string,
-    state: (UP, DOWN, UNKNOWN),
+    state: (Up, Down, Unknown),
     mtu: int,
-    ?bond: BondIface
+    ?bond_info: BondInfo,
+    ?bond_slave_info: [string]string,
+    ?master: string,
+    ?master_type: (Bond, Unknown),
 )
 
 type NetState (
