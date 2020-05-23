@@ -5,7 +5,10 @@ pub fn delete_dummy(iface_name: &str) {
 }
 
 pub fn create_dummy(iface_name: &str) {
-    assert!(cmd_exec("ip", vec!["link", "add", iface_name, "type", "dummy"]));
+    assert!(cmd_exec(
+        "ip",
+        vec!["link", "add", iface_name, "type", "dummy"]
+    ));
 }
 
 pub fn cmd_exec(command: &str, args: Vec<&str>) -> bool {

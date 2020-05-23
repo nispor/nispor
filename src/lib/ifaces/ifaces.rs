@@ -1,6 +1,7 @@
+use crate::ifaces::bond::bond_iface_tidy_up;
 use crate::ifaces::bond::get_bond_info;
 use crate::ifaces::bond::get_bond_slave_info;
-use crate::ifaces::bond::bond_iface_tidy_up;
+use crate::netlink::fill_ip_addr;
 use crate::Iface;
 use crate::IfaceState;
 use crate::IfaceType;
@@ -31,7 +32,7 @@ async fn _get_ifaces() -> Result<HashMap<String, Iface>, Error> {
         };
         iface_state.index = nl_msg.header.index;
         for nla in &nl_msg.nlas {
-            //println!("{} {:?}", name, nla);
+            // println!("{} {:?}", name, nla);
             if let Nla::Mtu(mtu) = nla {
                 iface_state.mtu = *mtu as i64;
             }
@@ -104,6 +105,10 @@ async fn _get_ifaces() -> Result<HashMap<String, Iface>, Error> {
             }
         }
         iface_states.insert(iface_state.name.clone(), iface_state);
+    }
+    let mut addrs = handle.address().get().execute();
+    while let Some(nl_msg) = addrs.try_next().await? {
+        fill_ip_addr(&mut iface_states, &nl_msg);
     }
     tidy_up(&mut iface_states);
     Ok(iface_states)

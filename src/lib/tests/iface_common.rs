@@ -6,8 +6,8 @@ use std::time;
 
 mod utils;
 
-const IFACE_TEST:&str = "dummy0";
-const IFACE_MAC_TEST:&str = "AA:BB:CC:DD:EE:FF";
+const IFACE_TEST: &str = "dummy0";
+const IFACE_MAC_TEST: &str = "AA:BB:CC:DD:EE:FF";
 
 #[test]
 fn test_get_iface_name() {
@@ -23,7 +23,10 @@ fn test_get_iface_name() {
 #[test]
 fn test_get_iface_mtu() {
     with_dummy_iface(|| {
-        utils::cmd_exec("ip", vec!["link", "set", "dev", IFACE_TEST, "mtu", "1000"]);
+        utils::cmd_exec(
+            "ip",
+            vec!["link", "set", "dev", IFACE_TEST, "mtu", "1000"],
+        );
         if let Ok(state) = nispor::get_state() {
             let iface = &state.ifaces[IFACE_TEST];
             let mtu = iface.mtu;
@@ -35,7 +38,10 @@ fn test_get_iface_mtu() {
 #[test]
 fn test_get_iface_mac() {
     with_dummy_iface(|| {
-        utils::cmd_exec("ip", vec!["link", "set", "dev", IFACE_TEST, "address", IFACE_MAC_TEST]);
+        utils::cmd_exec(
+            "ip",
+            vec!["link", "set", "dev", IFACE_TEST, "address", IFACE_MAC_TEST],
+        );
         sleep(time::Duration::from_millis(2000));
         if let Ok(state) = nispor::get_state() {
             let iface = &state.ifaces[IFACE_TEST];
@@ -46,7 +52,8 @@ fn test_get_iface_mac() {
 }
 
 fn with_dummy_iface<T>(test: T) -> ()
-    where T: FnOnce() -> () + panic::UnwindSafe
+where
+    T: FnOnce() -> () + panic::UnwindSafe,
 {
     utils::create_dummy(IFACE_TEST);
 

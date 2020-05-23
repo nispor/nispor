@@ -6,6 +6,29 @@ type BondInfo (
     options: [string]string
 )
 
+type Ipv4Info (
+    addresses: []Ipv4AddrInfo
+)
+
+type Ipv4AddrInfo (
+    address: string,
+    prefix_len: int,
+    ?peer: string,
+    valid_lft: string,
+    preferred_lft: string
+)
+
+type Ipv6Info (
+    addresses: []Ipv6AddrInfo
+)
+
+type Ipv6AddrInfo (
+    address: string,
+    prefix_len: int,
+    valid_lft: string,
+    preferred_lft: string
+)
+
 type Iface (
     name: string,
     iface_type: string,
@@ -15,6 +38,8 @@ type Iface (
     ?bond_slave_info: [string]string,
     ?master: string,
     ?master_type: (Bond, Unknown),
+    ?ipv4: Ipv4Info,
+    ?ipv6: Ipv6Info
 )
 
 type NetState (

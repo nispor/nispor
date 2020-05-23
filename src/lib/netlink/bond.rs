@@ -1,4 +1,6 @@
-use serde_derive::{Deserialize, Serialize};
+use crate::BondMiiStatus;
+use crate::BondSlaveInfo;
+use crate::BondSlaveState;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::convert::TryInto;
@@ -35,12 +37,12 @@ fn bond_mode_u8_to_string(mode: u8) -> String {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Default)]
-pub struct BondAdInfo {
-    pub aggregator: u16,
-    pub num_ports: u16,
-    pub actor_key: u16,
-    pub partner_key: u16,
-    pub partner_mac: String,
+struct BondAdInfo {
+    aggregator: u16,
+    num_ports: u16,
+    actor_key: u16,
+    partner_key: u16,
+    partner_mac: String,
 }
 
 const IFLA_BOND_MODE: u16 = 1;
@@ -550,66 +552,6 @@ const IFLA_BOND_SLAVE_QUEUE_ID: u16 = 5;
 const IFLA_BOND_SLAVE_AD_AGGREGATOR_ID: u16 = 6;
 const IFLA_BOND_SLAVE_AD_ACTOR_OPER_PORT_STATE: u16 = 7;
 const IFLA_BOND_SLAVE_AD_PARTNER_OPER_PORT_STATE: u16 = 8;
-
-#[repr(u8)]
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub enum BondSlaveState {
-    Active,
-    Backup,
-    Unknown = std::u8::MAX,
-}
-
-const _LAST_BOND_SLAVE_STATE: BondSlaveState = BondSlaveState::Backup;
-
-impl From<u8> for BondSlaveState {
-    fn from(d: u8) -> Self {
-        if d <= _LAST_BOND_SLAVE_STATE as u8 {
-            unsafe { transmute(d as u8) }
-        } else {
-            BondSlaveState::Unknown
-        }
-    }
-}
-
-#[repr(u8)]
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub enum BondMiiStatus {
-    LinkUp,
-    LinkFail,
-    LinkDown,
-    LinkBack,
-    Unknown = std::u8::MAX,
-}
-
-const _LAST_MII_STATUS: BondMiiStatus = BondMiiStatus::LinkBack;
-
-impl From<u8> for BondMiiStatus {
-    fn from(d: u8) -> Self {
-        if d <= _LAST_MII_STATUS as u8 {
-            unsafe { transmute(d as u8) }
-        } else {
-            BondMiiStatus::Unknown
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct BondSlaveInfo {
-    pub slave_state: BondSlaveState,
-    pub mii_status: BondMiiStatus,
-    pub link_failure_count: u32,
-    pub perm_hwaddr: String,
-    pub queue_id: u16,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub ad_aggregator_id: Option<u16>,
-    // 802.3ad port state definitions (43.4.2.2 in the 802.3ad standard)
-    // bit map of LACP_STATE_XXX
-    // TODO: Find a rust way of showing it.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub ad_actor_oper_port_state: Option<u8>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub ad_partner_oper_port_state: Option<u16>,
-}
 
 pub(crate) fn parse_bond_slave_info(raw: &[u8]) -> BondSlaveInfo {
     let mut i: usize = 0;

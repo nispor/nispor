@@ -51,5 +51,6 @@ make cli
  * Bond
 
 ## TODO:
+ * Error handling instead of `unwrap()/panic!/etc`.
  * Bridge
  * Plugin design
