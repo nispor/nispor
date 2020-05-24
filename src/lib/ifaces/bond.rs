@@ -98,11 +98,11 @@ pub(crate) fn get_bond_slave_info(data: &[u8]) -> Option<BondSlaveInfo> {
 }
 
 pub(crate) fn bond_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
-    gathering_slaves(iface_states);
+    gen_slave_list_of_master(iface_states);
     active_slave_index_to_iface_name(iface_states);
 }
 
-fn gathering_slaves(iface_states: &mut HashMap<String, Iface>) {
+fn gen_slave_list_of_master(iface_states: &mut HashMap<String, Iface>) {
     let mut master_slaves: HashMap<String, Vec<String>> = HashMap::new();
     for iface in iface_states.values() {
         if iface.master_type == Some(MasterType::Bond) {

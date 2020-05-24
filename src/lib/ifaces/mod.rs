@@ -1,4 +1,5 @@
 mod bond;
+mod bridge;
 mod iface;
 mod ifaces;
 
@@ -6,6 +7,8 @@ pub use crate::ifaces::bond::BondInfo;
 pub use crate::ifaces::bond::BondMiiStatus;
 pub use crate::ifaces::bond::BondSlaveInfo;
 pub use crate::ifaces::bond::BondSlaveState;
+pub use crate::ifaces::bridge::BridgeInfo;
+pub use crate::ifaces::bridge::BridgePortInfo;
 pub(crate) use crate::ifaces::iface::get_iface_name_by_index;
 pub use crate::ifaces::iface::Iface;
 pub use crate::ifaces::iface::IfaceState;

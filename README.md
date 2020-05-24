@@ -49,8 +49,9 @@ make cli
 
 ## Supported interface types
  * Bond
+ * Linux Bridge
 
 ## TODO:
- * Error handling instead of `unwrap()/panic!/etc`.
- * Bridge
+ * Error handling instead of `unwrap()/panic!/etc`
+ * Linux Bridge VLAN filtering
  * Plugin design

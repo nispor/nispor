@@ -1,5 +1,7 @@
 use crate::ifaces::bond::BondInfo;
 use crate::ifaces::bond::BondSlaveInfo;
+use crate::ifaces::bridge::BridgeInfo;
+use crate::ifaces::bridge::BridgePortInfo;
 use crate::Ipv4Info;
 use crate::Ipv6Info;
 use serde_derive::{Deserialize, Serialize};
@@ -37,6 +39,7 @@ impl Default for IfaceState {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum MasterType {
     Bond,
+    Bridge,
     Unknown,
 }
 
@@ -44,6 +47,7 @@ impl From<&str> for MasterType {
     fn from(s: &str) -> Self {
         match s {
             "bond" => MasterType::Bond,
+            "bridge" => MasterType::Bridge,
             _ => MasterType::Unknown,
         }
     }
@@ -71,6 +75,10 @@ pub struct Iface {
     pub master_type: Option<MasterType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bond_slave_info: Option<BondSlaveInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bridge_info: Option<BridgeInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bridge_port_info: Option<BridgePortInfo>
 }
 
 pub(crate) fn get_iface_name_by_index(

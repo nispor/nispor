@@ -1,6 +1,9 @@
 use crate::ifaces::bond::bond_iface_tidy_up;
 use crate::ifaces::bond::get_bond_info;
 use crate::ifaces::bond::get_bond_slave_info;
+use crate::ifaces::bridge::bridge_iface_tidy_up;
+use crate::ifaces::bridge::get_bridge_info;
+use crate::ifaces::bridge::get_bridge_port_info;
 use crate::netlink::fill_ip_addr;
 use crate::Iface;
 use crate::IfaceState;
@@ -35,26 +38,22 @@ async fn _get_ifaces() -> Result<HashMap<String, Iface>, Error> {
             // println!("{} {:?}", name, nla);
             if let Nla::Mtu(mtu) = nla {
                 iface_state.mtu = *mtu as i64;
-            }
-            if let Nla::Address(mac) = nla {
+            } else if let Nla::Address(mac) = nla {
                 let mut mac_str = String::new();
                 for octet in mac.iter() {
                     mac_str.push_str(&format!("{:02X?}:", octet));
                 }
                 mac_str.pop();
                 iface_state.mac_address = mac_str;
-            }
-            if let Nla::OperState(state) = nla {
+            } else if let Nla::OperState(state) = nla {
                 iface_state.state = match state {
                     nlas::State::Up => IfaceState::Up,
                     nlas::State::Down => IfaceState::Down,
                     _ => IfaceState::Unknown,
                 };
-            }
-            if let Nla::Master(master) = nla {
+            } else if let Nla::Master(master) = nla {
                 iface_state.master = Some(format!("{}", master));
-            }
-            if let Nla::Info(infos) = nla {
+            } else if let Nla::Info(infos) = nla {
                 for info in infos {
                     if let nlas::Info::Kind(t) = info {
                         iface_state.iface_type = match t {
@@ -71,6 +70,9 @@ async fn _get_ifaces() -> Result<HashMap<String, Iface>, Error> {
                         match iface_state.iface_type {
                             IfaceType::Bond => {
                                 iface_state.bond_info = get_bond_info(&d)
+                            }
+                            IfaceType::Bridge => {
+                                iface_state.bridge_info = get_bridge_info(&d)
                             }
                             _ => (),
                         }
@@ -97,11 +99,18 @@ async fn _get_ifaces() -> Result<HashMap<String, Iface>, Error> {
                                     iface_state.bond_slave_info =
                                         get_bond_slave_info(&d);
                                 }
+                                MasterType::Bridge => {
+                                    iface_state.bridge_port_info =
+                                        get_bridge_port_info(&d);
+                                }
                                 _ => (),
                             }
                         }
                     }
                 }
+            } else {
+                ()
+                //println!("{} {:?}", name, nla);
             }
         }
         iface_states.insert(iface_state.name.clone(), iface_state);
@@ -128,11 +137,12 @@ fn _get_iface_name(nl_msg: &LinkMessage) -> String {
 }
 
 fn tidy_up(iface_states: &mut HashMap<String, Iface>) {
-    convert_iface_index_to_name(iface_states);
+    master_iface_index_to_name(iface_states);
     bond_iface_tidy_up(iface_states);
+    bridge_iface_tidy_up(iface_states);
 }
 
-fn convert_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
+fn master_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
     let mut index_to_name = HashMap::new();
     for iface in iface_states.values() {
         index_to_name.insert(format!("{}", iface.index), iface.name.clone());

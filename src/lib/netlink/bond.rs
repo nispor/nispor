@@ -1,10 +1,15 @@
+use crate::netlink::nla::parse_nla_header;
+use crate::netlink::nla::NL_ATTR_HDR_LEN;
+use crate::netlink::nla::parse_as_u8;
+use crate::netlink::nla::parse_as_u16;
+use crate::netlink::nla::parse_as_u32;
+use crate::parse_as_mac;
 use crate::BondMiiStatus;
 use crate::BondSlaveInfo;
 use crate::BondSlaveState;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::convert::TryInto;
-use std::mem::transmute;
 use std::net::Ipv4Addr;
 use std::slice;
 
@@ -48,51 +53,6 @@ struct BondAdInfo {
 const IFLA_BOND_MODE: u16 = 1;
 const IFLA_BOND_AD_INFO: u16 = 23;
 
-const NL_ATTR_HDR_LEN: usize = 4;
-
-#[derive(Debug, Eq, PartialEq, Clone)]
-struct NetLinkAttrHeader {
-    data_len: usize,
-    nla_len: usize,
-    nla_type: u16,
-}
-
-const NLA_ALIGNTO: usize = 4;
-
-fn parse_nla_header(data: *const u8) -> NetLinkAttrHeader {
-    let mut data_len: usize = unsafe {
-        transmute::<[u8; 2], u16>([*data, *(data.wrapping_offset(1))])
-    }
-    .into();
-    let nla_type: u16 = unsafe {
-        transmute::<[u8; 2], u16>([
-            *(data.wrapping_offset(2)),
-            *(data.wrapping_offset(3)),
-        ])
-    };
-
-    // Align nla_len by NLA_ALIGNTO
-    let nla_len = ((data_len + NLA_ALIGNTO - 1) / NLA_ALIGNTO) * NLA_ALIGNTO;
-    data_len = data_len - NL_ATTR_HDR_LEN;
-    NetLinkAttrHeader {
-        data_len,
-        nla_len,
-        nla_type,
-    }
-}
-
-fn parse_as_u8(data: &[u8]) -> u8 {
-    data[0]
-}
-
-fn parse_as_u16(data: &[u8]) -> u16 {
-    unsafe { transmute::<[u8; 2], u16>([data[0], data[1]]) }
-}
-
-fn parse_as_u32(data: &[u8]) -> u32 {
-    unsafe { transmute::<[u8; 4], u32>([data[0], data[1], data[2], data[3]]) }
-}
-
 fn parse_as_nested_ipv4_addr(data: &[u8]) -> Vec<Ipv4Addr> {
     let mut i: usize = 0;
     let mut addrs = Vec::new();
@@ -124,17 +84,6 @@ fn ipv4_addr_array_to_string(addrs: &[Ipv4Addr]) -> String {
 
 fn parse_as_48_bits_mac(data: &[u8]) -> String {
     parse_as_mac(6, data)
-}
-
-fn parse_as_mac(mac_len: usize, data: &[u8]) -> String {
-    let mut rt = String::new();
-    for i in 0..mac_len {
-        rt.push_str(&format!("{:X}", data[i]));
-        if i != mac_len - 1 {
-            rt.push_str(":");
-        }
-    }
-    rt
 }
 
 const IFLA_BOND_AD_INFO_AGGREGATOR: u16 = 1;

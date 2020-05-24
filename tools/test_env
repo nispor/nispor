@@ -1,0 +1,40 @@
+#!/bin/bash -x
+
+if [ "CHK$1" == "CHK" ];then
+    echo 'Need $1: bond, br, rm'
+    exit 1
+fi
+
+function create_nics {
+    sudo ip netns add tmp
+    sudo ip link add eth1 type veth peer name eth1.ep
+    sudo ip link add eth2 type veth peer name eth2.ep
+    sudo ip link set eth1.ep netns tmp
+    sudo ip link set eth2.ep netns tmp
+    sudo ip netns exec tmp ip link set eth1.ep up
+    sudo ip netns exec tmp ip link set eth2.ep up
+}
+
+if [ "CHK$1" == "CHKbond" ];then
+    create_nics
+    sudo ip link add bond99 type bond
+    sudo ip link set eth1 master bond99
+    sudo ip link set eth2 master bond99
+    sudo ip link set eth1 up
+    sudo ip link set eth2 up
+    sudo ip link set bond99 up
+elif [ "CHK$1" == "CHKbr" ];then
+    create_nics
+    sudo ip link add br0 type bridge
+    sudo ip link set eth1 master br0
+    sudo ip link set eth2 master br0
+    sudo ip link set eth1 up
+    sudo ip link set eth2 up
+    sudo ip link set br0 up
+elif [ "CHK$1" == "CHKrm" ];then
+    sudo ip link del eth1
+    sudo ip link del eth2
+    sudo ip link del br0
+    sudo ip link del bond99
+    sudo ip netns del tmp
+fi
