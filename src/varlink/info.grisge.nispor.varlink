@@ -21,14 +21,47 @@ type BridgeVlanFilteringInfo (
 
 )
 
+type BridgeMulticastIgmpInfo (
+    router: (Disabled, TempQuery, Perm, Temp, Unknown),
+    snooping: bool,
+    query_use_ifaddr: bool,
+    querier: bool,
+    stats_enabled: bool,
+    hash_elasticity: int,
+    hash_max: int,
+    last_member_count: int,
+    startup_query_count: int,
+    last_member_interval: int,
+    membership_interval: int,
+    querier_interval: int,
+    query_interval: int,
+    query_response_interval: int,
+    startup_query_interval: int,
+    igmp_version: int,
+    mld_version: int,
+)
+
 type BridgeInfo (
     slaves: []string,
     stp: BridgeStpInfo,
     ageing_time: int,
     bridge_id: string,
-    vlan_filtering: BridgeVlanFilteringInfo,
     group_fwd_mask: int,
-    multicast_snooping: bool,
+    root_id: string,
+    root_port: int,
+    root_path_cost: int,
+    topology_change: bool,
+    topology_change_detected: bool,
+    hello_timer: int,
+    tcn_timer: int,
+    topology_change_timer: int,
+    multicast_igmp: BridgeMulticastIgmpInfo,
+    gc_timer: int,
+    group_addr: string,
+    nf_call_iptables: bool,
+    nf_call_ip6tables: bool,
+    nf_call_arptables: bool,
+    vlan_filtering: BridgeVlanFilteringInfo,
 )
 
 type BridgeVlanEntry (
