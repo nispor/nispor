@@ -31,6 +31,17 @@ elif [ "CHK$1" == "CHKbr" ];then
     sudo ip link set eth1 up
     sudo ip link set eth2 up
     sudo ip link set br0 up
+elif [ "CHK$1" == "CHKbrv" ];then
+    create_nics
+    sudo ip link add br0 type bridge
+    sudo ip link set eth1 master br0
+    sudo ip link set eth2 master br0
+    sudo ip link set eth1 up
+    sudo ip link set eth2 up
+    sudo ip link set br0 up
+    sudo bridge vlan add vid 10 pvid untagged dev eth1
+    sudo bridge vlan add vid 2-4094 dev eth2
+    sudo ip link set br0 type bridge vlan_filtering 1
 elif [ "CHK$1" == "CHKrm" ];then
     sudo ip link del eth1
     sudo ip link del eth2

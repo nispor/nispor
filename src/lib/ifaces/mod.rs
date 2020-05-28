@@ -9,6 +9,7 @@ pub use crate::ifaces::bond::BondSlaveInfo;
 pub use crate::ifaces::bond::BondSlaveState;
 pub use crate::ifaces::bridge::BridgeInfo;
 pub use crate::ifaces::bridge::BridgePortInfo;
+pub use crate::ifaces::bridge::BridgeVlanEntry;
 pub(crate) use crate::ifaces::iface::get_iface_name_by_index;
 pub use crate::ifaces::iface::Iface;
 pub use crate::ifaces::iface::IfaceState;

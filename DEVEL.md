@@ -7,6 +7,10 @@
 
 `./tools/test_env br`
 
+### Bridge with VLAN filtering
+
+`./tools/test_env brv`
+
 ### Clean up
 
 `./tools/test_env rm`

@@ -1,18 +1,13 @@
+use crate::netlink::parse_af_spec_bridge_info;
+use crate::netlink::parse_bridge_info;
 use crate::netlink::parse_bridge_port_info;
-use crate::parse_as_mac;
 use crate::Iface;
 use crate::MasterType;
 use netlink_packet_route::rtnl::link::nlas;
-use netlink_packet_route::rtnl::link::nlas::InfoBridge::{
-    AgeingTime, BridgeId, ForwardDelay, GroupFwdMask, HelloTime, MaxAge,
-    MulticastSnooping, Priority, StpState, VlanDefaultPvid, VlanFiltering,
-    VlanProtocol,
-};
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::mem::transmute;
 
-const ETH_ALEN: usize = 6;
 const ETH_P_8021Q: u16 = 0x8100;
 const ETH_P_8021AD: u16 = 0x88A8;
 
@@ -83,7 +78,30 @@ pub struct BridgeVlanFilteringInfo {
     pub vlan_protocol: BridgeVlanProtocol,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_pvid: Option<u16>,
+    pub vlan_stats_enabled: bool,
 }
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+pub struct BridgeMulticastIgmpInfo {
+    pub router: BridgePortMulticastRouterType,
+    pub snooping: bool,
+    pub query_use_ifaddr: bool,
+    pub querier: bool,
+    pub stats_enabled: bool,
+    pub hash_elasticity: u32,
+    pub hash_max: u32,
+    pub last_member_count: u32,
+    pub startup_query_count: u32,
+    pub last_member_interval: u64,
+    pub membership_interval: u64,
+    pub querier_interval: u64,
+    pub query_interval: u64,
+    pub query_response_interval: u64,
+    pub startup_query_interval: u64,
+    pub igmp_version: u8,
+    pub mld_version: u8
+}
+
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct BridgeInfo {
@@ -91,10 +109,22 @@ pub struct BridgeInfo {
     pub stp: BridgeStpInfo,
     pub ageing_time: u32,
     pub bridge_id: String,
-    pub vlan_filtering: BridgeVlanFilteringInfo,
     pub group_fwd_mask: u16,
-    pub multicast_snooping: bool,
-    // TODO: There are a lot remaining properties
+    pub root_id: String,
+    pub root_port: u16,
+    pub root_path_cost: u32,
+    pub topology_change: bool,
+    pub topology_change_detected: bool,
+    pub hello_timer: u64,
+    pub tcn_timer: u64,
+    pub topology_change_timer: u64,
+    pub multicast_igmp: BridgeMulticastIgmpInfo,
+    pub gc_timer: u64,
+    pub group_addr: String,
+    pub nf_call_iptables: bool,
+    pub nf_call_ip6tables: bool,
+    pub nf_call_arptables: bool,
+    pub vlan_filtering: BridgeVlanFilteringInfo,
 }
 
 #[repr(u8)]
@@ -189,52 +219,13 @@ pub struct BridgePortInfo {
     pub isolated: bool,
     #[serde(skip_serializing_if = "String::is_empty")]
     pub backup_port: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vlans: Option<Vec<BridgeVlanEntry>>,
 }
 
 pub(crate) fn get_bridge_info(data: &nlas::InfoData) -> Option<BridgeInfo> {
-    let mut bridge_info = BridgeInfo::default();
     if let nlas::InfoData::Bridge(infos) = data {
-        for info in infos {
-            if let StpState(d) = info {
-                bridge_info.stp.state = (*d).into();
-            } else if let VlanFiltering(d) = info {
-                bridge_info.vlan_filtering.enabled = *d > 0;
-            } else if let HelloTime(d) = info {
-                bridge_info.stp.hello_time = *d;
-            } else if let MaxAge(d) = info {
-                bridge_info.stp.max_age = *d;
-            } else if let ForwardDelay(d) = info {
-                bridge_info.stp.forward_delay = *d;
-            } else if let Priority(d) = info {
-                bridge_info.stp.priority = *d;
-            } else if let AgeingTime(d) = info {
-                bridge_info.ageing_time = *d;
-            } else if let BridgeId((priority, mac)) = info {
-                //Following the format of sysfs
-                let priority_bytes = priority.to_ne_bytes();
-                bridge_info.bridge_id = format!(
-                    "{:02x}{:02x}.{}",
-                    priority_bytes[0],
-                    priority_bytes[1],
-                    parse_as_mac(ETH_ALEN, mac).to_lowercase().replace(":", "")
-                )
-            } else if let VlanProtocol(d) = info {
-                //TODO: Once https://github.com/little-dude/netlink/pull/78
-                //released, remove the endian converting line
-                let protocol = u16::from_be_bytes(d.to_ne_bytes());
-                bridge_info.vlan_filtering.vlan_protocol = protocol.into();
-            } else if let VlanDefaultPvid(d) = info {
-                bridge_info.vlan_filtering.default_pvid = Some((*d).into());
-            } else if let GroupFwdMask(d) = info {
-                bridge_info.group_fwd_mask = *d;
-            } else if let MulticastSnooping(d) = info {
-                bridge_info.multicast_snooping = *d > 0;
-            } else {
-                ()
-                // println!("{:?}", &info);
-            }
-        }
-        Some(bridge_info)
+        Some(parse_bridge_info(&infos))
     } else {
         None
     }
@@ -268,12 +259,12 @@ fn gen_slave_list_of_master(iface_states: &mut HashMap<String, Iface>) {
     }
     for (master, slaves) in master_slaves.iter_mut() {
         if let Some(master_iface) = iface_states.get_mut(master) {
-            if let Some(old_bridge_info) = &master_iface.bridge_info {
+            if let Some(old_bridge_info) = &master_iface.bridge {
                 // TODO: Need better way to update this slave list.
                 let mut new_bridge_info = old_bridge_info.clone();
                 slaves.sort();
                 new_bridge_info.slaves = slaves.clone();
-                master_iface.bridge_info = Some(new_bridge_info);
+                master_iface.bridge = Some(new_bridge_info);
             }
         }
     }
@@ -288,7 +279,7 @@ fn convert_back_port_index_to_name(iface_states: &mut HashMap<String, Iface>) {
         if iface.master_type != Some(MasterType::Bridge) {
             continue;
         }
-        if let Some(old_port_info) = &iface.bridge_port_info {
+        if let Some(old_port_info) = &iface.bridge_port {
             let index = &old_port_info.backup_port;
             if index != "" {
                 if let Some(iface_name) = index_to_name.get(index) {
@@ -296,9 +287,28 @@ fn convert_back_port_index_to_name(iface_states: &mut HashMap<String, Iface>) {
                     // clone()
                     let mut new_port_info = old_port_info.clone();
                     new_port_info.backup_port = iface_name.into();
-                    iface.bridge_port_info = Some(new_port_info);
+                    iface.bridge_port = Some(new_port_info);
                 }
             }
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+pub struct BridgeVlanEntry {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vid: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vid_range: Option<(u16, u16)>,
+    pub is_pvid: bool, // is PVID and ingress untagged
+    pub is_egress_untagged: bool,
+}
+
+pub(crate) fn parse_bridge_vlan_info(iface_state: &mut Iface, data: &[u8]) {
+    if let Some(old_port_info) = &iface_state.bridge_port {
+        // TODO: shoule update in place instead of clone
+        let mut new_port_info = old_port_info.clone();
+        new_port_info.vlans = parse_af_spec_bridge_info(data);
+        iface_state.bridge_port = Some(new_port_info);
     }
 }

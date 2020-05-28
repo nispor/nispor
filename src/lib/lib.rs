@@ -12,6 +12,7 @@ pub use crate::ifaces::BondSlaveInfo;
 pub use crate::ifaces::BondSlaveState;
 pub use crate::ifaces::BridgeInfo;
 pub use crate::ifaces::BridgePortInfo;
+pub use crate::ifaces::BridgeVlanEntry;
 pub use crate::ifaces::Iface;
 pub use crate::ifaces::IfaceState;
 pub use crate::ifaces::IfaceType;

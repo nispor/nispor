@@ -53,7 +53,6 @@ make cli
 
 ## TODO:
  * Error handling instead of `unwrap()/panic!/etc`
- * Linux Bridge VLAN filtering
  * VLAN
  * VxLAN
  * Dummy

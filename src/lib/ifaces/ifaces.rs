@@ -1,21 +1,14 @@
 use crate::ifaces::bond::bond_iface_tidy_up;
-use crate::ifaces::bond::get_bond_info;
-use crate::ifaces::bond::get_bond_slave_info;
 use crate::ifaces::bridge::bridge_iface_tidy_up;
-use crate::ifaces::bridge::get_bridge_info;
-use crate::ifaces::bridge::get_bridge_port_info;
+use crate::ifaces::iface::fill_bridge_vlan_info;
+use crate::ifaces::iface::parse_nl_msg_to_iface;
 use crate::netlink::fill_ip_addr;
 use crate::Iface;
-use crate::IfaceState;
-use crate::IfaceType;
-use crate::MasterType;
 use futures::stream::TryStreamExt;
-use netlink_packet_route::rtnl::link::nlas;
-use netlink_packet_route::rtnl::LinkMessage;
-use rtnetlink::packet::rtnl::link::nlas::Nla;
+use netlink_packet_route::rtnl::constants::AF_BRIDGE;
+use netlink_sys::constants::RTEXT_FILTER_BRVLAN_COMPRESSED;
 use rtnetlink::{new_connection, Error};
 use std::collections::HashMap;
-use std::str;
 use tokio::runtime::Runtime;
 
 async fn _get_ifaces() -> Result<HashMap<String, Iface>, Error> {
@@ -25,99 +18,21 @@ async fn _get_ifaces() -> Result<HashMap<String, Iface>, Error> {
 
     let mut links = handle.link().get().execute();
     while let Some(nl_msg) = links.try_next().await? {
-        let name = _get_iface_name(&nl_msg);
-        if name.len() <= 0 {
-            continue;
+        if let Some(iface_state) = parse_nl_msg_to_iface(&nl_msg) {
+            iface_states.insert(iface_state.name.clone(), iface_state);
         }
-        let mut iface_state = Iface {
-            name: name.clone(),
-            ..Default::default()
-        };
-        iface_state.index = nl_msg.header.index;
-        for nla in &nl_msg.nlas {
-            // println!("{} {:?}", name, nla);
-            if let Nla::Mtu(mtu) = nla {
-                iface_state.mtu = *mtu as i64;
-            } else if let Nla::Address(mac) = nla {
-                let mut mac_str = String::new();
-                for octet in mac.iter() {
-                    mac_str.push_str(&format!("{:02X?}:", octet));
-                }
-                mac_str.pop();
-                iface_state.mac_address = mac_str;
-            } else if let Nla::OperState(state) = nla {
-                iface_state.state = match state {
-                    nlas::State::Up => IfaceState::Up,
-                    nlas::State::Down => IfaceState::Down,
-                    _ => IfaceState::Unknown,
-                };
-            } else if let Nla::Master(master) = nla {
-                iface_state.master = Some(format!("{}", master));
-            } else if let Nla::Info(infos) = nla {
-                for info in infos {
-                    if let nlas::Info::Kind(t) = info {
-                        iface_state.iface_type = match t {
-                            nlas::InfoKind::Bond => IfaceType::Bond,
-                            nlas::InfoKind::Veth => IfaceType::Veth,
-                            nlas::InfoKind::Bridge => IfaceType::Bridge,
-                            nlas::InfoKind::Vlan => IfaceType::Vlan,
-                            _ => IfaceType::Unknown,
-                        };
-                    }
-                }
-                for info in infos {
-                    if let nlas::Info::Data(d) = info {
-                        match iface_state.iface_type {
-                            IfaceType::Bond => {
-                                iface_state.bond_info = get_bond_info(&d)
-                            }
-                            IfaceType::Bridge => {
-                                iface_state.bridge_info = get_bridge_info(&d)
-                            }
-                            _ => (),
-                        }
-                    }
-                }
-                for info in infos {
-                    if let nlas::Info::SlaveKind(d) = info {
-                        // Remove the tailing \0
-                        match str::from_utf8(&(d.as_slice()[0..(d.len() - 1)]))
-                        {
-                            Ok(master_type) => {
-                                iface_state.master_type =
-                                    Some(master_type.into())
-                            }
-                            _ => (),
-                        }
-                    }
-                }
-                if let Some(master_type) = &iface_state.master_type {
-                    for info in infos {
-                        if let nlas::Info::SlaveData(d) = info {
-                            match master_type {
-                                MasterType::Bond => {
-                                    iface_state.bond_slave_info =
-                                        get_bond_slave_info(&d);
-                                }
-                                MasterType::Bridge => {
-                                    iface_state.bridge_port_info =
-                                        get_bridge_port_info(&d);
-                                }
-                                _ => (),
-                            }
-                        }
-                    }
-                }
-            } else {
-                ()
-                //println!("{} {:?}", name, nla);
-            }
-        }
-        iface_states.insert(iface_state.name.clone(), iface_state);
     }
     let mut addrs = handle.address().get().execute();
     while let Some(nl_msg) = addrs.try_next().await? {
         fill_ip_addr(&mut iface_states, &nl_msg);
+    }
+    let mut br_vlan_links = handle
+        .link()
+        .get()
+        .set_filter_mask(AF_BRIDGE as u8, RTEXT_FILTER_BRVLAN_COMPRESSED)
+        .execute();
+    while let Some(nl_msg) = br_vlan_links.try_next().await? {
+        fill_bridge_vlan_info(&mut iface_states, &nl_msg);
     }
     tidy_up(&mut iface_states);
     Ok(iface_states)
@@ -125,15 +40,6 @@ async fn _get_ifaces() -> Result<HashMap<String, Iface>, Error> {
 
 pub(crate) fn get_ifaces() -> HashMap<String, Iface> {
     Runtime::new().unwrap().block_on(_get_ifaces()).unwrap()
-}
-
-fn _get_iface_name(nl_msg: &LinkMessage) -> String {
-    for nla in &nl_msg.nlas {
-        if let Nla::IfName(name) = nla {
-            return name.clone();
-        }
-    }
-    "".into()
 }
 
 fn tidy_up(iface_states: &mut HashMap<String, Iface>) {

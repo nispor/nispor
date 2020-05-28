@@ -6,6 +6,73 @@ type BondInfo (
     options: [string]string
 )
 
+type BridgeStpInfo (
+    state: (Disabled, KernelStp, UserStp, Unknown),
+    hello_time: int,
+    forward_delay: int,
+    max_age: int,
+    priority: int,
+)
+
+type BridgeVlanFilteringInfo (
+    enabled: bool,
+    vlan_protocol: (802.1Q, 802.1AD),
+    ?default_pvid: int,
+
+)
+
+type BridgeInfo (
+    slaves: []string,
+    stp: BridgeStpInfo,
+    ageing_time: int,
+    bridge_id: string,
+    vlan_filtering: BridgeVlanFilteringInfo,
+    group_fwd_mask: int,
+    multicast_snooping: bool,
+)
+
+type BridgeVlanEntry (
+    ?vid: int,
+    ?vid_range: []int,
+    is_pvid: bool,
+    is_egress_untagged: bool,
+)
+
+type BridgePortInfo (
+    stp_state: (Disabled, Listening, Learning, Forwarding, Blocking, Unknown),
+    stp_priority: int,
+    stp_path_cost: int,
+    hairpin_mode: bool,
+    bpdu_guard: bool,
+    root_block: bool,
+    multicast_fast_leave: bool,
+    learning: bool,
+    unicast_flood: bool,
+    proxyarp: bool,
+    proxyarp_wifi: bool,
+    designated_root: string,
+    designated_bridge: string,
+    designated_port: int,
+    designated_cost: int,
+    port_id: string,
+    port_no: string,
+    change_ack: bool,
+    config_pending: bool,
+    message_age_timer: int,
+    forward_delay_timer: int,
+    hold_timer: int,
+    multicast_router: (Disabled, TempQuery, Perm, Temp, Unknown),
+    multicast_flood: bool,
+    multicast_to_unicast: bool,
+    vlan_tunnel: bool,
+    broadcast_flood: bool,
+    group_fwd_mask: int,
+    neigh_suppress: bool,
+    isolated: bool,
+    ?backup_port: string,
+    ?vlans: []BridgeVlanEntry,
+)
+
 type Ipv4Info (
     addresses: []Ipv4AddrInfo
 )
@@ -34,8 +101,10 @@ type Iface (
     iface_type: string,
     state: (Up, Down, Unknown),
     mtu: int,
-    ?bond_info: BondInfo,
-    ?bond_slave_info: [string]string,
+    ?bond: BondInfo,
+    ?bond_slave: [string]string,
+    ?bridge: BridgeInfo,
+    ?bridge_port: BridgePortInfo,
     ?master: string,
     ?master_type: (Bond, Unknown),
     ?ipv4: Ipv4Info,

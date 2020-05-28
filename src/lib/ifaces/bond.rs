@@ -120,12 +120,12 @@ fn gen_slave_list_of_master(iface_states: &mut HashMap<String, Iface>) {
     }
     for (master, slaves) in master_slaves.iter_mut() {
         if let Some(master_iface) = iface_states.get_mut(master) {
-            if let Some(old_bond_info) = &master_iface.bond_info {
+            if let Some(old_bond_info) = &master_iface.bond {
                 // TODO: Need better way to update this slave list.
                 let mut new_bond_info = old_bond_info.clone();
                 slaves.sort();
                 new_bond_info.slaves = slaves.clone();
-                master_iface.bond_info = Some(new_bond_info);
+                master_iface.bond = Some(new_bond_info);
             }
         }
     }
@@ -140,7 +140,7 @@ fn active_slave_index_to_iface_name(iface_states: &mut HashMap<String, Iface>) {
         if iface.iface_type != IfaceType::Bond {
             continue;
         }
-        if let Some(old_bond_info) = &iface.bond_info {
+        if let Some(old_bond_info) = &iface.bond {
             let mut bond_options = old_bond_info.options.clone();
             if let Some(index) = bond_options.get("active_slave") {
                 if let Some(iface_name) = index_to_name.get(index) {
@@ -150,7 +150,7 @@ fn active_slave_index_to_iface_name(iface_states: &mut HashMap<String, Iface>) {
             }
             let mut bond_info = old_bond_info.clone();
             bond_info.options = bond_options;
-            iface.bond_info = Some(bond_info);
+            iface.bond = Some(bond_info);
         }
     }
 }
