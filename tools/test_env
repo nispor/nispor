@@ -42,6 +42,12 @@ elif [ "CHK$1" == "CHKbrv" ];then
     sudo bridge vlan add vid 10 pvid untagged dev eth1
     sudo bridge vlan add vid 2-4094 dev eth2
     sudo ip link set br0 type bridge vlan_filtering 1
+elif [ "CHK$1" == "CHKvlan" ];then
+    create_nics
+    sudo modprobe 8021q
+    sudo ip link set eth1 up
+    sudo ip link set eth2 up
+    sudo ip link add link eth1 name eth1.101 type vlan id 101
 elif [ "CHK$1" == "CHKrm" ];then
     sudo ip link del eth1
     sudo ip link del eth2
