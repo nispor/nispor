@@ -50,10 +50,11 @@ make cli
 ## Supported interface types
  * Bond
  * Linux Bridge
+ * VLAN
 
 ## TODO:
  * Error handling instead of `unwrap()/panic!/etc`
- * VLAN
+ * VLAN QoS
  * VxLAN
  * Dummy
  * Veth

@@ -7,6 +7,8 @@ use crate::ifaces::bridge::get_bridge_port_info;
 use crate::ifaces::bridge::parse_bridge_vlan_info;
 use crate::ifaces::bridge::BridgeInfo;
 use crate::ifaces::bridge::BridgePortInfo;
+use crate::ifaces::vlan::get_vlan_info;
+use crate::ifaces::vlan::VlanInfo;
 use crate::Ipv4Info;
 use crate::Ipv6Info;
 use netlink_packet_route::rtnl::link::nlas;
@@ -87,6 +89,8 @@ pub struct Iface {
     pub bridge: Option<BridgeInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bridge_port: Option<BridgePortInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vlan: Option<VlanInfo>,
 }
 
 pub(crate) fn get_iface_name_by_index(
@@ -111,8 +115,8 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
         ..Default::default()
     };
     iface_state.index = nl_msg.header.index;
+    let mut link: Option<u32> = None;
     for nla in &nl_msg.nlas {
-        // println!("{} {:?}", name, nla);
         if let Nla::Mtu(mtu) = nla {
             iface_state.mtu = *mtu as i64;
         } else if let Nla::Address(mac) = nla {
@@ -130,6 +134,8 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
             };
         } else if let Nla::Master(master) = nla {
             iface_state.master = Some(format!("{}", master));
+        } else if let Nla::Link(l) = nla {
+            link = Some(*l);
         } else if let Nla::Info(infos) = nla {
             for info in infos {
                 if let nlas::Info::Kind(t) = info {
@@ -138,7 +144,8 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         nlas::InfoKind::Veth => IfaceType::Veth,
                         nlas::InfoKind::Bridge => IfaceType::Bridge,
                         nlas::InfoKind::Vlan => IfaceType::Vlan,
-                        _ => IfaceType::Unknown,
+                        nlas::InfoKind::Other(s) => IfaceType::Other(s.clone()),
+                        _ => IfaceType::Other(format!("{:?}", t)),
                     };
                 }
             }
@@ -149,7 +156,11 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         IfaceType::Bridge => {
                             iface_state.bridge = get_bridge_info(&d)
                         }
-                        _ => (),
+                        IfaceType::Vlan => iface_state.vlan = get_vlan_info(&d),
+                        _ => eprintln!(
+                            "Unhandled iface type {:?}",
+                            iface_state.iface_type
+                        ),
                     }
                 }
             }
@@ -177,7 +188,7 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                                 iface_state.bridge_port =
                                     get_bridge_port_info(&d);
                             }
-                            _ => (),
+                            _ => eprintln!("Unknown master type {:?}", &d),
                         }
                     }
                 }
@@ -185,6 +196,13 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
         } else {
             ()
             // println!("{} {:?}", name, nla);
+        }
+    }
+    if let Some(old_vlan_info) = &iface_state.vlan {
+        if let Some(base_iface_index) = link {
+            let mut new_vlan_info = old_vlan_info.clone();
+            new_vlan_info.base_iface = format!("{}", base_iface_index);
+            iface_state.vlan = Some(new_vlan_info);
         }
     }
     Some(iface_state)

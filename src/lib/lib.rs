@@ -17,6 +17,8 @@ pub use crate::ifaces::Iface;
 pub use crate::ifaces::IfaceState;
 pub use crate::ifaces::IfaceType;
 pub use crate::ifaces::MasterType;
+pub use crate::ifaces::VlanInfo;
+pub use crate::ifaces::VlanProtocol;
 pub use crate::ip::Ipv4AddrInfo;
 pub use crate::ip::Ipv4Info;
 pub use crate::ip::Ipv6AddrInfo;
