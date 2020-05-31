@@ -93,8 +93,10 @@ pub(crate) fn parse_bridge_info(infos: &[InfoBridge]) -> BridgeInfo {
             bridge_info.multicast_igmp.igmp_version = *d;
         } else if let InfoBridge::MulticastMldVersion(d) = info {
             bridge_info.multicast_igmp.mld_version = *d;
-        // TODO: wait https://github.com/little-dude/netlink/pull/80
-        //  for IFLA_BR_VLAN_STATS_PER_PORT and IFLA_BR_MULTI_BOOLOPT
+        } else if let InfoBridge::VlanStatsPerHost(d) = info {
+            bridge_info.vlan_filtering.vlan_stats_per_host = *d > 0;
+        } else if let InfoBridge::MultiBoolOpt(d) = info {
+            bridge_info.multi_bool_opt = *d;
         } else {
             eprintln!("Unknown NLA {:?}", &info);
         }

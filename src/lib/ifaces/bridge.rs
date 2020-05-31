@@ -79,6 +79,7 @@ pub struct BridgeVlanFilteringInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_pvid: Option<u16>,
     pub vlan_stats_enabled: bool,
+    pub vlan_stats_per_host: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
@@ -99,9 +100,8 @@ pub struct BridgeMulticastIgmpInfo {
     pub query_response_interval: u64,
     pub startup_query_interval: u64,
     pub igmp_version: u8,
-    pub mld_version: u8
+    pub mld_version: u8,
 }
-
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct BridgeInfo {
@@ -125,6 +125,7 @@ pub struct BridgeInfo {
     pub nf_call_ip6tables: bool,
     pub nf_call_arptables: bool,
     pub vlan_filtering: BridgeVlanFilteringInfo,
+    pub multi_bool_opt: u64,
 }
 
 #[repr(u8)]
