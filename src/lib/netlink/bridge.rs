@@ -39,7 +39,7 @@ pub(crate) fn parse_bridge_info(infos: &[InfoBridge]) -> BridgeInfo {
         } else if let InfoBridge::TopologyChangeDetected(d) = info {
             bridge_info.topology_change_detected = *d > 0;
         } else if let InfoBridge::HelloTimer(d) = info {
-            bridge_info.hello_timer = *d;
+            bridge_info.stp.hello_timer = *d;
         } else if let InfoBridge::TcnTimer(d) = info {
             bridge_info.tcn_timer = *d;
         } else if let InfoBridge::TopologyChangeTimer(d) = info {
