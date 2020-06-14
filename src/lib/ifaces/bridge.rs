@@ -64,50 +64,12 @@ impl From<u16> for BridgeVlanProtocol {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
-pub struct BridgeStpInfo {
-    pub state: BridgeStpState,
-    pub hello_time: u32,
-    pub hello_timer: u64,
-    pub forward_delay: u32,
-    pub max_age: u32,
-    pub priority: u16,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct BridgeVlanFilteringInfo {
-    pub enabled: bool,
-    pub vlan_protocol: BridgeVlanProtocol,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub default_pvid: Option<u16>,
-    pub vlan_stats_enabled: bool,
-    pub vlan_stats_per_host: bool,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
-pub struct BridgeMulticastIgmpInfo {
-    pub router: BridgePortMulticastRouterType,
-    pub snooping: bool,
-    pub query_use_ifaddr: bool,
-    pub querier: bool,
-    pub stats_enabled: bool,
-    pub hash_elasticity: u32,
-    pub hash_max: u32,
-    pub last_member_count: u32,
-    pub last_member_interval: u64,
-    pub startup_query_count: u32,
-    pub membership_interval: u64,
-    pub querier_interval: u64,
-    pub query_interval: u64,
-    pub query_response_interval: u64,
-    pub startup_query_interval: u64,
-    pub igmp_version: u8,
-    pub mld_version: u8,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct BridgeInfo {
     pub slaves: Vec<String>,
-    pub stp: BridgeStpInfo,
     pub ageing_time: u32,
     pub bridge_id: String,
     pub group_fwd_mask: u16,
@@ -118,14 +80,41 @@ pub struct BridgeInfo {
     pub topology_change_detected: bool,
     pub tcn_timer: u64,
     pub topology_change_timer: u64,
-    pub multicast_igmp: BridgeMulticastIgmpInfo,
     pub gc_timer: u64,
     pub group_addr: String,
     pub nf_call_iptables: bool,
     pub nf_call_ip6tables: bool,
     pub nf_call_arptables: bool,
-    pub vlan_filtering: BridgeVlanFilteringInfo,
-    pub multi_bool_opt: u64,
+    pub vlan_filtering: bool,
+    pub vlan_protocol: BridgeVlanProtocol,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_pvid: Option<u16>,
+    pub vlan_stats_enabled: bool,
+    pub vlan_stats_per_host: bool,
+    pub stp_state: BridgeStpState,
+    pub hello_time: u32,
+    pub hello_timer: u64,
+    pub forward_delay: u32,
+    pub max_age: u32,
+    pub priority: u16,
+    pub multi_bool_opt: u64,            // not avaiable in sysfs yet
+    pub multicast_router: BridgePortMulticastRouterType,
+    pub multicast_snooping: bool,
+    pub multicast_query_use_ifaddr: bool,
+    pub multicast_querier: bool,
+    pub multicast_stats_enabled: bool,
+    pub multicast_hash_elasticity: u32,
+    pub multicast_hash_max: u32,
+    pub multicast_last_member_count: u32,
+    pub multicast_last_member_interval: u64,
+    pub multicast_startup_query_count: u32,
+    pub multicast_membership_interval: u64,
+    pub multicast_querier_interval: u64,
+    pub multicast_query_interval: u64,
+    pub multicast_query_response_interval: u64,
+    pub multicast_startup_query_interval: u64,
+    pub multicast_igmp_version: u8,
+    pub multicast_mld_version: u8,
 }
 
 #[repr(u8)]
