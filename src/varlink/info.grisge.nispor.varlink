@@ -6,44 +6,13 @@ type BondInfo (
     options: [string]string
 )
 
-type BridgeStpInfo (
-    state: (Disabled, KernelStp, UserStp, Unknown),
+type BridgeInfo (
+    stp_state: (Disabled, KernelStp, UserStp, Unknown),
     hello_time: int,
     forward_delay: int,
     max_age: int,
     priority: int,
-)
-
-type BridgeVlanFilteringInfo (
-    enabled: bool,
-    vlan_protocol: (802.1Q, 802.1AD),
-    ?default_pvid: int,
-
-)
-
-type BridgeMulticastIgmpInfo (
-    router: (Disabled, TempQuery, Perm, Temp, Unknown),
-    snooping: bool,
-    query_use_ifaddr: bool,
-    querier: bool,
-    stats_enabled: bool,
-    hash_elasticity: int,
-    hash_max: int,
-    last_member_count: int,
-    startup_query_count: int,
-    last_member_interval: int,
-    membership_interval: int,
-    querier_interval: int,
-    query_interval: int,
-    query_response_interval: int,
-    startup_query_interval: int,
-    igmp_version: int,
-    mld_version: int,
-)
-
-type BridgeInfo (
     slaves: []string,
-    stp: BridgeStpInfo,
     ageing_time: int,
     bridge_id: string,
     group_fwd_mask: int,
@@ -55,13 +24,31 @@ type BridgeInfo (
     hello_timer: int,
     tcn_timer: int,
     topology_change_timer: int,
-    multicast_igmp: BridgeMulticastIgmpInfo,
+    multicast_router: (Disabled, TempQuery, Perm, Temp, Unknown),
+    multicast_snooping: bool,
+    multicast_query_use_ifaddr: bool,
+    multicast_querier: bool,
+    multicast_stats_enabled: bool,
+    multicast_hash_elasticity: int,
+    multicast_hash_max: int,
+    multicast_last_member_count: int,
+    multicast_startup_query_count: int,
+    multicast_last_member_interval: int,
+    multicast_membership_interval: int,
+    multicast_querier_interval: int,
+    multicast_query_interval: int,
+    multicast_query_response_interval: int,
+    multicast_startup_query_interval: int,
+    multicast_igmp_version: int,
+    multicast_mld_version: int,
     gc_timer: int,
     group_addr: string,
     nf_call_iptables: bool,
     nf_call_ip6tables: bool,
     nf_call_arptables: bool,
-    vlan_filtering: BridgeVlanFilteringInfo,
+    vlan_filtering: bool,
+    vlan_protocol: (802.1Q, 802.1AD),
+    ?default_pvid: int,
 )
 
 type BridgeVlanEntry (
@@ -129,6 +116,17 @@ type Ipv6AddrInfo (
     preferred_lft: string
 )
 
+type VlanInfo (
+    vlan_id: int,
+    protocol: (802.1Q, 802.1AD, Unknown),
+    base_iface: string,
+    is_reorder_hdr: bool,
+    is_gvrp: bool,
+    is_loose_binding: bool,
+    is_mvrp: bool,
+    is_bridge_binding: bool,
+)
+
 type Iface (
     name: string,
     iface_type: string,
@@ -138,6 +136,7 @@ type Iface (
     ?bond_slave: [string]string,
     ?bridge: BridgeInfo,
     ?bridge_port: BridgePortInfo,
+    ?vlan: VlanInfo,
     ?master: string,
     ?master_type: (Bond, Unknown),
     ?ipv4: Ipv4Info,
