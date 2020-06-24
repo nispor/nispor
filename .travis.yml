@@ -1,9 +1,19 @@
+os: linux
+dist: bionic
 language: rust
 rust:
   - stable
   - beta
   - nightly
+cache: cargo
 jobs:
   allow_failures:
     - rust: nightly
   fast_finish: true
+
+before_cache:
+  - sudo chown -R travis:travis $HOME/.cargo
+  - sudo chown -R travis:travis $TRAVIS_BUILD_DIR/target
+script:
+  - cargo build --verbose --all
+  - sudo env "PATH=$PATH" make test
