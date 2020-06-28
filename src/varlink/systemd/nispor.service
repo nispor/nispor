@@ -1,0 +1,9 @@
+[Unit]
+Description=Network Inspector(nispor) varlink service
+
+[Service]
+ExecStart=/usr/bin/npd unix:/run/nispor.so
+User=root
+
+[Install]
+Also=nispor.socket
