@@ -15,7 +15,7 @@ srv:
 	$(VARLINK_SRV_EXEC) $(SOCKET_ADDR)
 
 cli:
-	varlink call $(SOCKET_ADDR)/info.grisge.nispor.Get
+	varlink call $(SOCKET_ADDR)/info.nispor.Get
 
 clean:
 	cargo clean

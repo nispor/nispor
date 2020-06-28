@@ -1,10 +1,10 @@
 use std::process::exit;
 use varlink::VarlinkService;
 
-use crate::info_grisge_nispor::*;
+use crate::info_nispor::*;
 use nispor::get_state;
 
-mod info_grisge_nispor;
+mod info_nispor;
 
 const IDEAL_TIMEOUT: u64 = 0;
 const INITIAL_WORKER_THREADS: usize = 1;
@@ -37,12 +37,12 @@ impl VarlinkInterface for MyInfoGrisgeNispor {
 
 fn run_server(address: &str) -> varlink::Result<()> {
     let my_varlink_iface =
-        info_grisge_nispor::new(Box::new(MyInfoGrisgeNispor {}));
+        info_nispor::new(Box::new(MyInfoGrisgeNispor {}));
     let service = VarlinkService::new(
-        "info.grisge.nispor",
+        "info.nispor",
         "Network status query service",
         "0.1",
-        "http://nispor.grisge.info",
+        "http://nispor.info",
         vec![Box::new(my_varlink_iface)],
     );
     varlink::listen(

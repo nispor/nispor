@@ -21,7 +21,7 @@ impl ::std::fmt::Display for ErrorKind {
             ErrorKind::Varlink_Error => write!(f, "Varlink Error"),
             ErrorKind::VarlinkReply_Error => write!(f, "Varlink error reply"),
             ErrorKind::InternalError(v) => {
-                write!(f, "info.grisge.nispor.InternalError: {:#?}", v)
+                write!(f, "info.nispor.InternalError: {:#?}", v)
             }
         }
     }
@@ -110,7 +110,7 @@ impl From<&varlink::Reply> for ErrorKind {
         match e {
             varlink::Reply {
                 error: Some(ref t), ..
-            } if t == "info.grisge.nispor.InternalError" => match e {
+            } if t == "info.nispor.InternalError" => match e {
                 varlink::Reply {
                     parameters: Some(p),
                     ..
@@ -127,7 +127,7 @@ impl From<&varlink::Reply> for ErrorKind {
 pub trait VarlinkCallError: varlink::CallTrait {
     fn reply_internal_error(&mut self, r#msg: String) -> varlink::Result<()> {
         self.reply_struct(varlink::Reply::error(
-            "info.grisge.nispor.InternalError",
+            "info.nispor.InternalError",
             Some(
                 serde_json::to_value(InternalError_Args { r#msg })
                     .map_err(varlink::map_context!())?,
@@ -157,7 +157,7 @@ pub trait Call_Get: VarlinkCallError {
         self.reply_struct(varlink::Reply {
             continues: None,
             error: Some(
-                format!("info.grisge.nispor.InternalError: {}", msg).into(),
+                format!("info.nispor.InternalError: {}", msg).into(),
             ),
             parameters: None,
         })
@@ -191,7 +191,7 @@ impl VarlinkClientInterface for VarlinkClient {
     fn get(&mut self) -> varlink::MethodCall<Get_Args, Get_Reply, Error> {
         varlink::MethodCall::<Get_Args, Get_Reply, Error>::new(
             self.connection.clone(),
-            "info.grisge.nispor.Get",
+            "info.nispor.Get",
             Get_Args {},
         )
     }
@@ -208,10 +208,10 @@ pub fn new(
 }
 impl varlink::Interface for VarlinkInterfaceProxy {
     fn get_description(&self) -> &'static str {
-        "interface info.grisge.nispor\n\ntype IfaceState (\n    name: string,\n    iface_type: string,\n    state: (UP, DOWN, UNKNOWN),\n    mtu: int\n)\n\ntype NetState (\n    iface_states: [string]IfaceState\n)\n\n\nmethod Get() -> (net_state: NetState)\n\nerror InternalError(msg: string)\n"
+        "interface info.nispor\n\ntype IfaceState (\n    name: string,\n    iface_type: string,\n    state: (UP, DOWN, UNKNOWN),\n    mtu: int\n)\n\ntype NetState (\n    iface_states: [string]IfaceState\n)\n\n\nmethod Get() -> (net_state: NetState)\n\nerror InternalError(msg: string)\n"
     }
     fn get_name(&self) -> &'static str {
-        "info.grisge.nispor"
+        "info.nispor"
     }
     fn call_upgraded(
         &self,
@@ -223,7 +223,7 @@ impl varlink::Interface for VarlinkInterfaceProxy {
     fn call(&self, call: &mut varlink::Call) -> varlink::Result<()> {
         let req = call.request.unwrap();
         match req.method.as_ref() {
-            "info.grisge.nispor.Get" => {
+            "info.nispor.Get" => {
                 self.inner.get(call as &mut dyn Call_Get)
             }
             m => call.reply_method_not_found(String::from(m)),

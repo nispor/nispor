@@ -1,4 +1,4 @@
-interface info.grisge.nispor
+interface info.nispor
 
 type BondInfo (
     slaves: []string,
