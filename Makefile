@@ -1,6 +1,6 @@
 VARLINK_SRV_EXEC="./target/debug/npd"
 CLI_EXEC="./target/debug/npc"
-SOCKET_ADDR="unix:/run/nispor.so"
+SOCKET_ADDR="unix:/run/nispor/nispor.so"
 SYSTEMD_FILES=src/varlink/systemd/nispor.service \
 	      src/varlink/systemd/nispor.socket
 PREFIX ?= /usr/local

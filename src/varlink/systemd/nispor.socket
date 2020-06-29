@@ -3,7 +3,7 @@ Description=Network Inspector(nispor) varlink service
 PartOf=nispor.service
 
 [Socket]
-ListenStream=/run/nispor.so
+ListenStream=/run/nispor/nispor.so
 SocketMode=0666
 
 [Install]
