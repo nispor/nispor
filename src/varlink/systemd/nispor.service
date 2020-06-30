@@ -3,8 +3,6 @@ Description=Network Inspector(nispor) varlink service
 
 [Service]
 ExecStart=/usr/bin/npd unix:/run/nispor/nispor.so
-ExecStartPost=/usr/bin/sleep 5
-ExecStartPost=chmod 0666 /run/nispor/nispor.so
 DynamicUser=yes
 RuntimeDirectory=nispor
 

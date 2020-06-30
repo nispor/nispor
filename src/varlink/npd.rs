@@ -1,3 +1,4 @@
+use libc::umask;
 use std::process::exit;
 use varlink::VarlinkService;
 
@@ -36,8 +37,7 @@ impl VarlinkInterface for MyInfoGrisgeNispor {
 }
 
 fn run_server(address: &str) -> varlink::Result<()> {
-    let my_varlink_iface =
-        info_nispor::new(Box::new(MyInfoGrisgeNispor {}));
+    let my_varlink_iface = info_nispor::new(Box::new(MyInfoGrisgeNispor {}));
     let service = VarlinkService::new(
         "info.nispor",
         "Network status query service",
@@ -45,6 +45,8 @@ fn run_server(address: &str) -> varlink::Result<()> {
         "http://nispor.info",
         vec![Box::new(my_varlink_iface)],
     );
+    // Make sure the socket file been created with permission 0666.
+    let old_umask = unsafe { umask(0o111) };
     varlink::listen(
         service,
         &address,
@@ -52,5 +54,8 @@ fn run_server(address: &str) -> varlink::Result<()> {
         MAX_WORKER_THREADS,
         IDEAL_TIMEOUT,
     )?;
+    unsafe {
+        umask(old_umask);
+    }
     Ok(())
 }

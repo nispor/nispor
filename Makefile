@@ -1,6 +1,8 @@
 VARLINK_SRV_EXEC="./target/debug/npd"
 CLI_EXEC="./target/debug/npc"
-SOCKET_ADDR="unix:/run/nispor/nispor.so"
+SOCKET_FILE=/run/nispor/nispor.so
+SOCKET_DIR=$(dir $(SOCKET_FILE))
+SOCKET_ADDR=unix:$(SOCKET_FILE)
 SYSTEMD_FILES=src/varlink/systemd/nispor.service \
 	      src/varlink/systemd/nispor.socket
 PREFIX ?= /usr/local
@@ -16,7 +18,12 @@ $(CLI_EXEC) $(VARLINK_SRV_EXEC):
 test:
 	cargo test -- --test-threads=1 --show-output
 
-srv:
+srv: $(VARLINK_SRV_EXEC)
+	echo $(SOCKET_DIR)
+	if [ ! -d $(SOCKET_DIR) ]; then \
+		sudo mkdir $(SOCKET_DIR); \
+		sudo chmod 0777 $(SOCKET_DIR); \
+	fi
 	$(VARLINK_SRV_EXEC) $(SOCKET_ADDR)
 
 cli:
