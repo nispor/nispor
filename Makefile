@@ -1,5 +1,5 @@
-VARLINK_SRV_EXEC="./target/debug/npd"
-CLI_EXEC="./target/debug/npc"
+VARLINK_SRV_EXEC=./target/debug/npd
+CLI_EXEC=./target/debug/npc
 SOCKET_FILE=/run/nispor/nispor.so
 SOCKET_DIR=$(dir $(SOCKET_FILE))
 SOCKET_ADDR=unix:$(SOCKET_FILE)
@@ -41,6 +41,6 @@ install:
 	install -m644 $(SYSTEMD_FILES) $(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/
 
 uninstall:
-	rm -f $(DESTDIR)$(PREFIX)/bin/$(VARLINK_SRV_EXEC)
-	rm -f $(DESTDIR)$(PREFIX)/bin/$(CLI_EXEC)
+	rm -f $(DESTDIR)$(PREFIX)/bin/$(notdir $(VARLINK_SRV_EXEC))
+	rm -f $(DESTDIR)$(PREFIX)/bin/$(notdir $(CLI_EXEC))
 	rm -f $(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/nispor*
