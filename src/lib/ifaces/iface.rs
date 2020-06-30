@@ -66,7 +66,7 @@ impl From<&str> for MasterType {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct Iface {
     pub name: String,
-    //    #[serde(skip_serializing)]
+    #[serde(skip_serializing)]
     pub index: u32,
     pub iface_type: IfaceType,
     pub state: IfaceState,
