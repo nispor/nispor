@@ -1,5 +1,13 @@
-VARLINK_SRV_EXEC=./target/debug/npd
-CLI_EXEC=./target/debug/npc
+RUST_DEBUG_BIN_DIR=./target/debug
+RUST_RELEASE_BIN_DIR=./target/release
+VARLINK_SRV_EXEC=npd
+VARLINK_SRV_EXEC_DEBUG=$(RUST_DEBUG_BIN_DIR)/$(VARLINK_SRV_EXEC)
+VARLINK_SRV_EXEC_RELEASE=$(RUST_RELEASE_BIN_DIR)/$(VARLINK_SRV_EXEC)
+CLI_EXEC=npc
+CLI_EXEC_DEBUG=$(RUST_DEBUG_BIN_DIR)/$(CLI_EXEC)
+PYTHON_EXTENTION=libnispor.so
+PYTHON_EXTENTION_RELEASE=$(RUST_DEBUG_BIN_DIR)/$(PYTHON_EXTENTION)
+CLI_EXEC_RELEASE=$(RUST_RELEASE_BIN_DIR)/$(CLI_EXEC)
 SOCKET_FILE=/run/nispor/nispor.so
 SOCKET_DIR=$(dir $(SOCKET_FILE))
 SOCKET_ADDR=unix:$(SOCKET_FILE)
@@ -7,18 +15,34 @@ SYSTEMD_FILES=src/varlink/systemd/nispor.service \
 	      src/varlink/systemd/nispor.socket
 PREFIX ?= /usr/local
 
-SYSTEMD_SYS_UNIT_DIR ?= $(shell pkg-config --variable=systemdsystemunitdir systemd)
 
-debug: $(CLI_EXEC)
-	$(CLI_EXEC) $(ARGS)
+all: $(VARLINK_SRV_EXEC_DEBUG) $(CLI_EXEC_DEBUG) \
+    $(VARLINK_SRV_EXEC_RELEASE) $(CLI_EXEC_RELEASE)
 
-$(CLI_EXEC) $(VARLINK_SRV_EXEC):
+# Always invoke cargo build
+.PHONY: all clean
+
+SYSTEMD_SYS_UNIT_DIR ?= $(shell \
+	pkg-config --variable=systemdsystemunitdir systemd)
+
+PYTHON3_SITE_DIR ?=$(shell \
+	python3 -c \
+		"from distutils.sysconfig import get_python_lib; \
+		 print(get_python_lib())")
+
+debug: $(CLI_EXEC_DEBUG)
+	$(CLI_EXEC_DEBUG) $(ARGS)
+
+$(CLI_EXEC_DEBUG) $(VARLINK_SRV_EXEC_DEBUG):
 	cargo build --all
+
+$(CLI_EXEC_RELEASE) $(VARLINK_SRV_EXEC_RELEASE) $(PYTHON_EXTENTION_RELEASE):
+	cargo build --all --release
 
 test:
 	cargo test -- --test-threads=1 --show-output
 
-srv: $(VARLINK_SRV_EXEC)
+srv: $(VARLINK_SRV_EXEC_DEBUG)
 	echo $(SOCKET_DIR)
 	if [ ! -d $(SOCKET_DIR) ]; then \
 		sudo mkdir $(SOCKET_DIR); \
@@ -32,15 +56,15 @@ cli:
 clean:
 	cargo clean
 
-all:
-	cargo build --all
-
 install:
-	install -m755 $(VARLINK_SRV_EXEC) $(DESTDIR)$(PREFIX)/bin/
-	install -m755 $(CLI_EXEC) $(DESTDIR)$(PREFIX)/bin/
+	install -m755 $(VARLINK_SRV_EXEC_RELEASE) $(DESTDIR)$(PREFIX)/bin/
+	install -m755 $(CLI_EXEC_RELEASE) $(DESTDIR)$(PREFIX)/bin/
 	install -m644 $(SYSTEMD_FILES) $(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/
+	install -m755 $(PYTHON_EXTENTION_RELEASE) \
+		$(DESTDIR)$(PYTHON3_SITE_DIR)/nispor.so
 
 uninstall:
-	rm -f $(DESTDIR)$(PREFIX)/bin/$(notdir $(VARLINK_SRV_EXEC))
-	rm -f $(DESTDIR)$(PREFIX)/bin/$(notdir $(CLI_EXEC))
+	rm -f $(DESTDIR)$(PREFIX)/bin/$(VARLINK_SRV_EXEC)
+	rm -f $(DESTDIR)$(PREFIX)/bin/$(CLI_EXEC)
 	rm -f $(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/nispor*
+	rm -f $(DESTDIR)$(PYTHON3_SITE_DIR)/nispor.so
