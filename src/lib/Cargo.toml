@@ -2,7 +2,13 @@
 name = "nispor"
 version = "0.1.0"
 authors = ["Gris Ge <cnfourt@gmail.com>"]
+license = "Apache-2.0"
 edition = "2018"
+description = "Unified interface for Linux network state querying"
+homepage = "https://github.com/nispor/nispor"
+repository = "https://github.com/nispor/nispor"
+keywords = ["network"]
+categories = ["network-programming", "os"]
 
 [lib]
 name = "nispor"
