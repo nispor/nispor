@@ -1,0 +1,8 @@
+# Changelog
+## [0.1.0] - 2020-07-03
+### New features
+ * IPv4/IPv6 address
+ * Bond
+ * Linux Bridge
+ * Linux Bridge VLAN filtering
+ * VLAN
