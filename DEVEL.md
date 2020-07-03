@@ -14,3 +14,21 @@
 ### Clean up
 
 `./tools/test_env rm`
+
+## Design
+
+### Rust module
+
+Path: `src/lib`
+
+### Command line tool
+
+Path: `src/cli`
+
+### Varlink service
+
+Path: `src/varlink`
+
+### Python binding
+
+Path: `src/python`

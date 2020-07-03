@@ -1,55 +1,51 @@
-## Design
+The nispor(Network Inspector) project is designed to providing unified
+interface for Linux network state querying.
 
-### Rust module
+Currently providing:
+ * Rust crate
+ * Python binding
+ * Varlink interface -- `npd`
+ * Command line tool -- `npc`
 
-Path: `src/lib`
+## Install
 
-### Command line tool
-
-Path: `src/cli`
-
-Take first argument as NIC name to print network status, if no no argument
-defined, print out full network status.
-
-### Varlink service
-
-Path: `src/varlink`
+```bash
+make
+sudo PREFIX=/usr make install
+```
 
 ## Usage
 
 ### Print all network status
 
 ```bash
-make debug
+npc
 ```
 
 ### Print network status of certain NIC
 
 ```bash
-ARGS="bond99" make debug
+npc bond99
 ```
 
 ### Varlink service
 
 ```bash
-make srv
+systemctl start nispor.socket
 ```
 
 ### Varlink client
 
 ```bash
 # Please install `libvarlink-util` pacakge beforehand
-make cli
+varlink call unix:/run/nispor/nispor.so/info.nispor.Get
 ```
 
-## Goal
-
- * Provide C/Python/Rust binding to query linux network status
- * Provide varlink interface for querying linux networks status
-
-## Supported interface types
+## Supported features
+ * IPv4/IPv6 address
  * Bond
  * Linux Bridge
+ * Linux Bridge VLAN filtering
  * VLAN
 
 ## TODO:
@@ -61,5 +57,5 @@ make cli
  * SR-IOV
  * Route
  * Route rule
- * OpenvSwitch
- * Plugin design
+ * Traffic control
+ * Manpage for npc/npd
