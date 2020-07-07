@@ -48,7 +48,7 @@ srv: $(VARLINK_SRV_EXEC_DEBUG)
 		sudo mkdir $(SOCKET_DIR); \
 		sudo chmod 0777 $(SOCKET_DIR); \
 	fi
-	$(VARLINK_SRV_EXEC) $(SOCKET_ADDR)
+	$(VARLINK_SRV_EXEC_DEBUG) $(SOCKET_ADDR)
 
 cli:
 	varlink call $(SOCKET_ADDR)/info.nispor.Get
