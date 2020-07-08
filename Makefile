@@ -20,7 +20,8 @@ all: $(VARLINK_SRV_EXEC_DEBUG) $(CLI_EXEC_DEBUG) \
     $(VARLINK_SRV_EXEC_RELEASE) $(CLI_EXEC_RELEASE)
 
 # Always invoke cargo build
-.PHONY: all clean
+.PHONY: $(VARLINK_SRV_EXEC_DEBUG) $(CLI_EXEC_DEBUG) \
+    $(VARLINK_SRV_EXEC_RELEASE) $(CLI_EXEC_RELEASE)
 
 SYSTEMD_SYS_UNIT_DIR ?= $(shell \
 	pkg-config --variable=systemdsystemunitdir systemd)
