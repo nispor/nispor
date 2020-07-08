@@ -57,10 +57,10 @@ clean:
 	cargo clean
 
 install:
-	install -m755 $(VARLINK_SRV_EXEC_RELEASE) $(DESTDIR)$(PREFIX)/bin/
-	install -m755 $(CLI_EXEC_RELEASE) $(DESTDIR)$(PREFIX)/bin/
-	install -m644 $(SYSTEMD_FILES) $(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/
-	install -m755 $(PYTHON_EXTENTION_RELEASE) \
+	install -D -m755 $(VARLINK_SRV_EXEC_RELEASE) $(DESTDIR)$(PREFIX)/bin/
+	install -D -m755 $(CLI_EXEC_RELEASE) $(DESTDIR)$(PREFIX)/bin/
+	install -D -m644 $(SYSTEMD_FILES) $(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/
+	install -D -m755 $(PYTHON_EXTENTION_RELEASE) \
 		$(DESTDIR)$(PYTHON3_SITE_DIR)/nispor.so
 
 uninstall:
