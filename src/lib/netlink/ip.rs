@@ -161,7 +161,7 @@ fn parse_cache_info(cache_info_raw: &[u8]) -> IfaCacheInfo {
 }
 
 fn left_time_to_string(left_time: u32) -> String {
-    if left_time == u32::MAX {
+    if left_time == std::u32::MAX {
         "forever".into()
     } else {
         format!("{}sec", left_time)
