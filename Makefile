@@ -11,8 +11,8 @@ CLI_EXEC_RELEASE=$(RUST_RELEASE_BIN_DIR)/$(CLI_EXEC)
 SOCKET_FILE=/run/nispor/nispor.so
 SOCKET_DIR=$(dir $(SOCKET_FILE))
 SOCKET_ADDR=unix:$(SOCKET_FILE)
-SYSTEMD_FILES=src/varlink/systemd/nispor.service \
-	      src/varlink/systemd/nispor.socket
+SYSTEMD_SERVICE_FILE=src/varlink/systemd/nispor.service
+SYSTEMD_SOCKET_FILE=src/varlink/systemd/nispor.socket
 PREFIX ?= /usr/local
 
 
@@ -57,9 +57,14 @@ clean:
 	cargo clean
 
 install:
-	install -D -m755 $(VARLINK_SRV_EXEC_RELEASE) $(DESTDIR)$(PREFIX)/bin/
-	install -D -m755 $(CLI_EXEC_RELEASE) $(DESTDIR)$(PREFIX)/bin/
-	install -D -m644 $(SYSTEMD_FILES) $(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/
+	install -D -m755 $(VARLINK_SRV_EXEC_RELEASE) \
+		$(DESTDIR)$(PREFIX)/bin/$(VARLINK_SRV_EXEC)
+	install -D -m755 $(CLI_EXEC_RELEASE) \
+		$(DESTDIR)$(PREFIX)/bin/$(CLI_EXEC)
+	install -D -m644 $(SYSTEMD_SOCKET_FILE) \
+		$(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/nispor.socket
+	install -D -m644 $(SYSTEMD_SERVICE_FILE) \
+		$(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/nispor.service
 	install -D -m755 $(PYTHON_EXTENTION_RELEASE) \
 		$(DESTDIR)$(PYTHON3_SITE_DIR)/nispor.so
 
