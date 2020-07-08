@@ -57,7 +57,7 @@ cli:
 clean:
 	cargo clean
 
-install:
+install: $(VARLINK_SRV_EXEC_RELEASE) $(CLI_EXEC_RELEASE) $(PYTHON_EXTENTION_RELEASE)
 	install -D -m755 $(VARLINK_SRV_EXEC_RELEASE) \
 		$(DESTDIR)$(PREFIX)/bin/$(VARLINK_SRV_EXEC)
 	install -D -m755 $(CLI_EXEC_RELEASE) \
