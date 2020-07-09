@@ -9,7 +9,7 @@ create_exception!(nispor, NisporError, pyo3::exceptions::Exception);
 #[pyfunction]
 fn get_state() -> PyResult<String> {
     match _get_state() {
-        Ok(state) => Ok(serde_json::to_string_pretty(&state).unwrap()),
+        Ok(state) => Ok(serde_json::to_string(&state).unwrap()),
         Err(e) => Err(NisporError::py_err(format!("{}", e))),
     }
 }
