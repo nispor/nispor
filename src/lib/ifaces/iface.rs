@@ -132,6 +132,10 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                 nlas::State::Down => IfaceState::Down,
                 _ => IfaceState::Unknown,
             };
+            if iface_state.index == 1 {
+                // Lookpback should be always UP
+                iface_state.state = IfaceState::Up;
+            }
         } else if let Nla::Master(master) = nla {
             iface_state.master = Some(format!("{}", master));
         } else if let Nla::Link(l) = nla {
