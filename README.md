@@ -57,5 +57,6 @@ varlink call unix:/run/nispor/nispor.so/info.nispor.Get
  * SR-IOV
  * Route
  * Route rule
+ * TUN/TAP
  * Traffic control
  * Manpage for npc/npd
