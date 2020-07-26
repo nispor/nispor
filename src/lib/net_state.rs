@@ -11,6 +11,6 @@ pub struct NetState {
 
 pub fn get_state() -> Result<NetState, NisporError> {
     Ok(NetState {
-        ifaces: get_ifaces(),
+        ifaces: get_ifaces()?,
     })
 }

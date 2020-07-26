@@ -5,16 +5,17 @@ use crate::ifaces::iface::parse_nl_msg_to_iface;
 use crate::ifaces::vlan::vlan_iface_tidy_up;
 use crate::netlink::fill_ip_addr;
 use crate::Iface;
+use crate::NisporError;
 use futures::stream::TryStreamExt;
 use netlink_packet_route::rtnl::constants::AF_BRIDGE;
 use netlink_sys::constants::RTEXT_FILTER_BRVLAN_COMPRESSED;
-use rtnetlink::{new_connection, Error};
+use rtnetlink::new_connection;
 use std::collections::HashMap;
 use tokio::runtime::Runtime;
 
-async fn _get_ifaces() -> Result<HashMap<String, Iface>, Error> {
+async fn _get_ifaces() -> Result<HashMap<String, Iface>, NisporError> {
     let mut iface_states: HashMap<String, Iface> = HashMap::new();
-    let (connection, handle, _) = new_connection().unwrap();
+    let (connection, handle, _) = new_connection()?;
     tokio::spawn(connection);
 
     let mut links = handle.link().get().execute();
@@ -39,8 +40,8 @@ async fn _get_ifaces() -> Result<HashMap<String, Iface>, Error> {
     Ok(iface_states)
 }
 
-pub(crate) fn get_ifaces() -> HashMap<String, Iface> {
-    Runtime::new().unwrap().block_on(_get_ifaces()).unwrap()
+pub(crate) fn get_ifaces() -> Result<HashMap<String, Iface>, NisporError> {
+    Ok(Runtime::new()?.block_on(_get_ifaces())?)
 }
 
 fn tidy_up(iface_states: &mut HashMap<String, Iface>) {
