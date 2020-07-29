@@ -48,10 +48,14 @@ elif [ "CHK$1" == "CHKvlan" ];then
     sudo ip link set eth1 up
     sudo ip link set eth2 up
     sudo ip link add link eth1 name eth1.101 type vlan id 101
+elif [ "CHK$1" == "CHKdummy" ];then
+    sudo ip link add dummy1 type dummy
+    sudo ip link set dummy1 up
 elif [ "CHK$1" == "CHKrm" ];then
     sudo ip link del eth1
     sudo ip link del eth2
     sudo ip link del br0
     sudo ip link del bond99
+    sudo ip link del dummy1
     sudo ip netns del tmp
 fi

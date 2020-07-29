@@ -23,6 +23,7 @@ pub enum IfaceType {
     Veth,
     Bridge,
     Vlan,
+    Dummy,
     Unknown,
     Other(String),
 }
@@ -144,6 +145,7 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         nlas::InfoKind::Veth => IfaceType::Veth,
                         nlas::InfoKind::Bridge => IfaceType::Bridge,
                         nlas::InfoKind::Vlan => IfaceType::Vlan,
+                        nlas::InfoKind::Dummy => IfaceType::Dummy,
                         nlas::InfoKind::Other(s) => IfaceType::Other(s.clone()),
                         _ => IfaceType::Other(format!("{:?}", t)),
                     };
