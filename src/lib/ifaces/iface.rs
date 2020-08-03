@@ -9,6 +9,8 @@ use crate::ifaces::bridge::BridgeInfo;
 use crate::ifaces::bridge::BridgePortInfo;
 use crate::ifaces::vlan::get_vlan_info;
 use crate::ifaces::vlan::VlanInfo;
+use crate::ifaces::vxlan::get_vxlan_info;
+use crate::ifaces::vxlan::VxlanInfo;
 use crate::Ipv4Info;
 use crate::Ipv6Info;
 use netlink_packet_route::rtnl::link::nlas;
@@ -24,6 +26,7 @@ pub enum IfaceType {
     Bridge,
     Vlan,
     Dummy,
+    Vxlan,
     Unknown,
     Other(String),
 }
@@ -92,6 +95,8 @@ pub struct Iface {
     pub bridge_port: Option<BridgePortInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vlan: Option<VlanInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vxlan: Option<VxlanInfo>,
 }
 
 pub(crate) fn get_iface_name_by_index(
@@ -145,6 +150,7 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         nlas::InfoKind::Veth => IfaceType::Veth,
                         nlas::InfoKind::Bridge => IfaceType::Bridge,
                         nlas::InfoKind::Vlan => IfaceType::Vlan,
+                        nlas::InfoKind::Vxlan => IfaceType::Vxlan,
                         nlas::InfoKind::Dummy => IfaceType::Dummy,
                         nlas::InfoKind::Other(s) => IfaceType::Other(s.clone()),
                         _ => IfaceType::Other(format!("{:?}", t)),
@@ -159,6 +165,9 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                             iface_state.bridge = get_bridge_info(&d)
                         }
                         IfaceType::Vlan => iface_state.vlan = get_vlan_info(&d),
+                        IfaceType::Vxlan => {
+                            iface_state.vxlan = get_vxlan_info(&d)
+                        }
                         _ => eprintln!(
                             "Unhandled iface type {:?}",
                             iface_state.iface_type
