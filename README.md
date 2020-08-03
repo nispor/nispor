@@ -47,11 +47,11 @@ varlink call unix:/run/nispor/nispor.so/info.nispor.Get
  * Linux Bridge
  * Linux Bridge VLAN filtering
  * VLAN
+ * VxLAN
 
 ## TODO:
  * Error handling instead of `unwrap()/panic!/etc`
  * VLAN QoS
- * VxLAN
  * Dummy
  * Veth
  * SR-IOV
