@@ -28,6 +28,12 @@ npc
 npc bond99
 ```
 
+### Print route entries
+
+```bash
+npc route
+```
+
 ### Varlink service
 
 ```bash
@@ -48,6 +54,7 @@ varlink call unix:/run/nispor/nispor.so/info.nispor.Get
  * Linux Bridge VLAN filtering
  * VLAN
  * VxLAN
+ * Route
 
 ## TODO:
  * Error handling instead of `unwrap()/panic!/etc`
@@ -55,7 +62,6 @@ varlink call unix:/run/nispor/nispor.so/info.nispor.Get
  * Dummy
  * Veth
  * SR-IOV
- * Route
  * Route rule
  * TUN/TAP
  * Traffic control

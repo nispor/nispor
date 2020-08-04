@@ -4,6 +4,7 @@ mod ip;
 mod mac;
 mod net_state;
 mod netlink;
+mod route;
 
 pub use crate::error::NisporError;
 pub use crate::ifaces::BondInfo;
@@ -26,3 +27,4 @@ pub use crate::ip::Ipv6Info;
 pub(crate) use crate::mac::parse_as_mac;
 pub use crate::net_state::get_state;
 pub use crate::net_state::NetState;
+pub use crate::route::Route;

@@ -1,3 +1,4 @@
+use netlink_packet_utils::DecodeError;
 use rtnetlink;
 
 #[derive(Debug, Clone)]
@@ -24,6 +25,15 @@ impl std::error::Error for NisporError {
 
 impl std::convert::From<rtnetlink::Error> for NisporError {
     fn from(e: rtnetlink::Error) -> Self {
+        NisporError {
+            kind: ErrorKind::NetlinkError,
+            msg: e.to_string(),
+        }
+    }
+}
+
+impl std::convert::From<DecodeError> for NisporError {
+    fn from(e: DecodeError) -> Self {
         NisporError {
             kind: ErrorKind::NetlinkError,
             msg: e.to_string(),

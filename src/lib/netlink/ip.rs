@@ -12,8 +12,8 @@ use std::collections::HashMap;
 use std::net::Ipv4Addr;
 use std::net::Ipv6Addr;
 
-const AF_INET: u8 = 2;
-const AF_INET6: u8 = 10;
+pub(crate) const AF_INET: u8 = 2;
+pub(crate) const AF_INET6: u8 = 10;
 
 pub(crate) fn fill_ip_addr(
     iface_states: &mut HashMap<String, Iface>,
