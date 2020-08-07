@@ -64,57 +64,99 @@ impl From<u16> for BridgeVlanProtocol {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
-pub struct BridgeVlanFilteringInfo {
-}
+pub struct BridgeVlanFilteringInfo {}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct BridgeInfo {
     pub slaves: Vec<String>,
-    pub ageing_time: u32,
-    pub bridge_id: String,
-    pub group_fwd_mask: u16,
-    pub root_id: String,
-    pub root_port: u16,
-    pub root_path_cost: u32,
-    pub topology_change: bool,
-    pub topology_change_detected: bool,
-    pub tcn_timer: u64,
-    pub topology_change_timer: u64,
-    pub gc_timer: u64,
-    pub group_addr: String,
-    pub nf_call_iptables: bool,
-    pub nf_call_ip6tables: bool,
-    pub nf_call_arptables: bool,
-    pub vlan_filtering: bool,
-    pub vlan_protocol: BridgeVlanProtocol,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ageing_time: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bridge_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub group_fwd_mask: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub root_id: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub root_port: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub root_path_cost: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub topology_change: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub topology_change_detected: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tcn_timer: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub topology_change_timer: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub gc_timer: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub group_addr: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub nf_call_iptables: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub nf_call_ip6tables: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub nf_call_arptables: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vlan_filtering: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vlan_protocol: Option<BridgeVlanProtocol>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_pvid: Option<u16>,
-    pub vlan_stats_enabled: bool,
-    pub vlan_stats_per_host: bool,
-    pub stp_state: BridgeStpState,
-    pub hello_time: u32,
-    pub hello_timer: u64,
-    pub forward_delay: u32,
-    pub max_age: u32,
-    pub priority: u16,
-    pub multi_bool_opt: u64,            // not avaiable in sysfs yet
-    pub multicast_router: BridgePortMulticastRouterType,
-    pub multicast_snooping: bool,
-    pub multicast_query_use_ifaddr: bool,
-    pub multicast_querier: bool,
-    pub multicast_stats_enabled: bool,
-    pub multicast_hash_elasticity: u32,
-    pub multicast_hash_max: u32,
-    pub multicast_last_member_count: u32,
-    pub multicast_last_member_interval: u64,
-    pub multicast_startup_query_count: u32,
-    pub multicast_membership_interval: u64,
-    pub multicast_querier_interval: u64,
-    pub multicast_query_interval: u64,
-    pub multicast_query_response_interval: u64,
-    pub multicast_startup_query_interval: u64,
-    pub multicast_igmp_version: u8,
-    pub multicast_mld_version: u8,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vlan_stats_enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vlan_stats_per_host: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stp_state: Option<BridgeStpState>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hello_time: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hello_timer: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub forward_delay: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_age: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub priority: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multi_bool_opt: Option<u64>, // does not avaiable in sysfs yet
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_router: Option<BridgePortMulticastRouterType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_snooping: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_query_use_ifaddr: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_querier: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_stats_enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_hash_elasticity: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_hash_max: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_last_member_count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_last_member_interval: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_startup_query_count: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_membership_interval: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_querier_interval: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_query_interval: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_query_response_interval: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_startup_query_interval: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_igmp_version: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_mld_version: Option<u8>,
 }
 
 #[repr(u8)]
