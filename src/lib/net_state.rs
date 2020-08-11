@@ -13,8 +13,7 @@ pub struct NetState {
 }
 
 pub fn get_state() -> Result<NetState, NisporError> {
-    Ok(NetState {
-        ifaces: get_ifaces()?,
-        routes: get_routes()?,
-    })
+    let ifaces = get_ifaces()?;
+    let routes = get_routes(&ifaces)?;
+    Ok(NetState { ifaces, routes })
 }

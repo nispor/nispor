@@ -1,3 +1,4 @@
+use crate::ifaces::Iface;
 use crate::netlink::parse_as_ipv4;
 use crate::netlink::parse_as_ipv6;
 use crate::netlink::parse_as_u32;
@@ -22,6 +23,7 @@ use netlink_packet_utils::traits::Parseable;
 use rtnetlink::new_connection;
 use rtnetlink::IpVersion;
 use serde_derive::{Deserialize, Serialize};
+use std::collections::HashMap;
 use tokio::runtime::Runtime;
 
 const USER_HZ: u32 = 100;
@@ -256,27 +258,38 @@ impl Default for RouteType {
     }
 }
 
-pub(crate) fn get_routes() -> Result<Vec<Route>, NisporError> {
-    Ok(Runtime::new()?.block_on(_get_routes())?)
+pub(crate) fn get_routes(
+    ifaces: &HashMap<String, Iface>,
+) -> Result<Vec<Route>, NisporError> {
+    let mut ifindex_to_name = HashMap::new();
+    for iface in ifaces.values() {
+        ifindex_to_name.insert(format!("{}", iface.index), iface.name.clone());
+    }
+    Ok(Runtime::new()?.block_on(_get_routes(&ifindex_to_name))?)
 }
 
-async fn _get_routes() -> Result<Vec<Route>, NisporError> {
+async fn _get_routes(
+    ifindex_to_name: &HashMap<String, String>,
+) -> Result<Vec<Route>, NisporError> {
     let mut routes = Vec::new();
     let (connection, handle, _) = new_connection()?;
     tokio::spawn(connection);
 
     let mut links = handle.route().get(IpVersion::V6).execute();
     while let Some(rt_msg) = links.try_next().await? {
-        routes.push(get_route(rt_msg)?);
+        routes.push(get_route(rt_msg, ifindex_to_name)?);
     }
     let mut links = handle.route().get(IpVersion::V4).execute();
     while let Some(rt_msg) = links.try_next().await? {
-        routes.push(get_route(rt_msg)?);
+        routes.push(get_route(rt_msg, ifindex_to_name)?);
     }
     Ok(routes)
 }
 
-fn get_route(route_msg: RouteMessage) -> Result<Route, NisporError> {
+fn get_route(
+    route_msg: RouteMessage,
+    ifindex_to_name: &HashMap<String, String>,
+) -> Result<Route, NisporError> {
     let mut rt = Route::default();
     let header = &route_msg.header;
     rt.address_family = header.address_family.into();
@@ -299,7 +312,13 @@ fn get_route(route_msg: RouteMessage) -> Result<Route, NisporError> {
                 ));
             }
             Nla::Oif(ref d) => {
-                rt.oif = Some(format!("{}", d));
+                rt.oif = if let Some(iface_name) =
+                    ifindex_to_name.get(&format!("{}", d))
+                {
+                    Some(iface_name.clone())
+                } else {
+                    Some(format!("{}", d))
+                }
             }
             Nla::PrefSource(ref d) => {
                 rt.prefered_src = Some(_addr_to_string(d, family));
@@ -396,7 +415,13 @@ fn get_route(route_msg: RouteMessage) -> Result<Route, NisporError> {
                 rt.uid = Some(parse_as_u32(d));
             }
             Nla::Iif(d) => {
-                rt.oif = Some(format!("{}", d));
+                rt.iif = if let Some(iface_name) =
+                    ifindex_to_name.get(&format!("{}", d))
+                {
+                    Some(iface_name.clone())
+                } else {
+                    Some(format!("{}", d))
+                }
             }
             Nla::CacheInfo(ref d) => {
                 let cache_info = CacheInfo::parse(&CacheInfoBuffer::new(d))?;
