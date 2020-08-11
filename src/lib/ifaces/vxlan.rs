@@ -1,6 +1,9 @@
 use crate::netlink::parse_vxlan_info;
+use crate::Iface;
+use crate::IfaceType;
 use netlink_packet_route::rtnl::link::nlas::InfoData;
 use serde_derive::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct VxlanInfo {
@@ -40,5 +43,30 @@ pub(crate) fn get_vxlan_info(data: &InfoData) -> Option<VxlanInfo> {
         Some(parse_vxlan_info(&raw))
     } else {
         None
+    }
+}
+
+pub(crate) fn vxlan_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
+    convert_base_iface_index_to_name(iface_states);
+}
+
+fn convert_base_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
+    let mut index_to_name = HashMap::new();
+    for iface in iface_states.values() {
+        index_to_name.insert(format!("{}", iface.index), iface.name.clone());
+    }
+    for iface in iface_states.values_mut() {
+        if iface.iface_type != IfaceType::Vxlan {
+            continue;
+        }
+        if let Some(old_vxlan_info) = &iface.vxlan {
+            if let Some(base_iface_name) =
+                index_to_name.get(&old_vxlan_info.base_iface)
+            {
+                let mut new_vxlan_info = old_vxlan_info.clone();
+                new_vxlan_info.base_iface = base_iface_name.clone();
+                iface.vxlan = Some(new_vxlan_info);
+            }
+        }
     }
 }

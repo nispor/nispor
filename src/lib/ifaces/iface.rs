@@ -163,9 +163,6 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
         name: name.clone(),
         ..Default::default()
     };
-    if name == "eth1" {
-        println!("{:?}", nl_msg);
-    }
     iface_state.index = nl_msg.header.index;
     let mut link: Option<u32> = None;
     for nla in &nl_msg.nlas {
