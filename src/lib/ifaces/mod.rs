@@ -2,6 +2,7 @@ mod bond;
 mod bridge;
 mod iface;
 mod ifaces;
+mod veth;
 mod vlan;
 mod vxlan;
 
@@ -17,7 +18,8 @@ pub use crate::ifaces::iface::Iface;
 pub use crate::ifaces::iface::IfaceState;
 pub use crate::ifaces::iface::IfaceType;
 pub use crate::ifaces::iface::MasterType;
+pub(crate) use crate::ifaces::ifaces::get_ifaces;
+pub use crate::ifaces::veth::VethInfo;
 pub use crate::ifaces::vlan::VlanInfo;
 pub use crate::ifaces::vlan::VlanProtocol;
 pub use crate::ifaces::vxlan::VxlanInfo;
-pub(crate) use crate::ifaces::ifaces::get_ifaces;

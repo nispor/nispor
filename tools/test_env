@@ -56,6 +56,8 @@ elif [ "CHK$1" == "CHKvxlan" ];then
     sudo ip link add vxlan0 type vxlan id 101 dstport 4789 dev eth1 \
         local 1.1.1.1 remote 8.8.8.8
     sudo ip link set vxlan0 up
+elif [ "CHK$1" == "CHKveth" ];then
+    create_nics
 elif [ "CHK$1" == "CHKrm" ];then
     sudo ip link del br0
     sudo ip link del bond99

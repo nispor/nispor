@@ -7,6 +7,7 @@ use crate::ifaces::bridge::get_bridge_port_info;
 use crate::ifaces::bridge::parse_bridge_vlan_info;
 use crate::ifaces::bridge::BridgeInfo;
 use crate::ifaces::bridge::BridgePortInfo;
+use crate::ifaces::veth::VethInfo;
 use crate::ifaces::vlan::get_vlan_info;
 use crate::ifaces::vlan::VlanInfo;
 use crate::ifaces::vxlan::get_vxlan_info;
@@ -137,6 +138,8 @@ pub struct Iface {
     pub vlan: Option<VlanInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vxlan: Option<VxlanInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub veth: Option<VethInfo>,
 }
 
 pub(crate) fn get_iface_name_by_index(
@@ -160,6 +163,9 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
         name: name.clone(),
         ..Default::default()
     };
+    if name == "eth1" {
+        println!("{:?}", nl_msg);
+    }
     iface_state.index = nl_msg.header.index;
     let mut link: Option<u32> = None;
     for nla in &nl_msg.nlas {
@@ -250,6 +256,13 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
             let mut new_vlan_info = old_vlan_info.clone();
             new_vlan_info.base_iface = format!("{}", base_iface_index);
             iface_state.vlan = Some(new_vlan_info);
+        }
+    }
+    if let Some(iface_index) = link {
+        if iface_state.iface_type == IfaceType::Veth {
+            iface_state.veth = Some(VethInfo {
+                peer: format!("{}", iface_index),
+            })
         }
     }
     if (nl_msg.header.flags & IFF_LOOPBACK) > 0 {
