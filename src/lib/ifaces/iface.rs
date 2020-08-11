@@ -15,6 +15,7 @@ use crate::Ipv4Info;
 use crate::Ipv6Info;
 use netlink_packet_route::rtnl::link::nlas;
 use netlink_packet_route::rtnl::LinkMessage;
+use netlink_packet_route::rtnl::IFF_LOOPBACK;
 use rtnetlink::packet::rtnl::link::nlas::Nla;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -27,6 +28,7 @@ pub enum IfaceType {
     Vlan,
     Dummy,
     Vxlan,
+    Loopback,
     Unknown,
     Other(String),
 }
@@ -215,6 +217,9 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
             new_vlan_info.base_iface = format!("{}", base_iface_index);
             iface_state.vlan = Some(new_vlan_info);
         }
+    }
+    if (nl_msg.header.flags & IFF_LOOPBACK) > 0 {
+        iface_state.iface_type = IfaceType::Loopback;
     }
     Some(iface_state)
 }
