@@ -15,7 +15,12 @@ use crate::Ipv4Info;
 use crate::Ipv6Info;
 use netlink_packet_route::rtnl::link::nlas;
 use netlink_packet_route::rtnl::LinkMessage;
-use netlink_packet_route::rtnl::IFF_LOOPBACK;
+use netlink_packet_route::rtnl::{
+    IFF_ALLMULTI, IFF_AUTOMEDIA, IFF_BROADCAST, IFF_DEBUG, IFF_DORMANT,
+    IFF_LOOPBACK, IFF_LOWER_UP, IFF_MASTER, IFF_MULTICAST, IFF_NOARP,
+    IFF_POINTOPOINT, IFF_PORTSEL, IFF_PROMISC, IFF_RUNNING, IFF_SLAVE, IFF_UP,
+};
+
 use rtnetlink::packet::rtnl::link::nlas::Nla;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -56,6 +61,35 @@ impl Default for IfaceState {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub enum IfaceFlags {
+    AllMulti,
+    AutoMedia,
+    Broadcast,
+    Debug,
+    Dormant,
+    Loopback,
+    LowerUp,
+    Master,
+    Multicast,
+    #[serde(rename = "NOARP")]
+    NoArp,
+    PoinToPoint,
+    Portsel,
+    Promisc,
+    Running,
+    Slave,
+    Up,
+    Other(u32),
+    Unknown,
+}
+
+impl Default for IfaceFlags {
+    fn default() -> Self {
+        Self::Unknown
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum MasterType {
     Bond,
     Bridge,
@@ -80,6 +114,7 @@ pub struct Iface {
     pub iface_type: IfaceType,
     pub state: IfaceState,
     pub mtu: i64,
+    pub flags: Vec<IfaceFlags>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ipv4: Option<Ipv4Info>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -220,6 +255,7 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
     if (nl_msg.header.flags & IFF_LOOPBACK) > 0 {
         iface_state.iface_type = IfaceType::Loopback;
     }
+    iface_state.flags = _parse_iface_flags(nl_msg.header.flags);
     Some(iface_state)
 }
 
@@ -259,4 +295,58 @@ fn _get_iface_state(state: &nlas::State) -> IfaceState {
         nlas::State::Unknown => IfaceState::Unknown,
         _ => IfaceState::Other(format!("{:?}", state)),
     }
+}
+
+fn _parse_iface_flags(flags: u32) -> Vec<IfaceFlags> {
+    let mut ret = Vec::new();
+    if (flags & IFF_ALLMULTI) > 0 {
+        ret.push(IfaceFlags::AllMulti)
+    }
+    if (flags & IFF_AUTOMEDIA) > 0 {
+        ret.push(IfaceFlags::AutoMedia)
+    }
+    if (flags & IFF_BROADCAST) > 0 {
+        ret.push(IfaceFlags::Broadcast)
+    }
+    if (flags & IFF_DEBUG) > 0 {
+        ret.push(IfaceFlags::Debug)
+    }
+    if (flags & IFF_DORMANT) > 0 {
+        ret.push(IfaceFlags::Dormant)
+    }
+    if (flags & IFF_LOOPBACK) > 0 {
+        ret.push(IfaceFlags::Loopback)
+    }
+    if (flags & IFF_LOWER_UP) > 0 {
+        ret.push(IfaceFlags::LowerUp)
+    }
+    if (flags & IFF_MASTER) > 0 {
+        ret.push(IfaceFlags::Master)
+    }
+    if (flags & IFF_MULTICAST) > 0 {
+        ret.push(IfaceFlags::Multicast)
+    }
+    if (flags & IFF_NOARP) > 0 {
+        ret.push(IfaceFlags::NoArp)
+    }
+    if (flags & IFF_POINTOPOINT) > 0 {
+        ret.push(IfaceFlags::PoinToPoint)
+    }
+    if (flags & IFF_PORTSEL) > 0 {
+        ret.push(IfaceFlags::Portsel)
+    }
+    if (flags & IFF_PROMISC) > 0 {
+        ret.push(IfaceFlags::Promisc)
+    }
+    if (flags & IFF_RUNNING) > 0 {
+        ret.push(IfaceFlags::Running)
+    }
+    if (flags & IFF_SLAVE) > 0 {
+        ret.push(IfaceFlags::Slave)
+    }
+    if (flags & IFF_UP) > 0 {
+        ret.push(IfaceFlags::Up)
+    }
+
+    ret
 }
