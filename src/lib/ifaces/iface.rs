@@ -42,7 +42,10 @@ impl Default for IfaceType {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum IfaceState {
     Up,
+    Dormant,
     Down,
+    LowerLayerDown,
+    Other(String),
     Unknown,
 }
 
@@ -135,11 +138,7 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
             mac_str.pop();
             iface_state.mac_address = mac_str;
         } else if let Nla::OperState(state) = nla {
-            iface_state.state = match state {
-                nlas::State::Up => IfaceState::Up,
-                nlas::State::Down => IfaceState::Down,
-                _ => IfaceState::Unknown,
-            };
+            iface_state.state = _get_iface_state(&state);
         } else if let Nla::Master(master) = nla {
             iface_state.master = Some(format!("{}", master));
         } else if let Nla::Link(l) = nla {
@@ -248,5 +247,16 @@ pub(crate) fn fill_bridge_vlan_info(
                 break;
             }
         }
+    }
+}
+
+fn _get_iface_state(state: &nlas::State) -> IfaceState {
+    match state {
+        nlas::State::Up => IfaceState::Up,
+        nlas::State::Dormant => IfaceState::Dormant,
+        nlas::State::Down => IfaceState::Down,
+        nlas::State::LowerLayerDown => IfaceState::LowerLayerDown,
+        nlas::State::Unknown => IfaceState::Unknown,
+        _ => IfaceState::Other(format!("{:?}", state)),
     }
 }
