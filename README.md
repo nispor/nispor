@@ -55,12 +55,12 @@ varlink call unix:/run/nispor/nispor.so/info.nispor.Get
  * VLAN
  * VxLAN
  * Route
+ * Dummy
+ * Veth
 
 ## TODO:
  * Error handling instead of `unwrap()/panic!/etc`
  * VLAN QoS
- * Dummy
- * Veth
  * SR-IOV
  * Route rule
  * TUN/TAP
