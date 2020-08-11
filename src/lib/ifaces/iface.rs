@@ -17,9 +17,10 @@ use crate::Ipv6Info;
 use netlink_packet_route::rtnl::link::nlas;
 use netlink_packet_route::rtnl::LinkMessage;
 use netlink_packet_route::rtnl::{
-    IFF_ALLMULTI, IFF_AUTOMEDIA, IFF_BROADCAST, IFF_DEBUG, IFF_DORMANT,
-    IFF_LOOPBACK, IFF_LOWER_UP, IFF_MASTER, IFF_MULTICAST, IFF_NOARP,
-    IFF_POINTOPOINT, IFF_PORTSEL, IFF_PROMISC, IFF_RUNNING, IFF_SLAVE, IFF_UP,
+    ARPHRD_ETHER, IFF_ALLMULTI, IFF_AUTOMEDIA, IFF_BROADCAST, IFF_DEBUG,
+    IFF_DORMANT, IFF_LOOPBACK, IFF_LOWER_UP, IFF_MASTER, IFF_MULTICAST,
+    IFF_NOARP, IFF_POINTOPOINT, IFF_PORTSEL, IFF_PROMISC, IFF_RUNNING,
+    IFF_SLAVE, IFF_UP,
 };
 
 use rtnetlink::packet::rtnl::link::nlas::Nla;
@@ -35,6 +36,7 @@ pub enum IfaceType {
     Dummy,
     Vxlan,
     Loopback,
+    Ethernet,
     Unknown,
     Other(String),
 }
@@ -163,6 +165,9 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
         name: name.clone(),
         ..Default::default()
     };
+    if nl_msg.header.link_layer_type == ARPHRD_ETHER {
+        iface_state.iface_type = IfaceType::Ethernet
+    }
     iface_state.index = nl_msg.header.index;
     let mut link: Option<u32> = None;
     for nla in &nl_msg.nlas {
