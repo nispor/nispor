@@ -2,7 +2,7 @@ use crate::netlink::parse_af_spec_bridge_info;
 use crate::netlink::parse_bridge_info;
 use crate::netlink::parse_bridge_port_info;
 use crate::Iface;
-use crate::MasterType;
+use crate::ControllerType;
 use netlink_packet_route::rtnl::link::nlas;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -68,7 +68,7 @@ pub struct BridgeVlanFilteringInfo {}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct BridgeInfo {
-    pub slaves: Vec<String>,
+    pub ports: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ageing_time: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -268,35 +268,35 @@ pub(crate) fn get_bridge_port_info(data: &[u8]) -> Option<BridgePortInfo> {
 }
 
 pub(crate) fn bridge_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
-    gen_slave_list_of_master(iface_states);
+    gen_port_list_of_controller(iface_states);
     convert_back_port_index_to_name(iface_states);
 }
 
-// TODO: This is duplicate of bond gen_slave_list_of_master()
-fn gen_slave_list_of_master(iface_states: &mut HashMap<String, Iface>) {
-    let mut master_slaves: HashMap<String, Vec<String>> = HashMap::new();
+// TODO: This is duplicate of bond gen_port_list_of_controller()
+fn gen_port_list_of_controller(iface_states: &mut HashMap<String, Iface>) {
+    let mut controller_ports: HashMap<String, Vec<String>> = HashMap::new();
     for iface in iface_states.values() {
-        if iface.master_type == Some(MasterType::Bridge) {
-            if let Some(master) = &iface.master {
-                match master_slaves.get_mut(master) {
-                    Some(slaves) => slaves.push(iface.name.clone()),
+        if iface.controller_type == Some(ControllerType::Bridge) {
+            if let Some(controller) = &iface.controller {
+                match controller_ports.get_mut(controller) {
+                    Some(ports) => ports.push(iface.name.clone()),
                     None => {
-                        let mut new_slaves: Vec<String> = Vec::new();
-                        new_slaves.push(iface.name.clone());
-                        master_slaves.insert(master.clone(), new_slaves);
+                        let mut new_ports: Vec<String> = Vec::new();
+                        new_ports.push(iface.name.clone());
+                        controller_ports.insert(controller.clone(), new_ports);
                     }
                 };
             }
         }
     }
-    for (master, slaves) in master_slaves.iter_mut() {
-        if let Some(master_iface) = iface_states.get_mut(master) {
-            if let Some(old_bridge_info) = &master_iface.bridge {
-                // TODO: Need better way to update this slave list.
+    for (controller, ports) in controller_ports.iter_mut() {
+        if let Some(controller_iface) = iface_states.get_mut(controller) {
+            if let Some(old_bridge_info) = &controller_iface.bridge {
+                // TODO: Need better way to update this port list.
                 let mut new_bridge_info = old_bridge_info.clone();
-                slaves.sort();
-                new_bridge_info.slaves = slaves.clone();
-                master_iface.bridge = Some(new_bridge_info);
+                ports.sort();
+                new_bridge_info.ports = ports.clone();
+                controller_iface.bridge = Some(new_bridge_info);
             }
         }
     }
@@ -308,7 +308,7 @@ fn convert_back_port_index_to_name(iface_states: &mut HashMap<String, Iface>) {
         index_to_name.insert(format!("{}", iface.index), iface.name.clone());
     }
     for iface in iface_states.values_mut() {
-        if iface.master_type != Some(MasterType::Bridge) {
+        if iface.controller_type != Some(ControllerType::Bridge) {
             continue;
         }
         if let Some(old_port_info) = &iface.bridge_port {

@@ -1,7 +1,7 @@
 use crate::ifaces::bond::get_bond_info;
-use crate::ifaces::bond::get_bond_slave_info;
+use crate::ifaces::bond::get_bond_subordinate_info;
 use crate::ifaces::bond::BondInfo;
-use crate::ifaces::bond::BondSlaveInfo;
+use crate::ifaces::bond::BondSubordinateInfo;
 use crate::ifaces::bridge::get_bridge_info;
 use crate::ifaces::bridge::get_bridge_port_info;
 use crate::ifaces::bridge::parse_bridge_vlan_info;
@@ -72,7 +72,7 @@ pub enum IfaceFlags {
     Dormant,
     Loopback,
     LowerUp,
-    Master,
+    Controller,
     Multicast,
     #[serde(rename = "NOARP")]
     NoArp,
@@ -80,7 +80,7 @@ pub enum IfaceFlags {
     Portsel,
     Promisc,
     Running,
-    Slave,
+    Subordinate,
     Up,
     Other(u32),
     Unknown,
@@ -93,18 +93,18 @@ impl Default for IfaceFlags {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub enum MasterType {
+pub enum ControllerType {
     Bond,
     Bridge,
     Unknown,
 }
 
-impl From<&str> for MasterType {
+impl From<&str> for ControllerType {
     fn from(s: &str) -> Self {
         match s {
-            "bond" => MasterType::Bond,
-            "bridge" => MasterType::Bridge,
-            _ => MasterType::Unknown,
+            "bond" => ControllerType::Bond,
+            "bridge" => ControllerType::Bridge,
+            _ => ControllerType::Unknown,
         }
     }
 }
@@ -125,13 +125,13 @@ pub struct Iface {
     #[serde(skip_serializing_if = "String::is_empty")]
     pub mac_address: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub controller: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub controller_type: Option<ControllerType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub bond: Option<BondInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub master: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub master_type: Option<MasterType>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub bond_slave: Option<BondSlaveInfo>,
+    pub bond_subordinate: Option<BondSubordinateInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bridge: Option<BridgeInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -182,8 +182,8 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
             iface_state.mac_address = mac_str;
         } else if let Nla::OperState(state) = nla {
             iface_state.state = _get_iface_state(&state);
-        } else if let Nla::Master(master) = nla {
-            iface_state.master = Some(format!("{}", master));
+        } else if let Nla::Master(controller) = nla {
+            iface_state.controller = Some(format!("{}", controller));
         } else if let Nla::Link(l) = nla {
             link = Some(*l);
         } else if let Nla::Info(infos) = nla {
@@ -224,26 +224,27 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                     // Remove the tailing \0
                     match std::str::from_utf8(&(d.as_slice()[0..(d.len() - 1)]))
                     {
-                        Ok(master_type) => {
-                            iface_state.master_type = Some(master_type.into())
+                        Ok(controller_type) => {
+                            iface_state.controller_type =
+                                Some(controller_type.into())
                         }
                         _ => (),
                     }
                 }
             }
-            if let Some(master_type) = &iface_state.master_type {
+            if let Some(controller_type) = &iface_state.controller_type {
                 for info in infos {
                     if let nlas::Info::SlaveData(d) = info {
-                        match master_type {
-                            MasterType::Bond => {
-                                iface_state.bond_slave =
-                                    get_bond_slave_info(&d);
+                        match controller_type {
+                            ControllerType::Bond => {
+                                iface_state.bond_subordinate =
+                                    get_bond_subordinate_info(&d);
                             }
-                            MasterType::Bridge => {
+                            ControllerType::Bridge => {
                                 iface_state.bridge_port =
                                     get_bridge_port_info(&d);
                             }
-                            _ => eprintln!("Unknown master type {:?}", &d),
+                            _ => eprintln!("Unknown controller type {:?}", &d),
                         }
                     }
                 }
@@ -336,7 +337,7 @@ fn _parse_iface_flags(flags: u32) -> Vec<IfaceFlags> {
         ret.push(IfaceFlags::LowerUp)
     }
     if (flags & IFF_MASTER) > 0 {
-        ret.push(IfaceFlags::Master)
+        ret.push(IfaceFlags::Controller)
     }
     if (flags & IFF_MULTICAST) > 0 {
         ret.push(IfaceFlags::Multicast)
@@ -357,7 +358,7 @@ fn _parse_iface_flags(flags: u32) -> Vec<IfaceFlags> {
         ret.push(IfaceFlags::Running)
     }
     if (flags & IFF_SLAVE) > 0 {
-        ret.push(IfaceFlags::Slave)
+        ret.push(IfaceFlags::Subordinate)
     }
     if (flags & IFF_UP) > 0 {
         ret.push(IfaceFlags::Up)

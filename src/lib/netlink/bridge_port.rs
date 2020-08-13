@@ -145,7 +145,7 @@ fn parse_brport_backup_port(data: &[u8], cost_info: &mut BridgePortInfo) {
     cost_info.backup_port = format!("{}", parse_as_u32(data));
 }
 
-const NLA_SLAVE_PARSE_FUNS: &[fn(&[u8], &mut BridgePortInfo)] = &[
+const NLA_PORT_PARSE_FUNS: &[fn(&[u8], &mut BridgePortInfo)] = &[
     parse_void_port_info, // IFLA_BRPORT_UNSPEC
     parse_brport_state,
     parse_brport_priority,
@@ -198,7 +198,7 @@ pub(crate) fn parse_bridge_port_info(raw: &[u8]) -> BridgePortInfo {
             std::slice::from_raw_parts(data_ptr, hdr.nla_len - NL_ATTR_HDR_LEN)
         };
         if let Some(func) =
-            NLA_SLAVE_PARSE_FUNS.get::<usize>(hdr.nla_type.into())
+            NLA_PORT_PARSE_FUNS.get::<usize>(hdr.nla_type.into())
         {
             func(data, &mut port_info);
         } else {

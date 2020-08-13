@@ -1,8 +1,8 @@
 use crate::ifaces::Iface;
 use crate::netlink::parse_bond_info;
-use crate::netlink::parse_bond_slave_info;
+use crate::netlink::parse_bond_subordinate_info;
+use crate::ControllerType;
 use crate::IfaceType;
-use crate::MasterType;
 use netlink_packet_route::rtnl::link::nlas;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -10,27 +10,28 @@ use std::mem::transmute;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct BondInfo {
-    pub slaves: Vec<String>,
+    pub subordinates: Vec<String>,
     pub mode: String,
     pub options: HashMap<String, String>,
 }
 
 #[repr(u8)]
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub enum BondSlaveState {
+pub enum BondSubordinateState {
     Active,
     Backup,
     Unknown = std::u8::MAX,
 }
 
-const _LAST_BOND_SLAVE_STATE: BondSlaveState = BondSlaveState::Backup;
+const _LAST_BOND_SUBORDINATE_STATE: BondSubordinateState =
+    BondSubordinateState::Backup;
 
-impl From<u8> for BondSlaveState {
+impl From<u8> for BondSubordinateState {
     fn from(d: u8) -> Self {
-        if d <= _LAST_BOND_SLAVE_STATE as u8 {
+        if d <= _LAST_BOND_SUBORDINATE_STATE as u8 {
             unsafe { transmute(d as u8) }
         } else {
-            BondSlaveState::Unknown
+            BondSubordinateState::Unknown
         }
     }
 }
@@ -58,8 +59,8 @@ impl From<u8> for BondMiiStatus {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct BondSlaveInfo {
-    pub slave_state: BondSlaveState,
+pub struct BondSubordinateInfo {
+    pub subordinate_state: BondSubordinateState,
     pub mii_status: BondMiiStatus,
     pub link_failure_count: u32,
     pub perm_hwaddr: String,
@@ -84,7 +85,7 @@ pub(crate) fn get_bond_info(data: &nlas::InfoData) -> Option<BondInfo> {
         };
         bond_info.remove("mode");
         Some(BondInfo {
-            slaves: Vec::new(), // TODO
+            subordinates: Vec::new(), // TODO
             mode: mode,
             options: bond_info,
         })
@@ -93,45 +94,53 @@ pub(crate) fn get_bond_info(data: &nlas::InfoData) -> Option<BondInfo> {
     }
 }
 
-pub(crate) fn get_bond_slave_info(data: &[u8]) -> Option<BondSlaveInfo> {
-    Some(parse_bond_slave_info(data))
+pub(crate) fn get_bond_subordinate_info(
+    data: &[u8],
+) -> Option<BondSubordinateInfo> {
+    Some(parse_bond_subordinate_info(data))
 }
 
 pub(crate) fn bond_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
-    gen_slave_list_of_master(iface_states);
-    active_slave_index_to_iface_name(iface_states);
+    gen_subordinate_list_of_controller(iface_states);
+    active_subordinate_index_to_iface_name(iface_states);
 }
 
-fn gen_slave_list_of_master(iface_states: &mut HashMap<String, Iface>) {
-    let mut master_slaves: HashMap<String, Vec<String>> = HashMap::new();
+fn gen_subordinate_list_of_controller(
+    iface_states: &mut HashMap<String, Iface>,
+) {
+    let mut controller_subordinates: HashMap<String, Vec<String>> =
+        HashMap::new();
     for iface in iface_states.values() {
-        if iface.master_type == Some(MasterType::Bond) {
-            if let Some(master) = &iface.master {
-                match master_slaves.get_mut(master) {
-                    Some(slaves) => slaves.push(iface.name.clone()),
+        if iface.controller_type == Some(ControllerType::Bond) {
+            if let Some(controller) = &iface.controller {
+                match controller_subordinates.get_mut(controller) {
+                    Some(subordinates) => subordinates.push(iface.name.clone()),
                     None => {
-                        let mut new_slaves: Vec<String> = Vec::new();
-                        new_slaves.push(iface.name.clone());
-                        master_slaves.insert(master.clone(), new_slaves);
+                        let mut new_subordinates: Vec<String> = Vec::new();
+                        new_subordinates.push(iface.name.clone());
+                        controller_subordinates
+                            .insert(controller.clone(), new_subordinates);
                     }
                 };
             }
         }
     }
-    for (master, slaves) in master_slaves.iter_mut() {
-        if let Some(master_iface) = iface_states.get_mut(master) {
-            if let Some(old_bond_info) = &master_iface.bond {
-                // TODO: Need better way to update this slave list.
+    for (controller, subordinates) in controller_subordinates.iter_mut() {
+        if let Some(controller_iface) = iface_states.get_mut(controller) {
+            if let Some(old_bond_info) = &controller_iface.bond {
+                // TODO: Need better way to update this subordinate list.
                 let mut new_bond_info = old_bond_info.clone();
-                slaves.sort();
-                new_bond_info.slaves = slaves.clone();
-                master_iface.bond = Some(new_bond_info);
+                subordinates.sort();
+                new_bond_info.subordinates = subordinates.clone();
+                controller_iface.bond = Some(new_bond_info);
             }
         }
     }
 }
 
-fn active_slave_index_to_iface_name(iface_states: &mut HashMap<String, Iface>) {
+fn active_subordinate_index_to_iface_name(
+    iface_states: &mut HashMap<String, Iface>,
+) {
     let mut index_to_name = HashMap::new();
     for iface in iface_states.values() {
         index_to_name.insert(format!("{}", iface.index), iface.name.clone());
@@ -142,10 +151,10 @@ fn active_slave_index_to_iface_name(iface_states: &mut HashMap<String, Iface>) {
         }
         if let Some(old_bond_info) = &iface.bond {
             let mut bond_options = old_bond_info.options.clone();
-            if let Some(index) = bond_options.get("active_slave") {
+            if let Some(index) = bond_options.get("active_subordinate") {
                 if let Some(iface_name) = index_to_name.get(index) {
                     bond_options
-                        .insert("active_slave".into(), iface_name.into());
+                        .insert("active_subordinate".into(), iface_name.into());
                 }
             }
             let mut bond_info = old_bond_info.clone();

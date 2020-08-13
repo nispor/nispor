@@ -47,7 +47,7 @@ pub(crate) fn get_ifaces() -> Result<HashMap<String, Iface>, NisporError> {
 }
 
 fn tidy_up(iface_states: &mut HashMap<String, Iface>) {
-    master_iface_index_to_name(iface_states);
+    controller_iface_index_to_name(iface_states);
     bond_iface_tidy_up(iface_states);
     bridge_iface_tidy_up(iface_states);
     vlan_iface_tidy_up(iface_states);
@@ -55,15 +55,15 @@ fn tidy_up(iface_states: &mut HashMap<String, Iface>) {
     veth_iface_tidy_up(iface_states);
 }
 
-fn master_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
+fn controller_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
     let mut index_to_name = HashMap::new();
     for iface in iface_states.values() {
         index_to_name.insert(format!("{}", iface.index), iface.name.clone());
     }
     for iface in iface_states.values_mut() {
-        if let Some(master) = &iface.master {
-            if let Some(name) = index_to_name.get(master) {
-                iface.master = Some(name.to_string());
+        if let Some(controller) = &iface.controller {
+            if let Some(name) = index_to_name.get(controller) {
+                iface.controller = Some(name.to_string());
             }
         }
     }

@@ -1,7 +1,7 @@
 interface info.nispor
 
 type BondInfo (
-    slaves: []string,
+    subordinates: []string,
     mode: []string,
     options: [string]string
 )
@@ -12,7 +12,7 @@ type BridgeInfo (
     forward_delay: int,
     max_age: int,
     priority: int,
-    slaves: []string,
+    subordinates: []string,
     ageing_time: int,
     bridge_id: string,
     group_fwd_mask: int,
@@ -133,12 +133,12 @@ type Iface (
     state: (Up, Down, Unknown),
     mtu: int,
     ?bond: BondInfo,
-    ?bond_slave: [string]string,
+    ?bond_subordinate: [string]string,
     ?bridge: BridgeInfo,
     ?bridge_port: BridgePortInfo,
     ?vlan: VlanInfo,
-    ?master: string,
-    ?master_type: (Bond, Unknown),
+    ?controller: string,
+    ?controller_type: (Bond, Unknown),
     ?ipv4: Ipv4Info,
     ?ipv6: Ipv6Info
 )

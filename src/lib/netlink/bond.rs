@@ -1,12 +1,12 @@
-use crate::netlink::nla::parse_nla_header;
-use crate::netlink::nla::NL_ATTR_HDR_LEN;
-use crate::netlink::nla::parse_as_u8;
 use crate::netlink::nla::parse_as_u16;
 use crate::netlink::nla::parse_as_u32;
+use crate::netlink::nla::parse_as_u8;
+use crate::netlink::nla::parse_nla_header;
+use crate::netlink::nla::NL_ATTR_HDR_LEN;
 use crate::parse_as_mac;
 use crate::BondMiiStatus;
-use crate::BondSlaveInfo;
-use crate::BondSlaveState;
+use crate::BondSubordinateInfo;
+use crate::BondSubordinateState;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::convert::TryInto;
@@ -148,9 +148,15 @@ fn get_bond_mode(raw: &[u8]) -> u8 {
 }
 
 // TODO: Use macro to generate function below
-fn parse_active_slave(data: &[u8], mode: &u8) -> Option<(String, String)> {
+fn parse_active_subordinate(
+    data: &[u8],
+    mode: &u8,
+) -> Option<(String, String)> {
     if [BOND_MODE_ACTIVEBACKUP, BOND_MODE_ALB, BOND_MODE_TLB].contains(mode) {
-        Some(("active_slave".into(), format!("{}", parse_as_u32(data))))
+        Some((
+            "active_subordinate".into(),
+            format!("{}", parse_as_u32(data)),
+        ))
     } else {
         None
     }
@@ -291,17 +297,17 @@ fn parse_num_peer_notif(data: &[u8], mode: &u8) -> Option<(String, String)> {
     }
 }
 
-const ALL_SLAVES_ACTIVE_VALUES: &[&str] = &["dropped", "delivered"];
+const ALL_SUBORDINATES_ACTIVE_VALUES: &[&str] = &["dropped", "delivered"];
 
-fn parse_all_slaves_active(
+fn parse_all_subordinates_active(
     data: &[u8],
     _mode: &u8,
 ) -> Option<(String, String)> {
     let i: usize = parse_as_u8(data).into();
-    if let Some(value) = ALL_SLAVES_ACTIVE_VALUES.get(i) {
-        Some(("all_slaves_active".into(), value.to_string()))
+    if let Some(value) = ALL_SUBORDINATES_ACTIVE_VALUES.get(i) {
+        Some(("all_subordinates_active".into(), value.to_string()))
     } else {
-        Some(("all_slaves_active".into(), format!("unknown: {}", i)))
+        Some(("all_subordinates_active".into(), format!("unknown: {}", i)))
     }
 }
 
@@ -321,10 +327,13 @@ fn parse_lp_interval(data: &[u8], mode: &u8) -> Option<(String, String)> {
     }
 }
 
-fn parse_packets_per_slave(data: &[u8], mode: &u8) -> Option<(String, String)> {
+fn parse_packets_per_subordinate(
+    data: &[u8],
+    mode: &u8,
+) -> Option<(String, String)> {
     if *mode == BOND_MODE_ROUNDROBIN {
         Some((
-            "packets_per_slave".into(),
+            "packets_per_subordinate".into(),
             format!("{}", parse_as_u32(data)),
         ))
     } else {
@@ -404,7 +413,7 @@ fn parse_peer_notif_delay(data: &[u8], _mode: &u8) -> Option<(String, String)> {
 const NLA_PARSE_FUNS: &[fn(&[u8], &u8) -> Option<(String, String)>] = &[
     parse_void, // IFLA_BOND_UNSPEC
     parse_void, // IFLA_BOND_MODE
-    parse_active_slave,
+    parse_active_subordinate,
     parse_miimon,
     parse_updelay,
     parse_downdelay,
@@ -419,10 +428,10 @@ const NLA_PARSE_FUNS: &[fn(&[u8], &u8) -> Option<(String, String)>] = &[
     parse_xmit_hash_policy,
     parse_resend_igmp,
     parse_num_peer_notif,
-    parse_all_slaves_active,
+    parse_all_subordinates_active,
     parse_min_links,
     parse_lp_interval,
-    parse_packets_per_slave,
+    parse_packets_per_subordinate,
     parse_ad_lacp_rate,
     parse_ad_select,
     parse_void, // IFLA_BOND_AD_INFO, handled by parse_ad_info().
@@ -502,10 +511,10 @@ const IFLA_BOND_SLAVE_AD_AGGREGATOR_ID: u16 = 6;
 const IFLA_BOND_SLAVE_AD_ACTOR_OPER_PORT_STATE: u16 = 7;
 const IFLA_BOND_SLAVE_AD_PARTNER_OPER_PORT_STATE: u16 = 8;
 
-pub(crate) fn parse_bond_slave_info(raw: &[u8]) -> BondSlaveInfo {
+pub(crate) fn parse_bond_subordinate_info(raw: &[u8]) -> BondSubordinateInfo {
     let mut i: usize = 0;
 
-    let mut slave_state = BondSlaveState::Unknown;
+    let mut subordinate_state = BondSubordinateState::Unknown;
     let mut mii_status = BondMiiStatus::Unknown;
     let mut link_failure_count = std::u32::MAX;
     let mut perm_hwaddr = String::new();
@@ -524,7 +533,9 @@ pub(crate) fn parse_bond_slave_info(raw: &[u8]) -> BondSlaveInfo {
             slice::from_raw_parts(data_ptr, hdr.nla_len - NL_ATTR_HDR_LEN)
         };
         match hdr.nla_type {
-            IFLA_BOND_SLAVE_STATE => slave_state = parse_as_u8(data).into(),
+            IFLA_BOND_SLAVE_STATE => {
+                subordinate_state = parse_as_u8(data).into()
+            }
             IFLA_BOND_SLAVE_MII_STATUS => mii_status = parse_as_u8(data).into(),
             IFLA_BOND_SLAVE_LINK_FAILURE_COUNT => {
                 link_failure_count = parse_as_u32(data)
@@ -549,8 +560,8 @@ pub(crate) fn parse_bond_slave_info(raw: &[u8]) -> BondSlaveInfo {
         i = i + hdr.nla_len;
     }
 
-    BondSlaveInfo {
-        slave_state,
+    BondSubordinateInfo {
+        subordinate_state,
         mii_status,
         link_failure_count,
         perm_hwaddr,
