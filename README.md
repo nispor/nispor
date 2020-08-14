@@ -66,3 +66,4 @@ varlink call unix:/run/nispor/nispor.so/info.nispor.Get
  * TUN/TAP
  * Traffic control
  * Manpage for npc/npd
+ * pkgconfig file for nispor C library

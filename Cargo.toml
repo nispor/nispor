@@ -3,5 +3,5 @@ members = [
     "src/varlink",
     "src/lib",
     "src/cli",
-    "src/python",
+    "src/clib",
 ]

@@ -7,6 +7,12 @@ pub enum ErrorKind {
     NisporBug,
 }
 
+impl std::fmt::Display for ErrorKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct NisporError {
     pub kind: ErrorKind,

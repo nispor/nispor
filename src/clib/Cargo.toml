@@ -1,0 +1,17 @@
+[package]
+name = "nispor-clib"
+description = "Nispor C binding"
+version = "0.2.1"
+authors = ["Gris Ge <fge@redhat.com>"]
+license = "Apache-2.0"
+edition = "2018"
+
+[lib]
+name = "nispor"
+path = "lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+nispor = { path = "../lib" }
+libc = "0.2.74"
+serde_json = "1.0"
