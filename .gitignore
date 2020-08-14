@@ -2,3 +2,4 @@
 *.swp
 Cargo.lock
 tags
+__pycache__

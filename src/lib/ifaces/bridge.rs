@@ -64,9 +64,6 @@ impl From<u16> for BridgeVlanProtocol {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
-pub struct BridgeVlanFilteringInfo {}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct BridgeInfo {
     pub ports: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
