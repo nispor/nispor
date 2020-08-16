@@ -12,8 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .base_iface import NisporBaseIface
+from .bond import NisporBond
+from .bond import NisporBondSubordinate
+from .bridge import NisporBridge
+from .bridge import NisporBridgePort
 from .clib_wrapper import NisporError
 from .clib_wrapper import get_state_json
+from .iface import NisporIfaceState
+from .route import NisporRouteState
 from .state import get_state
+from .veth import NisporVeth
+from .vlan import NisporVlan
+from .vxlan import NisporVxlan
+
 
 __all__ = []
