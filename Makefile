@@ -25,20 +25,18 @@ SYSTEMD_SERVICE_FILE=src/varlink/systemd/nispor.service
 SYSTEMD_SOCKET_FILE=src/varlink/systemd/nispor.socket
 PREFIX ?= /usr/local
 
-libdir.x86_64 = lib64
-libdir.i686   = lib
-MACHINE = $(shell uname -m)
-LIBDIR ?= $(PREFIX)/$(libdir.$(MACHINE))
+CPU_BITS = $(shell getconf LONG_BIT)
+ifeq ($(CPU_BITS), 32)
+    LIBDIR ?= $(PREFIX)/lib
+else
+    LIBDIR ?= $(PREFIX)/lib$(CPU_BITS)
+endif
 
 INCLUDE_DIR ?= $(PREFIX)/include
 
 SKIP_PYTHON_INSTALL ?=0
 
 all: $(VARLINK_SRV_EXEC_DEBUG) $(CLI_EXEC_DEBUG) \
-    $(VARLINK_SRV_EXEC_RELEASE) $(CLI_EXEC_RELEASE)
-
-# Always invoke cargo build
-.PHONY: $(VARLINK_SRV_EXEC_DEBUG) $(CLI_EXEC_DEBUG) \
     $(VARLINK_SRV_EXEC_RELEASE) $(CLI_EXEC_RELEASE)
 
 SYSTEMD_SYS_UNIT_DIR ?= $(shell \
