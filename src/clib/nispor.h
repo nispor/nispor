@@ -22,10 +22,10 @@
 extern "C" {
 #endif
 
-#define NISPOR_VERSION              "0.2.1"
+#define NISPOR_VERSION              "0.3.0"
 #define NISPOR_VERSION_MAJOR        0
-#define NISPOR_VERSION_MINOR        2
-#define NISPOR_VERSION_MICRO        1
+#define NISPOR_VERSION_MINOR        3
+#define NISPOR_VERSION_MICRO        0
 
 #define NISPOR_PASS                 0
 #define NISPOR_FAIL                 1

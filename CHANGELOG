@@ -1,4 +1,17 @@
 # Changelog
+## [0.3.0] - 2020-08-16
+
+### New features
+ * C binding of nispor
+ * Python binding is wrapper from C binding, hence does not need
+   rust-pyo3 any more
+ * Python binding now support setuptools.
+
+### Break changes
+ * The python function `nispor.get_state()` is returning a object.
+   not, rather than json string.
+   The new function `nispor.get_state_json()` is returned the json string.
+
 ## [0.2.0] - 2020-08-11
 ### New features
  * Veth
