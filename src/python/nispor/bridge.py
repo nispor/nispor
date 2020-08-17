@@ -59,8 +59,8 @@ class NisporBridgePort(NisporBaseSubordinateIface):
         self._sub_info = info.get("bridge_port")
         self._vlans = None
         if self._sub_info:
+            self._vlans = []
             for vlan in self._sub_info.get("vlans", []):
-                self._vlans = []
                 self._vlans.append(
                     NisporBridgePortVlan(
                         vlan.get("vid"),
