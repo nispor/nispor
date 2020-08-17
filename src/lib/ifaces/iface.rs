@@ -10,6 +10,10 @@ use crate::ifaces::bridge::BridgePortInfo;
 use crate::ifaces::veth::VethInfo;
 use crate::ifaces::vlan::get_vlan_info;
 use crate::ifaces::vlan::VlanInfo;
+use crate::ifaces::vrf::get_vrf_info;
+use crate::ifaces::vrf::get_vrf_subordinate_info;
+use crate::ifaces::vrf::VrfInfo;
+use crate::ifaces::vrf::VrfSubordinateInfo;
 use crate::ifaces::vxlan::get_vxlan_info;
 use crate::ifaces::vxlan::VxlanInfo;
 use crate::Ipv4Info;
@@ -37,6 +41,7 @@ pub enum IfaceType {
     Vxlan,
     Loopback,
     Ethernet,
+    Vrf,
     Unknown,
     Other(String),
 }
@@ -96,6 +101,8 @@ impl Default for IfaceFlags {
 pub enum ControllerType {
     Bond,
     Bridge,
+    Vrf,
+    Other(String),
     Unknown,
 }
 
@@ -104,7 +111,8 @@ impl From<&str> for ControllerType {
         match s {
             "bond" => ControllerType::Bond,
             "bridge" => ControllerType::Bridge,
-            _ => ControllerType::Unknown,
+            "vrf" => ControllerType::Vrf,
+            _ => ControllerType::Other(s.to_string()),
         }
     }
 }
@@ -142,6 +150,10 @@ pub struct Iface {
     pub vxlan: Option<VxlanInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub veth: Option<VethInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vrf: Option<VrfInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vrf_subordinate: Option<VrfSubordinateInfo>,
 }
 
 pub(crate) fn get_iface_name_by_index(
@@ -196,6 +208,7 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         nlas::InfoKind::Vlan => IfaceType::Vlan,
                         nlas::InfoKind::Vxlan => IfaceType::Vxlan,
                         nlas::InfoKind::Dummy => IfaceType::Dummy,
+                        nlas::InfoKind::Vrf => IfaceType::Vrf,
                         nlas::InfoKind::Other(s) => IfaceType::Other(s.clone()),
                         _ => IfaceType::Other(format!("{:?}", t)),
                     };
@@ -212,6 +225,7 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         IfaceType::Vxlan => {
                             iface_state.vxlan = get_vxlan_info(&d)
                         }
+                        IfaceType::Vrf => iface_state.vrf = get_vrf_info(&d),
                         _ => eprintln!(
                             "Unhandled iface type {:?}",
                             iface_state.iface_type
@@ -244,7 +258,14 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                                 iface_state.bridge_port =
                                     get_bridge_port_info(&d);
                             }
-                            _ => eprintln!("Unknown controller type {:?}", &d),
+                            ControllerType::Vrf => {
+                                iface_state.vrf_subordinate =
+                                    get_vrf_subordinate_info(&d);
+                            }
+                            _ => eprintln!(
+                                "Unknown controller type {:?}",
+                                controller_type
+                            ),
                         }
                     }
                 }

@@ -4,6 +4,7 @@ mod iface;
 mod ifaces;
 mod veth;
 mod vlan;
+mod vrf;
 mod vxlan;
 
 pub use crate::ifaces::bond::BondInfo;
@@ -22,4 +23,6 @@ pub(crate) use crate::ifaces::ifaces::get_ifaces;
 pub use crate::ifaces::veth::VethInfo;
 pub use crate::ifaces::vlan::VlanInfo;
 pub use crate::ifaces::vlan::VlanProtocol;
+pub use crate::ifaces::vrf::VrfInfo;
+pub use crate::ifaces::vrf::VrfSubordinateInfo;
 pub use crate::ifaces::vxlan::VxlanInfo;

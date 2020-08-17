@@ -47,6 +47,9 @@ PYTHON3_SITE_DIR ?=$(shell \
 		"from distutils.sysconfig import get_python_lib; \
 		 print(get_python_lib())")
 
+# Always invoke cargo build for debug
+.PHONY: $(VARLINK_SRV_EXEC_DEBUG) $(CLI_EXEC_DEBUG)
+
 debug: $(CLI_EXEC_DEBUG)
 	$(CLI_EXEC_DEBUG) $(ARGS)
 

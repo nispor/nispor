@@ -3,3 +3,6 @@
 Cargo.lock
 tags
 __pycache__
+src/python/nispor.egg-info
+src/python/build
+src/python/dist

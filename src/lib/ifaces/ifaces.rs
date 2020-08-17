@@ -1,4 +1,5 @@
 use crate::ifaces::bond::bond_iface_tidy_up;
+use crate::ifaces::vrf::vrf_iface_tidy_up;
 use crate::ifaces::bridge::bridge_iface_tidy_up;
 use crate::ifaces::iface::fill_bridge_vlan_info;
 use crate::ifaces::iface::parse_nl_msg_to_iface;
@@ -53,6 +54,7 @@ fn tidy_up(iface_states: &mut HashMap<String, Iface>) {
     vlan_iface_tidy_up(iface_states);
     vxlan_iface_tidy_up(iface_states);
     veth_iface_tidy_up(iface_states);
+    vrf_iface_tidy_up(iface_states);
 }
 
 fn controller_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
