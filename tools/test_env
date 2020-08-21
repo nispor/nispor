@@ -64,6 +64,16 @@ elif [ "CHK$1" == "CHKvrf" ];then
     sudo ip link set vrf0 up
     sudo ip link set dev eth1 master vrf0
     sudo ip link set eth1 up
+elif [ "CHK$1" == "CHKsriov" ];thne
+    sudo modprobe netdevsim
+    echo '1 1' | sudo tee /sys/bus/netdevsim/new_device
+    sleep 5
+    sudo ip link set eni1np1 name eth1
+    echo 2 | sudo tee /sys/class/net/eth1/device/sriov_numvfs
+    sudo ip link set eth1 vf 0 vlan 100 mac 36:f7:09:ef:95:f0
+    sudo ip link set eth1 vf 1 mac 36:f7:09:ef:95:f1
+    sudo ip link set eth1 up
+
 elif [ "CHK$1" == "CHKrm" ];then
     sudo ip link del br0
     sudo ip link del bond99
