@@ -6,6 +6,7 @@ mod veth;
 mod vlan;
 mod vrf;
 mod vxlan;
+mod sriov;
 
 pub use crate::ifaces::bond::BondInfo;
 pub use crate::ifaces::bond::BondMiiStatus;
@@ -26,3 +27,4 @@ pub use crate::ifaces::vlan::VlanProtocol;
 pub use crate::ifaces::vrf::VrfInfo;
 pub use crate::ifaces::vrf::VrfSubordinateInfo;
 pub use crate::ifaces::vxlan::VxlanInfo;
+pub use crate::ifaces::sriov::SriovInfo;

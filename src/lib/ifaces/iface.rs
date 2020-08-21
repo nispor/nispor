@@ -7,6 +7,8 @@ use crate::ifaces::bridge::get_bridge_port_info;
 use crate::ifaces::bridge::parse_bridge_vlan_info;
 use crate::ifaces::bridge::BridgeInfo;
 use crate::ifaces::bridge::BridgePortInfo;
+use crate::ifaces::sriov::get_sriov_info;
+use crate::ifaces::sriov::SriovInfo;
 use crate::ifaces::veth::VethInfo;
 use crate::ifaces::vlan::get_vlan_info;
 use crate::ifaces::vlan::VlanInfo;
@@ -154,6 +156,8 @@ pub struct Iface {
     pub vrf: Option<VrfInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vrf_subordinate: Option<VrfSubordinateInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sriov: Option<SriovInfo>,
 }
 
 pub(crate) fn get_iface_name_by_index(
@@ -182,10 +186,12 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
     }
     iface_state.index = nl_msg.header.index;
     let mut link: Option<u32> = None;
+    let mut mac_len = None;
     for nla in &nl_msg.nlas {
         if let Nla::Mtu(mtu) = nla {
             iface_state.mtu = *mtu as i64;
         } else if let Nla::Address(mac) = nla {
+            mac_len = Some(mac.len());
             let mut mac_str = String::new();
             for octet in mac.iter() {
                 mac_str.push_str(&format!("{:02X?}:", octet));
@@ -270,8 +276,11 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                     }
                 }
             }
+        } else if let Nla::VfInfoList(data) = nla {
+            if let Ok(info) = get_sriov_info(data, mac_len) {
+                iface_state.sriov = Some(info);
+            }
         } else {
-            ()
             // println!("{} {:?}", name, nla);
         }
     }

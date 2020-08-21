@@ -58,11 +58,12 @@ varlink call unix:/run/nispor/nispor.so/info.nispor.Get
  * Dummy
  * Veth
  * VRF(Virtual Routing and Forwarding)
+ * SR-IOV
 
 ## TODO:
  * Error handling instead of `unwrap()/panic!/etc`
+ * SR-IOV VF-PF relation is possible
  * VLAN QoS
- * SR-IOV
  * Route rule
  * TUN/TAP
  * Traffic control
