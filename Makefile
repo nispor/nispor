@@ -85,7 +85,7 @@ install: $(VARLINK_SRV_EXEC_RELEASE) $(CLI_EXEC_RELEASE)
 		$(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/nispor.socket
 	install -v -D -m644 $(SYSTEMD_SERVICE_FILE) \
 		$(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/nispor.service
-	install -v -D -m644 $(CLIB_SO_DEV_RELEASE) \
+	install -v -D -m755 $(CLIB_SO_DEV_RELEASE) \
 		$(DESTDIR)$(LIBDIR)/$(CLIB_SO_FULL)
 	ln -sfv $(CLIB_SO_FULL) $(DESTDIR)$(LIBDIR)/$(CLIB_SO_MAN)
 	ln -sfv $(CLIB_SO_FULL) $(DESTDIR)$(LIBDIR)/$(CLIB_SO_MIN)
