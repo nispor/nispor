@@ -54,5 +54,5 @@ Path: `src/python`
 
 ```bash
 sed -i -e 's/0.3.1/0.4.0/' \
-    Makefile src/*/Cargo.toml src/python/setup.py src/clib/.cargo/config.toml
+    Makefile src/*/Cargo.toml src/python/setup.py .cargo/config.toml
 ```

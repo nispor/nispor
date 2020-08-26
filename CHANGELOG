@@ -1,4 +1,14 @@
 # Changelog
+## [0.4.0] - 2020-08-26
+
+### New features
+ * Support SR-IOV
+ * Support VRF(Virtual Routing and Forwarding)
+
+### Bug fixes
+ * Fix the python module on linux bridge vlan filtering
+ * Include SONAME in `libnispor.so` of C binding
+
 ## [0.3.0] - 2020-08-16
 
 ### New features
