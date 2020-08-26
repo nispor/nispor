@@ -21,11 +21,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#define NISPOR_VERSION_MAJOR        @_VERSION_MAJOR@
+#define NISPOR_VERSION_MINOR        @_VERSION_MINOR@
+#define NISPOR_VERSION_MICRO        @_VERSION_MICRO@
 
-#define NISPOR_VERSION              "0.3.1"
-#define NISPOR_VERSION_MAJOR        0
-#define NISPOR_VERSION_MINOR        3
-#define NISPOR_VERSION_MICRO        1
+#define NISPOR_VERSION              \
+    ((NISPOR_VERSION_MAJOR * 10000) + \
+     (NISPOR_VERSION_MINOR * 100) + \
+     NISPOR_VERSION_MICRO)
 
 #define NISPOR_PASS                 0
 #define NISPOR_FAIL                 1

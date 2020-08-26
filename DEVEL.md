@@ -1,3 +1,20 @@
+
+<!-- vim-markdown-toc GFM -->
+
+* [Setup Test environment](#setup-test-environment)
+    * [Bond](#bond)
+    * [Bridge](#bridge)
+    * [Bridge with VLAN filtering](#bridge-with-vlan-filtering)
+    * [Clean up](#clean-up)
+* [Design](#design)
+    * [Rust module](#rust-module)
+    * [Command line tool](#command-line-tool)
+    * [Varlink service](#varlink-service)
+    * [Python binding](#python-binding)
+* [Release workflow](#release-workflow)
+
+<!-- vim-markdown-toc -->
+
 ## Setup Test environment
 
 ### Bond
@@ -32,3 +49,10 @@ Path: `src/varlink`
 ### Python binding
 
 Path: `src/python`
+
+## Release workflow
+
+```bash
+sed -i -e 's/0.3.1/0.4.0/' \
+    Makefile src/*/Cargo.toml src/python/setup.py src/clib/.cargo/config.toml
+```
