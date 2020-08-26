@@ -79,26 +79,26 @@ clean:
 	cargo clean
 
 install: $(VARLINK_SRV_EXEC_RELEASE) $(CLI_EXEC_RELEASE)
-	install -v -D -m755 $(VARLINK_SRV_EXEC_RELEASE) \
+	install -p -v -D -m755 $(VARLINK_SRV_EXEC_RELEASE) \
 		$(DESTDIR)$(PREFIX)/bin/$(VARLINK_SRV_EXEC)
-	install -v -D -m755 $(CLI_EXEC_RELEASE) \
+	install -p -v -D -m755 $(CLI_EXEC_RELEASE) \
 		$(DESTDIR)$(PREFIX)/bin/$(CLI_EXEC)
-	install -v -D -m644 $(SYSTEMD_SOCKET_FILE) \
+	install -p -v -D -m644 $(SYSTEMD_SOCKET_FILE) \
 		$(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/nispor.socket
-	install -v -D -m644 $(SYSTEMD_SERVICE_FILE) \
+	install -p -D -m644 $(SYSTEMD_SERVICE_FILE) \
 		$(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/nispor.service
-	install -v -D -m755 $(CLIB_SO_DEV_RELEASE) \
+	install -p -D -m755 $(CLIB_SO_DEV_RELEASE) \
 		$(DESTDIR)$(LIBDIR)/$(CLIB_SO_FULL)
 	ln -sfv $(CLIB_SO_FULL) $(DESTDIR)$(LIBDIR)/$(CLIB_SO_MAN)
 	ln -sfv $(CLIB_SO_FULL) $(DESTDIR)$(LIBDIR)/$(CLIB_SO_MIN)
 	ln -sfv $(CLIB_SO_FULL) $(DESTDIR)$(LIBDIR)/$(CLIB_SO_DEV)
 	if [ $(SKIP_PYTHON_INSTALL) != 1 ];then \
-	    install -v -D -d -m755 $(PYTHON_MODULE_SRC) \
+	    install -p -v -D -d -m755 $(PYTHON_MODULE_SRC) \
 		    $(DESTDIR)$(PYTHON3_SITE_DIR)/$(PYTHON_MODULE_NAME); \
-	    install -v -D -m644 $(PYTHON_MODULE_SRC)/*.py \
+	    install -p -v -D -m644 $(PYTHON_MODULE_SRC)/*.py \
 		    $(DESTDIR)$(PYTHON3_SITE_DIR)/$(PYTHON_MODULE_NAME)/; \
 	fi
-	install -v -D -m644 $(CLIB_HEADER_IN) \
+	install -p -v -D -m644 $(CLIB_HEADER_IN) \
 		$(DESTDIR)$(INCLUDE_DIR)/$(CLIB_HEADER)
 	sed -i -e 's/@_VERSION_MAJOR@/$(CLIB_VERSION_MAJOR)/' \
 		$(DESTDIR)$(INCLUDE_DIR)/$(CLIB_HEADER)
