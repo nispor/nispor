@@ -1,7 +1,8 @@
 use netlink_packet_utils::DecodeError;
 use rtnetlink;
+use serde_derive::Serialize;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub enum ErrorKind {
     NetlinkError,
     NisporBug,
@@ -13,7 +14,7 @@ impl std::fmt::Display for ErrorKind {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct NisporError {
     pub kind: ErrorKind,
     pub msg: String,
