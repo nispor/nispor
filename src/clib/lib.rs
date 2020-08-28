@@ -4,7 +4,7 @@ use serde_json;
 use std::ffi::CString;
 
 #[no_mangle]
-pub extern "C" fn nispor_state_get(
+pub extern "C" fn nispor_net_state_retrieve(
     state: *mut *mut c_char,
     err_kind: *mut *mut c_char,
     err_msg: *mut *mut c_char,
@@ -19,7 +19,7 @@ pub extern "C" fn nispor_state_get(
         *err_msg = std::ptr::null_mut();
     }
 
-    match nispor::get_state() {
+    match nispor::NetState::retrieve() {
         Ok(s) => unsafe {
             *state = CString::new(serde_json::to_string(&s).unwrap())
                 .unwrap()
@@ -36,7 +36,7 @@ pub extern "C" fn nispor_state_get(
 }
 
 #[no_mangle]
-pub extern "C" fn nispor_state_free(state: *mut c_char) {
+pub extern "C" fn nispor_net_state_free(state: *mut c_char) {
     unsafe {
         if state != std::ptr::null_mut() {
             CString::from_raw(state);

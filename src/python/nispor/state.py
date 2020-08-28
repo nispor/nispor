@@ -14,12 +14,12 @@
 
 import json
 
-from .clib_wrapper import get_state_json
+from .clib_wrapper import retrieve_net_state_json
 from .iface import NisporIfaceState
 from .route import NisporRouteState
 
 
-class NisporState:
+class NisporNetState:
     def __str__(self):
         return f"{self._info}"
 
@@ -36,6 +36,6 @@ class NisporState:
     def routes(self):
         return self._routes
 
-
-def get_state():
-    return NisporState(json.loads(get_state_json()))
+    @staticmethod
+    def retrieve():
+        return NisporNetState(json.loads(retrieve_net_state_json()))
