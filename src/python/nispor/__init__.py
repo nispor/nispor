@@ -18,10 +18,10 @@ from .bond import NisporBondSubordinate
 from .bridge import NisporBridge
 from .bridge import NisporBridgePort
 from .clib_wrapper import NisporError
-from .clib_wrapper import get_state_json
+from .clib_wrapper import retrieve_net_state_json
 from .iface import NisporIfaceState
 from .route import NisporRouteState
-from .state import get_state
+from .state import NisporNetState
 from .veth import NisporVeth
 from .vlan import NisporVlan
 from .vxlan import NisporVxlan

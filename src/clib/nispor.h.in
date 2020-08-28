@@ -34,17 +34,17 @@ extern "C" {
 #define NISPOR_FAIL                 1
 
 /**
- * nispor_state_get - Get network state
+ * nispor_net_state_retrieve - Retrieve network state
  *
  * Version:
  *      0.2
  *
  * Description:
- *      Get network state in the format of JSON.
+ *      Retrieve network state in the format of JSON.
  *
  * @state:
  *      Output pointer of char array for network state in json format.
- *      The memory should be freed by nispor_state_free().
+ *      The memory should be freed by nispor_net_state_free().
  * @err_kind:
  *      Output pointer of char array for error kind.
  *      The memory should be freed by nispor_err_kind_free().
@@ -59,9 +59,9 @@ extern "C" {
  *          * NISPOR_FAIL
  *              On failure.
  */
-int nispor_state_get(char **state, char **err_kind, char **err_msg);
+int nispor_net_state_retrieve(char **state, char **err_kind, char **err_msg);
 
-void nispor_state_free(char *state);
+void nispor_net_state_free(char *state);
 
 void nispor_err_msg_free(char *err_msg);
 

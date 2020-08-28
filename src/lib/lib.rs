@@ -25,6 +25,5 @@ pub use crate::ip::Ipv4Info;
 pub use crate::ip::Ipv6AddrInfo;
 pub use crate::ip::Ipv6Info;
 pub(crate) use crate::mac::parse_as_mac;
-pub use crate::net_state::get_state;
 pub use crate::net_state::NetState;
 pub use crate::route::Route;

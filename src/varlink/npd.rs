@@ -1,5 +1,5 @@
 use libc::umask;
-use nispor::get_state;
+use nispor::NetState;
 use std::process::exit;
 use varlink::{ListenConfig, VarlinkService};
 
@@ -25,7 +25,7 @@ struct MyInfoGrisgeNispor {}
 
 impl VarlinkInterface for MyInfoGrisgeNispor {
     fn get(&self, call: &mut dyn Call_Get) -> varlink::Result<()> {
-        match get_state() {
+        match NetState::retrieve() {
             Ok(s) => call.reply(s),
             Err(e) => call.fail(&e.msg),
         }

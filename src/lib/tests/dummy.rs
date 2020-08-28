@@ -1,4 +1,4 @@
-extern crate nispor;
+use nispor::NetState;
 
 use std::panic;
 
@@ -9,7 +9,7 @@ const IFACE_STATE: &str = "dummy1";
 #[test]
 fn test_get_iface_dummy_type() {
     with_dummy1_iface(|| {
-        if let Ok(state) = nispor::get_state() {
+        if let Ok(state) = NetState::retrieve() {
             let iface = &state.ifaces[IFACE_STATE];
             let iface_type = &iface.iface_type;
             assert_eq!(iface_type, &nispor::IfaceType::Dummy)

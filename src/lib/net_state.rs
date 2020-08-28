@@ -12,8 +12,10 @@ pub struct NetState {
     pub routes: Vec<Route>,
 }
 
-pub fn get_state() -> Result<NetState, NisporError> {
-    let ifaces = get_ifaces()?;
-    let routes = get_routes(&ifaces)?;
-    Ok(NetState { ifaces, routes })
+impl NetState {
+    pub fn retrieve() -> Result<NetState, NisporError> {
+        let ifaces = get_ifaces()?;
+        let routes = get_routes(&ifaces)?;
+        Ok(NetState { ifaces, routes })
+    }
 }
