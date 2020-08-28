@@ -1,17 +1,14 @@
 use crate::netlink::nla::parse_as_u16;
 use crate::netlink::nla::parse_as_u32;
 use crate::netlink::nla::parse_as_u8;
-use crate::netlink::nla::parse_nla_header;
-use crate::netlink::nla::NL_ATTR_HDR_LEN;
 use crate::parse_as_mac;
 use crate::BondMiiStatus;
 use crate::BondSubordinateInfo;
 use crate::BondSubordinateState;
 use std::collections::HashMap;
 use std::convert::TryFrom;
-use std::convert::TryInto;
 use std::net::Ipv4Addr;
-use std::slice;
+use netlink_packet_route::rtnl::nlas::NlasIterator;
 
 // Using the kernel constant name.
 const BOND_MODE_ROUNDROBIN: u8 = 0;
@@ -53,22 +50,21 @@ struct BondAdInfo {
 const IFLA_BOND_MODE: u16 = 1;
 const IFLA_BOND_AD_INFO: u16 = 23;
 
-fn parse_as_nested_ipv4_addr(data: &[u8]) -> Vec<Ipv4Addr> {
-    let mut i: usize = 0;
-    let mut addrs = Vec::new();
-    while i < data.len() {
-        let hdr_ptr = data.as_ptr().wrapping_offset(i.try_into().unwrap());
-        let hdr = parse_nla_header(hdr_ptr);
-        let data_ptr = data
-            .as_ptr()
-            .wrapping_offset((i + NL_ATTR_HDR_LEN).try_into().unwrap());
-        let data = unsafe {
-            slice::from_raw_parts(data_ptr, hdr.nla_len - NL_ATTR_HDR_LEN)
-        };
-        addrs.push(Ipv4Addr::new(data[0], data[1], data[2], data[3]));
-        i = i + hdr.nla_len;
+fn parse_as_nested_ipv4_addr(raw: &[u8]) -> Vec<Ipv4Addr> {
+    let mut addresses = Vec::new();
+    let nlas = NlasIterator::new(raw);
+    for nla in nlas {
+        match nla {
+            Ok(nla) => {
+                let data = nla.value();
+                addresses.push(Ipv4Addr::new(data[0], data[1], data[2], data[3]));
+            }
+            Err(e) => {
+                eprintln!("{}", e);
+            }
+        }
     }
-    addrs
+    addresses
 }
 
 fn ipv4_addr_array_to_string(addrs: &[Ipv4Addr]) -> String {
@@ -92,57 +88,59 @@ const IFLA_BOND_AD_INFO_ACTOR_KEY: u16 = 3;
 const IFLA_BOND_AD_INFO_PARTNER_KEY: u16 = 4;
 const IFLA_BOND_AD_INFO_PARTNER_MAC: u16 = 5;
 
-fn parse_ad_info(data: &[u8]) -> BondAdInfo {
-    let mut i: usize = 0;
+fn parse_ad_info(raw: &[u8]) -> BondAdInfo {
+    let nlas = NlasIterator::new(raw);
     let mut ad_info = BondAdInfo::default();
-    while i < data.len() {
-        let hdr_ptr = data.as_ptr().wrapping_offset(i.try_into().unwrap());
-        let hdr = parse_nla_header(hdr_ptr);
-        let data_ptr = data
-            .as_ptr()
-            .wrapping_offset((i + NL_ATTR_HDR_LEN).try_into().unwrap());
-        let data = unsafe {
-            slice::from_raw_parts(data_ptr, hdr.nla_len - NL_ATTR_HDR_LEN)
-        };
-        match hdr.nla_type {
-            IFLA_BOND_AD_INFO_AGGREGATOR => {
-                ad_info.aggregator = parse_as_u16(data)
+    for nla in nlas {
+        match nla {
+            Ok(nla) => {
+                match nla.kind(){
+                    IFLA_BOND_AD_INFO_AGGREGATOR => {
+                        ad_info.aggregator = parse_as_u16(nla.value())
+                    }
+                    IFLA_BOND_AD_INFO_NUM_PORTS => {
+                        ad_info.num_ports = parse_as_u16(nla.value())
+                    }
+                    IFLA_BOND_AD_INFO_ACTOR_KEY => {
+                        ad_info.actor_key = parse_as_u16(nla.value())
+                    }
+                    IFLA_BOND_AD_INFO_PARTNER_KEY => {
+                        ad_info.partner_key = parse_as_u16(nla.value())
+                    }
+                    IFLA_BOND_AD_INFO_PARTNER_MAC => {
+                        ad_info.partner_mac = parse_as_48_bits_mac(nla.value())
+                    }
+                    _ => {
+                        eprintln!("unknown nla kind {} value: {:?}", nla.kind(), nla.value());
+                    },
+                }
             }
-            IFLA_BOND_AD_INFO_NUM_PORTS => {
-                ad_info.num_ports = parse_as_u16(data)
+            Err(e) => {
+                eprintln!("{}", e);
             }
-            IFLA_BOND_AD_INFO_ACTOR_KEY => {
-                ad_info.actor_key = parse_as_u16(data)
-            }
-            IFLA_BOND_AD_INFO_PARTNER_KEY => {
-                ad_info.partner_key = parse_as_u16(data)
-            }
-            IFLA_BOND_AD_INFO_PARTNER_MAC => {
-                ad_info.partner_mac = parse_as_48_bits_mac(data)
-            }
-            _ => (),
         }
-        i = i + hdr.nla_len;
     }
     ad_info
 }
 
 fn get_bond_mode(raw: &[u8]) -> u8 {
-    let mut i: usize = 0;
-    while i < raw.len() {
-        let hdr_ptr = raw.as_ptr().wrapping_offset(i.try_into().unwrap());
-        let hdr = parse_nla_header(hdr_ptr);
-        let data_ptr = raw
-            .as_ptr()
-            .wrapping_offset((i + NL_ATTR_HDR_LEN).try_into().unwrap());
-        let data = unsafe {
-            slice::from_raw_parts(data_ptr, hdr.nla_len - NL_ATTR_HDR_LEN)
-        };
-        match hdr.nla_type {
-            IFLA_BOND_MODE => return parse_as_u8(data),
-            _ => (),
+    let nlas = NlasIterator::new(raw);
+    for nla in nlas {
+        match nla {
+            Ok(nla) => {
+                match nla.kind() {
+                    IFLA_BOND_MODE => {
+                        return parse_as_u8(nla.value());
+                    }
+                    _ => {
+                        eprintln!("unknown nla kind {} value: {:?}", nla.kind(), nla.value());
+                    },
+                }
+            }
+            Err(e) => {
+                eprintln!("{}", e);
+            }
         }
-        i = i + hdr.nla_len;
     }
     std::u8::MAX
 }
@@ -443,51 +441,47 @@ const NLA_PARSE_FUNS: &[fn(&[u8], &u8) -> Option<(String, String)>] = &[
 ];
 
 pub(crate) fn parse_bond_info(raw: &[u8]) -> HashMap<String, String> {
-    let mut i: usize = 0;
     let mut bond_options: HashMap<String, String> = HashMap::new();
     let mode = get_bond_mode(raw);
-
-    // TODO: Convert this into a iterator or better dedup way
-    while i < raw.len() {
-        let hdr_ptr = raw.as_ptr().wrapping_offset(i.try_into().unwrap());
-        let hdr = parse_nla_header(hdr_ptr);
-        let data_ptr = raw
-            .as_ptr()
-            .wrapping_offset((i + NL_ATTR_HDR_LEN).try_into().unwrap());
-        let data = unsafe {
-            slice::from_raw_parts(data_ptr, hdr.nla_len - NL_ATTR_HDR_LEN)
-        };
-        if let Some(func) = NLA_PARSE_FUNS.get::<usize>(hdr.nla_type.into()) {
-            if let Some((name, value)) = func(data, &mode) {
-                bond_options.insert(name, value);
+    let nlas = NlasIterator::new(raw);
+    for nla in nlas {
+        match nla {
+            Ok(nla) => {
+                if let Some(func) = NLA_PARSE_FUNS.get::<usize>(nla.kind().into()) {
+                    if let Some((name, value)) = func(nla.value(), &mode) {
+                        bond_options.insert(name, value);
+                    }
+                } else if nla.kind() == IFLA_BOND_AD_INFO {
+                    let ad_info = parse_ad_info(nla.value());
+                    bond_options.insert(
+                        "ad_aggregator".into(),
+                        format!("{}", ad_info.aggregator),
+                    );
+                    bond_options.insert(
+                        "ad_num_ports".into(),
+                        format!("{}", ad_info.num_ports),
+                    );
+                    bond_options.insert(
+                        "ad_actor_key".into(),
+                        format!("{}", ad_info.actor_key),
+                    );
+                    bond_options.insert(
+                        "ad_partner_key".into(),
+                        format!("{}", ad_info.partner_key),
+                    );
+                    bond_options.insert(
+                        "ad_partner_mac".into(),
+                        format!("{}", &ad_info.partner_mac),
+                    );
+                } else {
+                    bond_options
+                        .insert(format!("{}", nla.kind()), format!("{:?}", nla.value()));
+                }
             }
-        } else if hdr.nla_type == IFLA_BOND_AD_INFO {
-            let ad_info = parse_ad_info(data);
-            bond_options.insert(
-                "ad_aggregator".into(),
-                format!("{}", ad_info.aggregator),
-            );
-            bond_options.insert(
-                "ad_num_ports".into(),
-                format!("{}", ad_info.num_ports),
-            );
-            bond_options.insert(
-                "ad_actor_key".into(),
-                format!("{}", ad_info.actor_key),
-            );
-            bond_options.insert(
-                "ad_partner_key".into(),
-                format!("{}", ad_info.partner_key),
-            );
-            bond_options.insert(
-                "ad_partner_mac".into(),
-                format!("{}", &ad_info.partner_mac),
-            );
-        } else {
-            bond_options
-                .insert(format!("{}", hdr.nla_type), format!("{:?}", data));
+            Err(e) => {
+                eprintln!("{}", e);
+            }
         }
-        i = i + hdr.nla_len;
     }
 
     bond_options.insert("mode".to_string(), bond_mode_u8_to_string(mode));
@@ -512,8 +506,7 @@ const IFLA_BOND_SLAVE_AD_ACTOR_OPER_PORT_STATE: u16 = 7;
 const IFLA_BOND_SLAVE_AD_PARTNER_OPER_PORT_STATE: u16 = 8;
 
 pub(crate) fn parse_bond_subordinate_info(raw: &[u8]) -> BondSubordinateInfo {
-    let mut i: usize = 0;
-
+    let nlas = NlasIterator::new(raw);
     let mut subordinate_state = BondSubordinateState::Unknown;
     let mut mii_status = BondMiiStatus::Unknown;
     let mut link_failure_count = std::u32::MAX;
@@ -522,44 +515,40 @@ pub(crate) fn parse_bond_subordinate_info(raw: &[u8]) -> BondSubordinateInfo {
     let mut ad_aggregator_id = None;
     let mut ad_actor_oper_port_state = None;
     let mut ad_partner_oper_port_state = None;
-
-    while i < raw.len() {
-        let hdr_ptr = raw.as_ptr().wrapping_offset(i.try_into().unwrap());
-        let hdr = parse_nla_header(hdr_ptr);
-        let data_ptr = raw
-            .as_ptr()
-            .wrapping_offset((i + NL_ATTR_HDR_LEN).try_into().unwrap());
-        let data = unsafe {
-            slice::from_raw_parts(data_ptr, hdr.nla_len - NL_ATTR_HDR_LEN)
-        };
-        match hdr.nla_type {
-            IFLA_BOND_SLAVE_STATE => {
-                subordinate_state = parse_as_u8(data).into()
+    for nla in nlas {
+        match nla {
+            Ok(nla) =>  {
+                match nla.kind(){
+                    IFLA_BOND_SLAVE_STATE => {
+                        subordinate_state = parse_as_u8(nla.value()).into()
+                    }
+                    IFLA_BOND_SLAVE_MII_STATUS => mii_status = parse_as_u8(nla.value()).into(),
+                    IFLA_BOND_SLAVE_LINK_FAILURE_COUNT => {
+                        link_failure_count = parse_as_u32(nla.value())
+                    }
+                    IFLA_BOND_SLAVE_PERM_HWADDR => {
+                        perm_hwaddr = parse_as_mac(nla.value_length(), nla.value());
+                    }
+                    IFLA_BOND_SLAVE_QUEUE_ID => queue_id = parse_as_u16(nla.value()),
+                    IFLA_BOND_SLAVE_AD_AGGREGATOR_ID => {
+                        ad_aggregator_id = Some(parse_as_u16(nla.value()));
+                    }
+                    IFLA_BOND_SLAVE_AD_ACTOR_OPER_PORT_STATE => {
+                        ad_actor_oper_port_state = Some(parse_as_u8(nla.value()));
+                    }
+                    IFLA_BOND_SLAVE_AD_PARTNER_OPER_PORT_STATE => {
+                        ad_partner_oper_port_state = Some(parse_as_u16(nla.value()));
+                    }
+                    _ => {
+                        eprintln!("unknown nla kind {} value: {:?}", nla.kind(), nla.value());
+                    }
+                }
             }
-            IFLA_BOND_SLAVE_MII_STATUS => mii_status = parse_as_u8(data).into(),
-            IFLA_BOND_SLAVE_LINK_FAILURE_COUNT => {
-                link_failure_count = parse_as_u32(data)
-            }
-            IFLA_BOND_SLAVE_PERM_HWADDR => {
-                perm_hwaddr = parse_as_mac(hdr.data_len, data);
-            }
-            IFLA_BOND_SLAVE_QUEUE_ID => queue_id = parse_as_u16(data),
-            IFLA_BOND_SLAVE_AD_AGGREGATOR_ID => {
-                ad_aggregator_id = Some(parse_as_u16(data));
-            }
-            IFLA_BOND_SLAVE_AD_ACTOR_OPER_PORT_STATE => {
-                ad_actor_oper_port_state = Some(parse_as_u8(data));
-            }
-            IFLA_BOND_SLAVE_AD_PARTNER_OPER_PORT_STATE => {
-                ad_partner_oper_port_state = Some(parse_as_u16(data));
-            }
-            _ => {
-                eprintln!("unknown nla_type {} data: {:?}", hdr.nla_type, data);
+            Err(e) => {
+                    eprintln!("{}", e);
             }
         }
-        i = i + hdr.nla_len;
     }
-
     BondSubordinateInfo {
         subordinate_state,
         mii_status,
