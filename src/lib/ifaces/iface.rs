@@ -9,6 +9,8 @@ use crate::ifaces::bridge::BridgeInfo;
 use crate::ifaces::bridge::BridgePortInfo;
 use crate::ifaces::sriov::get_sriov_info;
 use crate::ifaces::sriov::SriovInfo;
+use crate::ifaces::tun::get_tun_info;
+use crate::ifaces::tun::TunInfo;
 use crate::ifaces::veth::VethInfo;
 use crate::ifaces::vlan::get_vlan_info;
 use crate::ifaces::vlan::VlanInfo;
@@ -44,6 +46,7 @@ pub enum IfaceType {
     Loopback,
     Ethernet,
     Vrf,
+    Tun,
     Unknown,
     Other(String),
 }
@@ -147,6 +150,8 @@ pub struct Iface {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bridge_port: Option<BridgePortInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub tun: Option<TunInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub vlan: Option<VlanInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vxlan: Option<VxlanInfo>,
@@ -214,6 +219,7 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         nlas::InfoKind::Vlan => IfaceType::Vlan,
                         nlas::InfoKind::Vxlan => IfaceType::Vxlan,
                         nlas::InfoKind::Dummy => IfaceType::Dummy,
+                        nlas::InfoKind::Tun => IfaceType::Tun,
                         nlas::InfoKind::Vrf => IfaceType::Vrf,
                         nlas::InfoKind::Other(s) => IfaceType::Other(s.clone()),
                         _ => IfaceType::Other(format!("{:?}", t)),
@@ -226,6 +232,16 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         IfaceType::Bond => iface_state.bond = get_bond_info(&d),
                         IfaceType::Bridge => {
                             iface_state.bridge = get_bridge_info(&d)
+                        }
+                        IfaceType::Tun => {
+                            match get_tun_info(&d) {
+                                Ok(info) => {
+                                    iface_state.tun = Some(info);
+                                }
+                                Err(e) => {
+                                    eprintln!("Error parsing TUN info: {}", e);
+                                }
+                            }
                         }
                         IfaceType::Vlan => iface_state.vlan = get_vlan_info(&d),
                         IfaceType::Vxlan => {
