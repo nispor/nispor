@@ -7,6 +7,8 @@ use crate::ifaces::vlan::vlan_iface_tidy_up;
 use crate::ifaces::vrf::vrf_iface_tidy_up;
 use crate::ifaces::vxlan::vxlan_iface_tidy_up;
 use crate::netlink::fill_ip_addr;
+use crate::traffic_control::get_tc_qdisc;
+use crate::traffic_control::save_qdiscs_into_iface;
 use crate::Iface;
 use crate::NisporError;
 use futures::stream::TryStreamExt;
@@ -46,7 +48,38 @@ async fn _get_ifaces() -> Result<HashMap<String, Iface>, NisporError> {
         fill_bridge_vlan_info(&mut iface_states, &nl_msg);
     }
 
+    let mut qdiscs = Vec::new();
+    let mut qdiscs_handle = handle.qdisc().get().execute();
+    while let Some(tc_msg) = qdiscs_handle.try_next().await? {
+        qdiscs.push(get_tc_qdisc(tc_msg)?);
+    }
+    save_qdiscs_into_iface(&mut iface_states, qdiscs);
+
+
+
+    /*
+    for iface_state in iface_states.values() {
+        let mut traffic_classes = handle
+            .traffic_class(iface_state.index.try_into()?)
+            .get()
+            .execute();
+        while let Some(nl_msg) = traffic_classes.try_next().await? {
+            println!("{:?}", nl_msg);
+        }
+    }
+    for iface_state in iface_states.values() {
+        let mut traffic_filters = handle
+            .traffic_filter(iface_state.index.try_into()?)
+            .get()
+            .execute();
+        while let Some(nl_msg) = traffic_filters.try_next().await? {
+            println!("{:?}", nl_msg);
+        }
+    }
+    */
+
     tidy_up(&mut iface_states);
+
     Ok(iface_states)
 }
 

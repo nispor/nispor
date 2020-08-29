@@ -5,6 +5,7 @@ mod mac;
 mod net_state;
 mod netlink;
 mod route;
+mod traffic_control;
 
 pub use crate::error::NisporError;
 pub use crate::ifaces::BondInfo;
@@ -28,3 +29,4 @@ pub(crate) use crate::mac::parse_as_mac;
 pub use crate::net_state::get_state;
 pub use crate::net_state::NetState;
 pub use crate::route::Route;
+pub use crate::traffic_control::*;

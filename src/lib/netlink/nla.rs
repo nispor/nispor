@@ -45,6 +45,10 @@ pub(crate) fn parse_as_be16(data: &[u8]) -> u16 {
     u16::from_be_bytes([data[0], data[1]])
 }
 
+pub(crate) fn parse_as_i32(data: &[u8]) -> i32 {
+    i32::from_ne_bytes([data[0], data[1], data[2], data[3]])
+}
+
 pub(crate) fn parse_as_u32(data: &[u8]) -> u32 {
     u32::from_ne_bytes([data[0], data[1], data[2], data[3]])
 }

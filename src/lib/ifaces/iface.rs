@@ -20,6 +20,7 @@ use crate::ifaces::vxlan::get_vxlan_info;
 use crate::ifaces::vxlan::VxlanInfo;
 use crate::Ipv4Info;
 use crate::Ipv6Info;
+use crate::TcQueueingDiscipline;
 use netlink_packet_route::rtnl::link::nlas;
 use netlink_packet_route::rtnl::LinkMessage;
 use netlink_packet_route::rtnl::{
@@ -158,6 +159,8 @@ pub struct Iface {
     pub vrf_subordinate: Option<VrfSubordinateInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sriov: Option<SriovInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub qdiscs: Option<Vec<TcQueueingDiscipline>>,
 }
 
 pub(crate) fn get_iface_name_by_index(
