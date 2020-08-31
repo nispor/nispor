@@ -73,6 +73,9 @@ elif [ "CHK$1" == "CHKsriov" ];then
     sudo ip link set eth1 vf 0 vlan 100 mac 36:f7:09:ef:95:f0
     sudo ip link set eth1 vf 1 mac 36:f7:09:ef:95:f1
     sudo ip link set eth1 up
+elif [ "CHK$1" == "CHKtun" ];then
+    sudo ip tuntap add name tun1 mode tap \
+        user 1001 group 0 multi_queue vnet_hdr
 elif [ "CHK$1" == "CHKrm" ];then
     sudo ip link del br0
     sudo ip link del bond99
@@ -82,5 +85,6 @@ elif [ "CHK$1" == "CHKrm" ];then
     sudo ip link del eth2
     sudo ip link del vrf0
     sudo ip netns del tmp
+    sudo ip link del tun1
     sudo modprobe -r netdevsim
 fi

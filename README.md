@@ -56,6 +56,7 @@ varlink call unix:/run/nispor/nispor.so/info.nispor.Get
  * VxLAN
  * Route
  * Dummy
+ * TUN/TAP
  * Veth
  * VRF(Virtual Routing and Forwarding)
  * SR-IOV
@@ -65,7 +66,6 @@ varlink call unix:/run/nispor/nispor.so/info.nispor.Get
  * SR-IOV VF-PF relation is possible
  * VLAN QoS
  * Route rule
- * TUN/TAP
  * Traffic control
  * Manpage for npc/npd
  * pkgconfig file for nispor C library
