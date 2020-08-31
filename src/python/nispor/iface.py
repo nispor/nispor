@@ -19,6 +19,7 @@ from .bridge import NisporBridge
 from .bridge import NisporBridgePort
 from .veth import NisporVeth
 from .vlan import NisporVlan
+from .vrf import NisporVRF
 from .vxlan import NisporVxlan
 
 
@@ -60,6 +61,8 @@ def _iface_info_to_obj(iface_info):
         iface = NisporVxlan(iface_info)
     elif iface_type == "Veth":
         iface = NisporVeth(iface_info)
+    elif iface_type == "Vrf":
+        iface = NisporVRF(iface_info)
     else:
         iface = NisporBaseIface(iface_info)
     if ctrl_type == "Bond":
