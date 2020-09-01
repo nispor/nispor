@@ -17,6 +17,7 @@ from .bond import NisporBond
 from .bond import NisporBondSubordinate
 from .bridge import NisporBridge
 from .bridge import NisporBridgePort
+from .sr_iov import NisporSriov
 from .veth import NisporVeth
 from .vlan import NisporVlan
 from .vrf import NisporVRF
@@ -63,6 +64,8 @@ def _iface_info_to_obj(iface_info):
         iface = NisporVeth(iface_info)
     elif iface_type == "Vrf":
         iface = NisporVRF(iface_info)
+    elif iface_info.get("sriov"):
+        iface = NisporSriov(iface_info)
     else:
         iface = NisporBaseIface(iface_info)
     if ctrl_type == "Bond":
