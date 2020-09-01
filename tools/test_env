@@ -48,7 +48,7 @@ elif [ "CHK$1" == "CHKvlan" ];then
     sudo modprobe 8021q
     sudo ip link set eth1 up
     sudo ip link set eth2 up
-    sudo ip link add link eth1 name eth1.101 type vlan id 101
+    sudo ip link add link eth1 name eth1.101 type vlan id 101 ${@:2}
 elif [ "CHK$1" == "CHKdummy" ];then
     sudo ip link add dummy1 type dummy
     sudo ip link set dummy1 up

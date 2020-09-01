@@ -4,8 +4,8 @@ pub fn clear_network_environment() {
     cmd_exec("../../tools/test_env", vec!["rm"]);
 }
 
-pub fn set_network_environment(env_type: &str) {
-    assert!(cmd_exec("../../tools/test_env", vec![env_type]));
+pub fn set_network_environment(env_type: &str, options: &str) {
+    assert!(cmd_exec("../../tools/test_env", vec![env_type, options]));
 }
 
 pub fn cmd_exec(command: &str, args: Vec<&str>) -> bool {

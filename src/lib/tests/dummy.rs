@@ -21,7 +21,7 @@ fn with_dummy1_iface<T>(test: T) -> ()
 where
     T: FnOnce() -> () + panic::UnwindSafe,
 {
-    utils::set_network_environment("dummy");
+    utils::set_network_environment("dummy", "");
 
     let result = panic::catch_unwind(|| {
         test();

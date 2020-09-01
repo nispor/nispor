@@ -92,7 +92,7 @@ fn with_eth1_iface<T>(test: T) -> ()
 where
     T: FnOnce() -> () + panic::UnwindSafe,
 {
-    utils::set_network_environment("veth");
+    utils::set_network_environment("veth", "");
 
     let result = panic::catch_unwind(|| {
         test();
