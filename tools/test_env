@@ -1,7 +1,8 @@
-#!/bin/bash -x
+#!/bin/bash
 
 if [ "CHK$1" == "CHK" ];then
-    echo 'Need $1: bond, br, rm'
+    echo 'Need argument: bond, br, brv, vlan, dummy, vxlan, veth, vrf, sriov,'
+    echo 'rm'
     exit 1
 fi
 

@@ -1,14 +1,11 @@
 use std::process::Command;
 
-pub fn delete_dummy(iface_name: &str) {
-    assert!(cmd_exec("ip", vec!["link", "delete", iface_name]));
+pub fn clear_network_environment() {
+    cmd_exec("../../tools/test_env", vec!["rm"]);
 }
 
-pub fn create_dummy(iface_name: &str) {
-    assert!(cmd_exec(
-        "ip",
-        vec!["link", "add", iface_name, "type", "dummy"]
-    ));
+pub fn set_network_environment(env_type: &str) {
+    assert!(cmd_exec("../../tools/test_env", vec![env_type]));
 }
 
 pub fn cmd_exec(command: &str, args: Vec<&str>) -> bool {

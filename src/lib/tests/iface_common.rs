@@ -6,12 +6,12 @@ use std::time;
 
 mod utils;
 
-const IFACE_TEST: &str = "dummy0";
+const IFACE_TEST: &str = "eth1";
 const IFACE_MAC_TEST: &str = "AA:BB:CC:DD:EE:FF";
 
 #[test]
 fn test_get_iface_name() {
-    with_dummy_iface(|| {
+    with_eth1_iface(|| {
         if let Ok(state) = nispor::get_state() {
             let iface = &state.ifaces[IFACE_TEST];
             let iface_name = &iface.name;
@@ -22,7 +22,7 @@ fn test_get_iface_name() {
 
 #[test]
 fn test_get_iface_mtu() {
-    with_dummy_iface(|| {
+    with_eth1_iface(|| {
         utils::cmd_exec(
             "ip",
             vec!["link", "set", "dev", IFACE_TEST, "mtu", "1000"],
@@ -36,8 +36,19 @@ fn test_get_iface_mtu() {
 }
 
 #[test]
+fn test_get_iface_type() {
+    with_eth1_iface(|| {
+        if let Ok(state) = nispor::get_state() {
+            let iface = &state.ifaces[IFACE_TEST];
+            let iface_type = &iface.iface_type;
+            assert_eq!(iface_type, &nispor::IfaceType::Veth);
+        }
+    });
+}
+
+#[test]
 fn test_get_iface_mac() {
-    with_dummy_iface(|| {
+    with_eth1_iface(|| {
         utils::cmd_exec(
             "ip",
             vec!["link", "set", "dev", IFACE_TEST, "address", IFACE_MAC_TEST],
@@ -51,16 +62,42 @@ fn test_get_iface_mac() {
     });
 }
 
-fn with_dummy_iface<T>(test: T) -> ()
+#[test]
+fn test_get_iface_state_down() {
+    with_eth1_iface(|| {
+        if let Ok(net_state) = nispor::get_state() {
+            let iface = &net_state.ifaces[IFACE_TEST];
+            let state = &iface.state;
+            assert_eq!(state, &nispor::IfaceState::Down);
+        }
+    });
+}
+
+#[test]
+fn test_get_iface_state_up() {
+    with_eth1_iface(|| {
+        utils::cmd_exec(
+            "ip",
+            vec!["link", "set", IFACE_TEST, "up"],
+        );
+        if let Ok(net_state) = nispor::get_state() {
+            let iface = &net_state.ifaces[IFACE_TEST];
+            let state = &iface.state;
+            assert_eq!(state, &nispor::IfaceState::Up);
+        }
+    });
+}
+
+fn with_eth1_iface<T>(test: T) -> ()
 where
     T: FnOnce() -> () + panic::UnwindSafe,
 {
-    utils::create_dummy(IFACE_TEST);
+    utils::set_network_environment("veth");
 
     let result = panic::catch_unwind(|| {
         test();
     });
 
-    utils::delete_dummy(IFACE_TEST);
+    utils::clear_network_environment();
     assert!(result.is_ok())
 }
