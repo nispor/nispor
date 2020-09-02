@@ -7,6 +7,8 @@ use crate::ifaces::bridge::get_bridge_port_info;
 use crate::ifaces::bridge::parse_bridge_vlan_info;
 use crate::ifaces::bridge::BridgeInfo;
 use crate::ifaces::bridge::BridgePortInfo;
+use crate::ifaces::mac_vlan::get_mac_vlan_info;
+use crate::ifaces::mac_vlan::MacVlanInfo;
 use crate::ifaces::sriov::get_sriov_info;
 use crate::ifaces::sriov::SriovInfo;
 use crate::ifaces::tun::get_tun_info;
@@ -47,6 +49,7 @@ pub enum IfaceType {
     Ethernet,
     Vrf,
     Tun,
+    MacVlan,
     Unknown,
     Other(String),
 }
@@ -162,6 +165,8 @@ pub struct Iface {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vrf_subordinate: Option<VrfSubordinateInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub mac_vlan: Option<MacVlanInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub sriov: Option<SriovInfo>,
 }
 
@@ -221,6 +226,7 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         nlas::InfoKind::Dummy => IfaceType::Dummy,
                         nlas::InfoKind::Tun => IfaceType::Tun,
                         nlas::InfoKind::Vrf => IfaceType::Vrf,
+                        nlas::InfoKind::MacVlan => IfaceType::MacVlan,
                         nlas::InfoKind::Other(s) => IfaceType::Other(s.clone()),
                         _ => IfaceType::Other(format!("{:?}", t)),
                     };
@@ -233,23 +239,24 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         IfaceType::Bridge => {
                             iface_state.bridge = get_bridge_info(&d)
                         }
-                        IfaceType::Tun => {
-                            match get_tun_info(&d) {
-                                Ok(info) => {
-                                    iface_state.tun = Some(info);
-                                }
-                                Err(e) => {
-                                    eprintln!("Error parsing TUN info: {}", e);
-                                }
+                        IfaceType::Tun => match get_tun_info(&d) {
+                            Ok(info) => {
+                                iface_state.tun = Some(info);
                             }
-                        }
+                            Err(e) => {
+                                eprintln!("Error parsing TUN info: {}", e);
+                            }
+                        },
                         IfaceType::Vlan => iface_state.vlan = get_vlan_info(&d),
                         IfaceType::Vxlan => {
                             iface_state.vxlan = get_vxlan_info(&d)
                         }
                         IfaceType::Vrf => iface_state.vrf = get_vrf_info(&d),
+                        IfaceType::MacVlan => {
+                            iface_state.mac_vlan = get_mac_vlan_info(&d)
+                        }
                         _ => eprintln!(
-                            "Unhandled iface type {:?}",
+                            "Unhandled IFLA_INFO_DATA for iface type {:?}",
                             iface_state.iface_type
                         ),
                     }
@@ -308,10 +315,18 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
         }
     }
     if let Some(iface_index) = link {
-        if iface_state.iface_type == IfaceType::Veth {
-            iface_state.veth = Some(VethInfo {
-                peer: format!("{}", iface_index),
-            })
+        match iface_state.iface_type {
+            IfaceType::Veth => {
+                iface_state.veth = Some(VethInfo {
+                    peer: format!("{}", iface_index),
+                })
+            }
+            IfaceType::MacVlan => {
+                if let Some(ref mut mac_vlan_info) = iface_state.mac_vlan {
+                    mac_vlan_info.base_iface = format!("{}", iface_index);
+                }
+            }
+            _ => (),
         }
     }
     if (nl_msg.header.flags & IFF_LOOPBACK) > 0 {

@@ -77,7 +77,15 @@ elif [ "CHK$1" == "CHKsriov" ];then
 elif [ "CHK$1" == "CHKtun" ];then
     sudo ip tuntap add name tun1 mode tap \
         user 1001 group 0 multi_queue vnet_hdr
+elif [ "CHK$1" == "CHKmacvlan" ];then
+    create_nics
+    sudo ip link add mac0 link eth1 type macvlan mode source
+    sudo ip link set link dev mac0 type macvlan macaddr add 00:11:11:11:11:11
+    sudo ip link set link dev mac0 type macvlan macaddr add 00:22:22:22:22:22
+    sudo ip link set eth1 up
+    sudo ip link set mac0 up
 elif [ "CHK$1" == "CHKrm" ];then
+    sudo ip link del mac0
     sudo ip link del br0
     sudo ip link del bond99
     sudo ip link del dummy1
