@@ -21,6 +21,7 @@ from .veth import NisporVeth
 from .vlan import NisporVlan
 from .vrf import NisporVRF
 from .vxlan import NisporVxlan
+from .mac_vlan import NisporMacVlan
 
 
 class NisporIfaceState:
@@ -63,6 +64,8 @@ def _iface_info_to_obj(iface_info):
         iface = NisporVeth(iface_info)
     elif iface_type == "Vrf":
         iface = NisporVRF(iface_info)
+    elif iface_type == "MacVlan":
+        iface = NisporMacVlan(iface_info)
     else:
         iface = NisporBaseIface(iface_info)
     if ctrl_type == "Bond":
