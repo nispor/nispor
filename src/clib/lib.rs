@@ -37,15 +37,15 @@ pub extern "C" fn nispor_state_get(
 
 #[no_mangle]
 pub extern "C" fn nispor_state_free(state: *mut c_char) {
-    unsafe { libc::free(state as *mut libc::c_void) }
+    unsafe { CString::from_raw(state) };
 }
 
 #[no_mangle]
 pub extern "C" fn nispor_err_kind_free(err_kind: *mut c_char) {
-    unsafe { libc::free(err_kind as *mut libc::c_void) }
+    unsafe { CString::from_raw(err_kind) };
 }
 
 #[no_mangle]
 pub extern "C" fn nispor_err_msg_free(err_msg: *mut c_char) {
-    unsafe { libc::free(err_msg as *mut libc::c_void) }
+    unsafe { CString::from_raw(err_msg) };
 }
