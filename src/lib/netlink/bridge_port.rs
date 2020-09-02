@@ -2,10 +2,8 @@ use crate::netlink::nla::parse_as_u16;
 use crate::netlink::nla::parse_as_u32;
 use crate::netlink::nla::parse_as_u64;
 use crate::netlink::nla::parse_as_u8;
-use crate::netlink::nla::parse_nla_header;
-use crate::netlink::nla::NL_ATTR_HDR_LEN;
 use crate::BridgePortInfo;
-use std::convert::TryInto;
+use netlink_packet_route::rtnl::nlas::NlasIterator;
 
 fn parse_void_port_info(_data: &[u8], _port_info: &mut BridgePortInfo) {
     ()
@@ -184,27 +182,24 @@ const NLA_PORT_PARSE_FUNS: &[fn(&[u8], &mut BridgePortInfo)] = &[
 ];
 
 pub(crate) fn parse_bridge_port_info(raw: &[u8]) -> BridgePortInfo {
+    let nlas = NlasIterator::new(raw);
     let mut port_info = BridgePortInfo::default();
-    let mut i: usize = 0;
-
     // TODO: Dup with parse_bond_info
-    while i < raw.len() {
-        let hdr_ptr = raw.as_ptr().wrapping_offset(i.try_into().unwrap());
-        let hdr = parse_nla_header(hdr_ptr);
-        let data_ptr = raw
-            .as_ptr()
-            .wrapping_offset((i + NL_ATTR_HDR_LEN).try_into().unwrap());
-        let data = unsafe {
-            std::slice::from_raw_parts(data_ptr, hdr.nla_len - NL_ATTR_HDR_LEN)
-        };
-        if let Some(func) =
-            NLA_PORT_PARSE_FUNS.get::<usize>(hdr.nla_type.into())
-        {
-            func(data, &mut port_info);
-        } else {
-            eprintln!("unknown nla_type: {} {:?}", hdr.nla_type, data);
+    for nla in nlas {
+        match nla {
+            Ok(nla) => {
+                if let Some(func) =
+                    NLA_PORT_PARSE_FUNS.get::<usize>(nla.kind().into())
+                {
+                    func(nla.value(), &mut port_info);
+                } else {
+                    eprintln!("Unhandled BRIDGE_PORT_INFO {} {:?}", nla.kind(), nla.value());
+                }
+            }
+            Err(e) => {
+                eprintln!("{}", e);
+            }
         }
-        i = i + hdr.nla_len;
     }
     port_info
 }
