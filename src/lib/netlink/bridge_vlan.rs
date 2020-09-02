@@ -1,7 +1,5 @@
-use crate::netlink::nla::parse_nla_header;
-use crate::netlink::nla::NL_ATTR_HDR_LEN;
 use crate::BridgeVlanEntry;
-use std::convert::TryInto;
+use netlink_packet_route::rtnl::nlas::NlasIterator;
 
 const IFLA_BRIDGE_VLAN_INFO: u16 = 2;
 
@@ -18,33 +16,29 @@ const BRIDGE_VLAN_INFO_RANGE_END: u16 = 1 << 4;
 pub(crate) fn parse_af_spec_bridge_info(
     raw: &[u8],
 ) -> Option<Vec<BridgeVlanEntry>> {
-    let mut i: usize = 0;
+    let nlas = NlasIterator::new(raw);
     let mut vlans = Vec::new();
 
     // TODO: Dup with parse_bond_info
-    while i < raw.len() {
-        let hdr_ptr = raw.as_ptr().wrapping_offset(i.try_into().unwrap());
-        let hdr = parse_nla_header(hdr_ptr);
-        let data_ptr = raw
-            .as_ptr()
-            .wrapping_offset((i + NL_ATTR_HDR_LEN).try_into().unwrap());
-        let data = unsafe {
-            std::slice::from_raw_parts(data_ptr, hdr.nla_len - NL_ATTR_HDR_LEN)
-        };
-        match hdr.nla_type {
-            IFLA_BRIDGE_VLAN_INFO => {
-                if let Some(v) = parse_vlan_info(data) {
-                    vlans.push(v);
+    for nla in nlas {
+        match nla {
+            Ok(nla) => {
+                match nla.kind() {
+                    IFLA_BRIDGE_VLAN_INFO => {
+                        if let Some(v) = parse_vlan_info(nla.value()) {
+                            vlans.push(v);
+                        }
+                    }
+                    _ => {
+                        eprintln!("Unhandled AF_SPEC_BRIDGE_INFO: {} {:?}",
+                            nla.kind(), nla.value());
+                    }
                 }
             }
-            _ => {
-                eprintln!(
-                    "unknown nla_type, {}, nla_data: {:?}",
-                    hdr.nla_type, data
-                );
+            Err(e) => {
+                eprintln!("{}", e)
             }
         }
-        i = i + hdr.nla_len;
     }
     if vlans.len() > 0 {
         Some(merge_vlan_range(&vlans))
