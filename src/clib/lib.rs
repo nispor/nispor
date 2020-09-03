@@ -37,15 +37,27 @@ pub extern "C" fn nispor_state_get(
 
 #[no_mangle]
 pub extern "C" fn nispor_state_free(state: *mut c_char) {
-    unsafe { CString::from_raw(state) };
+    unsafe {
+        if state != std::ptr::null_mut() {
+            CString::from_raw(state);
+        }
+    }
 }
 
 #[no_mangle]
 pub extern "C" fn nispor_err_kind_free(err_kind: *mut c_char) {
-    unsafe { CString::from_raw(err_kind) };
+    unsafe {
+        if err_kind != std::ptr::null_mut() {
+            CString::from_raw(err_kind);
+        }
+    }
 }
 
 #[no_mangle]
 pub extern "C" fn nispor_err_msg_free(err_msg: *mut c_char) {
-    unsafe { CString::from_raw(err_msg) };
+    unsafe {
+        if err_msg != std::ptr::null_mut() {
+            CString::from_raw(err_msg);
+        }
+    }
 }
