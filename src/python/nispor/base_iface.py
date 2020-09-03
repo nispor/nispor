@@ -21,6 +21,7 @@ class NisporBaseIface:
     def __init__(self, info):
         self._info = info
         self._sub_state = None
+        self._sr_iov = None
         if "sriov" in self._info:
             self._sr_iov = NisporSriov(self._info["sriov"])
 
