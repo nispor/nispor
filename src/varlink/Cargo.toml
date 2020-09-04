@@ -1,6 +1,6 @@
 [package]
 name = "npd"
-version = "0.4.0"
+version = "0.5.0"
 authors = ["Gris Ge <cnfourt@gmail.com>"]
 edition = "2018"
 

@@ -1,4 +1,19 @@
 # Changelog
+## [0.5.0] - 2020-09-04
+### New features
+ * Support MAC VLAN
+ * Support TUN/TAP(no python binding yet)
+ * Include VRF support in python binding
+
+### Bug fixes
+ * Fix incorrect string memory free function in C binding
+ * Fix python binding failure when SR-IOV is not supported
+
+### Break changes
+ * The rust API `nispor::get_state` changed to `nispor::NetState::retrieve()`
+ * The python API `nispor.get_state` changed to
+   `nispor.NisporNetState.retrieve()`
+
 ## [0.4.0] - 2020-08-26
 
 ### New features
