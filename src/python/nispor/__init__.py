@@ -22,6 +22,7 @@ from .clib_wrapper import retrieve_net_state_json
 from .iface import NisporIfaceState
 from .route import NisporRouteState
 from .state import NisporNetState
+from .tun import NisporTun
 from .veth import NisporVeth
 from .vlan import NisporVlan
 from .vxlan import NisporVxlan
