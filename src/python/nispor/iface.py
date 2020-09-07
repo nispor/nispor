@@ -17,6 +17,7 @@ from .bond import NisporBond
 from .bond import NisporBondSubordinate
 from .bridge import NisporBridge
 from .bridge import NisporBridgePort
+from .tun import NisporTun
 from .veth import NisporVeth
 from .vlan import NisporVlan
 from .vrf import NisporVRF
@@ -56,6 +57,8 @@ def _iface_info_to_obj(iface_info):
         iface = NisporBond(iface_info)
     elif iface_type == "Bridge":
         iface = NisporBridge(iface_info)
+    elif iface_type == "Tun":
+        iface = NisporTun(iface_info)
     elif iface_type == "Vlan":
         iface = NisporVlan(iface_info)
     elif iface_type == "Vxlan":
