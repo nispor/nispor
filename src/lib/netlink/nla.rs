@@ -1,13 +1,6 @@
 use std::net::Ipv4Addr;
 use std::net::Ipv6Addr;
 
-#[derive(Debug, Eq, PartialEq, Clone)]
-pub(crate) struct NetLinkAttrHeader {
-    pub data_len: usize,
-    pub nla_len: usize,
-    pub nla_type: u16,
-}
-
 pub(crate) fn parse_as_u8(data: &[u8]) -> u8 {
     data[0]
 }
