@@ -15,35 +15,44 @@
 
 class NisporRouteState:
     def __init__(self, info):
+        self._rts = [NisporRoute(rt_info) for rt_info in info]
+
+    def __iter__(self):
+        for rt in self._rts:
+            yield rt
+
+
+class NisporRoute:
+    def __init__(self, info):
         self._info = info
 
     @property
     def address_family(self):
-        return self._info.get("address_family")
+        return self._info["address_family"]
 
     @property
     def tos(self):
-        return self._info.get("tos")
+        return self._info["tos"]
 
     @property
     def table(self):
-        return self._info.get("table")
+        return self._info["table"]
 
     @property
     def protocol(self):
-        return self._info.get("protocol")
+        return self._info["protocol"]
 
     @property
     def scope(self):
-        return self._info.get("scope")
+        return self._info["scope"]
 
     @property
     def route_type(self):
-        return self._info.get("route_type")
+        return self._info["route_type"]
 
     @property
     def flags(self):
-        return self._info.get("flags")
+        return self._info["flags"]
 
     @property
     def dst(self):
