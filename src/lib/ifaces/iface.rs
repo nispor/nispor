@@ -9,6 +9,8 @@ use crate::ifaces::bridge::BridgeInfo;
 use crate::ifaces::bridge::BridgePortInfo;
 use crate::ifaces::mac_vlan::get_mac_vlan_info;
 use crate::ifaces::mac_vlan::MacVlanInfo;
+use crate::ifaces::mac_vtap::get_mac_vtap_info;
+use crate::ifaces::mac_vtap::MacVtapInfo;
 use crate::ifaces::sriov::get_sriov_info;
 use crate::ifaces::sriov::SriovInfo;
 use crate::ifaces::tun::get_tun_info;
@@ -50,6 +52,7 @@ pub enum IfaceType {
     Vrf,
     Tun,
     MacVlan,
+    MacVtap,
     Unknown,
     Other(String),
 }
@@ -167,6 +170,8 @@ pub struct Iface {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mac_vlan: Option<MacVlanInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub mac_vtap: Option<MacVtapInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub sriov: Option<SriovInfo>,
 }
 
@@ -227,6 +232,7 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         nlas::InfoKind::Tun => IfaceType::Tun,
                         nlas::InfoKind::Vrf => IfaceType::Vrf,
                         nlas::InfoKind::MacVlan => IfaceType::MacVlan,
+                        nlas::InfoKind::MacVtap => IfaceType::MacVtap,
                         nlas::InfoKind::Other(s) => IfaceType::Other(s.clone()),
                         _ => IfaceType::Other(format!("{:?}", t)),
                     };
@@ -254,6 +260,9 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         IfaceType::Vrf => iface_state.vrf = get_vrf_info(&d),
                         IfaceType::MacVlan => {
                             iface_state.mac_vlan = get_mac_vlan_info(&d)
+                        }
+                        IfaceType::MacVtap => {
+                            iface_state.mac_vtap = get_mac_vtap_info(&d)
                         }
                         _ => eprintln!(
                             "Unhandled IFLA_INFO_DATA for iface type {:?}",
@@ -324,6 +333,11 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
             IfaceType::MacVlan => {
                 if let Some(ref mut mac_vlan_info) = iface_state.mac_vlan {
                     mac_vlan_info.base_iface = format!("{}", iface_index);
+                }
+            }
+            IfaceType::MacVtap => {
+                if let Some(ref mut mac_vtap_info) = iface_state.mac_vtap {
+                    mac_vtap_info.base_iface = format!("{}", iface_index);
                 }
             }
             _ => (),
