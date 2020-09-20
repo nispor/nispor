@@ -53,6 +53,10 @@ Path: `src/python`
 ## Release workflow
 
 ```bash
-sed -i -e 's/0.5.0/0.6.0/' \
+sed -i -e 's/0.5.1/0.6.0/' \
     Makefile src/*/Cargo.toml src/python/setup.py .cargo/config.toml
+```
+
+```bash
+git log --oneline --since=v0.5.1
 ```

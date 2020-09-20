@@ -1,4 +1,9 @@
 # Changelog
+## [0.5.1] - 2020-09-20
+### Bug fixes
+ * Add support of TUN/TAP in Python binding
+ * Fix route query in Python binding
+
 ## [0.5.0] - 2020-09-04
 ### New features
  * Support MAC VLAN
