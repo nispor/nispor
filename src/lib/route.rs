@@ -438,7 +438,10 @@ fn get_route(
                 rt.metric = Some(*d);
             }
             Nla::MultiPath(_) => {
-                todo!("netlink-rust does not support parsing this yet");
+                eprintln!(
+                    "netlink-rust does not support parsing
+                    multipath routes yet"
+                );
             }
             Nla::Pref(d) => {
                 rt.perf = Some(d[0]);
