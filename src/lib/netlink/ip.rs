@@ -131,8 +131,8 @@ fn parse_ipv6_nlas(nl_msg: &AddressMessage) -> (u32, Ipv6AddrInfo) {
 struct IfaCacheInfo {
     ifa_prefered: u32,
     ifa_valid: u32,
-    //cstamp: u32,
-    //tstamp: u32,
+    /*cstamp: u32,
+    tstamp: u32, */
 }
 
 fn parse_cache_info(cache_info_raw: &[u8]) -> IfaCacheInfo {

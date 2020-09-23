@@ -71,7 +71,7 @@ pub struct MacVlanInfo {
 
 pub(crate) fn get_mac_vlan_info(data: &nlas::InfoData) -> Option<MacVlanInfo> {
     let mut info = MacVlanInfo::default();
-    if let nlas::InfoData::MacVlan(raw) | nlas::InfoData::MacVtap(raw)= data {
+    if let nlas::InfoData::MacVlan(raw) | nlas::InfoData::MacVtap(raw) = data {
         let nlas = NlasIterator::new(raw);
         for nla in nlas {
             match nla {
@@ -152,8 +152,8 @@ fn convert_base_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
         index_to_name.insert(format!("{}", iface.index), iface.name.clone());
     }
     for iface in iface_states.values_mut() {
-        if iface.iface_type != IfaceType::MacVlan &&
-           iface.iface_type != IfaceType::MacVtap
+        if iface.iface_type != IfaceType::MacVlan
+            && iface.iface_type != IfaceType::MacVtap
         {
             continue;
         }

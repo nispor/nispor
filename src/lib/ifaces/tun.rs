@@ -93,7 +93,8 @@ pub(crate) fn get_tun_info(data: &InfoData) -> Result<TunInfo, NisporError> {
                     tun_info.num_queues = Some(parse_as_u32(nla.value()));
                 }
                 IFLA_TUN_NUM_DISABLED_QUEUES => {
-                    tun_info.num_disabled_queues = Some(parse_as_u32(nla.value()));
+                    tun_info.num_disabled_queues =
+                        Some(parse_as_u32(nla.value()));
                 }
                 _ => {
                     eprintln!(
