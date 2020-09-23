@@ -22,22 +22,21 @@ pub(crate) fn parse_af_spec_bridge_info(
     // TODO: Dup with parse_bond_info
     for nla in nlas {
         match nla {
-            Ok(nla) => {
-                match nla.kind() {
-                    IFLA_BRIDGE_VLAN_INFO => {
-                        if let Some(v) = parse_vlan_info(nla.value()) {
-                            vlans.push(v);
-                        }
-                    }
-                    _ => {
-                        eprintln!("Unhandled AF_SPEC_BRIDGE_INFO: {} {:?}",
-                            nla.kind(), nla.value());
+            Ok(nla) => match nla.kind() {
+                IFLA_BRIDGE_VLAN_INFO => {
+                    if let Some(v) = parse_vlan_info(nla.value()) {
+                        vlans.push(v);
                     }
                 }
-            }
-            Err(e) => {
-                eprintln!("{}", e)
-            }
+                _ => {
+                    eprintln!(
+                        "Unhandled AF_SPEC_BRIDGE_INFO: {} {:?}",
+                        nla.kind(),
+                        nla.value()
+                    );
+                }
+            },
+            Err(e) => eprintln!("{}", e),
         }
     }
     if vlans.len() > 0 {

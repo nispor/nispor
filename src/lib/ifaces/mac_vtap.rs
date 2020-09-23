@@ -37,7 +37,7 @@ impl From<MacVlanMode> for MacVtapMode {
             MacVlanMode::PassThrough => Self::PassThrough,
             MacVlanMode::Source => Self::Source,
             MacVlanMode::Unknown => Self::Unknown,
-            MacVlanMode::Other(u32) => Self::Other(u32)
+            MacVlanMode::Other(u32) => Self::Other(u32),
         }
     }
 }
@@ -60,7 +60,6 @@ impl From<MacVlanInfo> for MacVtapInfo {
             allowed_mac_addresses: d.allowed_mac_addresses,
         }
     }
-
 }
 pub(crate) fn get_mac_vtap_info(data: &nlas::InfoData) -> Option<MacVtapInfo> {
     if let Some(info) = get_mac_vlan_info(data) {

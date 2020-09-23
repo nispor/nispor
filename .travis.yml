@@ -14,6 +14,9 @@ jobs:
 before_cache:
   - sudo chown -R travis:travis $HOME/.cargo
   - sudo chown -R travis:travis $TRAVIS_BUILD_DIR/target
+before_script:
+- rustup component add rustfmt
 script:
   - cargo build --verbose --all
+  - cargo fmt -- --check
   - sudo env "PATH=$PATH" make test

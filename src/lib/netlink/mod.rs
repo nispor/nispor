@@ -11,5 +11,5 @@ pub(crate) use crate::netlink::bridge::*;
 pub(crate) use crate::netlink::bridge_port::*;
 pub(crate) use crate::netlink::bridge_vlan::*;
 pub(crate) use crate::netlink::ip::*;
-pub(crate) use crate::netlink::vxlan::*;
 pub(crate) use crate::netlink::nla::*;
+pub(crate) use crate::netlink::vxlan::*;

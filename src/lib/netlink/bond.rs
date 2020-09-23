@@ -5,10 +5,10 @@ use crate::parse_as_mac;
 use crate::BondMiiStatus;
 use crate::BondSubordinateInfo;
 use crate::BondSubordinateState;
+use netlink_packet_route::rtnl::nlas::NlasIterator;
 use std::collections::HashMap;
 use std::convert::TryFrom;
 use std::net::Ipv4Addr;
-use netlink_packet_route::rtnl::nlas::NlasIterator;
 
 // Using the kernel constant name.
 const BOND_MODE_ROUNDROBIN: u8 = 0;
@@ -57,7 +57,8 @@ fn parse_as_nested_ipv4_addr(raw: &[u8]) -> Vec<Ipv4Addr> {
         match nla {
             Ok(nla) => {
                 let data = nla.value();
-                addresses.push(Ipv4Addr::new(data[0], data[1], data[2], data[3]));
+                addresses
+                    .push(Ipv4Addr::new(data[0], data[1], data[2], data[3]));
             }
             Err(e) => {
                 eprintln!("{}", e);
@@ -93,28 +94,30 @@ fn parse_ad_info(raw: &[u8]) -> BondAdInfo {
     let mut ad_info = BondAdInfo::default();
     for nla in nlas {
         match nla {
-            Ok(nla) => {
-                match nla.kind(){
-                    IFLA_BOND_AD_INFO_AGGREGATOR => {
-                        ad_info.aggregator = parse_as_u16(nla.value())
-                    }
-                    IFLA_BOND_AD_INFO_NUM_PORTS => {
-                        ad_info.num_ports = parse_as_u16(nla.value())
-                    }
-                    IFLA_BOND_AD_INFO_ACTOR_KEY => {
-                        ad_info.actor_key = parse_as_u16(nla.value())
-                    }
-                    IFLA_BOND_AD_INFO_PARTNER_KEY => {
-                        ad_info.partner_key = parse_as_u16(nla.value())
-                    }
-                    IFLA_BOND_AD_INFO_PARTNER_MAC => {
-                        ad_info.partner_mac = parse_as_48_bits_mac(nla.value())
-                    }
-                    _ => {
-                        eprintln!("unknown nla kind {} value: {:?}", nla.kind(), nla.value());
-                    },
+            Ok(nla) => match nla.kind() {
+                IFLA_BOND_AD_INFO_AGGREGATOR => {
+                    ad_info.aggregator = parse_as_u16(nla.value())
                 }
-            }
+                IFLA_BOND_AD_INFO_NUM_PORTS => {
+                    ad_info.num_ports = parse_as_u16(nla.value())
+                }
+                IFLA_BOND_AD_INFO_ACTOR_KEY => {
+                    ad_info.actor_key = parse_as_u16(nla.value())
+                }
+                IFLA_BOND_AD_INFO_PARTNER_KEY => {
+                    ad_info.partner_key = parse_as_u16(nla.value())
+                }
+                IFLA_BOND_AD_INFO_PARTNER_MAC => {
+                    ad_info.partner_mac = parse_as_48_bits_mac(nla.value())
+                }
+                _ => {
+                    eprintln!(
+                        "unknown nla kind {} value: {:?}",
+                        nla.kind(),
+                        nla.value()
+                    );
+                }
+            },
             Err(e) => {
                 eprintln!("{}", e);
             }
@@ -127,16 +130,18 @@ fn get_bond_mode(raw: &[u8]) -> u8 {
     let nlas = NlasIterator::new(raw);
     for nla in nlas {
         match nla {
-            Ok(nla) => {
-                match nla.kind() {
-                    IFLA_BOND_MODE => {
-                        return parse_as_u8(nla.value());
-                    }
-                    _ => {
-                        eprintln!("unknown nla kind {} value: {:?}", nla.kind(), nla.value());
-                    },
+            Ok(nla) => match nla.kind() {
+                IFLA_BOND_MODE => {
+                    return parse_as_u8(nla.value());
                 }
-            }
+                _ => {
+                    eprintln!(
+                        "unknown nla kind {} value: {:?}",
+                        nla.kind(),
+                        nla.value()
+                    );
+                }
+            },
             Err(e) => {
                 eprintln!("{}", e);
             }
@@ -447,7 +452,9 @@ pub(crate) fn parse_bond_info(raw: &[u8]) -> HashMap<String, String> {
     for nla in nlas {
         match nla {
             Ok(nla) => {
-                if let Some(func) = NLA_PARSE_FUNS.get::<usize>(nla.kind().into()) {
+                if let Some(func) =
+                    NLA_PARSE_FUNS.get::<usize>(nla.kind().into())
+                {
                     if let Some((name, value)) = func(nla.value(), &mode) {
                         bond_options.insert(name, value);
                     }
@@ -474,8 +481,10 @@ pub(crate) fn parse_bond_info(raw: &[u8]) -> HashMap<String, String> {
                         format!("{}", &ad_info.partner_mac),
                     );
                 } else {
-                    bond_options
-                        .insert(format!("{}", nla.kind()), format!("{:?}", nla.value()));
+                    bond_options.insert(
+                        format!("{}", nla.kind()),
+                        format!("{:?}", nla.value()),
+                    );
                 }
             }
             Err(e) => {
@@ -517,35 +526,42 @@ pub(crate) fn parse_bond_subordinate_info(raw: &[u8]) -> BondSubordinateInfo {
     let mut ad_partner_oper_port_state = None;
     for nla in nlas {
         match nla {
-            Ok(nla) =>  {
-                match nla.kind(){
-                    IFLA_BOND_SLAVE_STATE => {
-                        subordinate_state = parse_as_u8(nla.value()).into()
-                    }
-                    IFLA_BOND_SLAVE_MII_STATUS => mii_status = parse_as_u8(nla.value()).into(),
-                    IFLA_BOND_SLAVE_LINK_FAILURE_COUNT => {
-                        link_failure_count = parse_as_u32(nla.value())
-                    }
-                    IFLA_BOND_SLAVE_PERM_HWADDR => {
-                        perm_hwaddr = parse_as_mac(nla.value_length(), nla.value());
-                    }
-                    IFLA_BOND_SLAVE_QUEUE_ID => queue_id = parse_as_u16(nla.value()),
-                    IFLA_BOND_SLAVE_AD_AGGREGATOR_ID => {
-                        ad_aggregator_id = Some(parse_as_u16(nla.value()));
-                    }
-                    IFLA_BOND_SLAVE_AD_ACTOR_OPER_PORT_STATE => {
-                        ad_actor_oper_port_state = Some(parse_as_u8(nla.value()));
-                    }
-                    IFLA_BOND_SLAVE_AD_PARTNER_OPER_PORT_STATE => {
-                        ad_partner_oper_port_state = Some(parse_as_u16(nla.value()));
-                    }
-                    _ => {
-                        eprintln!("unknown nla kind {} value: {:?}", nla.kind(), nla.value());
-                    }
+            Ok(nla) => match nla.kind() {
+                IFLA_BOND_SLAVE_STATE => {
+                    subordinate_state = parse_as_u8(nla.value()).into()
                 }
-            }
+                IFLA_BOND_SLAVE_MII_STATUS => {
+                    mii_status = parse_as_u8(nla.value()).into()
+                }
+                IFLA_BOND_SLAVE_LINK_FAILURE_COUNT => {
+                    link_failure_count = parse_as_u32(nla.value())
+                }
+                IFLA_BOND_SLAVE_PERM_HWADDR => {
+                    perm_hwaddr = parse_as_mac(nla.value_length(), nla.value());
+                }
+                IFLA_BOND_SLAVE_QUEUE_ID => {
+                    queue_id = parse_as_u16(nla.value())
+                }
+                IFLA_BOND_SLAVE_AD_AGGREGATOR_ID => {
+                    ad_aggregator_id = Some(parse_as_u16(nla.value()));
+                }
+                IFLA_BOND_SLAVE_AD_ACTOR_OPER_PORT_STATE => {
+                    ad_actor_oper_port_state = Some(parse_as_u8(nla.value()));
+                }
+                IFLA_BOND_SLAVE_AD_PARTNER_OPER_PORT_STATE => {
+                    ad_partner_oper_port_state =
+                        Some(parse_as_u16(nla.value()));
+                }
+                _ => {
+                    eprintln!(
+                        "unknown nla kind {} value: {:?}",
+                        nla.kind(),
+                        nla.value()
+                    );
+                }
+            },
             Err(e) => {
-                    eprintln!("{}", e);
+                eprintln!("{}", e);
             }
         }
     }

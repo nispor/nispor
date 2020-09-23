@@ -1,8 +1,8 @@
 use crate::netlink::parse_af_spec_bridge_info;
 use crate::netlink::parse_bridge_info;
 use crate::netlink::parse_bridge_port_info;
-use crate::Iface;
 use crate::ControllerType;
+use crate::Iface;
 use netlink_packet_route::rtnl::link::nlas;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
