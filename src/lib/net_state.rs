@@ -3,6 +3,8 @@ use crate::ifaces::get_ifaces;
 use crate::ifaces::Iface;
 use crate::route::get_routes;
 use crate::route::Route;
+use crate::route_rule::get_route_rules;
+use crate::route_rule::RouteRule;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -10,12 +12,18 @@ use std::collections::HashMap;
 pub struct NetState {
     pub ifaces: HashMap<String, Iface>,
     pub routes: Vec<Route>,
+    pub rules: Vec<RouteRule>,
 }
 
 impl NetState {
     pub fn retrieve() -> Result<NetState, NisporError> {
         let ifaces = get_ifaces()?;
         let routes = get_routes(&ifaces)?;
-        Ok(NetState { ifaces, routes })
+        let rules = get_route_rules()?;
+        Ok(NetState {
+            ifaces,
+            routes,
+            rules,
+        })
     }
 }
