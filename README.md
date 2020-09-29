@@ -60,6 +60,8 @@ varlink call unix:/run/nispor/nispor.so/info.nispor.Get
  * Veth
  * VRF(Virtual Routing and Forwarding)
  * SR-IOV
+ * MacVlan
+ * MacVtap
 
 ## TODO:
  * Error handling instead of `unwrap()/panic!/etc`
