@@ -91,6 +91,9 @@ elif [ "CHK$1" == "CHKmacvtap" ];then
     sudo ip link set link dev macvtap0 type macvtap macaddr add 00:22:22:22:22:22
     sudo ip link set eth1 up
     sudo ip link set macvtap0 up
+elif [ "CHK$1" == "CHKrule" ];then
+    create_nics
+    sudo ip rule add from 192.0.2.1 to 192.0.2.2 tos 10 protocol kernel table 100 iif eth1 oif eth2
 elif [ "CHK$1" == "CHKrm" ];then
     sudo ip link del mac0
     sudo ip link del macvtap0
@@ -103,5 +106,6 @@ elif [ "CHK$1" == "CHKrm" ];then
     sudo ip link del vrf0
     sudo ip netns del tmp
     sudo ip link del tun1
+    sudo ip rule del from 192.0.2.1 to 192.0.2.2 tos 10 protocol kernel table 100 iif eth1 oif eth2
     sudo modprobe -r netdevsim
 fi

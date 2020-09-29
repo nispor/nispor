@@ -19,6 +19,12 @@ fn main() {
                                 serde_json::to_string_pretty(&state.routes)
                                     .unwrap()
                             );
+                        } else if argv[1] == "rule" {
+                            println!(
+                                "{}",
+                                serde_json::to_string_pretty(&state.rules)
+                                    .unwrap()
+                            );
                         } else {
                             eprintln!("Interface '{}' not found", argv[1]);
                         }
