@@ -7,6 +7,8 @@ use crate::ifaces::bridge::get_bridge_port_info;
 use crate::ifaces::bridge::parse_bridge_vlan_info;
 use crate::ifaces::bridge::BridgeInfo;
 use crate::ifaces::bridge::BridgePortInfo;
+use crate::ifaces::ipoib::get_ipoib_info;
+use crate::ifaces::ipoib::IpoibInfo;
 use crate::ifaces::mac_vlan::get_mac_vlan_info;
 use crate::ifaces::mac_vlan::MacVlanInfo;
 use crate::ifaces::mac_vtap::get_mac_vtap_info;
@@ -60,6 +62,7 @@ pub enum IfaceType {
     MacVlan,
     MacVtap,
     OpenvSwitch,
+    Ipoib,
     Unknown,
     Other(String),
 }
@@ -184,6 +187,8 @@ pub struct Iface {
     pub mac_vtap: Option<MacVtapInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sriov: Option<SriovInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ipoib: Option<IpoibInfo>,
 }
 
 // TODO: impl From Iface to IfaceConf
@@ -243,6 +248,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                         nlas::InfoKind::Vrf => IfaceType::Vrf,
                         nlas::InfoKind::MacVlan => IfaceType::MacVlan,
                         nlas::InfoKind::MacVtap => IfaceType::MacVtap,
+                        nlas::InfoKind::Ipoib => IfaceType::Ipoib,
                         nlas::InfoKind::Other(s) => match s.as_ref() {
                             "openvswitch" => IfaceType::OpenvSwitch,
                             _ => IfaceType::Other(s.clone()),
@@ -278,6 +284,9 @@ pub(crate) fn parse_nl_msg_to_iface(
                         }
                         IfaceType::MacVtap => {
                             iface_state.mac_vtap = get_mac_vtap_info(&d)?
+                        }
+                        IfaceType::Ipoib => {
+                            iface_state.ipoib = get_ipoib_info(&d)
                         }
                         _ => eprintln!(
                             "Unhandled IFLA_INFO_DATA for iface type {:?}",

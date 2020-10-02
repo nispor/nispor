@@ -63,6 +63,7 @@ varlink call unix:/run/nispor/nispor.so/info.nispor.Get
  * SR-IOV
  * MacVlan
  * MacVtap
+ * IP over Infiniband
 
 ## TODO:
  * Error handling instead of `unwrap()/panic!/etc`
