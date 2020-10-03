@@ -2,50 +2,14 @@ use crate::netlink::nla::parse_as_u16;
 use crate::netlink::nla::parse_as_u32;
 use crate::netlink::nla::parse_as_u8;
 use crate::parse_as_mac;
+use crate::BondAdInfo;
+use crate::BondInfo;
 use crate::BondMiiStatus;
+use crate::BondMode;
 use crate::BondSubordinateInfo;
 use crate::BondSubordinateState;
 use netlink_packet_route::rtnl::nlas::NlasIterator;
-use std::collections::HashMap;
-use std::convert::TryFrom;
 use std::net::Ipv4Addr;
-
-// Using the kernel constant name.
-const BOND_MODE_ROUNDROBIN: u8 = 0;
-const BOND_MODE_ACTIVEBACKUP: u8 = 1;
-const BOND_MODE_XOR: u8 = 2;
-// const BOND_MODE_BROADCAST: u8 = 3;
-const BOND_MODE_8023AD: u8 = 4;
-const BOND_MODE_TLB: u8 = 5;
-const BOND_MODE_ALB: u8 = 6;
-
-// Using the sysfs mode name
-const BOND_MODES: &[&str] = &[
-    "balance-rr",
-    "active-backup",
-    "balance-xor",
-    "broadcast",
-    "802.3ad",
-    "balance-tlb",
-    "balance-alb",
-];
-
-fn bond_mode_u8_to_string(mode: u8) -> String {
-    if let Some(mode_str) = BOND_MODES.get::<usize>(mode.into()) {
-        mode_str.to_string()
-    } else {
-        format!("unknown: {}", mode)
-    }
-}
-
-#[derive(Debug, Eq, PartialEq, Clone, Default)]
-struct BondAdInfo {
-    aggregator: u16,
-    num_ports: u16,
-    actor_key: u16,
-    partner_key: u16,
-    partner_mac: String,
-}
 
 const IFLA_BOND_MODE: u16 = 1;
 const IFLA_BOND_AD_INFO: u16 = 23;
@@ -96,19 +60,19 @@ fn parse_ad_info(raw: &[u8]) -> BondAdInfo {
         match nla {
             Ok(nla) => match nla.kind() {
                 IFLA_BOND_AD_INFO_AGGREGATOR => {
-                    ad_info.aggregator = parse_as_u16(nla.value())
+                    ad_info.aggregator = parse_as_u16(nla.value());
                 }
                 IFLA_BOND_AD_INFO_NUM_PORTS => {
-                    ad_info.num_ports = parse_as_u16(nla.value())
+                    ad_info.num_ports = parse_as_u16(nla.value());
                 }
                 IFLA_BOND_AD_INFO_ACTOR_KEY => {
-                    ad_info.actor_key = parse_as_u16(nla.value())
+                    ad_info.actor_key = parse_as_u16(nla.value());
                 }
                 IFLA_BOND_AD_INFO_PARTNER_KEY => {
-                    ad_info.partner_key = parse_as_u16(nla.value())
+                    ad_info.partner_key = parse_as_u16(nla.value());
                 }
                 IFLA_BOND_AD_INFO_PARTNER_MAC => {
-                    ad_info.partner_mac = parse_as_48_bits_mac(nla.value())
+                    ad_info.partner_mac = parse_as_48_bits_mac(nla.value());
                 }
                 _ => {
                     eprintln!(
@@ -126,297 +90,188 @@ fn parse_ad_info(raw: &[u8]) -> BondAdInfo {
     ad_info
 }
 
-fn get_bond_mode(raw: &[u8]) -> u8 {
+fn get_bond_mode(raw: &[u8]) -> BondMode {
     let nlas = NlasIterator::new(raw);
     for nla in nlas {
         match nla {
             Ok(nla) => match nla.kind() {
                 IFLA_BOND_MODE => {
-                    return parse_as_u8(nla.value());
+                    return parse_as_u8(nla.value()).into();
                 }
-                _ => {
-                    eprintln!(
-                        "unknown nla kind {} value: {:?}",
-                        nla.kind(),
-                        nla.value()
-                    );
-                }
+                _ => (),
             },
             Err(e) => {
                 eprintln!("{}", e);
             }
         }
     }
-    std::u8::MAX
+    eprintln!("Failed to parse bond mode from NLAS: {:?}", nlas);
+    BondMode::Unknown
 }
 
 // TODO: Use macro to generate function below
-fn parse_active_subordinate(
-    data: &[u8],
-    mode: &u8,
-) -> Option<(String, String)> {
-    if [BOND_MODE_ACTIVEBACKUP, BOND_MODE_ALB, BOND_MODE_TLB].contains(mode) {
-        Some((
-            "active_subordinate".into(),
-            format!("{}", parse_as_u32(data)),
-        ))
-    } else {
-        None
-    }
+fn parse_miimon(data: &[u8], bond_info: &mut BondInfo) {
+    bond_info.miimon = Some(parse_as_u32(data));
 }
 
-fn parse_miimon(data: &[u8], _mode: &u8) -> Option<(String, String)> {
-    Some(("miimon".into(), format!("{}", parse_as_u32(data))))
+fn parse_void(_data: &[u8], _bond_info: &mut BondInfo) {}
+
+fn parse_updelay(data: &[u8], bond_info: &mut BondInfo) {
+    bond_info.updelay = Some(parse_as_u32(data));
 }
 
-fn parse_void(_data: &[u8], _mode: &u8) -> Option<(String, String)> {
-    None
+fn parse_downdelay(data: &[u8], bond_info: &mut BondInfo) {
+    bond_info.downdelay = Some(parse_as_u32(data));
 }
 
-fn parse_updelay(data: &[u8], _mode: &u8) -> Option<(String, String)> {
-    Some(("updelay".into(), format!("{}", parse_as_u32(data))))
+fn parse_use_carrier(data: &[u8], bond_info: &mut BondInfo) {
+    bond_info.use_carrier = Some(parse_as_u8(data) > 0);
 }
 
-fn parse_downdelay(data: &[u8], _mode: &u8) -> Option<(String, String)> {
-    Some(("downdelay".into(), format!("{}", parse_as_u32(data))))
+fn parse_arp_interval(data: &[u8], bond_info: &mut BondInfo) {
+    bond_info.arp_interval = Some(parse_as_u32(data));
 }
 
-fn parse_use_carrier(data: &[u8], _mode: &u8) -> Option<(String, String)> {
-    Some(("use_carrier".into(), format!("{}", parse_as_u8(data))))
+fn parse_arp_ip_target(data: &[u8], bond_info: &mut BondInfo) {
+    bond_info.arp_ip_target =
+        Some(ipv4_addr_array_to_string(&parse_as_nested_ipv4_addr(data)));
 }
 
-fn parse_arp_interval(data: &[u8], _mode: &u8) -> Option<(String, String)> {
-    Some(("arp_interval".into(), format!("{}", parse_as_u32(data))))
+fn parse_arp_all_targets(data: &[u8], bond_info: &mut BondInfo) {
+    bond_info.arp_all_targets = Some(parse_as_u32(data).into());
 }
 
-fn parse_arp_ip_target(data: &[u8], _mode: &u8) -> Option<(String, String)> {
-    Some((
-        "arp_ip_target".into(),
-        format!(
-            "{}",
-            ipv4_addr_array_to_string(&parse_as_nested_ipv4_addr(data))
-        ),
-    ))
+fn parse_arp_validate(data: &[u8], bond_info: &mut BondInfo) {
+    bond_info.arp_validate = Some(parse_as_u32(data).into());
 }
 
-fn parse_arp_all_targets(data: &[u8], _mode: &u8) -> Option<(String, String)> {
-    Some(("arp_all_targets".into(), format!("{}", parse_as_u32(data))))
-}
-
-const ARP_VALIDATE_VALUES: &[&str] = &[
-    "none",
-    "active",
-    "backup",
-    "all",
-    "filter",
-    "filter_active",
-    "filter_backup",
-];
-
-fn parse_arp_validate(data: &[u8], _mode: &u8) -> Option<(String, String)> {
-    let value_int = parse_as_u32(data);
-    if let Ok(i) = usize::try_from(value_int) {
-        if let Some(value) = ARP_VALIDATE_VALUES.get(i) {
-            return Some(("arp_validate".into(), value.to_string()));
-        }
-    }
-    Some(("arp_validate".into(), format!("unknown: {}", value_int)))
-}
-
-fn parse_primary(data: &[u8], mode: &u8) -> Option<(String, String)> {
-    if [BOND_MODE_ACTIVEBACKUP, BOND_MODE_ALB, BOND_MODE_TLB].contains(mode) {
-        Some(("primary".into(), format!("{}", parse_as_u32(data))))
-    } else {
-        None
-    }
-}
-
-const PRIMARY_RESELECT_VALUES: &[&str] = &["always", "better", "failure"];
-
-fn parse_primary_reselect(data: &[u8], mode: &u8) -> Option<(String, String)> {
-    if [BOND_MODE_ACTIVEBACKUP, BOND_MODE_ALB, BOND_MODE_TLB].contains(mode) {
-        let i: usize = parse_as_u8(data).into();
-        if let Some(value) = PRIMARY_RESELECT_VALUES.get(i) {
-            Some(("primary_reselect".into(), value.to_string()))
-        } else {
-            Some(("primary_reselect".into(), format!("unknown: {}", i)))
-        }
-    } else {
-        None
-    }
-}
-
-const FAIL_OVER_MAC_VALUES: &[&str] = &["none", "active", "follow"];
-
-fn parse_fail_over_mac(data: &[u8], mode: &u8) -> Option<(String, String)> {
-    if *mode == BOND_MODE_ACTIVEBACKUP {
-        let i: usize = parse_as_u8(data).into();
-        if let Some(value) = FAIL_OVER_MAC_VALUES.get(i) {
-            Some(("fail_over_mac".into(), value.to_string()))
-        } else {
-            Some(("fail_over_mac".into(), format!("unknown: {}", i)))
-        }
-    } else {
-        None
-    }
-}
-
-const XMIT_HASH_POLICY_VALUES: &[&str] =
-    &["layer2", "layer2+3", "layer3+4", "encap2+3", "encap3+4"];
-
-fn parse_xmit_hash_policy(data: &[u8], mode: &u8) -> Option<(String, String)> {
-    if [BOND_MODE_XOR, BOND_MODE_8023AD, BOND_MODE_TLB].contains(mode) {
-        let i: usize = parse_as_u8(data).into();
-        if let Some(value) = XMIT_HASH_POLICY_VALUES.get(i) {
-            Some(("xmit_hash_policy".into(), value.to_string()))
-        } else {
-            Some(("xmit_hash_policy".into(), format!("unknown: {}", i)))
-        }
-    } else {
-        None
-    }
-}
-
-fn parse_resend_igmp(data: &[u8], mode: &u8) -> Option<(String, String)> {
+fn parse_primary(data: &[u8], bond_info: &mut BondInfo) {
     if [
-        BOND_MODE_ROUNDROBIN,
-        BOND_MODE_ACTIVEBACKUP,
-        BOND_MODE_TLB,
-        BOND_MODE_ALB,
+        BondMode::ActiveBackup,
+        BondMode::BalanceAlb,
+        BondMode::BalanceTlb,
     ]
-    .contains(mode)
+    .contains(&bond_info.mode)
     {
-        Some(("resend_igmp".into(), format!("{}", parse_as_u32(data))))
-    } else {
-        None
+        bond_info.primary = Some(format!("{}", parse_as_u32(data)));
     }
 }
 
-fn parse_num_peer_notif(data: &[u8], mode: &u8) -> Option<(String, String)> {
-    if *mode == BOND_MODE_ACTIVEBACKUP {
-        Some(("num_peer_notif".into(), format!("{}", parse_as_u8(data))))
-    } else {
-        None
+fn parse_primary_reselect(data: &[u8], bond_info: &mut BondInfo) {
+    if [
+        BondMode::ActiveBackup,
+        BondMode::BalanceAlb,
+        BondMode::BalanceTlb,
+    ]
+    .contains(&bond_info.mode)
+    {
+        bond_info.primary_reselect = Some(parse_as_u8(data).into());
     }
 }
 
-const ALL_SUBORDINATES_ACTIVE_VALUES: &[&str] = &["dropped", "delivered"];
-
-fn parse_all_subordinates_active(
-    data: &[u8],
-    _mode: &u8,
-) -> Option<(String, String)> {
-    let i: usize = parse_as_u8(data).into();
-    if let Some(value) = ALL_SUBORDINATES_ACTIVE_VALUES.get(i) {
-        Some(("all_subordinates_active".into(), value.to_string()))
-    } else {
-        Some(("all_subordinates_active".into(), format!("unknown: {}", i)))
+fn parse_fail_over_mac(data: &[u8], bond_info: &mut BondInfo) {
+    if bond_info.mode == BondMode::ActiveBackup {
+        bond_info.fail_over_mac = Some(parse_as_u8(data).into());
     }
 }
 
-fn parse_min_links(data: &[u8], mode: &u8) -> Option<(String, String)> {
-    if *mode == BOND_MODE_8023AD {
-        Some(("min_links".into(), format!("{}", parse_as_u32(data))))
-    } else {
-        None
+fn parse_xmit_hash_policy(data: &[u8], bond_info: &mut BondInfo) {
+    if [
+        BondMode::BalanceXor,
+        BondMode::Ieee8021AD,
+        BondMode::BalanceTlb,
+    ]
+    .contains(&bond_info.mode)
+    {
+        bond_info.xmit_hash_policy = Some(parse_as_u8(data).into());
     }
 }
 
-fn parse_lp_interval(data: &[u8], mode: &u8) -> Option<(String, String)> {
-    if [BOND_MODE_TLB, BOND_MODE_ALB].contains(mode) {
-        Some(("lp_interval".into(), format!("{}", parse_as_u32(data))))
-    } else {
-        None
+fn parse_resend_igmp(data: &[u8], bond_info: &mut BondInfo) {
+    if [
+        BondMode::BalanceRoundRobin,
+        BondMode::ActiveBackup,
+        BondMode::BalanceTlb,
+        BondMode::BalanceAlb,
+    ]
+    .contains(&bond_info.mode)
+    {
+        bond_info.resend_igmp = Some(parse_as_u32(data));
     }
 }
 
-fn parse_packets_per_subordinate(
-    data: &[u8],
-    mode: &u8,
-) -> Option<(String, String)> {
-    if *mode == BOND_MODE_ROUNDROBIN {
-        Some((
-            "packets_per_subordinate".into(),
-            format!("{}", parse_as_u32(data)),
-        ))
-    } else {
-        None
+fn parse_num_peer_notif(data: &[u8], bond_info: &mut BondInfo) {
+    if bond_info.mode == BondMode::ActiveBackup {
+        bond_info.num_unsol_na = Some(parse_as_u8(data));
+        bond_info.num_grat_arp = Some(parse_as_u8(data));
     }
 }
 
-const LACP_RATE_VALUES: &[&str] = &["slow", "fast"];
+fn parse_all_subordinates_active(data: &[u8], bond_info: &mut BondInfo) {
+    bond_info.all_subordinates_active = Some(parse_as_u8(data).into());
+}
 
-fn parse_ad_lacp_rate(data: &[u8], mode: &u8) -> Option<(String, String)> {
-    if *mode == BOND_MODE_8023AD {
-        let i: usize = parse_as_u8(data).into();
-        if let Some(value) = LACP_RATE_VALUES.get(i) {
-            Some(("lacp_rate".into(), value.to_string()))
-        } else {
-            Some(("lacp_rate".into(), format!("unknown: {}", i)))
-        }
-    } else {
-        None
+fn parse_min_links(data: &[u8], bond_info: &mut BondInfo) {
+    if bond_info.mode == BondMode::Ieee8021AD {
+        bond_info.min_links = Some(parse_as_u32(data));
     }
 }
 
-const AD_SELECT_VALUES: &[&str] = &["stable", "bandwidth", "count"];
-
-fn parse_ad_select(data: &[u8], mode: &u8) -> Option<(String, String)> {
-    if *mode == BOND_MODE_8023AD {
-        let i: usize = parse_as_u8(data).into();
-        if let Some(value) = AD_SELECT_VALUES.get(i) {
-            Some(("ad_select".into(), value.to_string()))
-        } else {
-            Some(("ad_select".into(), format!("unknown: {}", i)))
-        }
-    } else {
-        None
+fn parse_lp_interval(data: &[u8], bond_info: &mut BondInfo) {
+    if [BondMode::BalanceTlb, BondMode::BalanceAlb].contains(&bond_info.mode) {
+        bond_info.lp_interval = Some(parse_as_u32(data));
     }
 }
 
-fn parse_ad_actor_sys_prio(data: &[u8], mode: &u8) -> Option<(String, String)> {
-    if *mode == BOND_MODE_8023AD {
-        Some((
-            "ad_actor_sys_prio".into(),
-            format!("{}", parse_as_u16(data)),
-        ))
-    } else {
-        None
+fn parse_packets_per_subordinate(data: &[u8], bond_info: &mut BondInfo) {
+    if bond_info.mode == BondMode::BalanceRoundRobin {
+        bond_info.packets_per_subordinate = Some(parse_as_u32(data));
+    }
+}
+fn parse_ad_lacp_rate(data: &[u8], bond_info: &mut BondInfo) {
+    if bond_info.mode == BondMode::Ieee8021AD {
+        bond_info.lacp_rate = Some(parse_as_u8(data).into());
     }
 }
 
-fn parse_ad_user_port_key(data: &[u8], mode: &u8) -> Option<(String, String)> {
-    if *mode == BOND_MODE_8023AD {
-        Some(("ad_user_port_key".into(), format!("{}", parse_as_u16(data))))
-    } else {
-        None
+fn parse_ad_select(data: &[u8], bond_info: &mut BondInfo) {
+    if bond_info.mode == BondMode::Ieee8021AD {
+        bond_info.ad_select = Some(parse_as_u8(data).into());
     }
 }
 
-fn parse_ad_actor_system(data: &[u8], mode: &u8) -> Option<(String, String)> {
-    if *mode == BOND_MODE_8023AD {
-        Some(("ad_actor_system".into(), parse_as_48_bits_mac(data)))
-    } else {
-        None
+fn parse_ad_actor_sys_prio(data: &[u8], bond_info: &mut BondInfo) {
+    if bond_info.mode == BondMode::Ieee8021AD {
+        bond_info.ad_actor_sys_prio = Some(parse_as_u16(data));
     }
 }
 
-fn parse_tlb_dynamic_lb(data: &[u8], mode: &u8) -> Option<(String, String)> {
-    if *mode == BOND_MODE_TLB {
-        Some(("tlb_dynamic_lb".into(), format!("{}", parse_as_u8(data))))
-    } else {
-        None
+fn parse_ad_user_port_key(data: &[u8], bond_info: &mut BondInfo) {
+    if bond_info.mode == BondMode::Ieee8021AD {
+        bond_info.ad_user_port_key = Some(parse_as_u16(data));
     }
 }
 
-fn parse_peer_notif_delay(data: &[u8], _mode: &u8) -> Option<(String, String)> {
-    Some(("peer_notif_delay".into(), format!("{}", parse_as_u32(data))))
+fn parse_ad_actor_system(data: &[u8], bond_info: &mut BondInfo) {
+    if bond_info.mode == BondMode::Ieee8021AD {
+        bond_info.ad_actor_system = Some(parse_as_48_bits_mac(data));
+    }
 }
 
-const NLA_PARSE_FUNS: &[fn(&[u8], &u8) -> Option<(String, String)>] = &[
+fn parse_tlb_dynamic_lb(data: &[u8], bond_info: &mut BondInfo) {
+    if bond_info.mode == BondMode::BalanceTlb {
+        bond_info.tlb_dynamic_lb = Some(parse_as_u8(data) > 0);
+    }
+}
+
+fn parse_peer_notif_delay(data: &[u8], bond_info: &mut BondInfo) {
+    bond_info.peer_notif_delay = Some(parse_as_u32(data));
+}
+
+const NLA_PARSE_FUNS: &[fn(&[u8], &mut BondInfo)] = &[
     parse_void, // IFLA_BOND_UNSPEC
-    parse_void, // IFLA_BOND_MODE
-    parse_active_subordinate,
+    parse_void, // IFLA_BOND_MODE parsed by get_bond_mode()
+    parse_void, // IFLA_BOND_ACTIVE_SLAVE is deprecated
     parse_miimon,
     parse_updelay,
     parse_downdelay,
@@ -445,9 +300,9 @@ const NLA_PARSE_FUNS: &[fn(&[u8], &u8) -> Option<(String, String)>] = &[
     parse_peer_notif_delay,
 ];
 
-pub(crate) fn parse_bond_info(raw: &[u8]) -> HashMap<String, String> {
-    let mut bond_options: HashMap<String, String> = HashMap::new();
-    let mode = get_bond_mode(raw);
+pub(crate) fn parse_bond_info(raw: &[u8]) -> BondInfo {
+    let mut bond_info = BondInfo::default();
+    bond_info.mode = get_bond_mode(raw);
     let nlas = NlasIterator::new(raw);
     for nla in nlas {
         match nla {
@@ -455,54 +310,23 @@ pub(crate) fn parse_bond_info(raw: &[u8]) -> HashMap<String, String> {
                 if let Some(func) =
                     NLA_PARSE_FUNS.get::<usize>(nla.kind().into())
                 {
-                    if let Some((name, value)) = func(nla.value(), &mode) {
-                        bond_options.insert(name, value);
-                    }
+                    func(nla.value(), &mut bond_info);
                 } else if nla.kind() == IFLA_BOND_AD_INFO {
-                    let ad_info = parse_ad_info(nla.value());
-                    bond_options.insert(
-                        "ad_aggregator".into(),
-                        format!("{}", ad_info.aggregator),
-                    );
-                    bond_options.insert(
-                        "ad_num_ports".into(),
-                        format!("{}", ad_info.num_ports),
-                    );
-                    bond_options.insert(
-                        "ad_actor_key".into(),
-                        format!("{}", ad_info.actor_key),
-                    );
-                    bond_options.insert(
-                        "ad_partner_key".into(),
-                        format!("{}", ad_info.partner_key),
-                    );
-                    bond_options.insert(
-                        "ad_partner_mac".into(),
-                        format!("{}", &ad_info.partner_mac),
-                    );
+                    bond_info.ad_info = Some(parse_ad_info(nla.value()));
                 } else {
-                    bond_options.insert(
-                        format!("{}", nla.kind()),
-                        format!("{:?}", nla.value()),
+                    eprintln!(
+                        "Failed to parse IFLA_LINKINFO for bond: {:?} {:?}",
+                        nla.kind(),
+                        nla.value()
                     );
                 }
             }
             Err(e) => {
-                eprintln!("{}", e);
+                eprintln!("Failed to parse IFLA_LINKINFO {:?}", e);
             }
         }
     }
-
-    bond_options.insert("mode".to_string(), bond_mode_u8_to_string(mode));
-
-    if let Some(value) = bond_options.get("num_peer_notif") {
-        let value1 = value.clone();
-        let value2 = value.clone();
-        bond_options.insert("num_unsol_na".into(), value1);
-        bond_options.insert("num_grat_arp".into(), value2);
-    }
-    bond_options.remove("num_peer_notif");
-    bond_options
+    bond_info
 }
 
 const IFLA_BOND_SLAVE_STATE: u16 = 1;
