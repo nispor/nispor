@@ -23,15 +23,119 @@ class NisporBond(NisporBaseIface):
 
     @property
     def subordinates(self):
-        return self._bond_info.get("subordinates")
+        return self._bond_info["subordinates"]
 
     @property
     def mode(self):
-        return self._bond_info.get("mode")
+        return self._bond_info["mode"]
 
     @property
-    def options(self):
-        return self._bond_info.get("options")
+    def miimon(self):
+        return self._bond_info.get("miimon")
+
+    @property
+    def updelay(self):
+        return self._bond_info.get("updelay")
+
+    @property
+    def downdelay(self):
+        return self._bond_info.get("downdelay")
+
+    @property
+    def use_carrier(self):
+        return self._bond_info.get("use_carrier")
+
+    @property
+    def arp_interval(self):
+        return self._bond_info.get("arp_interval")
+
+    @property
+    def arp_ip_target(self):
+        return self._bond_info.get("arp_ip_target")
+
+    @property
+    def arp_all_targets(self):
+        return self._bond_info.get("arp_all_targets")
+
+    @property
+    def arp_validate(self):
+        return self._bond_info.get("arp_validate")
+
+    @property
+    def primary(self):
+        return self._bond_info.get("primary")
+
+    @property
+    def primary_reselect(self):
+        return self._bond_info.get("primary_reselect")
+
+    @property
+    def fail_over_mac(self):
+        return self._bond_info.get("fail_over_mac")
+
+    @property
+    def xmit_hash_policy(self):
+        return self._bond_info.get("xmit_hash_policy")
+
+    @property
+    def resend_igmp(self):
+        return self._bond_info.get("resend_igmp")
+
+    @property
+    def num_unsol_na(self):
+        return self._bond_info.get("num_unsol_na")
+
+    @property
+    def num_grat_arp(self):
+        return self._bond_info.get("num_grat_arp")
+
+    @property
+    def all_subordinates_active(self):
+        return self._bond_info.get("all_subordinates_active")
+
+    @property
+    def min_links(self):
+        return self._bond_info.get("min_links")
+
+    @property
+    def lp_interval(self):
+        return self._bond_info.get("lp_interval")
+
+    @property
+    def packets_per_subordinate(self):
+        return self._bond_info.get("packets_per_subordinate")
+
+    @property
+    def lacp_rate(self):
+        return self._bond_info.get("lacp_rate")
+
+    @property
+    def ad_select(self):
+        return self._bond_info.get("ad_select")
+
+    @property
+    def ad_actor_sys_prio(self):
+        return self._bond_info.get("ad_actor_sys_prio")
+
+    @property
+    def ad_user_port_key(self):
+        return self._bond_info.get("ad_user_port_key")
+
+    @property
+    def ad_actor_system(self):
+        return self._bond_info.get("ad_actor_system")
+
+    @property
+    def tlb_dynamic_lb(self):
+        return self._bond_info.get("tlb_dynamic_lb")
+
+    @property
+    def peer_notif_delay(self):
+        return self._bond_info.get("peer_notif_delay")
+
+    @property
+    def ad_info(self):
+        return self._bond_info.get("ad_info")
 
 
 class NisporBondSubordinate(NisporBaseSubordinateIface):
