@@ -4,6 +4,7 @@ interface for Linux network state querying.
 Currently providing:
  * Rust crate
  * Python binding
+ * C binding
  * Varlink interface -- `npd`
  * Command line tool -- `npc`
 
