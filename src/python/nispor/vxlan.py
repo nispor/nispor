@@ -85,12 +85,18 @@ class NisporVxlan(NisporBaseIface):
         return self._vxlan_info.get("l3miss")
 
     @property
+    def dst_port(self):
+        return self._vxlan_info.get("dst_port")
+
+    @property
     def dst_port_min(self):
-        return self._vxlan_info.get("dst_port_min")
+        # Deprecated. Will remove in 0.7.0
+        return self._vxlan_info.get("dst_port")
 
     @property
     def dst_port_max(self):
-        return self._vxlan_info.get("dst_port_max")
+        # Deprecated. Will remove in 0.7.0
+        return self._vxlan_info.get("dst_port")
 
     @property
     def udp_check_sum(self):
