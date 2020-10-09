@@ -1,4 +1,17 @@
 # Changelog
+## [0.6.0] - 2020-10-03
+### New features
+ * Add the support of MAC VTAP. (c76993b)
+ * Add the support of route rule. (757945b)
+
+### Break changes
+ * The bond options has been changed from arbitrary hash map to explicit
+   properties. (71b95db)
+
+### Bug fixes
+ * Do not panic on multipath route found. (bc383be)
+ * Fix the crash on vxlan when `dst_port` is set. (14dffd3)
+
 ## [0.5.1] - 2020-09-20
 ### Bug fixes
  * Add support of TUN/TAP in Python binding
