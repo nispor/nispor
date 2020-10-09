@@ -88,9 +88,7 @@ pub(crate) fn parse_vxlan_info(raw: &[u8]) -> VxlanInfo {
                     info.l3miss = parse_as_u8(nla.value()) > 0;
                 }
                 IFLA_VXLAN_PORT => {
-                    info.dst_port_min = parse_as_be16(nla.value());
-                    info.dst_port_max =
-                        parse_as_be16(&[nla.value()[2], nla.value()[3]]);
+                    info.dst_port = parse_as_be16(nla.value());
                 }
                 IFLA_VXLAN_GROUP6 => {
                     info.remote = parse_as_ipv6(nla.value());
