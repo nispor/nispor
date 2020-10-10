@@ -53,6 +53,7 @@ pub enum IfaceType {
     Tun,
     MacVlan,
     MacVtap,
+    OpenvSwitch,
     Unknown,
     Other(String),
 }
@@ -113,6 +114,7 @@ pub enum ControllerType {
     Bond,
     Bridge,
     Vrf,
+    OpenvSwitch,
     Other(String),
     Unknown,
 }
@@ -123,6 +125,7 @@ impl From<&str> for ControllerType {
             "bond" => ControllerType::Bond,
             "bridge" => ControllerType::Bridge,
             "vrf" => ControllerType::Vrf,
+            "openvswitch" => ControllerType::OpenvSwitch,
             _ => ControllerType::Other(s.to_string()),
         }
     }
@@ -233,7 +236,10 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         nlas::InfoKind::Vrf => IfaceType::Vrf,
                         nlas::InfoKind::MacVlan => IfaceType::MacVlan,
                         nlas::InfoKind::MacVtap => IfaceType::MacVtap,
-                        nlas::InfoKind::Other(s) => IfaceType::Other(s.clone()),
+                        nlas::InfoKind::Other(s) => match s.as_ref() {
+                            "openvswitch" => IfaceType::OpenvSwitch,
+                            _ => IfaceType::Other(s.clone()),
+                        },
                         _ => IfaceType::Other(format!("{:?}", t)),
                     };
                 }
