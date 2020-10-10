@@ -617,8 +617,8 @@ fn get_route(
 
 fn _addr_to_string(data: &[u8], family: &AddressFamily) -> String {
     match family {
-        AddressFamily::IPv4 => parse_as_ipv4(data),
-        AddressFamily::IPv6 => parse_as_ipv6(data),
+        AddressFamily::IPv4 => parse_as_ipv4(data).to_string(),
+        AddressFamily::IPv6 => parse_as_ipv6(data).to_string(),
         _ => format!("{:?}", data),
     }
 }

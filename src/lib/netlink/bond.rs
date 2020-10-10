@@ -1,6 +1,7 @@
 use crate::netlink::nla::parse_as_u16;
 use crate::netlink::nla::parse_as_u32;
 use crate::netlink::nla::parse_as_u8;
+use crate::netlink::nla::parse_as_ipv4;
 use crate::parse_as_mac;
 use crate::BondAdInfo;
 use crate::BondInfo;
@@ -20,9 +21,7 @@ fn parse_as_nested_ipv4_addr(raw: &[u8]) -> Vec<Ipv4Addr> {
     for nla in nlas {
         match nla {
             Ok(nla) => {
-                let data = nla.value();
-                addresses
-                    .push(Ipv4Addr::new(data[0], data[1], data[2], data[3]));
+                addresses.push(parse_as_ipv4(nla.value()))
             }
             Err(e) => {
                 eprintln!("{}", e);

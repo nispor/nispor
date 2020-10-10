@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use std::net::Ipv4Addr;
 use std::net::Ipv6Addr;
 
@@ -31,12 +32,14 @@ pub(crate) fn parse_as_u64(data: &[u8]) -> u64 {
     ])
 }
 
-pub(crate) fn parse_as_ipv4(data: &[u8]) -> String {
-    Ipv4Addr::from([data[0], data[1], data[2], data[3]]).to_string()
+pub(crate) fn parse_as_ipv4(data: &[u8]) -> Ipv4Addr {
+    let addr_bytes: [u8; 4] = data.try_into()
+    .expect("Got invalid IPv4 address u8, the length is not 4 ");
+    Ipv4Addr::from(addr_bytes)
 }
 
-pub(crate) fn parse_as_ipv6(data: &[u8]) -> String {
-    let mut addr_bytes = [0u8; 16];
-    addr_bytes.copy_from_slice(&data[..16]);
-    Ipv6Addr::from(addr_bytes).to_string()
+pub(crate) fn parse_as_ipv6(data: &[u8]) -> Ipv6Addr {
+    let addr_bytes: [u8; 16] = data.try_into()
+    .expect("Got invalid IPv6 address u8, the length is not 16 ");
+    Ipv6Addr::from(addr_bytes)
 }
