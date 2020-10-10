@@ -47,13 +47,13 @@ pub(crate) fn parse_vxlan_info(raw: &[u8]) -> VxlanInfo {
                     info.vxlan_id = parse_as_u32(nla.value());
                 }
                 IFLA_VXLAN_GROUP => {
-                    info.remote = parse_as_ipv4(nla.value());
+                    info.remote = parse_as_ipv4(nla.value()).to_string();
                 }
                 IFLA_VXLAN_LINK => {
                     info.base_iface = format!("{}", parse_as_u32(nla.value()));
                 }
                 IFLA_VXLAN_LOCAL => {
-                    info.local = parse_as_ipv4(nla.value());
+                    info.local = parse_as_ipv4(nla.value()).to_string();
                 }
                 IFLA_VXLAN_TTL => {
                     info.ttl = parse_as_u8(nla.value());
@@ -91,10 +91,10 @@ pub(crate) fn parse_vxlan_info(raw: &[u8]) -> VxlanInfo {
                     info.dst_port = parse_as_be16(nla.value());
                 }
                 IFLA_VXLAN_GROUP6 => {
-                    info.remote = parse_as_ipv6(nla.value());
+                    info.remote = parse_as_ipv6(nla.value()).to_string();
                 }
                 IFLA_VXLAN_LOCAL6 => {
-                    info.local = parse_as_ipv6(nla.value());
+                    info.local = parse_as_ipv6(nla.value()).to_string();
                 }
                 IFLA_VXLAN_UDP_CSUM => {
                     info.udp_check_sum = parse_as_u8(nla.value()) > 0;

@@ -4,13 +4,13 @@ use crate::Ipv4AddrInfo;
 use crate::Ipv4Info;
 use crate::Ipv6AddrInfo;
 use crate::Ipv6Info;
+use crate::netlink::nla::parse_as_ipv4;
+use crate::netlink::nla::parse_as_ipv6;
 use netlink_packet_route::rtnl::address::nlas::Nla::{
     Address, CacheInfo, Local,
 };
 use netlink_packet_route::rtnl::AddressMessage;
 use std::collections::HashMap;
-use std::net::Ipv4Addr;
-use std::net::Ipv6Addr;
 
 pub(crate) const AF_INET: u8 = 2;
 pub(crate) const AF_INET6: u8 = 10;
@@ -77,21 +77,9 @@ fn parse_ipv4_nlas(nl_msg: &AddressMessage) -> (u32, Ipv4AddrInfo) {
     let mut peer = String::new();
     for nla in &nl_msg.nlas {
         if let Local(addr_vec) = nla {
-            addr.address = Ipv4Addr::from([
-                addr_vec[0],
-                addr_vec[1],
-                addr_vec[2],
-                addr_vec[3],
-            ])
-            .to_string();
+            addr.address = parse_as_ipv4(addr_vec.as_slice()).to_string();
         } else if let Address(addr_vec) = nla {
-            peer = Ipv4Addr::from([
-                addr_vec[0],
-                addr_vec[1],
-                addr_vec[2],
-                addr_vec[3],
-            ])
-            .to_string();
+            peer = parse_as_ipv4(addr_vec.as_slice()).to_string();
         } else if let CacheInfo(cache_info_vec) = nla {
             let cache_info = parse_cache_info(&cache_info_vec);
             addr.preferred_lft = left_time_to_string(cache_info.ifa_prefered);
@@ -113,13 +101,7 @@ fn parse_ipv6_nlas(nl_msg: &AddressMessage) -> (u32, Ipv6AddrInfo) {
 
     for nla in &nl_msg.nlas {
         if let Address(addr_vec) = nla {
-            if addr_vec.len() == 16 {
-                let mut addr_bytes = [0u8; 16];
-                addr_bytes.copy_from_slice(&addr_vec[..16]);
-                addr.address = Ipv6Addr::from(addr_bytes).to_string();
-            } else {
-                panic!("Got invalid IPv6 address u8, the length is not 16 ");
-            }
+            addr.address = parse_as_ipv6(addr_vec.as_slice()).to_string();
         } else if let CacheInfo(cache_info_vec) = nla {
             let cache_info = parse_cache_info(&cache_info_vec);
             addr.preferred_lft = left_time_to_string(cache_info.ifa_prefered);
