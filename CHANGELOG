@@ -1,4 +1,12 @@
 # Changelog
+## [0.6.1] - 2020-10-10
+### New features
+ * Support OVS internal interface and OVS system interface. (4e546a0)
+
+### Bug fixes
+ * Fix the python binding for VXLAN `dst_port`. (3012402)
+ * bond, bridge: Remove the unsafe std::mem::transmute(). (ce23ba5)
+
 ## [0.6.0] - 2020-10-09
 ### New features
  * Add the support of MAC VTAP. (c76993b)
