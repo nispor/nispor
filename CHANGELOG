@@ -1,5 +1,5 @@
 # Changelog
-## [0.6.0] - 2020-10-03
+## [0.6.0] - 2020-10-09
 ### New features
  * Add the support of MAC VTAP. (c76993b)
  * Add the support of route rule. (757945b)

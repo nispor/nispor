@@ -6,34 +6,27 @@ use crate::Iface;
 use netlink_packet_route::rtnl::link::nlas;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::mem::transmute;
 
-const ETH_P_8021Q: u16 = 0x8100;
-const ETH_P_8021AD: u16 = 0x88A8;
-
-#[repr(u32)]
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum BridgeStpState {
     Disabled,
     KernelStp,
     UserStp,
+    Other(u32),
     Unknown,
 }
 
-impl Default for BridgeStpState {
-    fn default() -> Self {
-        BridgeStpState::Unknown
-    }
-}
-
-const _LAST_STP_TYPE: BridgeStpState = BridgeStpState::UserStp;
+const BR_NO_STP: u32 = 0;
+const BR_KERNEL_STP: u32 = 1;
+const BR_USER_STP: u32 = 2;
 
 impl From<u32> for BridgeStpState {
     fn from(d: u32) -> Self {
-        if d <= _LAST_STP_TYPE as u32 {
-            unsafe { transmute(d as u32) }
-        } else {
-            BridgeStpState::Unknown
+        match d {
+            BR_NO_STP => Self::Disabled,
+            BR_KERNEL_STP => Self::KernelStp,
+            BR_USER_STP => Self::UserStp,
+            _ => Self::Other(d),
         }
     }
 }
@@ -44,21 +37,19 @@ pub enum BridgeVlanProtocol {
     Ieee8021Q,
     #[serde(rename = "802.1AD")]
     Ieee8021AD,
+    Other(u16),
     Unknown,
 }
 
-impl Default for BridgeVlanProtocol {
-    fn default() -> Self {
-        BridgeVlanProtocol::Unknown
-    }
-}
+const ETH_P_8021Q: u16 = 0x8100;
+const ETH_P_8021AD: u16 = 0x88A8;
 
 impl From<u16> for BridgeVlanProtocol {
     fn from(d: u16) -> Self {
         match d {
-            ETH_P_8021Q => BridgeVlanProtocol::Ieee8021Q,
-            ETH_P_8021AD => BridgeVlanProtocol::Ieee8021AD,
-            _ => BridgeVlanProtocol::Unknown,
+            ETH_P_8021Q => Self::Ieee8021Q,
+            ETH_P_8021AD => Self::Ieee8021AD,
+            _ => Self::Other(d),
         }
     }
 }
@@ -156,7 +147,6 @@ pub struct BridgeInfo {
     pub multicast_mld_version: Option<u8>,
 }
 
-#[repr(u8)]
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum BridgePortStpState {
     Disabled,
@@ -164,52 +154,64 @@ pub enum BridgePortStpState {
     Learning,
     Forwarding,
     Blocking,
+    Other(u8),
     Unknown,
 }
 
-const _LAST_PORT_STP_STATE: BridgePortStpState = BridgePortStpState::Blocking;
-
 impl Default for BridgePortStpState {
     fn default() -> Self {
-        BridgePortStpState::Unknown
+        Self::Unknown
     }
 }
 
+const BR_STATE_DISABLED: u8 = 0;
+const BR_STATE_LISTENING: u8 = 1;
+const BR_STATE_LEARNING: u8 = 2;
+const BR_STATE_FORWARDING: u8 = 3;
+const BR_STATE_BLOCKING: u8 = 4;
+
 impl From<u8> for BridgePortStpState {
     fn from(d: u8) -> Self {
-        if d <= _LAST_PORT_STP_STATE as u8 {
-            unsafe { transmute(d as u8) }
-        } else {
-            BridgePortStpState::Unknown
+        match d {
+            BR_STATE_DISABLED => Self::Disabled,
+            BR_STATE_LISTENING => Self::Listening,
+            BR_STATE_LEARNING => Self::Learning,
+            BR_STATE_FORWARDING => Self::Forwarding,
+            BR_STATE_BLOCKING => Self::Blocking,
+            _ => Self::Other(d),
         }
     }
 }
 
-#[repr(u8)]
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum BridgePortMulticastRouterType {
     Disabled,
     TempQuery,
     Perm,
     Temp,
+    Other(u8),
     Unknown,
 }
 
-const _LAST_PORT_MDB_RTR_TYPE: BridgePortMulticastRouterType =
-    BridgePortMulticastRouterType::Temp;
-
 impl Default for BridgePortMulticastRouterType {
     fn default() -> Self {
-        BridgePortMulticastRouterType::Unknown
+        Self::Unknown
     }
 }
 
+const MDB_RTR_TYPE_DISABLED: u8 = 0;
+const MDB_RTR_TYPE_TEMP_QUERY: u8 = 1;
+const MDB_RTR_TYPE_PERM: u8 = 2;
+const MDB_RTR_TYPE_TEMP: u8 = 3;
+
 impl From<u8> for BridgePortMulticastRouterType {
     fn from(d: u8) -> Self {
-        if d <= _LAST_PORT_MDB_RTR_TYPE as u8 {
-            unsafe { transmute(d as u8) }
-        } else {
-            BridgePortMulticastRouterType::Unknown
+        match d {
+            MDB_RTR_TYPE_DISABLED => Self::Disabled,
+            MDB_RTR_TYPE_TEMP_QUERY => Self::TempQuery,
+            MDB_RTR_TYPE_PERM => Self::Perm,
+            MDB_RTR_TYPE_TEMP => Self::Temp,
+            _ => Self::Other(d),
         }
     }
 }

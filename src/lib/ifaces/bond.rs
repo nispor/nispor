@@ -6,7 +6,6 @@ use crate::IfaceType;
 use netlink_packet_route::rtnl::link::nlas;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::mem::transmute;
 
 const BOND_MODE_ROUNDROBIN: u8 = 0;
 const BOND_MODE_ACTIVEBACKUP: u8 = 1;
@@ -78,11 +77,9 @@ impl From<u32> for BondModeArpAllTargets {
     }
 }
 
-const BOND_STATE_ACTIVE: u32 = 0;
-const BOND_STATE_BACKUP: u32 = 1;
 const BOND_ARP_VALIDATE_NONE: u32 = 0;
-const BOND_ARP_VALIDATE_ACTIVE: u32 = 1 << BOND_STATE_ACTIVE;
-const BOND_ARP_VALIDATE_BACKUP: u32 = 1 << BOND_STATE_BACKUP;
+const BOND_ARP_VALIDATE_ACTIVE: u32 = 1 << BOND_STATE_ACTIVE as u32;
+const BOND_ARP_VALIDATE_BACKUP: u32 = 1 << BOND_STATE_BACKUP as u32;
 const BOND_ARP_VALIDATE_ALL: u32 =
     BOND_ARP_VALIDATE_ACTIVE | BOND_ARP_VALIDATE_BACKUP;
 const BOND_ARP_FILTER: u32 = BOND_ARP_VALIDATE_ALL + 1;
@@ -337,45 +334,50 @@ pub struct BondInfo {
     pub ad_info: Option<BondAdInfo>,
 }
 
-#[repr(u8)]
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum BondSubordinateState {
     Active,
     Backup,
-    Unknown = std::u8::MAX,
+    Other(u8),
+    Unknown,
 }
 
-const _LAST_BOND_SUBORDINATE_STATE: BondSubordinateState =
-    BondSubordinateState::Backup;
+const BOND_STATE_ACTIVE: u8 = 0;
+const BOND_STATE_BACKUP: u8 = 1;
 
 impl From<u8> for BondSubordinateState {
     fn from(d: u8) -> Self {
-        if d <= _LAST_BOND_SUBORDINATE_STATE as u8 {
-            unsafe { transmute(d as u8) }
-        } else {
-            BondSubordinateState::Unknown
+        match d {
+            BOND_STATE_ACTIVE => Self::Active,
+            BOND_STATE_BACKUP => Self::Backup,
+            _ => Self::Other(d),
         }
     }
 }
 
-#[repr(u8)]
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum BondMiiStatus {
     LinkUp,
     LinkFail,
     LinkDown,
     LinkBack,
-    Unknown = std::u8::MAX,
+    Other(u8),
+    Unknown,
 }
 
-const _LAST_MII_STATUS: BondMiiStatus = BondMiiStatus::LinkBack;
+const BOND_LINK_UP: u8 = 0;
+const BOND_LINK_FAIL: u8 = 1;
+const BOND_LINK_DOWN: u8 = 2;
+const BOND_LINK_BACK: u8 = 3;
 
 impl From<u8> for BondMiiStatus {
     fn from(d: u8) -> Self {
-        if d <= _LAST_MII_STATUS as u8 {
-            unsafe { transmute(d as u8) }
-        } else {
-            BondMiiStatus::Unknown
+        match d {
+            BOND_LINK_UP => Self::LinkUp,
+            BOND_LINK_FAIL => Self::LinkFail,
+            BOND_LINK_DOWN => Self::LinkDown,
+            BOND_LINK_BACK => Self::LinkBack,
+            _ => Self::Other(d),
         }
     }
 }
