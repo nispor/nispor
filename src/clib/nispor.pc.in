@@ -1,0 +1,11 @@
+prefix=@PREFIX@
+exec_prefix=${prefix}
+libdir=@LIBDIR@
+includedir=@INCLUDE_DIR@/
+
+Name: nispor
+Version: @VERSION@
+Description: Nispor C binding library
+Requires:
+Libs: -L${libdir} -lnispor
+Cflags: -I${includedir}
