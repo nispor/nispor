@@ -63,8 +63,9 @@ $(CLI_EXEC_DEBUG) $(VARLINK_SRV_EXEC_DEBUG):
 $(CLI_EXEC_RELEASE) $(VARLINK_SRV_EXEC_RELEASE) $(CLIB_SO_DEV_RELEASE):
 	cargo build --all --release
 
-test:
+check:
 	cargo test -- --test-threads=1 --show-output
+	make check -C test/clib
 
 srv: $(VARLINK_SRV_EXEC_DEBUG)
 	echo $(SOCKET_DIR)
@@ -79,6 +80,7 @@ cli:
 
 clean:
 	cargo clean
+	make clean -C test/clib
 
 install: $(VARLINK_SRV_EXEC_RELEASE) $(CLI_EXEC_RELEASE)
 	install -p -v -D -m755 $(VARLINK_SRV_EXEC_RELEASE) \

@@ -19,4 +19,4 @@ before_script:
 script:
   - cargo build --verbose --all
   - cargo fmt -- --check
-  - sudo env "PATH=$PATH" make test
+  - sudo env "PATH=$PATH" make check
