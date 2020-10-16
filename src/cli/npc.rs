@@ -4,6 +4,7 @@ use serde_derive::Serialize;
 use serde_json;
 use serde_yaml;
 use std::fmt::{Display, Formatter, Result};
+use std::io::{stderr, stdout, Write};
 use std::process;
 
 #[derive(Serialize)]
@@ -35,27 +36,28 @@ macro_rules! npc_print {
     ($display_func:expr, $data: expr) => {
         match $data {
             CliResult::Full(netstate) => {
-                println!("{}", $display_func(&netstate).unwrap());
+                writeln!(stdout(), "{}", $display_func(&netstate).unwrap())
+                    .ok();
                 process::exit(0);
             }
             CliResult::Ifaces(ifaces) => {
-                println!("{}", $display_func(&ifaces).unwrap());
+                writeln!(stdout(), "{}", $display_func(&ifaces).unwrap()).ok();
                 process::exit(0);
             }
             CliResult::Routes(routes) => {
-                println!("{}", $display_func(&routes).unwrap());
+                writeln!(stdout(), "{}", $display_func(&routes).unwrap()).ok();
                 process::exit(0);
             }
             CliResult::RouteRules(rules) => {
-                println!("{}", $display_func(&rules).unwrap());
+                writeln!(stdout(), "{}", $display_func(&rules).unwrap()).ok();
                 process::exit(0);
             }
             CliResult::NisporError(e) => {
-                eprintln!("{}", $display_func(&e).unwrap());
+                writeln!(stderr(), "{}", $display_func(&e).unwrap()).ok();
                 process::exit(1);
             }
             CliResult::Error(e) => {
-                eprintln!("{}", $display_func(&e).unwrap());
+                writeln!(stderr(), "{}", $display_func(&e).unwrap()).ok();
                 process::exit(1);
             }
         }
