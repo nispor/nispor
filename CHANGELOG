@@ -1,4 +1,8 @@
 # Changelog
+## [0.7.0] - TBD
+## Break changes
+ * RouteProtocol changed to all lower case.
+
 ## [0.6.1] - 2020-10-10
 ### New features
  * Support OVS internal interface and OVS system interface. (4e546a0)
