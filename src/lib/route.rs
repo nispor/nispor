@@ -14,8 +14,7 @@ use netlink_packet_route::rtnl::nlas::NlasIterator;
 use netlink_packet_route::rtnl::{
     RTN_ANYCAST, RTN_BLACKHOLE, RTN_BROADCAST, RTN_LOCAL, RTN_MULTICAST,
     RTN_NAT, RTN_PROHIBIT, RTN_THROW, RTN_UNICAST, RTN_UNREACHABLE, RTN_UNSPEC,
-    RTN_XRESOLVE, RTPROT_BOOT, RTPROT_KERNEL, RTPROT_REDIRECT, RTPROT_STATIC,
-    RTPROT_UNSPEC, RT_SCOPE_HOST, RT_SCOPE_LINK, RT_SCOPE_NOWHERE,
+    RTN_XRESOLVE, RT_SCOPE_HOST, RT_SCOPE_LINK, RT_SCOPE_NOWHERE,
     RT_SCOPE_SITE, RT_SCOPE_UNIVERSE,
 };
 use netlink_packet_route::RouteMessage;
@@ -145,15 +144,56 @@ impl Default for AddressFamily {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "lowercase")]
 pub enum RouteProtocol {
     UnSpec,
     IcmpRedirect,
     Kernel,
     Boot,
     Static,
+    Gated,
+    Ra,
+    Mrt,
+    Zebra,
+    Bird,
+    DnRouted,
+    Xorp,
+    Ntk,
+    Dhcp,
+    Mrouted,
+    KeepAlived,
+    Babel,
+    Bgp,
+    Isis,
+    Ospf,
+    Rip,
+    Eigrp,
     Unknown,
     Other(u8),
 }
+
+const RTPROT_UNSPEC: u8 = 0;
+const RTPROT_REDIRECT: u8 = 1;
+const RTPROT_KERNEL: u8 = 2;
+const RTPROT_BOOT: u8 = 3;
+const RTPROT_STATIC: u8 = 4;
+const RTPROT_GATED: u8 = 8;
+const RTPROT_RA: u8 = 9;
+const RTPROT_MRT: u8 = 10;
+const RTPROT_ZEBRA: u8 = 11;
+const RTPROT_BIRD: u8 = 12;
+const RTPROT_DNROUTED: u8 = 13;
+const RTPROT_XORP: u8 = 14;
+const RTPROT_NTK: u8 = 15;
+const RTPROT_DHCP: u8 = 16;
+const RTPROT_MROUTED: u8 = 17;
+const RTPROT_KEEPALIVED: u8 = 18;
+const RTPROT_BABEL: u8 = 42;
+const RTPROT_BGP: u8 = 186;
+const RTPROT_ISIS: u8 = 187;
+const RTPROT_OSPF: u8 = 188;
+const RTPROT_RIP: u8 = 189;
+const RTPROT_EIGRP: u8 = 192;
 
 impl From<u8> for RouteProtocol {
     fn from(d: u8) -> Self {
@@ -163,6 +203,23 @@ impl From<u8> for RouteProtocol {
             RTPROT_KERNEL => RouteProtocol::Kernel,
             RTPROT_BOOT => RouteProtocol::Boot,
             RTPROT_STATIC => RouteProtocol::Static,
+            RTPROT_GATED => RouteProtocol::Gated,
+            RTPROT_RA => RouteProtocol::Ra,
+            RTPROT_MRT => RouteProtocol::Mrt,
+            RTPROT_ZEBRA => RouteProtocol::Zebra,
+            RTPROT_BIRD => RouteProtocol::Bird,
+            RTPROT_DNROUTED => RouteProtocol::DnRouted,
+            RTPROT_XORP => RouteProtocol::Xorp,
+            RTPROT_NTK => RouteProtocol::Ntk,
+            RTPROT_DHCP => RouteProtocol::Dhcp,
+            RTPROT_MROUTED => RouteProtocol::Mrouted,
+            RTPROT_KEEPALIVED => RouteProtocol::KeepAlived,
+            RTPROT_BABEL => RouteProtocol::Babel,
+            RTPROT_BGP => RouteProtocol::Bgp,
+            RTPROT_ISIS => RouteProtocol::Isis,
+            RTPROT_OSPF => RouteProtocol::Ospf,
+            RTPROT_RIP => RouteProtocol::Rip,
+            RTPROT_EIGRP => RouteProtocol::Eigrp,
             _ => RouteProtocol::Other(d),
         }
     }
