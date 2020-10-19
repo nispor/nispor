@@ -1,7 +1,7 @@
 # Changelog
 ## [0.7.0] - TBD
 ## Break changes
- * RouteProtocol changed to all lower case.
+ * All members of route classes has been changed to all lower case.
 
 ## [0.6.1] - 2020-10-10
 ### New features

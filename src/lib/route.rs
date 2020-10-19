@@ -120,6 +120,7 @@ pub struct Route {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "lowercase")]
 pub enum AddressFamily {
     IPv4,
     IPv6,
@@ -147,20 +148,26 @@ impl Default for AddressFamily {
 #[serde(rename_all = "lowercase")]
 pub enum RouteProtocol {
     UnSpec,
+    #[serde(rename = "icmp_redirect")]
     IcmpRedirect,
     Kernel,
     Boot,
     Static,
     Gated,
     Ra,
+    #[serde(rename = "merit_mrt")]
     Mrt,
     Zebra,
     Bird,
+    #[serde(rename = "decnet_routing_daemon")]
     DnRouted,
     Xorp,
+    #[serde(rename = "netsukuku")]
     Ntk,
     Dhcp,
+    #[serde(rename = "multicast_daemon")]
     Mrouted,
+    #[serde(rename = "keepalived_daemon")]
     KeepAlived,
     Babel,
     Bgp,
@@ -241,11 +248,13 @@ impl Default for RouteProtocol {
  * could be assigned a value between UNIVERSE and LINK.
  */
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "lowercase")]
 pub enum RouteScope {
     Universe,
     Site,
     Link,
     Host,
+    #[serde(rename = "no_where")]
     NoWhere,
     Unknown,
     Other(u8),
@@ -271,6 +280,7 @@ impl Default for RouteScope {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "lowercase")]
 pub enum RouteType {
     UnSpec,
     Unicast,
@@ -282,7 +292,6 @@ pub enum RouteType {
     Unreachable,
     Prohibit,
     Throw,
-    #[serde(rename = "NAT")]
     Nat,
     ExternalResolve,
     Unknown,
