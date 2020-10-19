@@ -38,6 +38,8 @@ pub use crate::ip::Ipv6Info;
 pub(crate) use crate::mac::parse_as_mac;
 pub use crate::net_state::NetState;
 pub use crate::route::AddressFamily;
+pub use crate::route::MultipathRoute;
+pub use crate::route::MultipathRouteFlags;
 pub use crate::route::Route;
 pub use crate::route::RouteProtocol;
 pub use crate::route::RouteScope;
