@@ -91,6 +91,17 @@ elif [ "CHK$1" == "CHKmacvtap" ];then
     sudo ip link set link dev macvtap0 type macvtap macaddr add 00:22:22:22:22:22
     sudo ip link set eth1 up
     sudo ip link set macvtap0 up
+elif [ "CHK$1" == "CHKroute" ];then
+    create_nics
+    sudo ip link set eth1 up
+    sudo ip addr add 192.0.2.1/24 dev eth1
+    sudo ip -6 addr add 2001:db8:f::1/64 dev eth1
+    sudo ip route add 192.0.3.0/24 proto static scope global \
+        nexthop via 192.0.2.254 dev eth1 weight 1 onlink \
+        nexthop via 192.0.2.253 dev eth1 weight 256 onlink
+    sudo ip -6 route add 2001:db8:e::/64 proto static scope global \
+        nexthop via 2001:db8:f::254 dev eth1 weight 1 onlink \
+        nexthop via 2001:db8:f::253 dev eth1 weight 256 onlink
 elif [ "CHK$1" == "CHKrule" ];then
     create_nics
     sudo ip rule add from 192.0.2.1 to 192.0.2.2 tos 10 protocol kernel table 100 iif eth1 oif eth2

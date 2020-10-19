@@ -1,6 +1,8 @@
 use crate::ifaces::Iface;
+use crate::netlink::parse_as_i32;
 use crate::netlink::parse_as_ipv4;
 use crate::netlink::parse_as_ipv6;
+use crate::netlink::parse_as_u16;
 use crate::netlink::parse_as_u32;
 use crate::netlink::AF_INET;
 use crate::netlink::AF_INET6;
@@ -10,12 +12,13 @@ use netlink_packet_route::rtnl::nlas::route::CacheInfo;
 use netlink_packet_route::rtnl::nlas::route::CacheInfoBuffer;
 use netlink_packet_route::rtnl::nlas::route::Metrics;
 use netlink_packet_route::rtnl::nlas::route::Nla;
+use netlink_packet_route::rtnl::nlas::NlaBuffer;
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 use netlink_packet_route::rtnl::{
-    RTN_ANYCAST, RTN_BLACKHOLE, RTN_BROADCAST, RTN_LOCAL, RTN_MULTICAST,
-    RTN_NAT, RTN_PROHIBIT, RTN_THROW, RTN_UNICAST, RTN_UNREACHABLE, RTN_UNSPEC,
-    RTN_XRESOLVE, RT_SCOPE_HOST, RT_SCOPE_LINK, RT_SCOPE_NOWHERE,
-    RT_SCOPE_SITE, RT_SCOPE_UNIVERSE,
+    RTA_GATEWAY, RTA_VIA, RTN_ANYCAST, RTN_BLACKHOLE, RTN_BROADCAST, RTN_LOCAL,
+    RTN_MULTICAST, RTN_NAT, RTN_PROHIBIT, RTN_THROW, RTN_UNICAST,
+    RTN_UNREACHABLE, RTN_UNSPEC, RTN_XRESOLVE, RT_SCOPE_HOST, RT_SCOPE_LINK,
+    RT_SCOPE_NOWHERE, RT_SCOPE_SITE, RT_SCOPE_UNIVERSE,
 };
 use netlink_packet_route::RouteMessage;
 use netlink_packet_utils::traits::Parseable;
@@ -116,6 +119,8 @@ pub struct Route {
     pub metric: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub perf: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multipath: Option<Vec<MultipathRoute>>,
     // Missing support of RTA_NH_ID
 }
 
@@ -324,6 +329,38 @@ impl Default for RouteType {
     }
 }
 
+const SIZE_OF_RTNEXTHOP: usize = 8;
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "lowercase")]
+pub struct MultipathRoute {
+    pub via: String,
+    pub iface: String,
+    pub weight: u16, // The kernel is u8, but ip route show it after + 1.
+    pub flags: Vec<MultipathRouteFlags>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "lowercase")]
+pub enum MultipathRouteFlags {
+    Dead,
+    Pervasive,
+    #[serde(rename = "on_link")]
+    OnLink,
+    Offload,
+    #[serde(rename = "link_down")]
+    LinkDown,
+    Unresolved,
+    Other(u8),
+}
+
+const RTNH_F_DEAD: u8 = 1; /* Nexthop is dead (used by multipath) */
+const RTNH_F_PERVASIVE: u8 = 2; /* Do recursive gateway lookup */
+const RTNH_F_ONLINK: u8 = 4; /* Gateway is forced on link */
+const RTNH_F_OFFLOAD: u8 = 8; /* offloaded route */
+const RTNH_F_LINKDOWN: u8 = 16; /* carrier-down on nexthop */
+const RTNH_F_UNRESOLVED: u8 = 32; /* The entry is unresolved (ipmr) */
+
 pub(crate) fn get_routes(
     ifaces: &HashMap<String, Iface>,
 ) -> Result<Vec<Route>, NisporError> {
@@ -503,11 +540,70 @@ fn get_route(
             Nla::Priority(d) => {
                 rt.metric = Some(*d);
             }
-            Nla::MultiPath(_) => {
-                eprintln!(
-                    "netlink-rust does not support parsing
-                    multipath routes yet"
-                );
+            Nla::MultiPath(d) => {
+                let mut next_hops = Vec::new();
+                let len = d.len();
+                let mut i = 0usize;
+                while (i < len) && (len - i > SIZE_OF_RTNEXTHOP) {
+                    let nex_hop_len = parse_as_u16(&[d[i], d[i + 1]]);
+                    let nla = NlaBuffer::new(
+                        &d[i + SIZE_OF_RTNEXTHOP..i + nex_hop_len as usize],
+                    );
+                    let via = match nla.kind() {
+                        RTA_GATEWAY => _addr_to_string(nla.value(), family),
+                        RTA_VIA => {
+                            // Kernel will use RTA_VIA when gateway family does
+                            // not match nexthop family
+                            eprintln!(
+                                "dual stack(RTA_VIA) multipath route next hop
+                                 is not supported by nispor yet"
+                            );
+                            continue;
+                        }
+                        _ => {
+                            eprintln!(
+                                "Got unexpected RTA_MULTIPATH NLA {} {:?}",
+                                nla.kind(),
+                                nla.value()
+                            );
+                            continue;
+                        }
+                    };
+                    let iface_index = parse_as_i32(&d[i + 4..i + 8]);
+                    let iface = if let Some(iface_name) =
+                        ifindex_to_name.get(&format!("{}", iface_index))
+                    {
+                        iface_name.clone()
+                    } else {
+                        format!("{}", iface_index)
+                    };
+                    let mut flags = Vec::new();
+                    let flags_raw = d[i + 2];
+                    //TODO: Need better way to handle the bitmap.
+                    if (flags_raw & RTNH_F_DEAD) > 0 {
+                        flags.push(MultipathRouteFlags::Dead);
+                    } else if (flags_raw & RTNH_F_PERVASIVE) > 0 {
+                        flags.push(MultipathRouteFlags::Pervasive);
+                    } else if (flags_raw & RTNH_F_ONLINK) > 0 {
+                        flags.push(MultipathRouteFlags::OnLink);
+                    } else if (flags_raw & RTNH_F_OFFLOAD) > 0 {
+                        flags.push(MultipathRouteFlags::Offload);
+                    } else if (flags_raw & RTNH_F_LINKDOWN) > 0 {
+                        flags.push(MultipathRouteFlags::LinkDown);
+                    } else if (flags_raw & RTNH_F_UNRESOLVED) > 0 {
+                        flags.push(MultipathRouteFlags::Unresolved);
+                    }
+
+                    let next_hop = MultipathRoute {
+                        flags: flags,
+                        weight: d[i + 3] as u16 + 1,
+                        iface: iface,
+                        via: via,
+                    };
+                    next_hops.push(next_hop);
+                    i += nex_hop_len as usize;
+                }
+                rt.multipath = Some(next_hops);
             }
             Nla::Pref(d) => {
                 rt.perf = Some(d[0]);
