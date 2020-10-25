@@ -35,8 +35,9 @@ pub(crate) fn fill_ip_addr(
                         addresses: vec![addr],
                     },
                 };
-                iface_states.get_mut(&iface_name).unwrap().ipv4 =
-                    Some(new_ip4_info);
+                if let Some(iface) = iface_states.get_mut(&iface_name) {
+                    iface.ipv4 = Some(new_ip4_info);
+                }
             }
         }
         AF_INET6 => {
@@ -54,8 +55,9 @@ pub(crate) fn fill_ip_addr(
                         addresses: vec![addr],
                     },
                 };
-                iface_states.get_mut(&iface_name).unwrap().ipv6 =
-                    Some(new_ip6_info);
+                if let Some(iface) = iface_states.get_mut(&iface_name) {
+                    iface.ipv6 = Some(new_ip6_info);
+                }
             }
         }
         _ => {
