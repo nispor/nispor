@@ -16,6 +16,7 @@ const BOND_MODE_TLB: u8 = 5;
 const BOND_MODE_ALB: u8 = 6;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum BondMode {
     #[serde(rename = "balance-rr")]
     BalanceRoundRobin,
@@ -335,6 +336,7 @@ pub struct BondInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum BondSubordinateState {
     Active,
     Backup,
@@ -356,6 +358,7 @@ impl From<u8> for BondSubordinateState {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum BondMiiStatus {
     LinkUp,
     LinkFail,

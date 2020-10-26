@@ -36,6 +36,7 @@ pub struct TunInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum TunMode {
     Tun,
     Tap,

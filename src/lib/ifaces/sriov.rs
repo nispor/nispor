@@ -34,6 +34,7 @@ const IFLA_VF_STATS_RX_DROPPED: u16 = 7;
 const IFLA_VF_STATS_TX_DROPPED: u16 = 8;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum VfLinkState {
     Auto,
     Enable,
