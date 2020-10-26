@@ -22,6 +22,7 @@ const FR_ACT_PROHIBIT: u8 = 128;
 const RT_TABLE_UNSPEC: u8 = 0;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum RuleAction {
     /* Pass to fixed table */
     Table,

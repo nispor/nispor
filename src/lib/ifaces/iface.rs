@@ -40,6 +40,7 @@ use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum IfaceType {
     Bond,
     Veth,
@@ -65,6 +66,7 @@ impl Default for IfaceType {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum IfaceState {
     Up,
     Dormant,
@@ -81,6 +83,7 @@ impl Default for IfaceState {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum IfaceFlags {
     AllMulti,
     AutoMedia,
@@ -110,6 +113,7 @@ impl Default for IfaceFlags {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum ControllerType {
     Bond,
     Bridge,

@@ -3,6 +3,7 @@ use rtnetlink;
 use serde_derive::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ErrorKind {
     NetlinkError,
     NisporBug,
