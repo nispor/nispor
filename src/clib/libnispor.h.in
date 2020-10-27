@@ -1,0 +1,70 @@
+#!/usr/bin/env perl
+# SPDX-License-Identifier: GPL-2.0
+
+use warnings;
+use strict;
+
+sub usage {
+    my $message = <<"EOF";
+ nispor_net_state_retrieve - Retrieve network state
+
+ Version:
+      0.2
+
+ Description:
+      Retrieve network state in the format of JSON.
+
+ @state:
+      Output pointer of char array for network state in json format.
+      The memory should be freed by nispor_net_state_free().
+ @err_kind:
+      Output pointer of char array for error kind.
+      The memory should be freed by nispor_err_kind_free().
+ @err_msg:
+      Output pointer of char array for error message.
+      The memory should be freed by nispor_err_msg_free().
+
+EOF
+    print $message;
+    exit 1;
+}
+
+my $module_name = "Nispor.h";
+my @parameter_list;
+my $version = '0.2'
+
+my @build_time;
+if (defined($ENV{'KBUILD_BUILD_TIMESTAMP'}) &&
+    (my $seconds = `date -d"${ENV{'KBUILD_BUILD_TIMESTAMP'}}" +%s`) ne '') {
+    @build_time = gmtime($seconds);
+} else {
+    @build_time = localtime;
+}
+
+my $man_date = ('January', 'February', 'March', 'April', 'May', 'June',
+		'July', 'August', 'September', 'October',
+		'November', 'December')[$build_time[4]] .
+  " " . ($build_time[5]+1900);
+
+
+sub output_function_man(%) {
+    print ".TH \"$module_name\" \"manpage\"  \"$man_date\" \"$version\" \n";
+
+    print ".SH NAME\n";
+    print $module_name . " \n";
+
+    print ".SH SYNOPSIS\n";
+        
+    print ".SH ARGUMENTS\n";
+    foreach $parameter (@{$args{'parameterlist'}}) {
+	my $parameter_name = $parameter;
+	$parameter_name =~ s/\[.*//;
+
+	print ".IP \"" . $parameter . "\" 12\n";
+	output_highlight($args{'parameterdescs'}{$parameter_name});
+    }
+    foreach $section (@{$args{'sectionlist'}}) {
+	print ".SH \"", uc $section, "\"\n";
+	output_highlight($args{'sections'}{$section});
+    }
+}
