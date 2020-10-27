@@ -1,0 +1,18 @@
+#!/usr/bin/env perl
+# SPDX-License-Identifier: Apache License, Version 2.0 
+
+use warnings;
+use strict;
+
+sub usage {
+    my $message = <<"EOF";
+nipsor.h
+
+This header file is responsible to retrieve network state in the format of JSON.
+
+It also returns the type of error as well as any error message that is attributed to the error type
+
+EOF
+    print $message;
+    exit 1;
+}
