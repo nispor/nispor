@@ -7,7 +7,7 @@ type BondInfo (
 )
 
 type BridgeInfo (
-    stp_state: (Disabled, KernelStp, UserStp, Unknown),
+    stp_state: (disabled, kernel_stp, user_stp, unknown),
     hello_time: int,
     forward_delay: int,
     max_age: int,
@@ -24,7 +24,7 @@ type BridgeInfo (
     hello_timer: int,
     tcn_timer: int,
     topology_change_timer: int,
-    multicast_router: (Disabled, TempQuery, Perm, Temp, Unknown),
+    multicast_router: (disabled, temp_query, perm, temp, unknown),
     multicast_snooping: bool,
     multicast_query_use_ifaddr: bool,
     multicast_querier: bool,
@@ -47,7 +47,7 @@ type BridgeInfo (
     nf_call_ip6tables: bool,
     nf_call_arptables: bool,
     vlan_filtering: bool,
-    vlan_protocol: (802.1Q, 802.1AD),
+    vlan_protocol: (802.1q, 802.1ad),
     ?default_pvid: int,
 )
 
@@ -59,7 +59,7 @@ type BridgeVlanEntry (
 )
 
 type BridgePortInfo (
-    stp_state: (Disabled, Listening, Learning, Forwarding, Blocking, Unknown),
+    stp_state: (disabled, listening, learning, forwarding, blocking, unknown),
     stp_priority: int,
     stp_path_cost: int,
     hairpin_mode: bool,
@@ -81,7 +81,7 @@ type BridgePortInfo (
     message_age_timer: int,
     forward_delay_timer: int,
     hold_timer: int,
-    multicast_router: (Disabled, TempQuery, Perm, Temp, Unknown),
+    multicast_router: (disabled, temp_query, perm, temp, unknown),
     multicast_flood: bool,
     multicast_to_unicast: bool,
     vlan_tunnel: bool,
@@ -118,13 +118,116 @@ type Ipv6AddrInfo (
 
 type VlanInfo (
     vlan_id: int,
-    protocol: (802.1Q, 802.1AD, Unknown),
+    protocol: (802.1q, 802.1ad, unknown),
     base_iface: string,
     is_reorder_hdr: bool,
     is_gvrp: bool,
     is_loose_binding: bool,
     is_mvrp: bool,
     is_bridge_binding: bool,
+)
+
+type VfState (
+    rx_packets: int,
+    tx_packets: int,
+    rx_bytes: int,
+    tx_bytes: int,
+    broadcast: int,
+    multicast: int,
+    rx_dropped: int,
+    tx_dropped: int,
+)
+
+type VfInfo (
+    id: int,
+    mac: string,
+    broadcast: string,
+    vlan_id: int,
+    qos: int,
+    tx_rate: int,
+    spoof_check: int,
+    link_state: (auto, enable, disable, unknown),
+    min_tx_rate: int,
+    max_tx_rate: int,
+    query_rss: bool,
+    state: VfState,
+    trust: bool,
+    ?ib_node_guid: string,
+    ?ib_port_guid: string,
+)
+
+type SriovInfo (
+    vfs: []VfInfo,
+)
+
+type TunInfo (
+    mode: (tun, tap, unknown),
+    pi: bool,
+    vnet_hdr: bool,
+    multi_queue: bool,
+    persist: bool,
+    ?owner: int,
+    ?group: int,
+    ?num_queues: int,
+    ?num_disabled_queues: int,
+)
+
+type VethInfo (
+    peer: string,
+)
+
+type VxlanInfo (
+    remote: string,
+    vxlan_id: int,
+    base_iface: string,
+    local: string,
+    ttl: int,
+    tos: int,
+    learning: bool,
+    ageing: int,
+    max_address: int,
+    src_port_min: int,
+    src_port_max: int,
+    proxy: bool,
+    rsc: bool,
+    l2miss: bool,
+    l3miss: bool,
+    dst_port: int,
+    udp_check_sum: bool,
+    udp6_zero_check_sum_tx: bool,
+    udp6_zero_check_sum_rx: bool,
+    remote_check_sum_tx: bool,
+    remote_check_sum_rx: bool,
+    gbp: bool,
+    remote_check_sum_no_partial: bool,
+    collect_metadata: bool,
+    label: int,
+    gpe: bool,
+    ttl_inherit: bool,
+    df: int,
+)
+
+type VrfInfo (
+    table_id: int,
+    subordinates: []string,
+)
+
+type VrfSubordinateInfo (
+    table_id: int,
+)
+
+type MacVlanInfo (
+    base_iface: string,
+    mode: (private, vepa, bridge, passthru, source, unknown),
+    flags: int,
+    ?allowed_mac_addresses: []string,
+)
+
+type MacVtapInfo (
+    base_iface: string,
+    mode: (private, vepa, bridge, passthru, source, unknown),
+    flags: int,
+    ?allowed_mac_addresses: []string,
 )
 
 type Iface (
@@ -137,8 +240,16 @@ type Iface (
     ?bridge: BridgeInfo,
     ?bridge_port: BridgePortInfo,
     ?vlan: VlanInfo,
+    ?vxlan: VxlanInfo,
+    ?sriov: SriovInfo,
+    ?tun: TunInfo,
+    ?veth: VethInfo,
+    ?vrf: VrfInfo,
+    ?vrf_subordinate: VrfSubordinateInfo,
+    ?mac_vlan: MacVlanInfo,
+    ?mac_vtap: MacVtapInfo,
     ?controller: string,
-    ?controller_type: (Bond, Unknown),
+    ?controller_type: (bond, unknown),
     ?ipv4: Ipv4Info,
     ?ipv6: Ipv6Info
 )
