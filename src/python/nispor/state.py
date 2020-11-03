@@ -27,6 +27,7 @@ class NisporNetState:
         self._info = info
         self._ifaces = NisporIfaceState(info.get("ifaces"))
         self._routes = NisporRouteState(info.get("routes"))
+        self._route_rules = NisporRouteRuleState(info.get("rules"))
 
     @property
     def ifaces(self):
@@ -35,6 +36,10 @@ class NisporNetState:
     @property
     def routes(self):
         return self._routes
+
+    @property
+    def route_rules(self):
+        return self._route_rules
 
     @staticmethod
     def retrieve():
