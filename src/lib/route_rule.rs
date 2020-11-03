@@ -197,6 +197,9 @@ fn get_rule(rule_msg: RuleMessage) -> Result<RouteRule, NisporError> {
             Nla::IpProto(ref d) => {
                 rl.ip_proto = Some(d.clone().into());
             }
+            Nla::L3MDev(_) => {
+                // Ignore the L3MDev NLA
+            }
             _ => eprintln!("Unknown NLA message for roule {:?}", nla),
         }
     }
