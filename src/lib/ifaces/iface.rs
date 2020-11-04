@@ -94,7 +94,6 @@ pub enum IfaceFlags {
     LowerUp,
     Controller,
     Multicast,
-    #[serde(rename = "NOARP")]
     NoArp,
     PoinToPoint,
     Portsel,
