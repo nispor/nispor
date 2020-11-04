@@ -78,6 +78,19 @@ fn parse_arg_output_format(matches: &clap::ArgMatches) -> CliOutputType {
     }
 }
 
+fn get_routes(state: &NetState, matches: &clap::ArgMatches) -> CliResult {
+    let mut routes = state.routes.clone();
+
+    if let Some(oif) = matches.value_of("dev") {
+        routes = routes
+            .into_iter()
+            .filter(|route| route.oif == Some(String::from(oif)))
+            .collect();
+    }
+
+    CliResult::Routes(routes)
+}
+
 fn main() {
     let matches = clap_app!(npc =>
         (version: crate_version!())
@@ -87,6 +100,7 @@ fn main() {
         (@arg json: -j --json "Show in json format")
         (@subcommand route =>
             (@arg json: -j --json "Show in json format")
+            (@arg dev: -d --dev [OIF] "Show only route entries with output to the specified interface")
             (about: "Show routes")
         )
         (@subcommand rule =>
@@ -110,7 +124,7 @@ fn main() {
                 }
             } else if let Some(m) = matches.subcommand_matches("route") {
                 output_format = parse_arg_output_format(m);
-                CliResult::Routes(state.routes)
+                get_routes(&state, &m)
             } else if let Some(m) = matches.subcommand_matches("rule") {
                 output_format = parse_arg_output_format(m);
                 CliResult::RouteRules(state.rules)
