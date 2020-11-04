@@ -4,17 +4,17 @@ use std::panic;
 
 mod utils;
 
-const IFACE_NAME: &str = "dummy1";
+const IFACE_NAME: &str = "veth1";
 
 const EXPECTED_IFACE_NAME: &str = r#"---
-- name: dummy1
-  iface_type: dummy
-  state: unknown
+- name: veth1
+  iface_type: veth
+  state: up
   mtu: 1500
   flags:
     - broadcast
     - lower_up
-    - no_arp
+    - multicast
     - running
     - up
   ipv6:
@@ -23,15 +23,17 @@ const EXPECTED_IFACE_NAME: &str = r#"---
         prefix_len: 64
         valid_lft: forever
         preferred_lft: forever
-  mac_address: "00:23:45:67:89:1a""#;
+  mac_address: "00:23:45:67:89:1a"
+  veth:
+    peer: veth1.ep"#;
 
 #[test]
-fn test_get_iface_dummy_yaml() {
-    with_dummy_iface(|| {
+fn test_get_veth_iface_yaml() {
+    with_veth_iface(|| {
         if let Ok(state) = NetState::retrieve() {
             let iface = &state.ifaces[IFACE_NAME];
             let iface_type = &iface.iface_type;
-            assert_eq!(iface_type, &nispor::IfaceType::Dummy);
+            assert_eq!(iface_type, &nispor::IfaceType::Veth);
             assert_eq!(
                 serde_yaml::to_string(&vec![iface]).unwrap(),
                 EXPECTED_IFACE_NAME
@@ -40,11 +42,11 @@ fn test_get_iface_dummy_yaml() {
     });
 }
 
-fn with_dummy_iface<T>(test: T) -> ()
+fn with_veth_iface<T>(test: T) -> ()
 where
     T: FnOnce() -> () + panic::UnwindSafe,
 {
-    utils::set_network_environment("dummy");
+    utils::set_network_environment("veth");
 
     let result = panic::catch_unwind(|| {
         test();
