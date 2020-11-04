@@ -34,7 +34,9 @@ nispor_test: nispor_test.c nispor.h libnispor.so
 
 check: nispor_test
 	LD_LIBRARY_PATH=$(TMPDIR) \
-		valgrind --trace-children=yes --leak-check=full ./nispor_test
+		valgrind --trace-children=yes --leak-check=full \
+		--error-exitcode=1 \
+		./nispor_test 1>/dev/null
 	rm -rf $(TMPDIR)
 
 clean:
