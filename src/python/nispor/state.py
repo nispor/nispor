@@ -17,6 +17,7 @@ import json
 from .clib_wrapper import retrieve_net_state_json
 from .iface import NisporIfaceState
 from .route import NisporRouteState
+from .route_rule import NisporRouteRuleState
 
 
 class NisporNetState:
