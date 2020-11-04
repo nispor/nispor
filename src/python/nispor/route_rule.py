@@ -113,3 +113,7 @@ class NisporRouteRule:
     @property
     def dst_port_range(self):
         return self._info.get("dst_port_range")
+
+    @property
+    def l3mdev(self):
+        return self._info.get("l3mdev", False)

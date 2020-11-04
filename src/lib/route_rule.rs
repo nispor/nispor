@@ -24,7 +24,7 @@ const RT_TABLE_UNSPEC: u8 = 0;
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum RuleAction {
-    /* Pass to fixed table */
+    /* Pass to fixed table or l3mdev */
     Table,
     /* Jump to another rule */
     Goto,
@@ -102,6 +102,8 @@ pub struct RouteRule {
     pub src_port_range: Option<Vec<u8>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub dst_port_range: Option<Vec<u8>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub l3mdev: Option<bool>,
 }
 
 pub(crate) fn get_route_rules() -> Result<Vec<RouteRule>, NisporError> {
@@ -197,7 +199,10 @@ fn get_rule(rule_msg: RuleMessage) -> Result<RouteRule, NisporError> {
             Nla::IpProto(ref d) => {
                 rl.ip_proto = Some(d.clone().into());
             }
-            _ => eprintln!("Unknown NLA message for roule {:?}", nla),
+            Nla::L3MDev(ref d) => {
+                rl.l3mdev = Some(*d > 0);
+            }
+            _ => eprintln!("Unknown NLA message for route rule {:?}", nla),
         }
     }
 
