@@ -7,7 +7,7 @@ use std::time;
 mod utils;
 
 const IFACE_TEST: &str = "eth1";
-const IFACE_MAC_TEST: &str = "AA:BB:CC:DD:EE:FF";
+const IFACE_MAC_TEST: &str = "aa:bb:cc:dd:ee:ff";
 
 #[test]
 fn test_get_iface_name() {

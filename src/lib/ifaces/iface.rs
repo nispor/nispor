@@ -24,6 +24,7 @@ use crate::ifaces::vrf::VrfInfo;
 use crate::ifaces::vrf::VrfSubordinateInfo;
 use crate::ifaces::vxlan::get_vxlan_info;
 use crate::ifaces::vxlan::VxlanInfo;
+use crate::mac::parse_as_mac;
 use crate::Ipv4Info;
 use crate::Ipv6Info;
 use netlink_packet_route::rtnl::link::nlas;
@@ -213,12 +214,7 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
             iface_state.mtu = *mtu as i64;
         } else if let Nla::Address(mac) = nla {
             mac_len = Some(mac.len());
-            let mut mac_str = String::new();
-            for octet in mac.iter() {
-                mac_str.push_str(&format!("{:02X?}:", octet));
-            }
-            mac_str.pop();
-            iface_state.mac_address = mac_str;
+            iface_state.mac_address = parse_as_mac(mac.len(), mac);
         } else if let Nla::OperState(state) = nla {
             iface_state.state = _get_iface_state(&state);
         } else if let Nla::Master(controller) = nla {
