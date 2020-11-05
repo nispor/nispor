@@ -11,6 +11,7 @@
     * [Command line tool](#command-line-tool)
     * [Varlink service](#varlink-service)
     * [Python binding](#python-binding)
+    * [Check list for creating PR:](#check-list-for-creating-pr)
 * [Release workflow](#release-workflow)
 
 <!-- vim-markdown-toc -->
@@ -50,6 +51,16 @@ Path: `src/varlink`
 
 Path: `src/python`
 
+### Check list for creating PR:
+
+ * Use `cargo fmt` to format your code. You may use
+   [rust-lang/rust.vim][rust-vim]:
+```vim
+let g:rustfmt_autosave = 0
+autocmd FileType rust nnoremap <silent> <leader>f :RustFmt<cr>
+```
+ * The `sudo make check` should pass.
+
 ## Release workflow
 
 ```bash
@@ -60,3 +71,5 @@ sed -i -e 's/0.6.1/0.6.2/' \
 ```bash
 git log --oneline v0.6.1..HEAD
 ```
+
+[rust-vim]: https://github.com/rust-lang/rust.vim
