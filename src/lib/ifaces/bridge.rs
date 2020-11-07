@@ -8,6 +8,7 @@ use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum BridgeStpState {
     Disabled,
     KernelStp,
@@ -32,10 +33,11 @@ impl From<u32> for BridgeStpState {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum BridgeVlanProtocol {
-    #[serde(rename = "802.1Q")]
+    #[serde(rename = "802.1q")]
     Ieee8021Q,
-    #[serde(rename = "802.1AD")]
+    #[serde(rename = "802.1ad")]
     Ieee8021AD,
     Other(u16),
     Unknown,
@@ -148,6 +150,7 @@ pub struct BridgeInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum BridgePortStpState {
     Disabled,
     Listening,
@@ -184,6 +187,7 @@ impl From<u8> for BridgePortStpState {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum BridgePortMulticastRouterType {
     Disabled,
     TempQuery,

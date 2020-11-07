@@ -9,10 +9,11 @@ const ETH_P_8021Q: u16 = 0x8100;
 const ETH_P_8021AD: u16 = 0x88A8;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum VlanProtocol {
-    #[serde(rename = "802.1Q")]
+    #[serde(rename = "802.1q")]
     Ieee8021Q,
-    #[serde(rename = "802.1AD")]
+    #[serde(rename = "802.1ad")]
     Ieee8021AD,
     Unknown,
 }

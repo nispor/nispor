@@ -1,19 +1,26 @@
 #!/bin/bash
 
+# Please be aware this script is used by cargo test also
+
+TEST_MAC1="00:23:45:67:89:1a"
+TEST_MAC2="00:23:45:67:89:1b"
+TEST_MAC3="00:23:45:67:89:1c"
+
+sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0
+
 if [ "CHK$1" == "CHK" ];then
     echo 'Need argument: bond, br, brv, vlan, dummy, vxlan, veth, vrf, sriov,'
-    echo 'rm'
+    echo 'rm, route, rule'
     exit 1
 fi
 
 function create_nics {
-    sudo ip netns add tmp
     sudo ip link add eth1 type veth peer name eth1.ep
+    sudo ip link set eth1 address $TEST_MAC1
     sudo ip link add eth2 type veth peer name eth2.ep
-    sudo ip link set eth1.ep netns tmp
-    sudo ip link set eth2.ep netns tmp
-    sudo ip netns exec tmp ip link set eth1.ep up
-    sudo ip netns exec tmp ip link set eth2.ep up
+    sudo ip link set eth2 address $TEST_MAC2
+    sudo ip link set eth1.ep up
+    sudo ip link set eth1.ep up
 }
 
 if [ "CHK$1" == "CHKbond" ];then
@@ -23,7 +30,9 @@ if [ "CHK$1" == "CHKbond" ];then
     sudo ip link set eth2 master bond99
     sudo ip link set eth1 up
     sudo ip link set eth2 up
+    sudo ip link set bond99 address $TEST_MAC3
     sudo ip link set bond99 up
+    sleep 1
 elif [ "CHK$1" == "CHKbr" ];then
     create_nics
     sudo ip link add br0 type bridge
@@ -51,6 +60,7 @@ elif [ "CHK$1" == "CHKvlan" ];then
     sudo ip link add link eth1 name eth1.101 type vlan id 101
 elif [ "CHK$1" == "CHKdummy" ];then
     sudo ip link add dummy1 type dummy
+    sudo ip link set dummy1 address $TEST_MAC1
     sudo ip link set dummy1 up
 elif [ "CHK$1" == "CHKvxlan" ];then
     create_nics
@@ -58,7 +68,11 @@ elif [ "CHK$1" == "CHKvxlan" ];then
         local 1.1.1.1 remote 8.8.8.8
     sudo ip link set vxlan0 up
 elif [ "CHK$1" == "CHKveth" ];then
-    create_nics
+    sudo ip link add veth1 type veth peer name veth1.ep
+    sudo ip link set veth1 address $TEST_MAC1
+    sudo ip link set veth1.ep address $TEST_MAC2
+    sudo ip link set veth1 up
+    sudo ip link set veth1.ep up
 elif [ "CHK$1" == "CHKvrf" ];then
     create_nics
     sudo ip link add vrf0 type vrf table 10
@@ -106,6 +120,7 @@ elif [ "CHK$1" == "CHKrule" ];then
     create_nics
     sudo ip rule add from 192.0.2.1 to 192.0.2.2 tos 10 protocol kernel table 100 iif eth1 oif eth2
 elif [ "CHK$1" == "CHKrm" ];then
+    sudo ip link del veth1
     sudo ip link del mac0
     sudo ip link del macvtap0
     sudo ip link del br0
@@ -115,7 +130,6 @@ elif [ "CHK$1" == "CHKrm" ];then
     sudo ip link del eth1
     sudo ip link del eth2
     sudo ip link del vrf0
-    sudo ip netns del tmp
     sudo ip link del tun1
     sudo ip rule del from 192.0.2.1 to 192.0.2.2 tos 10 protocol kernel table 100 iif eth1 oif eth2
     sudo modprobe -r netdevsim
