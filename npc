@@ -1,0 +1,23 @@
+.\" Manpage for npc.
+.TH man 1 "04 Nov 2020" "0.6.1"
+
+.SH NAME
+
+npc \- Prints all network status
+
+.SH SYNOPSIS
+
+npc <NIC> \- Prints network status of certain NIC
+
+.SH DESCRIPTION
+
+npc is a command line tool that has all the network status. 
+
+.SH OPTIONS
+
+npc route \- Print route entries
+
+.SH REPORTING BUGS
+
+No known bugs.
+
