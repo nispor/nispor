@@ -54,28 +54,28 @@ class NisporIfaceState:
 def _iface_info_to_obj(iface_info):
     iface_type = iface_info["iface_type"]
     ctrl_type = iface_info.get("controller_type")
-    if iface_type == "Bond":
+    if iface_type == "bond":
         iface = NisporBond(iface_info)
-    elif iface_type == "Bridge":
+    elif iface_type == "bridge":
         iface = NisporBridge(iface_info)
-    elif iface_type == "Tun":
+    elif iface_type == "tun":
         iface = NisporTun(iface_info)
-    elif iface_type == "Vlan":
+    elif iface_type == "vlan":
         iface = NisporVlan(iface_info)
-    elif iface_type == "Vxlan":
+    elif iface_type == "vxlan":
         iface = NisporVxlan(iface_info)
-    elif iface_type == "Veth":
+    elif iface_type == "veth":
         iface = NisporVeth(iface_info)
-    elif iface_type == "Vrf":
+    elif iface_type == "vrf":
         iface = NisporVRF(iface_info)
-    elif iface_type == "MacVlan":
+    elif iface_type == "mac_vlan":
         iface = NisporMacVlan(iface_info)
-    elif iface_type == "MacVtap":
+    elif iface_type == "mac_vtap":
         iface = NisporMacVtap(iface_info)
     else:
         iface = NisporBaseIface(iface_info)
-    if ctrl_type == "Bond":
+    if ctrl_type == "bond":
         iface.subordinate_state = NisporBondSubordinate(iface_info)
-    elif ctrl_type == "Bridge":
+    elif ctrl_type == "bridge":
         iface.subordinate_state = NisporBridgePort(iface_info)
     return iface
