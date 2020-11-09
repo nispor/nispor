@@ -64,12 +64,12 @@ autocmd FileType rust nnoremap <silent> <leader>f :RustFmt<cr>
 ## Release workflow
 
 ```bash
-sed -i -e 's/0.6.1/0.6.2/' \
-    Makefile src/*/Cargo.toml src/python/setup.py .cargo/config.toml
+sed -i -e 's/1.0.0/1.1.0/' \
+    Makefile.inc src/*/Cargo.toml src/python/setup.py .cargo/config.toml
 ```
 
 ```bash
-git log --oneline v0.6.1..HEAD
+git log --oneline v1.0.0..HEAD
 ```
 
 [rust-vim]: https://github.com/rust-lang/rust.vim

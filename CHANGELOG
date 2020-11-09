@@ -1,7 +1,19 @@
 # Changelog
-## [0.7.0] - TBD
+## [1.0.0] - 2020-11-09
+### New features
+ * Support multipath route. (89f4358)
+ * Support l3mdev route rule. (0f319c3)
+ * Support route rule in Python binding. (c2fe238)
+ * Support pkg-config support in C binding. (9fd46e6)
+
+## Bug fixes
+ * Add missing route protocol. (b045128)
+
 ## Break changes
- * All members of route classes has been changed to all lower case.
+ * All members of classes has been changed to all lower case.
+   (e370c14, cb23098)
+ * All mac address has been changed to all lower case. (ccb0625)
+ * The default output format of npc(cli tool) has changed to yaml. (372b22f)
 
 ## [0.6.1] - 2020-10-10
 ### New features
