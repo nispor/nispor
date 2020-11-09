@@ -18,7 +18,26 @@ fi
 
 LINK_WAIT_TIME=2
 
+function clean_up {
+    sudo ip link del veth1
+    sudo ip link del mac0
+    sudo ip link del macvtap0
+    sudo ip link del br0
+    sudo ip link del bond99
+    sudo ip link del dummy1
+    sudo ip link del vxlan0
+    sudo ip link del eth1
+    sudo ip link del eth2
+    sudo ip link del vrf0
+    sudo ip link del tun1
+    sudo ip link del tap1
+    sudo ip rule del priority 999
+    sudo ip -6 rule del priority 999
+    sudo modprobe -r netdevsim
+}
+
 function create_nics {
+    clean_up 2>/dev/null
     sudo ip link add eth1 type veth peer name eth1.ep
     sudo ip link set eth1 address $TEST_MAC1
     sudo ip link add eth2 type veth peer name eth2.ep
@@ -26,6 +45,7 @@ function create_nics {
     sudo ip link set eth1.ep up
     sudo ip link set eth2.ep up
 }
+
 
 if [ "CHK$1" == "CHKbond" ];then
     create_nics
@@ -139,7 +159,7 @@ elif [ "CHK$1" == "CHKroute" ];then
     sudo ip link set eth1 up
     sudo ip addr add 192.0.2.1/24 dev eth1
     sudo ip -6 addr add 2001:db8:f::1/64 dev eth1
-    sudo ip route add 192.0.3.0/24 proto static scope global \
+    sudo ip route add 198.51.100.0/24 proto static scope global \
         nexthop via 192.0.2.254 dev eth1 weight 1 onlink \
         nexthop via 192.0.2.253 dev eth1 weight 256 onlink
     sudo ip -6 route add 2001:db8:e::/64 proto static scope global \
@@ -147,20 +167,10 @@ elif [ "CHK$1" == "CHKroute" ];then
         nexthop via 2001:db8:f::253 dev eth1 weight 256 onlink
 elif [ "CHK$1" == "CHKrule" ];then
     create_nics
-    sudo ip rule add from 192.0.2.1 to 192.0.2.2 tos 10 protocol kernel table 100 iif eth1 oif eth2
+    sudo ip rule add from 192.0.2.1 to 192.0.2.2 \
+        tos 10 table 100 iif eth1 oif eth2 priority 999
+    sudo ip -6 rule add from 2001:db8:f::254 to 2001:db8:f::253 \
+        tos 10 table 100 iif eth1 oif eth2 priority 999
 elif [ "CHK$1" == "CHKrm" ];then
-    sudo ip link del veth1
-    sudo ip link del mac0
-    sudo ip link del macvtap0
-    sudo ip link del br0
-    sudo ip link del bond99
-    sudo ip link del dummy1
-    sudo ip link del vxlan0
-    sudo ip link del eth1
-    sudo ip link del eth2
-    sudo ip link del vrf0
-    sudo ip link del tun1
-    sudo ip link del tap1
-    sudo ip rule del from 192.0.2.1 to 192.0.2.2 tos 10 protocol kernel table 100 iif eth1 oif eth2
-    sudo modprobe -r netdevsim
+    clean_up 2>/dev/null
 fi
