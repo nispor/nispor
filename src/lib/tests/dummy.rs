@@ -1,4 +1,5 @@
 use nispor::NetState;
+use pretty_assertions::assert_eq;
 use serde_yaml;
 use std::panic;
 

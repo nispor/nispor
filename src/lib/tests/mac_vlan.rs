@@ -5,11 +5,11 @@ use std::panic;
 
 mod utils;
 
-const IFACE_NAME: &str = "veth1";
+const IFACE_NAME: &str = "mac0";
 
 const EXPECTED_IFACE_NAME: &str = r#"---
-- name: veth1
-  iface_type: veth
+- name: mac0
+  iface_type: mac_vlan
   state: up
   mtu: 1500
   flags:
@@ -20,21 +20,25 @@ const EXPECTED_IFACE_NAME: &str = r#"---
     - up
   ipv6:
     addresses:
-      - address: "fe80::223:45ff:fe67:891a"
+      - address: "fe80::223:45ff:fe67:891f"
         prefix_len: 64
         valid_lft: forever
         preferred_lft: forever
-  mac_address: "00:23:45:67:89:1a"
-  veth:
-    peer: veth1.ep"#;
+  mac_address: "00:23:45:67:89:1f"
+  mac_vlan:
+    base_iface: eth1
+    mode: source
+    flags: 0
+    allowed_mac_addresses:
+      - "00:23:45:67:89:1d"
+      - "00:23:45:67:89:1c""#;
 
 #[test]
-fn test_get_veth_iface_yaml() {
-    with_veth_iface(|| {
+fn test_get_macvlan_iface_yaml() {
+    with_macvlan_iface(|| {
         if let Ok(state) = NetState::retrieve() {
             let iface = &state.ifaces[IFACE_NAME];
-            let iface_type = &iface.iface_type;
-            assert_eq!(iface_type, &nispor::IfaceType::Veth);
+            assert_eq!(iface.iface_type, nispor::IfaceType::MacVlan);
             assert_eq!(
                 serde_yaml::to_string(&vec![iface]).unwrap(),
                 EXPECTED_IFACE_NAME
@@ -43,11 +47,11 @@ fn test_get_veth_iface_yaml() {
     });
 }
 
-fn with_veth_iface<T>(test: T) -> ()
+fn with_macvlan_iface<T>(test: T) -> ()
 where
     T: FnOnce() -> () + panic::UnwindSafe,
 {
-    utils::set_network_environment("veth");
+    utils::set_network_environment("macvlan");
 
     let result = panic::catch_unwind(|| {
         test();

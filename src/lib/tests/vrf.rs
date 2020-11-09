@@ -5,36 +5,33 @@ use std::panic;
 
 mod utils;
 
-const IFACE_NAME: &str = "veth1";
+const IFACE_NAME: &str = "vrf0";
 
 const EXPECTED_IFACE_NAME: &str = r#"---
-- name: veth1
-  iface_type: veth
+- name: vrf0
+  iface_type: vrf
   state: up
-  mtu: 1500
+  mtu: 65536
   flags:
-    - broadcast
     - lower_up
-    - multicast
+    - controller
+    - no_arp
     - running
     - up
-  ipv6:
-    addresses:
-      - address: "fe80::223:45ff:fe67:891a"
-        prefix_len: 64
-        valid_lft: forever
-        preferred_lft: forever
-  mac_address: "00:23:45:67:89:1a"
-  veth:
-    peer: veth1.ep"#;
+  mac_address: "00:23:45:67:89:1c"
+  vrf:
+    table_id: 10
+    subordinates:
+      - eth1
+      - eth2"#;
 
 #[test]
-fn test_get_veth_iface_yaml() {
-    with_veth_iface(|| {
+#[ignore] // Travis CI does not support VRF yet
+fn test_get_vrf_iface_yaml() {
+    with_vrf_iface(|| {
         if let Ok(state) = NetState::retrieve() {
             let iface = &state.ifaces[IFACE_NAME];
-            let iface_type = &iface.iface_type;
-            assert_eq!(iface_type, &nispor::IfaceType::Veth);
+            assert_eq!(iface.iface_type, nispor::IfaceType::Vrf);
             assert_eq!(
                 serde_yaml::to_string(&vec![iface]).unwrap(),
                 EXPECTED_IFACE_NAME
@@ -43,11 +40,11 @@ fn test_get_veth_iface_yaml() {
     });
 }
 
-fn with_veth_iface<T>(test: T) -> ()
+fn with_vrf_iface<T>(test: T) -> ()
 where
     T: FnOnce() -> () + panic::UnwindSafe,
 {
-    utils::set_network_environment("veth");
+    utils::set_network_environment("vrf");
 
     let result = panic::catch_unwind(|| {
         test();

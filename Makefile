@@ -59,7 +59,10 @@ $(CLI_EXEC_RELEASE) $(VARLINK_SRV_EXEC_RELEASE) $(CLIB_SO_DEV_RELEASE):
 	cargo build --all --release
 
 check:
-	cargo test -- --test-threads=1 --show-output
+	cargo test -- --test-threads=1 --show-output;
+	if [ "CHK$(TRAVIS)" != "CHKtrue" ]; then \
+		cargo test -- --test-threads=1 --show-output --ignored; \
+	fi
 	make check -C test/clib
 
 srv: $(VARLINK_SRV_EXEC_DEBUG)

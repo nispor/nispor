@@ -1,4 +1,5 @@
 use nispor::NetState;
+use pretty_assertions::assert_eq;
 use serde_yaml;
 use std::panic;
 
@@ -66,11 +67,13 @@ const EXPECTED_IFACE_NAME: &str = r#"---
     peer: eth1.ep
 - name: eth2
   iface_type: veth
-  state: lower_layer_down
+  state: up
   mtu: 1500
   flags:
     - broadcast
+    - lower_up
     - multicast
+    - running
     - subordinate
     - up
   mac_address: "00:23:45:67:89:1c"
