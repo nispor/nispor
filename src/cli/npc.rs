@@ -78,13 +78,30 @@ fn parse_arg_output_format(matches: &clap::ArgMatches) -> CliOutputType {
     }
 }
 
+fn _is_route_to_specified_dev(route: &Route, iface_name: &str) -> bool {
+    if let Some(oif) = &route.oif {
+        if oif == iface_name {
+            return true;
+        }
+    }
+    if let Some(mp_routes) = &route.multipath {
+        for mp_route in mp_routes {
+            if mp_route.iface == iface_name {
+                return true;
+            }
+        }
+    }
+
+    false
+}
+
 fn get_routes(state: &NetState, matches: &clap::ArgMatches) -> CliResult {
     let mut routes = state.routes.clone();
 
-    if let Some(oif) = matches.value_of("dev") {
+    if let Some(iface_name) = matches.value_of("dev") {
         routes = routes
             .into_iter()
-            .filter(|route| route.oif == Some(String::from(oif)))
+            .filter(|route| _is_route_to_specified_dev(route, iface_name))
             .collect();
     }
 
