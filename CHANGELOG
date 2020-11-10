@@ -1,4 +1,8 @@
 # Changelog
+## [1.0.1] - 2020-11-10
+## Bug fixes
+ * Fix interface type of python binding. (674d186)
+
 ## [1.0.0] - 2020-11-09
 ### New features
  * Support multipath route. (89f4358)

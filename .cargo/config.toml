@@ -1,2 +1,2 @@
 [build]
-rustflags = "-Clink-arg=-Wl,-soname=libnispor.so.1.0.0"
+rustflags = "-Clink-arg=-Wl,-soname=libnispor.so.1.0.1"
