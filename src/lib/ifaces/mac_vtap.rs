@@ -1,6 +1,7 @@
 use crate::ifaces::mac_vlan::get_mac_vlan_info;
 use crate::ifaces::mac_vlan::MacVlanInfo;
 use crate::ifaces::mac_vlan::MacVlanMode;
+use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas;
 use serde_derive::{Deserialize, Serialize};
 
@@ -61,10 +62,13 @@ impl From<MacVlanInfo> for MacVtapInfo {
         }
     }
 }
-pub(crate) fn get_mac_vtap_info(data: &nlas::InfoData) -> Option<MacVtapInfo> {
-    if let Some(info) = get_mac_vlan_info(data) {
-        Some(info.into())
+
+pub(crate) fn get_mac_vtap_info(
+    data: &nlas::InfoData,
+) -> Result<Option<MacVtapInfo>, NisporError> {
+    if let Some(info) = get_mac_vlan_info(data)? {
+        Ok(Some(info.into()))
     } else {
-        None
+        Ok(None)
     }
 }

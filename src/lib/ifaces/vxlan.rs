@@ -1,6 +1,7 @@
 use crate::netlink::parse_vxlan_info;
 use crate::Iface;
 use crate::IfaceType;
+use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas::InfoData;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -37,11 +38,13 @@ pub struct VxlanInfo {
     pub df: u8,
 }
 
-pub(crate) fn get_vxlan_info(data: &InfoData) -> Option<VxlanInfo> {
+pub(crate) fn get_vxlan_info(
+    data: &InfoData,
+) -> Result<Option<VxlanInfo>, NisporError> {
     if let InfoData::Vxlan(raw) = data {
-        Some(parse_vxlan_info(&raw))
+        Ok(Some(parse_vxlan_info(&raw)?))
     } else {
-        None
+        Ok(None)
     }
 }
 

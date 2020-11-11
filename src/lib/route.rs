@@ -515,7 +515,7 @@ fn get_route(
                 rt.mark = Some(*d);
             }
             Nla::Uid(d) => {
-                rt.uid = Some(parse_as_u32(d));
+                rt.uid = Some(parse_as_u32(d)?);
             }
             Nla::Iif(d) => {
                 rt.iif = if let Some(iface_name) =
@@ -545,7 +545,14 @@ fn get_route(
                 let len = d.len();
                 let mut i = 0usize;
                 while (i < len) && (len - i > SIZE_OF_RTNEXTHOP) {
-                    let nex_hop_len = parse_as_u16(&[d[i], d[i + 1]]);
+                    let nex_hop_len = parse_as_u16(&[
+                        *d.get(i).ok_or(NisporError::bug(
+                            "wrong index at multipath next_hop_len",
+                        ))?,
+                        *d.get(i + 1).ok_or(NisporError::bug(
+                            "wrong index at multipath next_hop_len",
+                        ))?,
+                    ])?;
                     let nla = NlaBuffer::new(
                         &d[i + SIZE_OF_RTNEXTHOP..i + nex_hop_len as usize],
                     );
@@ -569,7 +576,11 @@ fn get_route(
                             continue;
                         }
                     };
-                    let iface_index = parse_as_i32(&d[i + 4..i + 8]);
+                    let iface_index = parse_as_i32(
+                        &d.get(i + 4..i + 8).ok_or(NisporError::bug(
+                            "wrong index at multipath iface_index",
+                        ))?,
+                    )?;
                     let iface = if let Some(iface_name) =
                         ifindex_to_name.get(&format!("{}", iface_index))
                     {
@@ -578,7 +589,9 @@ fn get_route(
                         format!("{}", iface_index)
                     };
                     let mut flags = Vec::new();
-                    let flags_raw = d[i + 2];
+                    let flags_raw = d
+                        .get(i + 2)
+                        .ok_or(NisporError::bug("wrong index at flags raw"))?;
                     //TODO: Need better way to handle the bitmap.
                     if (flags_raw & RTNH_F_DEAD) > 0 {
                         flags.push(MultipathRouteFlags::Dead);
@@ -596,7 +609,11 @@ fn get_route(
 
                     let next_hop = MultipathRoute {
                         flags: flags,
-                        weight: d[i + 3] as u16 + 1,
+                        weight: *d
+                            .get(i + 3)
+                            .ok_or(NisporError::bug("wrong index at weight"))?
+                            as u16
+                            + 1,
                         iface: iface,
                         via: via,
                     };

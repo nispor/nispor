@@ -1,11 +1,12 @@
 use crate::ifaces::get_iface_name_by_index;
+use crate::netlink::nla::parse_as_ipv4;
+use crate::netlink::nla::parse_as_ipv6;
 use crate::Iface;
 use crate::Ipv4AddrInfo;
 use crate::Ipv4Info;
 use crate::Ipv6AddrInfo;
 use crate::Ipv6Info;
-use crate::netlink::nla::parse_as_ipv4;
-use crate::netlink::nla::parse_as_ipv6;
+use crate::NisporError;
 use netlink_packet_route::rtnl::address::nlas::Nla::{
     Address, CacheInfo, Local,
 };
@@ -18,10 +19,10 @@ pub(crate) const AF_INET6: u8 = 10;
 pub(crate) fn fill_ip_addr(
     iface_states: &mut HashMap<String, Iface>,
     nl_msg: &AddressMessage,
-) {
+) -> Result<(), NisporError> {
     match nl_msg.header.family {
         AF_INET => {
-            let (iface_index, addr) = parse_ipv4_nlas(nl_msg);
+            let (iface_index, addr) = parse_ipv4_nlas(nl_msg)?;
             let iface_name =
                 get_iface_name_by_index(&iface_states, iface_index);
             if iface_name != "" {
@@ -41,7 +42,7 @@ pub(crate) fn fill_ip_addr(
             }
         }
         AF_INET6 => {
-            let (iface_index, addr) = parse_ipv6_nlas(nl_msg);
+            let (iface_index, addr) = parse_ipv6_nlas(nl_msg)?;
             let iface_name =
                 get_iface_name_by_index(&iface_states, iface_index);
             if iface_name != "" {
@@ -67,10 +68,13 @@ pub(crate) fn fill_ip_addr(
             );
         }
     };
+    Ok(())
 }
 
 // TODO: remove the dupcode between parse_ipv4_nlas() and parse_ipv6_nlas()
-fn parse_ipv4_nlas(nl_msg: &AddressMessage) -> (u32, Ipv4AddrInfo) {
+fn parse_ipv4_nlas(
+    nl_msg: &AddressMessage,
+) -> Result<(u32, Ipv4AddrInfo), NisporError> {
     let iface_index = nl_msg.header.index;
     let mut addr: Ipv4AddrInfo = Default::default();
     addr.prefix_len = nl_msg.header.prefix_len;
@@ -81,7 +85,7 @@ fn parse_ipv4_nlas(nl_msg: &AddressMessage) -> (u32, Ipv4AddrInfo) {
         } else if let Address(addr_vec) = nla {
             peer = parse_as_ipv4(addr_vec.as_slice()).to_string();
         } else if let CacheInfo(cache_info_vec) = nla {
-            let cache_info = parse_cache_info(&cache_info_vec);
+            let cache_info = parse_cache_info(&cache_info_vec)?;
             addr.preferred_lft = left_time_to_string(cache_info.ifa_prefered);
             addr.valid_lft = left_time_to_string(cache_info.ifa_valid);
         }
@@ -91,10 +95,12 @@ fn parse_ipv4_nlas(nl_msg: &AddressMessage) -> (u32, Ipv4AddrInfo) {
         addr.peer = Some(peer)
     }
 
-    (iface_index, addr)
+    Ok((iface_index, addr))
 }
 
-fn parse_ipv6_nlas(nl_msg: &AddressMessage) -> (u32, Ipv6AddrInfo) {
+fn parse_ipv6_nlas(
+    nl_msg: &AddressMessage,
+) -> Result<(u32, Ipv6AddrInfo), NisporError> {
     let iface_index = nl_msg.header.index;
     let mut addr: Ipv6AddrInfo = Default::default();
     addr.prefix_len = nl_msg.header.prefix_len;
@@ -103,13 +109,13 @@ fn parse_ipv6_nlas(nl_msg: &AddressMessage) -> (u32, Ipv6AddrInfo) {
         if let Address(addr_vec) = nla {
             addr.address = parse_as_ipv6(addr_vec.as_slice()).to_string();
         } else if let CacheInfo(cache_info_vec) = nla {
-            let cache_info = parse_cache_info(&cache_info_vec);
+            let cache_info = parse_cache_info(&cache_info_vec)?;
             addr.preferred_lft = left_time_to_string(cache_info.ifa_prefered);
             addr.valid_lft = left_time_to_string(cache_info.ifa_valid);
         }
     }
 
-    (iface_index, addr)
+    Ok((iface_index, addr))
 }
 
 struct IfaCacheInfo {
@@ -119,7 +125,9 @@ struct IfaCacheInfo {
     tstamp: u32, */
 }
 
-fn parse_cache_info(cache_info_raw: &[u8]) -> IfaCacheInfo {
+fn parse_cache_info(
+    cache_info_raw: &[u8],
+) -> Result<IfaCacheInfo, NisporError> {
     if cache_info_raw.len() != 16 {
         panic!(
             "Got invalid ifa_cacheinfo, expect [u8; 32], got {} u8",
@@ -127,20 +135,21 @@ fn parse_cache_info(cache_info_raw: &[u8]) -> IfaCacheInfo {
         );
     } else {
         // The struct ifa_cacheinfo is storing valid time as second u32
-        IfaCacheInfo {
+        let err_msg = "wrong index at cache_info_raw parsing";
+        Ok(IfaCacheInfo {
             ifa_prefered: u32::from_ne_bytes([
-                cache_info_raw[0],
-                cache_info_raw[1],
-                cache_info_raw[2],
-                cache_info_raw[3],
+                *cache_info_raw.get(0).ok_or(NisporError::bug(err_msg))?,
+                *cache_info_raw.get(1).ok_or(NisporError::bug(err_msg))?,
+                *cache_info_raw.get(2).ok_or(NisporError::bug(err_msg))?,
+                *cache_info_raw.get(3).ok_or(NisporError::bug(err_msg))?,
             ]),
             ifa_valid: u32::from_ne_bytes([
-                cache_info_raw[4],
-                cache_info_raw[5],
-                cache_info_raw[6],
-                cache_info_raw[7],
+                *cache_info_raw.get(4).ok_or(NisporError::bug(err_msg))?,
+                *cache_info_raw.get(5).ok_or(NisporError::bug(err_msg))?,
+                *cache_info_raw.get(6).ok_or(NisporError::bug(err_msg))?,
+                *cache_info_raw.get(7).ok_or(NisporError::bug(err_msg))?,
             ]),
-        }
+        })
     }
 }
 

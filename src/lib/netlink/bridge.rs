@@ -1,10 +1,13 @@
 use crate::parse_as_mac;
 use crate::BridgeInfo;
+use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas::InfoBridge;
 
 const ETH_ALEN: usize = 6;
 
-pub(crate) fn parse_bridge_info(infos: &[InfoBridge]) -> BridgeInfo {
+pub(crate) fn parse_bridge_info(
+    infos: &[InfoBridge],
+) -> Result<BridgeInfo, NisporError> {
     let mut bridge_info = BridgeInfo::default();
 
     for info in infos {
@@ -27,9 +30,9 @@ pub(crate) fn parse_bridge_info(infos: &[InfoBridge]) -> BridgeInfo {
         } else if let InfoBridge::GroupFwdMask(d) = info {
             bridge_info.group_fwd_mask = Some(*d);
         } else if let InfoBridge::RootId((priority, mac)) = info {
-            bridge_info.root_id = Some(parse_bridge_id(*priority, mac));
+            bridge_info.root_id = Some(parse_bridge_id(*priority, mac)?);
         } else if let InfoBridge::BridgeId((priority, mac)) = info {
-            bridge_info.bridge_id = Some(parse_bridge_id(*priority, mac));
+            bridge_info.bridge_id = Some(parse_bridge_id(*priority, mac)?);
         } else if let InfoBridge::RootPort(d) = info {
             bridge_info.root_port = Some(*d);
         } else if let InfoBridge::RootPathCost(d) = info {
@@ -47,7 +50,7 @@ pub(crate) fn parse_bridge_info(infos: &[InfoBridge]) -> BridgeInfo {
         } else if let InfoBridge::GcTimer(d) = info {
             bridge_info.gc_timer = Some(*d);
         } else if let InfoBridge::GroupAddr(d) = info {
-            bridge_info.group_addr = Some(parse_as_mac(ETH_ALEN, d));
+            bridge_info.group_addr = Some(parse_as_mac(ETH_ALEN, d)?);
         // InfoBridge::FdbFlush is only used for changing bridge
         } else if let InfoBridge::MulticastRouter(d) = info {
             bridge_info.multicast_router = Some((*d).into());
@@ -101,16 +104,26 @@ pub(crate) fn parse_bridge_info(infos: &[InfoBridge]) -> BridgeInfo {
             eprintln!("Unknown NLA {:?}", &info);
         }
     }
-    bridge_info
+    Ok(bridge_info)
 }
 
-fn parse_bridge_id(priority: u16, mac: &[u8; 6]) -> String {
+fn parse_bridge_id(
+    priority: u16,
+    mac: &[u8; 6],
+) -> Result<String, NisporError> {
     //Following the format of sysfs
     let priority_bytes = priority.to_ne_bytes();
-    format!(
+    Ok(format!(
         "{:02x}{:02x}.{}",
-        priority_bytes[0],
-        priority_bytes[1],
-        parse_as_mac(ETH_ALEN, mac).to_lowercase().replace(":", "")
-    )
+        priority_bytes
+            .get(0)
+            .ok_or(NisporError::bug("wrong index at bridge_id parsing"))?,
+        priority_bytes
+            .get(1)
+            .ok_or(NisporError::bug("wrong index at bridge_id parsing"))?,
+        parse_as_mac(ETH_ALEN, mac)
+            .expect("error when parsing mac address in bridge_id")
+            .to_lowercase()
+            .replace(":", "")
+    ))
 }

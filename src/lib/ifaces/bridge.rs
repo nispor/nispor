@@ -3,6 +3,7 @@ use crate::netlink::parse_bridge_info;
 use crate::netlink::parse_bridge_port_info;
 use crate::ControllerType;
 use crate::Iface;
+use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -258,16 +259,20 @@ pub struct BridgePortInfo {
     pub vlans: Option<Vec<BridgeVlanEntry>>,
 }
 
-pub(crate) fn get_bridge_info(data: &nlas::InfoData) -> Option<BridgeInfo> {
+pub(crate) fn get_bridge_info(
+    data: &nlas::InfoData,
+) -> Result<Option<BridgeInfo>, NisporError> {
     if let nlas::InfoData::Bridge(infos) = data {
-        Some(parse_bridge_info(&infos))
+        Ok(Some(parse_bridge_info(&infos)?))
     } else {
-        None
+        Ok(None)
     }
 }
 
-pub(crate) fn get_bridge_port_info(data: &[u8]) -> Option<BridgePortInfo> {
-    Some(parse_bridge_port_info(data))
+pub(crate) fn get_bridge_port_info(
+    data: &[u8],
+) -> Result<Option<BridgePortInfo>, NisporError> {
+    Ok(Some(parse_bridge_port_info(data)?))
 }
 
 pub(crate) fn bridge_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
@@ -339,11 +344,15 @@ pub struct BridgeVlanEntry {
     pub is_egress_untagged: bool,
 }
 
-pub(crate) fn parse_bridge_vlan_info(iface_state: &mut Iface, data: &[u8]) {
+pub(crate) fn parse_bridge_vlan_info(
+    iface_state: &mut Iface,
+    data: &[u8],
+) -> Result<(), NisporError> {
     if let Some(old_port_info) = &iface_state.bridge_port {
         // TODO: shoule update in place instead of clone
         let mut new_port_info = old_port_info.clone();
-        new_port_info.vlans = parse_af_spec_bridge_info(data);
+        new_port_info.vlans = parse_af_spec_bridge_info(data)?;
         iface_state.bridge_port = Some(new_port_info);
     }
+    Ok(())
 }

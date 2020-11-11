@@ -3,6 +3,7 @@ use crate::netlink::parse_as_u16;
 use crate::netlink::parse_as_u32;
 use crate::Iface;
 use crate::IfaceType;
+use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas;
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 use serde_derive::{Deserialize, Serialize};
@@ -69,7 +70,9 @@ pub struct MacVlanInfo {
     pub allowed_mac_addresses: Option<Vec<String>>,
 }
 
-pub(crate) fn get_mac_vlan_info(data: &nlas::InfoData) -> Option<MacVlanInfo> {
+pub(crate) fn get_mac_vlan_info(
+    data: &nlas::InfoData,
+) -> Result<Option<MacVlanInfo>, NisporError> {
     let mut info = MacVlanInfo::default();
     if let nlas::InfoData::MacVlan(raw) | nlas::InfoData::MacVtap(raw) = data {
         let nlas = NlasIterator::new(raw);
@@ -77,10 +80,10 @@ pub(crate) fn get_mac_vlan_info(data: &nlas::InfoData) -> Option<MacVlanInfo> {
             match nla {
                 Ok(nla) => match nla.kind() {
                     IFLA_MACVLAN_MODE => {
-                        info.mode = parse_as_u32(nla.value()).into();
+                        info.mode = parse_as_u32(nla.value())?.into();
                     }
                     IFLA_MACVLAN_FLAGS => {
-                        info.flags = parse_as_u16(nla.value());
+                        info.flags = parse_as_u16(nla.value())?;
                     }
                     IFLA_MACVLAN_MACADDR_COUNT => {
                         // Ignore. Use info.allowed_mac_addresses.len()
@@ -88,7 +91,7 @@ pub(crate) fn get_mac_vlan_info(data: &nlas::InfoData) -> Option<MacVlanInfo> {
                     }
                     IFLA_MACVLAN_MACADDR_DATA => {
                         info.allowed_mac_addresses =
-                            Some(parse_mac_addr_data(nla.value()));
+                            Some(parse_mac_addr_data(nla.value())?);
                     }
                     _ => {
                         eprintln!(
@@ -106,20 +109,20 @@ pub(crate) fn get_mac_vlan_info(data: &nlas::InfoData) -> Option<MacVlanInfo> {
                 }
             }
         }
-        Some(info)
+        Ok(Some(info))
     } else {
-        None
+        Ok(None)
     }
 }
 
-fn parse_mac_addr_data(raw: &[u8]) -> Vec<String> {
+fn parse_mac_addr_data(raw: &[u8]) -> Result<Vec<String>, NisporError> {
     let mut addrs = Vec::new();
     let nlas = NlasIterator::new(raw);
     for nla in nlas {
         match nla {
             Ok(nla) => match nla.kind() {
                 IFLA_MACVLAN_MACADDR => {
-                    addrs.push(parse_as_mac(ETH_ALEN, nla.value()));
+                    addrs.push(parse_as_mac(ETH_ALEN, nla.value())?);
                 }
                 _ => {
                     eprintln!(
@@ -137,7 +140,7 @@ fn parse_mac_addr_data(raw: &[u8]) -> Vec<String> {
             }
         }
     }
-    addrs
+    Ok(addrs)
 }
 
 pub(crate) fn mac_vlan_iface_tidy_up(

@@ -1,6 +1,7 @@
 use crate::netlink::parse_as_u32;
 use crate::ControllerType;
 use crate::Iface;
+use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas;
 use netlink_packet_route::rtnl::nlas::NlaBuffer;
 use serde_derive::{Deserialize, Serialize};
@@ -20,32 +21,34 @@ pub struct VrfSubordinateInfo {
     pub table_id: u32,
 }
 
-pub(crate) fn get_vrf_info(data: &nlas::InfoData) -> Option<VrfInfo> {
+pub(crate) fn get_vrf_info(
+    data: &nlas::InfoData,
+) -> Result<Option<VrfInfo>, NisporError> {
     if let nlas::InfoData::Vrf(raw) = data {
         let nla_buff = NlaBuffer::new(raw);
         if nla_buff.kind() == IFLA_VRF_TABLE {
-            Some(VrfInfo {
-                table_id: parse_as_u32(nla_buff.value()),
+            Ok(Some(VrfInfo {
+                table_id: parse_as_u32(nla_buff.value())?,
                 subordinates: Vec::new(),
-            })
+            }))
         } else {
-            None
+            Ok(None)
         }
     } else {
-        None
+        Ok(None)
     }
 }
 
 pub(crate) fn get_vrf_subordinate_info(
     data: &[u8],
-) -> Option<VrfSubordinateInfo> {
+) -> Result<Option<VrfSubordinateInfo>, NisporError> {
     let nla_buff = NlaBuffer::new(data);
     if nla_buff.kind() == IFLA_VRF_PORT_TABLE {
-        Some(VrfSubordinateInfo {
-            table_id: parse_as_u32(nla_buff.value()),
-        })
+        Ok(Some(VrfSubordinateInfo {
+            table_id: parse_as_u32(nla_buff.value())?,
+        }))
     } else {
-        None
+        Ok(None)
     }
 }
 
