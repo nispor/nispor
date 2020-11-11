@@ -27,6 +27,7 @@ use crate::ifaces::vxlan::VxlanInfo;
 use crate::mac::parse_as_mac;
 use crate::Ipv4Info;
 use crate::Ipv6Info;
+use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas;
 use netlink_packet_route::rtnl::LinkMessage;
 use netlink_packet_route::rtnl::{
@@ -194,10 +195,12 @@ pub(crate) fn get_iface_name_by_index(
     "".into()
 }
 
-pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
+pub(crate) fn parse_nl_msg_to_iface(
+    nl_msg: &LinkMessage,
+) -> Result<Option<Iface>, NisporError> {
     let name = _get_iface_name(&nl_msg);
     if name.len() <= 0 {
-        return None;
+        return Ok(None);
     }
     let mut iface_state = Iface {
         name: name.clone(),
@@ -214,7 +217,7 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
             iface_state.mtu = *mtu as i64;
         } else if let Nla::Address(mac) = nla {
             mac_len = Some(mac.len());
-            iface_state.mac_address = parse_as_mac(mac.len(), mac);
+            iface_state.mac_address = parse_as_mac(mac.len(), mac)?;
         } else if let Nla::OperState(state) = nla {
             iface_state.state = _get_iface_state(&state);
         } else if let Nla::Master(controller) = nla {
@@ -246,9 +249,11 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
             for info in infos {
                 if let nlas::Info::Data(d) = info {
                     match iface_state.iface_type {
-                        IfaceType::Bond => iface_state.bond = get_bond_info(&d),
+                        IfaceType::Bond => {
+                            iface_state.bond = get_bond_info(&d)?
+                        }
                         IfaceType::Bridge => {
-                            iface_state.bridge = get_bridge_info(&d)
+                            iface_state.bridge = get_bridge_info(&d)?
                         }
                         IfaceType::Tun => match get_tun_info(&d) {
                             Ok(info) => {
@@ -260,14 +265,14 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         },
                         IfaceType::Vlan => iface_state.vlan = get_vlan_info(&d),
                         IfaceType::Vxlan => {
-                            iface_state.vxlan = get_vxlan_info(&d)
+                            iface_state.vxlan = get_vxlan_info(&d)?
                         }
-                        IfaceType::Vrf => iface_state.vrf = get_vrf_info(&d),
+                        IfaceType::Vrf => iface_state.vrf = get_vrf_info(&d)?,
                         IfaceType::MacVlan => {
-                            iface_state.mac_vlan = get_mac_vlan_info(&d)
+                            iface_state.mac_vlan = get_mac_vlan_info(&d)?
                         }
                         IfaceType::MacVtap => {
-                            iface_state.mac_vtap = get_mac_vtap_info(&d)
+                            iface_state.mac_vtap = get_mac_vtap_info(&d)?
                         }
                         _ => eprintln!(
                             "Unhandled IFLA_INFO_DATA for iface type {:?}",
@@ -279,14 +284,11 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
             for info in infos {
                 if let nlas::Info::SlaveKind(d) = info {
                     // Remove the tailing \0
-                    match std::str::from_utf8(&(d.as_slice()[0..(d.len() - 1)]))
-                    {
-                        Ok(controller_type) => {
-                            iface_state.controller_type =
-                                Some(controller_type.into())
-                        }
-                        _ => (),
-                    }
+                    iface_state.controller_type = Some(
+                        std::ffi::CStr::from_bytes_with_nul(&d.as_slice())?
+                            .to_str()?
+                            .into(),
+                    )
                 }
             }
             if let Some(controller_type) = &iface_state.controller_type {
@@ -295,15 +297,15 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
                         match controller_type {
                             ControllerType::Bond => {
                                 iface_state.bond_subordinate =
-                                    get_bond_subordinate_info(&d);
+                                    get_bond_subordinate_info(&d)?;
                             }
                             ControllerType::Bridge => {
                                 iface_state.bridge_port =
-                                    get_bridge_port_info(&d);
+                                    get_bridge_port_info(&d)?;
                             }
                             ControllerType::Vrf => {
                                 iface_state.vrf_subordinate =
-                                    get_vrf_subordinate_info(&d);
+                                    get_vrf_subordinate_info(&d)?;
                             }
                             _ => eprintln!(
                                 "Unknown controller type {:?}",
@@ -352,7 +354,7 @@ pub(crate) fn parse_nl_msg_to_iface(nl_msg: &LinkMessage) -> Option<Iface> {
         iface_state.iface_type = IfaceType::Loopback;
     }
     iface_state.flags = _parse_iface_flags(nl_msg.header.flags);
-    Some(iface_state)
+    Ok(Some(iface_state))
 }
 
 fn _get_iface_name(nl_msg: &LinkMessage) -> String {
@@ -367,19 +369,20 @@ fn _get_iface_name(nl_msg: &LinkMessage) -> String {
 pub(crate) fn fill_bridge_vlan_info(
     iface_states: &mut HashMap<String, Iface>,
     nl_msg: &LinkMessage,
-) {
+) -> Result<(), NisporError> {
     let name = _get_iface_name(&nl_msg);
     if name.len() <= 0 {
-        return;
+        return Ok(());
     }
     if let Some(mut iface_state) = iface_states.get_mut(&name) {
         for nla in &nl_msg.nlas {
             if let Nla::AfSpecBridge(data) = nla {
-                parse_bridge_vlan_info(&mut iface_state, &data);
+                parse_bridge_vlan_info(&mut iface_state, &data)?;
                 break;
             }
         }
     }
+    Ok(())
 }
 
 fn _get_iface_state(state: &nlas::State) -> IfaceState {

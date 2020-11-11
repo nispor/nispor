@@ -1,4 +1,5 @@
 use crate::BridgeVlanEntry;
+use crate::NisporError;
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 
 const IFLA_BRIDGE_VLAN_INFO: u16 = 2;
@@ -15,7 +16,7 @@ const BRIDGE_VLAN_INFO_RANGE_END: u16 = 1 << 4;
 // TODO: Dup with parse_bond_info
 pub(crate) fn parse_af_spec_bridge_info(
     raw: &[u8],
-) -> Option<Vec<BridgeVlanEntry>> {
+) -> Result<Option<Vec<BridgeVlanEntry>>, NisporError> {
     let nlas = NlasIterator::new(raw);
     let mut vlans = Vec::new();
 
@@ -24,7 +25,7 @@ pub(crate) fn parse_af_spec_bridge_info(
         match nla {
             Ok(nla) => match nla.kind() {
                 IFLA_BRIDGE_VLAN_INFO => {
-                    if let Some(v) = parse_vlan_info(nla.value()) {
+                    if let Some(v) = parse_vlan_info(nla.value())? {
                         vlans.push(v);
                     }
                 }
@@ -40,9 +41,9 @@ pub(crate) fn parse_af_spec_bridge_info(
         }
     }
     if vlans.len() > 0 {
-        Some(merge_vlan_range(&vlans))
+        Ok(Some(merge_vlan_range(&vlans)))
     } else {
-        None
+        Ok(None)
     }
 }
 
@@ -55,10 +56,26 @@ struct KernelBridgeVlanEntry {
     is_range_end: bool,
 }
 
-fn parse_vlan_info(data: &[u8]) -> Option<KernelBridgeVlanEntry> {
+fn parse_vlan_info(
+    data: &[u8],
+) -> Result<Option<KernelBridgeVlanEntry>, NisporError> {
     if data.len() == 4 {
-        let flags = u16::from_ne_bytes([data[0], data[1]]);
-        let vid = u16::from_ne_bytes([data[2], data[3]]);
+        let flags = u16::from_ne_bytes([
+            *data
+                .get(0)
+                .ok_or(NisporError::bug("wrong index at vlan flags"))?,
+            *data
+                .get(1)
+                .ok_or(NisporError::bug("wrong index at vlan flags"))?,
+        ]);
+        let vid = u16::from_ne_bytes([
+            *data
+                .get(2)
+                .ok_or(NisporError::bug("wrong index at vlan id"))?,
+            *data
+                .get(3)
+                .ok_or(NisporError::bug("wrong index at vlan id"))?,
+        ]);
         let mut entry = KernelBridgeVlanEntry {
             vid: vid,
             ..Default::default()
@@ -67,13 +84,13 @@ fn parse_vlan_info(data: &[u8]) -> Option<KernelBridgeVlanEntry> {
         entry.is_egress_untagged = (flags & BRIDGE_VLAN_INFO_UNTAGGED) > 0;
         entry.is_range_start = (flags & BRIDGE_VLAN_INFO_RANGE_BEGIN) > 0;
         entry.is_range_end = (flags & BRIDGE_VLAN_INFO_RANGE_END) > 0;
-        Some(entry)
+        Ok(Some(entry))
     } else {
         eprintln!(
             "Invalid kernel bridge vlan info: {:?}, should be [u8;4]",
             data
         );
-        None
+        Ok(None)
     }
 }
 

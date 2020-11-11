@@ -3,6 +3,7 @@ use crate::netlink::parse_bond_info;
 use crate::netlink::parse_bond_subordinate_info;
 use crate::ControllerType;
 use crate::IfaceType;
+use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -403,18 +404,20 @@ pub struct BondSubordinateInfo {
     pub ad_partner_oper_port_state: Option<u16>,
 }
 
-pub(crate) fn get_bond_info(data: &nlas::InfoData) -> Option<BondInfo> {
+pub(crate) fn get_bond_info(
+    data: &nlas::InfoData,
+) -> Result<Option<BondInfo>, NisporError> {
     if let nlas::InfoData::Bond(raw) = data {
-        Some(parse_bond_info(raw))
+        Ok(Some(parse_bond_info(raw)?))
     } else {
-        None
+        Ok(None)
     }
 }
 
 pub(crate) fn get_bond_subordinate_info(
     data: &[u8],
-) -> Option<BondSubordinateInfo> {
-    Some(parse_bond_subordinate_info(data))
+) -> Result<Option<BondSubordinateInfo>, NisporError> {
+    Ok(Some(parse_bond_subordinate_info(data)?))
 }
 
 pub(crate) fn bond_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {

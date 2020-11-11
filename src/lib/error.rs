@@ -21,6 +21,15 @@ pub struct NisporError {
     pub msg: String,
 }
 
+impl NisporError {
+    pub fn bug(message: &str) -> NisporError {
+        NisporError {
+            kind: ErrorKind::NisporBug,
+            msg: message.to_string(),
+        }
+    }
+}
+
 impl std::fmt::Display for NisporError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.msg)
@@ -36,6 +45,24 @@ impl std::convert::From<rtnetlink::Error> for NisporError {
         NisporError {
             kind: ErrorKind::NetlinkError,
             msg: e.to_string(),
+        }
+    }
+}
+
+impl std::convert::From<std::ffi::FromBytesWithNulError> for NisporError {
+    fn from(e: std::ffi::FromBytesWithNulError) -> Self {
+        NisporError {
+            kind: ErrorKind::NisporBug,
+            msg: format!("FromBytesWithNulError: {}", e),
+        }
+    }
+}
+
+impl std::convert::From<std::str::Utf8Error> for NisporError {
+    fn from(e: std::str::Utf8Error) -> Self {
+        NisporError {
+            kind: ErrorKind::NisporBug,
+            msg: format!("Utf8Error: {}", e),
         }
     }
 }

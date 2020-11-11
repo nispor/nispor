@@ -30,13 +30,13 @@ async fn _get_ifaces() -> Result<HashMap<String, Iface>, NisporError> {
         .set_filter_mask(AF_UNSPEC as u8, RTEXT_FILTER_VF)
         .execute();
     while let Some(nl_msg) = links.try_next().await? {
-        if let Some(iface_state) = parse_nl_msg_to_iface(&nl_msg) {
+        if let Some(iface_state) = parse_nl_msg_to_iface(&nl_msg)? {
             iface_states.insert(iface_state.name.clone(), iface_state);
         }
     }
     let mut addrs = handle.address().get().execute();
     while let Some(nl_msg) = addrs.try_next().await? {
-        fill_ip_addr(&mut iface_states, &nl_msg);
+        fill_ip_addr(&mut iface_states, &nl_msg)?;
     }
     let mut br_vlan_links = handle
         .link()
@@ -44,7 +44,7 @@ async fn _get_ifaces() -> Result<HashMap<String, Iface>, NisporError> {
         .set_filter_mask(AF_BRIDGE as u8, RTEXT_FILTER_BRVLAN_COMPRESSED)
         .execute();
     while let Some(nl_msg) = br_vlan_links.try_next().await? {
-        fill_bridge_vlan_info(&mut iface_states, &nl_msg);
+        fill_bridge_vlan_info(&mut iface_states, &nl_msg)?;
     }
 
     tidy_up(&mut iface_states);

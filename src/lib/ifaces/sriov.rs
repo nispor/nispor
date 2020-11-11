@@ -115,47 +115,80 @@ pub(crate) fn get_sriov_info(
             let nla = nla?;
             match nla.kind() {
                 IFLA_VF_MAC => {
-                    vf_info.id = parse_as_u32(nla.value());
-                    vf_info.mac = parse_vf_mac(&nla.value()[4..], mac_len);
+                    vf_info.id = parse_as_u32(nla.value())?;
+                    vf_info.mac = parse_vf_mac(
+                        &nla.value().get(4..).ok_or(NisporError::bug(
+                            "invalid index into nla",
+                        ))?,
+                        mac_len,
+                    )?;
                 }
                 IFLA_VF_VLAN => {
-                    vf_info.vlan_id = parse_as_u32(&nla.value()[4..]);
-                    vf_info.qos = parse_as_u32(&nla.value()[8..]);
+                    vf_info.vlan_id =
+                        parse_as_u32(&nla.value().get(4..).ok_or(
+                            NisporError::bug("invalid index into nla"),
+                        )?)?;
+                    vf_info.qos =
+                        parse_as_u32(&nla.value().get(8..).ok_or(
+                            NisporError::bug("invalid index into nla"),
+                        )?)?;
                 }
                 IFLA_VF_TX_RATE => {
-                    vf_info.tx_rate = parse_as_u32(&nla.value()[4..]);
+                    vf_info.tx_rate =
+                        parse_as_u32(&nla.value().get(4..).ok_or(
+                            NisporError::bug("invalid index into nla"),
+                        )?)?;
                 }
                 IFLA_VF_SPOOFCHK => {
-                    let d = parse_as_u32(&nla.value()[4..]);
+                    let d =
+                        parse_as_u32(&nla.value().get(4..).ok_or(
+                            NisporError::bug("invalid index into nla"),
+                        )?)?;
                     vf_info.spoof_check = d > 0 && d != std::u32::MAX;
                 }
                 IFLA_VF_LINK_STATE => {
-                    vf_info.link_state = parse_as_u32(&nla.value()[4..]).into();
+                    vf_info.link_state =
+                        parse_as_u32(&nla.value().get(4..).ok_or(
+                            NisporError::bug("invalid index into nla"),
+                        )?)?
+                        .into();
                 }
                 IFLA_VF_RATE => {
                     vf_info.min_tx_rate =
-                        parse_as_u32(&nla.value()[4..]).into();
+                        parse_as_u32(&nla.value().get(4..).ok_or(
+                            NisporError::bug("invalid index into nla"),
+                        )?)?
+                        .into();
                     vf_info.max_tx_rate =
-                        parse_as_u32(&nla.value()[8..]).into();
+                        parse_as_u32(&nla.value().get(8..).ok_or(
+                            NisporError::bug("invalid index into nla"),
+                        )?)?
+                        .into();
                 }
                 IFLA_VF_RSS_QUERY_EN => {
-                    let d = parse_as_u32(&nla.value()[4..]);
+                    let d =
+                        parse_as_u32(&nla.value().get(4..).ok_or(
+                            NisporError::bug("invalid index into nla"),
+                        )?)?;
                     vf_info.query_rss = d > 0 && d != std::u32::MAX;
                 }
                 IFLA_VF_STATS => {
                     vf_info.state = parse_vf_stats(nla.value())?;
                 }
                 IFLA_VF_TRUST => {
-                    let d = parse_as_u32(&nla.value()[4..]);
+                    let d =
+                        parse_as_u32(&nla.value().get(4..).ok_or(
+                            NisporError::bug("invalid index into nla"),
+                        )?)?;
                     vf_info.trust = d > 0 && d != std::u32::MAX;
                 }
                 IFLA_VF_IB_NODE_GUID => {
                     vf_info.ib_node_guid =
-                        Some(format!("{:X}", parse_as_u64(&nla.value())));
+                        Some(format!("{:X}", parse_as_u64(&nla.value())?));
                 }
                 IFLA_VF_IB_PORT_GUID => {
                     vf_info.ib_port_guid =
-                        Some(format!("{:X}", parse_as_u64(&nla.value())));
+                        Some(format!("{:X}", parse_as_u64(&nla.value())?));
                 }
                 IFLA_VF_VLAN_LIST => {
                     // The kernel just store IFLA_VF_VLAN in a list with single
@@ -164,7 +197,7 @@ pub(crate) fn get_sriov_info(
                     // not support this, so I doubt anyone is using this.
                 }
                 IFLA_VF_BROADCAST => {
-                    vf_info.broadcast = parse_vf_mac(nla.value(), mac_len);
+                    vf_info.broadcast = parse_vf_mac(nla.value(), mac_len)?;
                 }
                 _ => {
                     eprintln!(
@@ -180,7 +213,10 @@ pub(crate) fn get_sriov_info(
     Ok(sriov_info)
 }
 
-fn parse_vf_mac(raw: &[u8], mac_len: Option<usize>) -> String {
+fn parse_vf_mac(
+    raw: &[u8],
+    mac_len: Option<usize>,
+) -> Result<String, NisporError> {
     match mac_len {
         Some(mac_len) => parse_as_mac(mac_len, &raw),
         None => parse_as_mac(32, &raw),
@@ -194,28 +230,28 @@ fn parse_vf_stats(raw: &[u8]) -> Result<VfState, NisporError> {
         let nla = nla?;
         match nla.kind() {
             IFLA_VF_STATS_RX_PACKETS => {
-                state.rx_packets = parse_as_u64(nla.value());
+                state.rx_packets = parse_as_u64(nla.value())?;
             }
             IFLA_VF_STATS_TX_PACKETS => {
-                state.tx_packets = parse_as_u64(nla.value());
+                state.tx_packets = parse_as_u64(nla.value())?;
             }
             IFLA_VF_STATS_RX_BYTES => {
-                state.rx_bytes = parse_as_u64(nla.value());
+                state.rx_bytes = parse_as_u64(nla.value())?;
             }
             IFLA_VF_STATS_TX_BYTES => {
-                state.tx_bytes = parse_as_u64(nla.value());
+                state.tx_bytes = parse_as_u64(nla.value())?;
             }
             IFLA_VF_STATS_BROADCAST => {
-                state.broadcast = parse_as_u64(nla.value());
+                state.broadcast = parse_as_u64(nla.value())?;
             }
             IFLA_VF_STATS_MULTICAST => {
-                state.multicast = parse_as_u64(nla.value());
+                state.multicast = parse_as_u64(nla.value())?;
             }
             IFLA_VF_STATS_RX_DROPPED => {
-                state.rx_dropped = parse_as_u64(nla.value());
+                state.rx_dropped = parse_as_u64(nla.value())?;
             }
             IFLA_VF_STATS_TX_DROPPED => {
-                state.tx_dropped = parse_as_u64(nla.value());
+                state.tx_dropped = parse_as_u64(nla.value())?;
             }
             _ => eprintln!(
                 "Unhandled IFLA_VF_STATS {}, {:?}",
