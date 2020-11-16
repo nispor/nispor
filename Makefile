@@ -114,7 +114,10 @@ install: $(VARLINK_SRV_EXEC_RELEASE) $(CLI_EXEC_RELEASE)
 		$(DESTDIR)$(PKG_CONFIG_LIBDIR)/$(CLIB_PKG_CONFIG_FILE)
 	sed -i -e 's/@INCLUDE_DIR@/$(subst /,\/,$(INCLUDE_DIR))/' \
 		$(DESTDIR)$(PKG_CONFIG_LIBDIR)/$(CLIB_PKG_CONFIG_FILE)
-
+install-man: nispor.3
+    install ... nispor.3 $(mandir)/man3/nispor.3
+    ln -s nispor.3 $(mandir)/man3/npc.3
+    
 
 uninstall:
 	- rm -fv $(DESTDIR)$(PREFIX)/bin/$(VARLINK_SRV_EXEC)

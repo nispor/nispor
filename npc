@@ -1,5 +1,5 @@
 .\" Manpage for npc.
-.TH man 1 "04 Nov 2020" "0.6.1"
+.TH npc "04 Nov 2020" "0.6.1"
 
 .SH NAME
 
@@ -9,15 +9,30 @@ npc \- Prints all network status
 
 npc <NIC> \- Prints network status of certain NIC
 
+npc route \- Print route entries
+
+npc route --dev interface_name \- Print routes for the particular interface name
+
 .SH DESCRIPTION
 
 npc is a command line tool that has all the network status. 
+npc interface_name will show only the mentioned interface state. In addition, npc route is used to show all the network routes and npc route --dev interface_name is used to show up all the routes related to that particular interface. 
+
+For example, to show all interfaces starts with eth1:
+.RS
+npc eth1
+.br
+.RS
+npc route --dev eth1
+.br
+.RS
+
+User can also do npc rules in order to list all the network route rules.
 
 .SH OPTIONS
 
-npc route \- Print route entries
+npc rules \- Print all network rules
 
 .SH REPORTING BUGS
 
-No known bugs.
-
+Report bugs on nispor GitHub issues <https://github.com/nispor/nispor>.
