@@ -7,3 +7,4 @@ src/python/nispor.egg-info
 src/python/build
 src/python/dist
 test/clib/nispor_test
+vendor/
