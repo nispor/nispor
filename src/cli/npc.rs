@@ -3,7 +3,7 @@ use nispor::{Iface, NetState, NisporError, Route, RouteRule};
 use serde_derive::Serialize;
 use serde_json;
 use serde_yaml;
-use std::fmt::{Display, Formatter, Result};
+use std::fmt;
 use std::io::{stderr, stdout, Write};
 use std::process;
 
@@ -12,8 +12,8 @@ pub struct CliError {
     pub msg: String,
 }
 
-impl Display for CliError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+impl fmt::Display for CliError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.msg)
     }
 }
