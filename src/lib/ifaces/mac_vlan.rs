@@ -4,6 +4,7 @@ use crate::netlink::parse_as_u32;
 use crate::Iface;
 use crate::IfaceType;
 use crate::NisporError;
+use log::warn;
 use netlink_packet_route::rtnl::link::nlas;
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 use serde_derive::{Deserialize, Serialize};
@@ -94,7 +95,7 @@ pub(crate) fn get_mac_vlan_info(
                             Some(parse_mac_addr_data(nla.value())?);
                     }
                     _ => {
-                        eprintln!(
+                        warn!(
                             "Unhandled MAC VLAN IFLA_INFO_DATA: {} {:?}",
                             nla.kind(),
                             nla.value()
@@ -102,7 +103,7 @@ pub(crate) fn get_mac_vlan_info(
                     }
                 },
                 Err(e) => {
-                    eprintln!(
+                    warn!(
                         "MAC VLAN IFLA_INFO_DATA NlasIterator failure: {}",
                         e
                     );
@@ -125,7 +126,7 @@ fn parse_mac_addr_data(raw: &[u8]) -> Result<Vec<String>, NisporError> {
                     addrs.push(parse_as_mac(ETH_ALEN, nla.value())?);
                 }
                 _ => {
-                    eprintln!(
+                    warn!(
                         "Unhanlded IFLA_MACVLAN_MACADDR_DATA: {} {:?}",
                         nla.kind(),
                         nla.value()
@@ -133,10 +134,7 @@ fn parse_mac_addr_data(raw: &[u8]) -> Result<Vec<String>, NisporError> {
                 }
             },
             Err(e) => {
-                eprintln!(
-                    "IFLA_MACVLAN_MACADDR_DATA NlasIterator failure: {}",
-                    e
-                );
+                warn!("IFLA_MACVLAN_MACADDR_DATA NlasIterator failure: {}", e);
             }
         }
     }

@@ -5,6 +5,7 @@ use crate::route::AddressFamily;
 use crate::route::RouteProtocol;
 use crate::NisporError;
 use futures::stream::TryStreamExt;
+use log::warn;
 use netlink_packet_route::rtnl::rule::nlas::Nla;
 use netlink_packet_route::RuleMessage;
 use rtnetlink::new_connection;
@@ -202,7 +203,7 @@ fn get_rule(rule_msg: RuleMessage) -> Result<RouteRule, NisporError> {
             Nla::L3MDev(ref d) => {
                 rl.l3mdev = Some(*d > 0);
             }
-            _ => eprintln!("Unknown NLA message for route rule {:?}", nla),
+            _ => warn!("Unknown NLA message for route rule {:?}", nla),
         }
     }
 

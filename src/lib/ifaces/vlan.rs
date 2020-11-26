@@ -1,5 +1,6 @@
 use crate::Iface;
 use crate::IfaceType;
+use log::warn;
 use netlink_packet_route::rtnl::link::nlas::InfoData;
 use netlink_packet_route::rtnl::link::nlas::InfoVlan;
 use serde_derive::{Deserialize, Serialize};
@@ -78,7 +79,7 @@ pub(crate) fn get_vlan_info(data: &InfoData) -> Option<VlanInfo> {
                     vlan_info.is_bridge_binding = true
                 }
             } else {
-                eprintln!("Unknown VLAN info: {:?}", info);
+                warn!("Unknown VLAN info: {:?}", info);
             }
         }
         Some(vlan_info)

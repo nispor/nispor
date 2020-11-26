@@ -8,6 +8,7 @@ use crate::netlink::AF_INET;
 use crate::netlink::AF_INET6;
 use crate::NisporError;
 use futures::stream::TryStreamExt;
+use log::warn;
 use netlink_packet_route::rtnl::nlas::route::CacheInfo;
 use netlink_packet_route::rtnl::nlas::route::CacheInfoBuffer;
 use netlink_packet_route::rtnl::nlas::route::Metrics;
@@ -502,10 +503,7 @@ fn get_route(
                             rt.fastopen_no_cookie = Some(d);
                         }
                         _ => {
-                            eprintln!(
-                                "Unknown RTA_METRICS message {:?}",
-                                metric
-                            );
+                            warn!("Unknown RTA_METRICS message {:?}", metric);
                         }
                     }
                 }
@@ -561,14 +559,14 @@ fn get_route(
                         RTA_VIA => {
                             // Kernel will use RTA_VIA when gateway family does
                             // not match nexthop family
-                            eprintln!(
+                            warn!(
                                 "dual stack(RTA_VIA) multipath route next hop
                                  is not supported by nispor yet"
                             );
                             continue;
                         }
                         _ => {
-                            eprintln!(
+                            warn!(
                                 "Got unexpected RTA_MULTIPATH NLA {} {:?}",
                                 nla.kind(),
                                 nla.value()
@@ -625,7 +623,7 @@ fn get_route(
             Nla::Pref(d) => {
                 rt.perf = Some(d[0]);
             }
-            _ => eprintln!("Unknown NLA message for route {:?}", nla),
+            _ => warn!("Unknown NLA message for route {:?}", nla),
         }
     }
 
