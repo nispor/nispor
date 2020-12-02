@@ -2,13 +2,13 @@ use crate::netlink::parse_as_u32;
 use crate::ControllerType;
 use crate::Iface;
 use crate::NisporError;
-use netlink_packet_route::rtnl::link::nlas;
+use netlink_packet_route::rtnl::link::nlas::InfoData;
+use netlink_packet_route::rtnl::link::nlas::InfoVrf;
 use netlink_packet_route::rtnl::nlas::NlaBuffer;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 const IFLA_VRF_PORT_TABLE: u16 = 1;
-const IFLA_VRF_TABLE: u16 = 1;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct VrfInfo {
@@ -21,21 +21,19 @@ pub struct VrfSubordinateInfo {
     pub table_id: u32,
 }
 
-pub(crate) fn get_vrf_info(
-    data: &nlas::InfoData,
-) -> Result<Option<VrfInfo>, NisporError> {
-    if let nlas::InfoData::Vrf(raw) = data {
-        let nla_buff = NlaBuffer::new(raw);
-        if nla_buff.kind() == IFLA_VRF_TABLE {
-            Ok(Some(VrfInfo {
-                table_id: parse_as_u32(nla_buff.value())?,
-                subordinates: Vec::new(),
-            }))
-        } else {
-            Ok(None)
+pub(crate) fn get_vrf_info(data: &InfoData) -> Option<VrfInfo> {
+    if let InfoData::Vrf(infos) = data {
+        let mut vrf_info = VrfInfo::default();
+        for info in infos {
+            if let InfoVrf::TableId(d) = *info {
+                vrf_info.table_id = d;
+            } else {
+                eprintln!("Unknown VRF info {:?}", info)
+            }
         }
+        Some(vrf_info)
     } else {
-        Ok(None)
+        None
     }
 }
 
