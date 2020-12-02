@@ -272,7 +272,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                         IfaceType::Vxlan => {
                             iface_state.vxlan = get_vxlan_info(&d)?
                         }
-                        IfaceType::Vrf => iface_state.vrf = get_vrf_info(&d)?,
+                        IfaceType::Vrf => iface_state.vrf = get_vrf_info(&d),
                         IfaceType::MacVlan => {
                             iface_state.mac_vlan = get_mac_vlan_info(&d)?
                         }

@@ -1,8 +1,10 @@
-use crate::netlink::parse_vxlan_info;
+use crate::netlink::parse_as_ipv4;
+use crate::netlink::parse_as_ipv6;
 use crate::Iface;
 use crate::IfaceType;
 use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas::InfoData;
+use netlink_packet_route::rtnl::link::nlas::InfoVxlan;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -41,8 +43,71 @@ pub struct VxlanInfo {
 pub(crate) fn get_vxlan_info(
     data: &InfoData,
 ) -> Result<Option<VxlanInfo>, NisporError> {
-    if let InfoData::Vxlan(raw) = data {
-        Ok(Some(parse_vxlan_info(&raw)?))
+    if let InfoData::Vxlan(infos) = data {
+        let mut vxlan_info = VxlanInfo::default();
+        for info in infos {
+            if let InfoVxlan::Id(d) = *info {
+                vxlan_info.vxlan_id = d;
+            } else if let InfoVxlan::Group(d) = info {
+                vxlan_info.remote = parse_as_ipv4(d).to_string();
+            } else if let InfoVxlan::Group6(d) = info {
+                vxlan_info.remote = parse_as_ipv6(d).to_string();
+            } else if let InfoVxlan::Link(d) = *info {
+                vxlan_info.base_iface = format!("{}", d);
+            } else if let InfoVxlan::Local(d) = info {
+                vxlan_info.local = parse_as_ipv4(d).to_string();
+            } else if let InfoVxlan::Local6(d) = info {
+                vxlan_info.local = parse_as_ipv6(d).to_string();
+            } else if let InfoVxlan::Tos(d) = *info {
+                vxlan_info.tos = d;
+            } else if let InfoVxlan::Ttl(d) = *info {
+                vxlan_info.ttl = d;
+            } else if let InfoVxlan::Learning(d) = *info {
+                vxlan_info.learning = d > 0;
+            } else if let InfoVxlan::Label(d) = *info {
+                vxlan_info.label = d;
+            } else if let InfoVxlan::Ageing(d) = *info {
+                vxlan_info.ageing = d;
+            } else if let InfoVxlan::Limit(d) = *info {
+                vxlan_info.max_address = d;
+            } else if let InfoVxlan::PortRange(d) = *info {
+                vxlan_info.src_port_min = d.0;
+                vxlan_info.src_port_max = d.1;
+            } else if let InfoVxlan::Proxy(d) = *info {
+                vxlan_info.proxy = d > 0;
+            } else if let InfoVxlan::Rsc(d) = *info {
+                vxlan_info.rsc = d > 0;
+            } else if let InfoVxlan::L2Miss(d) = *info {
+                vxlan_info.l2miss = d > 0;
+            } else if let InfoVxlan::L3Miss(d) = *info {
+                vxlan_info.l3miss = d > 0;
+            } else if let InfoVxlan::Port(d) = *info {
+                vxlan_info.dst_port = d;
+            } else if let InfoVxlan::UDPCsum(d) = *info {
+                vxlan_info.udp_check_sum = d > 0;
+            } else if let InfoVxlan::UDPZeroCsumTX(d) = *info {
+                vxlan_info.udp6_zero_check_sum_tx = d > 0;
+            } else if let InfoVxlan::UDPZeroCsumRX(d) = *info {
+                vxlan_info.udp6_zero_check_sum_rx = d > 0;
+            } else if let InfoVxlan::RemCsumTX(d) = *info {
+                vxlan_info.remote_check_sum_tx = d > 0;
+            } else if let InfoVxlan::RemCsumRX(d) = *info {
+                vxlan_info.remote_check_sum_rx = d > 0;
+            } else if let InfoVxlan::Gpe(d) = *info {
+                vxlan_info.gpe = d > 0;
+            } else if let InfoVxlan::Gbp(d) = *info {
+                vxlan_info.gbp = d > 0;
+            } else if let InfoVxlan::TtlInherit(d) = *info {
+                vxlan_info.ttl_inherit = d > 0;
+            } else if let InfoVxlan::CollectMetadata(d) = *info {
+                vxlan_info.collect_metadata = d > 0;
+            } else if let InfoVxlan::Df(d) = *info {
+                vxlan_info.df = d;
+            } else {
+                eprintln!("Unknown VXLAN info {:?}", info)
+            }
+        }
+        Ok(Some(vxlan_info))
     } else {
         Ok(None)
     }
