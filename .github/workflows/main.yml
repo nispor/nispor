@@ -10,14 +10,29 @@ on:
 jobs:
   ci:
     strategy:
-    fail-fast: true
+      fail-fast: true
 
     name: CI (stable)
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: Install Rust Stable
+      run: |
+        rustc -vV
+        rustup update stable
+        rustup default stable
+        rustc -vV
+
+    - name: Install valgrind
+      run: |
+        sudo apt-get update 
+        sudo apt-get -y install valgrind
+
     - name: Build
-      run: make -j20
+      run: cargo build --verbose --all
+    - name: Check fmt
+      run: cargo fmt -- --check
     - name: Run tests
-      run: make check
+      run: sudo env PATH=$PATH make check
