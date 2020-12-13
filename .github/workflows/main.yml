@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches:
+      - base
+
+jobs:
+  ci:
+    strategy:
+    fail-fast: true
+
+    name: CI (stable)
+    runs-on: self-hosted
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: make -j20
+    - name: Run tests
+      run: make check
