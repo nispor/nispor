@@ -25,6 +25,8 @@ use crate::ifaces::vrf::VrfSubordinateInfo;
 use crate::ifaces::vxlan::get_vxlan_info;
 use crate::ifaces::vxlan::VxlanInfo;
 use crate::mac::parse_as_mac;
+use crate::IpConf;
+use crate::IpFamily;
 use crate::Ipv4Info;
 use crate::Ipv6Info;
 use crate::NisporError;
@@ -36,6 +38,7 @@ use netlink_packet_route::rtnl::{
     IFF_NOARP, IFF_POINTOPOINT, IFF_PORTSEL, IFF_PROMISC, IFF_RUNNING,
     IFF_SLAVE, IFF_UP,
 };
+use rtnetlink::new_connection;
 
 use rtnetlink::packet::rtnl::link::nlas::Nla;
 use serde_derive::{Deserialize, Serialize};
@@ -182,6 +185,8 @@ pub struct Iface {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sriov: Option<SriovInfo>,
 }
+
+// TODO: impl From Iface to IfaceConf
 
 pub(crate) fn get_iface_name_by_index(
     iface_states: &HashMap<String, Iface>,
@@ -448,4 +453,39 @@ fn _parse_iface_flags(flags: u32) -> Vec<IfaceFlags> {
     }
 
     ret
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+pub struct IfaceConf {
+    pub name: String,
+    pub iface_type: Option<IfaceType>,
+    pub ipv4: Option<IpConf>,
+    pub ipv6: Option<IpConf>,
+}
+
+impl IfaceConf {
+    // pub async fn create() { }
+    pub async fn apply(&self, cur_iface: &Iface) -> Result<(), NisporError> {
+        let (connection, handle, _) = new_connection()?;
+        tokio::spawn(connection);
+        if let Some(ipv6_conf) = &self.ipv6 {
+            ipv6_conf.apply(&handle, &cur_iface, IpFamily::Ipv6).await?;
+        } else {
+            IpConf {
+                addresses: Vec::new(),
+            }
+            .apply(&handle, &cur_iface, IpFamily::Ipv6)
+            .await?;
+        }
+        if let Some(ipv4_conf) = &self.ipv4 {
+            ipv4_conf.apply(&handle, &cur_iface, IpFamily::Ipv4).await?;
+        } else {
+            IpConf {
+                addresses: Vec::new(),
+            }
+            .apply(&handle, &cur_iface, IpFamily::Ipv4)
+            .await?;
+        }
+        Ok(())
+    }
 }

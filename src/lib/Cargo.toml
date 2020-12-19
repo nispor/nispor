@@ -25,6 +25,7 @@ netlink-sys = "0.4"
 netlink-packet-utils = "0.3"
 tokio = { version = "0.2.6", features = ["macros", "rt-core"] }
 futures = "0.3"
+libc = "0.2.74"
 
 [dev-dependencies]
 serde_yaml = "0.8"

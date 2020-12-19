@@ -26,4 +26,6 @@ impl NetState {
             rules,
         })
     }
+
+    // TODO: autoconvert NetState to NetConf and provide apply() here
 }
