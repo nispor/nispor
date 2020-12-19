@@ -32,20 +32,19 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
 #[test]
 fn test_get_route_rule_yaml() {
     with_route_rule_test_iface(|| {
-        if let Ok(state) = NetState::retrieve() {
-            let mut expected_rules = Vec::new();
-            for mut rule in state.rules {
-                if Some(TEST_TABLE_ID) == rule.table {
-                    // Travis CI Ubuntu 18.04 does not support protocol.
-                    rule.protocol = None;
-                    expected_rules.push(rule)
-                }
+        let state = NetState::retrieve().unwrap();
+        let mut expected_rules = Vec::new();
+        for mut rule in state.rules {
+            if Some(TEST_TABLE_ID) == rule.table {
+                // Travis CI Ubuntu 18.04 does not support protocol.
+                rule.protocol = None;
+                expected_rules.push(rule)
             }
-            assert_eq!(
-                serde_yaml::to_string(&expected_rules).unwrap(),
-                EXPECTED_YAML_OUTPUT
-            );
         }
+        assert_eq!(
+            serde_yaml::to_string(&expected_rules).unwrap(),
+            EXPECTED_YAML_OUTPUT
+        );
     });
 }
 

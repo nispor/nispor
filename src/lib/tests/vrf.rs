@@ -7,7 +7,7 @@ mod utils;
 
 const IFACE_NAME: &str = "vrf0";
 
-const EXPECTED_IFACE_NAME: &str = r#"---
+const EXPECTED_IFACE_STATE: &str = r#"---
 - name: vrf0
   iface_type: vrf
   state: up
@@ -29,14 +29,13 @@ const EXPECTED_IFACE_NAME: &str = r#"---
 #[ignore] // Travis CI does not support VRF yet
 fn test_get_vrf_iface_yaml() {
     with_vrf_iface(|| {
-        if let Ok(state) = NetState::retrieve() {
-            let iface = &state.ifaces[IFACE_NAME];
-            assert_eq!(iface.iface_type, nispor::IfaceType::Vrf);
-            assert_eq!(
-                serde_yaml::to_string(&vec![iface]).unwrap(),
-                EXPECTED_IFACE_NAME
-            );
-        }
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(iface.iface_type, nispor::IfaceType::Vrf);
+        assert_eq!(
+            serde_yaml::to_string(&vec![iface]).unwrap(),
+            EXPECTED_IFACE_STATE
+        );
     });
 }
 

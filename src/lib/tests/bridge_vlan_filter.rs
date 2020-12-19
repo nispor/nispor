@@ -9,7 +9,7 @@ const IFACE_NAME: &str = "br0";
 const PORT1_NAME: &str = "eth1";
 const PORT2_NAME: &str = "eth2";
 
-const EXPECTED_IFACE_NAME: &str = r#"---
+const EXPECTED_IFACE_STATE: &str = r#"---
 - name: eth1
   iface_type: veth
   state: up
@@ -134,27 +134,26 @@ const EXPECTED_IFACE_NAME: &str = r#"---
 #[test]
 fn test_get_br_iface_yaml() {
     with_br_with_vlan_filter_iface(|| {
-        if let Ok(ref mut state) = NetState::retrieve() {
-            let port1 = state.ifaces.get_mut(PORT1_NAME).unwrap();
-            if let Some(ref mut port_info) = port1.bridge_port {
-                port_info.forward_delay_timer = 0;
-            }
-            let port2 = state.ifaces.get_mut(PORT2_NAME).unwrap();
-            if let Some(ref mut port_info) = port2.bridge_port {
-                port_info.forward_delay_timer = 0;
-            }
-            let iface = state.ifaces.get(IFACE_NAME).unwrap();
-            if let Some(bridge_info) = &iface.bridge {
-                assert_eq!(bridge_info.vlan_filtering, Some(true))
-            }
-
-            let port1 = &state.ifaces[PORT1_NAME];
-            let port2 = &state.ifaces[PORT2_NAME];
-            assert_eq!(
-                serde_yaml::to_string(&vec![port1, port2]).unwrap(),
-                EXPECTED_IFACE_NAME
-            );
+        let mut state = NetState::retrieve().unwrap();
+        let port1 = state.ifaces.get_mut(PORT1_NAME).unwrap();
+        if let Some(ref mut port_info) = port1.bridge_port {
+            port_info.forward_delay_timer = 0;
         }
+        let port2 = state.ifaces.get_mut(PORT2_NAME).unwrap();
+        if let Some(ref mut port_info) = port2.bridge_port {
+            port_info.forward_delay_timer = 0;
+        }
+        let iface = state.ifaces.get(IFACE_NAME).unwrap();
+        if let Some(bridge_info) = &iface.bridge {
+            assert_eq!(bridge_info.vlan_filtering, Some(true))
+        }
+
+        let port1 = &state.ifaces[PORT1_NAME];
+        let port2 = &state.ifaces[PORT2_NAME];
+        assert_eq!(
+            serde_yaml::to_string(&vec![port1, port2]).unwrap(),
+            EXPECTED_IFACE_STATE
+        );
     });
 }
 

@@ -7,7 +7,7 @@ mod utils;
 
 const IFACE_NAME: &str = "vxlan0";
 
-const EXPECTED_IFACE_NAME: &str = r#"---
+const EXPECTED_IFACE_STATE: &str = r#"---
 - name: vxlan0
   iface_type: vxlan
   state: unknown
@@ -58,14 +58,13 @@ const EXPECTED_IFACE_NAME: &str = r#"---
 #[test]
 fn test_get_vxlan_iface_yaml() {
     with_vxlan_iface(|| {
-        if let Ok(state) = NetState::retrieve() {
-            let iface = &state.ifaces[IFACE_NAME];
-            assert_eq!(iface.iface_type, nispor::IfaceType::Vxlan);
-            assert_eq!(
-                serde_yaml::to_string(&vec![iface]).unwrap(),
-                EXPECTED_IFACE_NAME
-            );
-        }
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(iface.iface_type, nispor::IfaceType::Vxlan);
+        assert_eq!(
+            serde_yaml::to_string(&vec![iface]).unwrap(),
+            EXPECTED_IFACE_STATE
+        );
     });
 }
 

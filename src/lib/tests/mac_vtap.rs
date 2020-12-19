@@ -7,7 +7,7 @@ mod utils;
 
 const IFACE_NAME: &str = "macvtap0";
 
-const EXPECTED_IFACE_NAME: &str = r#"---
+const EXPECTED_IFACE_STATE: &str = r#"---
 - name: macvtap0
   iface_type: mac_vtap
   state: up
@@ -36,14 +36,13 @@ const EXPECTED_IFACE_NAME: &str = r#"---
 #[test]
 fn test_get_macvtap_iface_yaml() {
     with_macvtap_iface(|| {
-        if let Ok(state) = NetState::retrieve() {
-            let iface = &state.ifaces[IFACE_NAME];
-            assert_eq!(iface.iface_type, nispor::IfaceType::MacVtap);
-            assert_eq!(
-                serde_yaml::to_string(&vec![iface]).unwrap(),
-                EXPECTED_IFACE_NAME
-            );
-        }
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(iface.iface_type, nispor::IfaceType::MacVtap);
+        assert_eq!(
+            serde_yaml::to_string(&vec![iface]).unwrap(),
+            EXPECTED_IFACE_STATE
+        );
     });
 }
 
