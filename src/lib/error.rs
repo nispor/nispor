@@ -5,8 +5,10 @@ use serde_derive::Serialize;
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ErrorKind {
+    InvalidArgument,
     NetlinkError,
     NisporBug,
+    PermissionDeny,
 }
 
 impl std::fmt::Display for ErrorKind {
@@ -25,6 +27,18 @@ impl NisporError {
     pub fn bug(message: &str) -> NisporError {
         NisporError {
             kind: ErrorKind::NisporBug,
+            msg: message.to_string(),
+        }
+    }
+    pub fn permission_deny(message: &str) -> NisporError {
+        NisporError {
+            kind: ErrorKind::PermissionDeny,
+            msg: message.to_string(),
+        }
+    }
+    pub fn invalid_argument(message: &str) -> NisporError {
+        NisporError {
+            kind: ErrorKind::InvalidArgument,
             msg: message.to_string(),
         }
     }
@@ -80,6 +94,15 @@ impl std::convert::From<std::io::Error> for NisporError {
     fn from(e: std::io::Error) -> Self {
         NisporError {
             kind: ErrorKind::NisporBug,
+            msg: e.to_string(),
+        }
+    }
+}
+
+impl std::convert::From<std::net::AddrParseError> for NisporError {
+    fn from(e: std::net::AddrParseError) -> Self {
+        NisporError {
+            kind: ErrorKind::InvalidArgument,
             msg: e.to_string(),
         }
     }

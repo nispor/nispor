@@ -1,5 +1,5 @@
 use clap::{clap_app, crate_authors, crate_version};
-use nispor::{Iface, NetState, NisporError, Route, RouteRule};
+use nispor::{Iface, NetConf, NetState, NisporError, Route, RouteRule};
 use serde_derive::Serialize;
 use serde_json;
 use serde_yaml;
@@ -19,11 +19,12 @@ impl fmt::Display for CliError {
 }
 
 enum CliResult {
+    Pass,
     Full(NetState),
     Ifaces(Vec<Iface>),
     Routes(Vec<Route>),
     RouteRules(Vec<RouteRule>),
-    Error(CliError),
+    CliError(CliError),
     NisporError(NisporError),
 }
 
@@ -35,6 +36,9 @@ enum CliOutputType {
 macro_rules! npc_print {
     ($display_func:expr, $data: expr) => {
         match $data {
+            CliResult::Pass => {
+                process::exit(0);
+            }
             CliResult::Full(netstate) => {
                 writeln!(stdout(), "{}", $display_func(&netstate).unwrap())
                     .ok();
@@ -56,7 +60,7 @@ macro_rules! npc_print {
                 writeln!(stderr(), "{}", $display_func(&e).unwrap()).ok();
                 process::exit(1);
             }
-            CliResult::Error(e) => {
+            CliResult::CliError(e) => {
                 writeln!(stderr(), "{}", $display_func(&e).unwrap()).ok();
                 process::exit(1);
             }
@@ -124,33 +128,99 @@ fn main() {
             (@arg json: -j --json "Show in json format")
             (about: "Show routes rules")
         )
+        (@subcommand set =>
+            (@arg file_path: [FILE_PATH] +required "config file to apply")
+            (about: "Apply network config")
+        )
     )
     .get_matches();
 
     let mut output_format = parse_arg_output_format(&matches);
 
-    let result = match NetState::retrieve() {
-        Ok(mut state) => {
-            if let Some(ifname) = matches.value_of("ifname") {
-                if let Some(iface) = state.ifaces.remove(ifname) {
-                    CliResult::Ifaces(vec![iface])
-                } else {
-                    CliResult::Error(CliError {
-                        msg: format!("Interface '{}' not found", ifname),
-                    })
-                }
-            } else if let Some(m) = matches.subcommand_matches("route") {
-                output_format = parse_arg_output_format(m);
-                get_routes(&state, &m)
-            } else if let Some(m) = matches.subcommand_matches("rule") {
-                output_format = parse_arg_output_format(m);
-                CliResult::RouteRules(state.rules)
-            } else {
-                /* Show everything if no cmdline arg has been supplied */
-                CliResult::Full(state)
-            }
+    if let Some(m) = matches.subcommand_matches("set") {
+        if let Some(file_path) = m.value_of("file_path") {
+            print_result(&apply_conf(&file_path), output_format);
+            process::exit(0);
+        } else {
+            eprintln!("file path undefined");
+            process::exit(1);
         }
-        Err(e) => CliResult::NisporError(e),
+    } else {
+        let result = match NetState::retrieve() {
+            Ok(mut state) => {
+                if let Some(ifname) = matches.value_of("ifname") {
+                    if let Some(iface) = state.ifaces.remove(ifname) {
+                        CliResult::Ifaces(vec![iface])
+                    } else {
+                        CliResult::CliError(CliError {
+                            msg: format!("Interface '{}' not found", ifname),
+                        })
+                    }
+                } else if let Some(m) = matches.subcommand_matches("route") {
+                    output_format = parse_arg_output_format(m);
+                    get_routes(&state, &m)
+                } else if let Some(m) = matches.subcommand_matches("rule") {
+                    output_format = parse_arg_output_format(m);
+                    CliResult::RouteRules(state.rules)
+                } else {
+                    /* Show everything if no cmdline arg has been supplied */
+                    CliResult::Full(state)
+                }
+            }
+            Err(e) => CliResult::NisporError(e),
+        };
+        print_result(&result, output_format);
+    }
+}
+
+fn apply_conf(file_path: &str) -> CliResult {
+    let fd = match std::fs::File::open(file_path) {
+        Ok(fd) => fd,
+        Err(e) => {
+            return CliResult::CliError(CliError {
+                msg: format!("Filed to open file {}: {}", file_path, e),
+            })
+        }
     };
-    print_result(&result, output_format);
+    let net_conf: NetConf = match serde_yaml::from_reader(fd) {
+        Ok(c) => c,
+        Err(e) => {
+            return CliResult::CliError(CliError {
+                msg: format!("Invalid YAML file {}: {}", file_path, e,),
+            })
+        }
+    };
+    if let Err(e) = net_conf.apply() {
+        return CliResult::NisporError(e);
+    }
+    if let Some(desire_ifaces) = net_conf.ifaces {
+        match NetState::retrieve() {
+            Ok(cur_state) => {
+                let mut desired_iface_names = Vec::new();
+                for iface_conf in &desire_ifaces {
+                    desired_iface_names.push(iface_conf.name.clone());
+                }
+                CliResult::Ifaces(filter_iface_state(
+                    cur_state,
+                    desired_iface_names,
+                ))
+            }
+            Err(e) => CliResult::NisporError(e),
+        }
+    } else {
+        CliResult::Pass
+    }
+}
+
+fn filter_iface_state(
+    cur_state: NetState,
+    des_iface_names: Vec<String>,
+) -> Vec<Iface> {
+    let mut new_ifaces = Vec::new();
+    for (iface_name, iface_state) in cur_state.ifaces.iter() {
+        if des_iface_names.contains(iface_name) {
+            new_ifaces.push(iface_state.clone());
+        }
+    }
+    new_ifaces
 }

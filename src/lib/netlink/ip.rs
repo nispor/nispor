@@ -160,3 +160,33 @@ fn left_time_to_string(left_time: u32) -> String {
         format!("{}sec", left_time)
     }
 }
+
+pub(crate) fn get_ip_addr(nl_addr_msg: &AddressMessage) -> String {
+    match nl_addr_msg.header.family {
+        AF_INET => {
+            for nla in &nl_addr_msg.nlas {
+                if let Local(addr_vec) = nla {
+                    return parse_as_ipv4(addr_vec.as_slice()).to_string();
+                }
+            }
+        }
+        AF_INET6 => {
+            for nla in &nl_addr_msg.nlas {
+                if let Address(addr_vec) = nla {
+                    return parse_as_ipv6(addr_vec.as_slice()).to_string();
+                }
+            }
+        }
+        _ => {
+            eprintln!(
+                "unknown address family {} {:?}",
+                nl_addr_msg.header.family, nl_addr_msg
+            );
+        }
+    }
+    "".into()
+}
+
+pub(crate) fn get_ip_prefix_len(nl_addr_msg: &AddressMessage) -> u8 {
+    nl_addr_msg.header.prefix_len
+}
