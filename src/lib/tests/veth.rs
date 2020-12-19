@@ -7,7 +7,7 @@ mod utils;
 
 const IFACE_NAME: &str = "veth1";
 
-const EXPECTED_IFACE_NAME: &str = r#"---
+const EXPECTED_IFACE_STATE: &str = r#"---
 - name: veth1
   iface_type: veth
   state: up
@@ -31,15 +31,14 @@ const EXPECTED_IFACE_NAME: &str = r#"---
 #[test]
 fn test_get_veth_iface_yaml() {
     with_veth_iface(|| {
-        if let Ok(state) = NetState::retrieve() {
-            let iface = &state.ifaces[IFACE_NAME];
-            let iface_type = &iface.iface_type;
-            assert_eq!(iface_type, &nispor::IfaceType::Veth);
-            assert_eq!(
-                serde_yaml::to_string(&vec![iface]).unwrap(),
-                EXPECTED_IFACE_NAME
-            );
-        }
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        let iface_type = &iface.iface_type;
+        assert_eq!(iface_type, &nispor::IfaceType::Veth);
+        assert_eq!(
+            serde_yaml::to_string(&vec![iface]).unwrap(),
+            EXPECTED_IFACE_STATE
+        );
     });
 }
 

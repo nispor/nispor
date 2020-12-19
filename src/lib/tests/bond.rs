@@ -9,7 +9,7 @@ const IFACE_NAME: &str = "bond99";
 const PORT1_NAME: &str = "eth1";
 const PORT2_NAME: &str = "eth2";
 
-const EXPECTED_IFACE_NAME: &str = r#"---
+const EXPECTED_IFACE_STATE: &str = r#"---
 - name: bond99
   iface_type: bond
   state: up
@@ -91,22 +91,21 @@ const EXPECTED_IFACE_NAME: &str = r#"---
 #[test]
 fn test_get_iface_bond_yaml() {
     with_bond_iface(|| {
-        if let Ok(ref mut state) = NetState::retrieve() {
-            let iface = state.ifaces.get_mut(IFACE_NAME).unwrap();
-            // The peer_notif_delay is supported by kernel 5.3 and not
-            // supported by Travis CI Ubuntu 18.04 kernel 4.15.
-            if let Some(ref mut bond_info) = iface.bond {
-                bond_info.peer_notif_delay = None;
-            }
-            let iface = &state.ifaces[IFACE_NAME];
-            let port1 = &state.ifaces[PORT1_NAME];
-            let port2 = &state.ifaces[PORT2_NAME];
-            assert_eq!(&iface.iface_type, &nispor::IfaceType::Bond);
-            assert_eq!(
-                serde_yaml::to_string(&vec![iface, port1, port2]).unwrap(),
-                EXPECTED_IFACE_NAME
-            );
+        let mut state = NetState::retrieve().unwrap();
+        let iface = state.ifaces.get_mut(IFACE_NAME).unwrap();
+        // The peer_notif_delay is supported by kernel 5.3 and not
+        // supported by Travis CI Ubuntu 18.04 kernel 4.15.
+        if let Some(ref mut bond_info) = iface.bond {
+            bond_info.peer_notif_delay = None;
         }
+        let iface = &state.ifaces[IFACE_NAME];
+        let port1 = &state.ifaces[PORT1_NAME];
+        let port2 = &state.ifaces[PORT2_NAME];
+        assert_eq!(&iface.iface_type, &nispor::IfaceType::Bond);
+        assert_eq!(
+            serde_yaml::to_string(&vec![iface, port1, port2]).unwrap(),
+            EXPECTED_IFACE_STATE
+        );
     });
 }
 

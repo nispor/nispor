@@ -62,20 +62,19 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
 #[ignore] // Travis CI Ubuntu 18.04 has bug on IPv6 multipath route weight
 fn test_get_route_yaml() {
     with_route_test_iface(|| {
-        if let Ok(state) = NetState::retrieve() {
-            let mut expected_routes = Vec::new();
-            for route in state.routes {
-                if Some(TEST_ROUTE_DST_V4.into()) == route.dst {
-                    expected_routes.push(route)
-                } else if Some(TEST_ROUTE_DST_V6.into()) == route.dst {
-                    expected_routes.push(route)
-                }
+        let state = NetState::retrieve().unwrap();
+        let mut expected_routes = Vec::new();
+        for route in state.routes {
+            if Some(TEST_ROUTE_DST_V4.into()) == route.dst {
+                expected_routes.push(route)
+            } else if Some(TEST_ROUTE_DST_V6.into()) == route.dst {
+                expected_routes.push(route)
             }
-            assert_eq!(
-                serde_yaml::to_string(&expected_routes).unwrap(),
-                EXPECTED_YAML_OUTPUT
-            );
         }
+        assert_eq!(
+            serde_yaml::to_string(&expected_routes).unwrap(),
+            EXPECTED_YAML_OUTPUT
+        );
     });
 }
 

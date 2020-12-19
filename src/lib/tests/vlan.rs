@@ -7,7 +7,7 @@ mod utils;
 
 const IFACE_NAME: &str = "eth1.101";
 
-const EXPECTED_IFACE_NAME: &str = r#"---
+const EXPECTED_IFACE_STATE: &str = r#"---
 - name: eth1.101
   iface_type: vlan
   state: up
@@ -38,14 +38,13 @@ const EXPECTED_IFACE_NAME: &str = r#"---
 #[test]
 fn test_get_vlan_iface_yaml() {
     with_vlan_iface(|| {
-        if let Ok(state) = NetState::retrieve() {
-            let iface = &state.ifaces[IFACE_NAME];
-            assert_eq!(iface.iface_type, nispor::IfaceType::Vlan);
-            assert_eq!(
-                serde_yaml::to_string(&vec![iface]).unwrap(),
-                EXPECTED_IFACE_NAME
-            );
-        }
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(iface.iface_type, nispor::IfaceType::Vlan);
+        assert_eq!(
+            serde_yaml::to_string(&vec![iface]).unwrap(),
+            EXPECTED_IFACE_STATE
+        );
     });
 }
 

@@ -9,7 +9,7 @@ const IFACE_NAME: &str = "br0";
 const PORT1_NAME: &str = "eth1";
 const PORT2_NAME: &str = "eth2";
 
-const EXPECTED_IFACE_NAME: &str = r#"---
+const EXPECTED_IFACE_STATE: &str = r#"---
 - name: br0
   iface_type: bridge
   state: up
@@ -185,36 +185,35 @@ const EXPECTED_IFACE_NAME: &str = r#"---
 #[test]
 fn test_get_br_iface_yaml() {
     with_br_iface(|| {
-        if let Ok(ref mut state) = NetState::retrieve() {
-            let iface = state.ifaces.get_mut(IFACE_NAME).unwrap();
-            if let Some(ref mut bridge_info) = iface.bridge {
-                bridge_info.gc_timer = None;
-                // Below are not support by Travis CI kernel
-                bridge_info.vlan_stats_per_host = None;
-                bridge_info.multi_bool_opt = None;
-                // Below are diffent value between Travis CI and RHEL/CentOS 8
-                bridge_info.multicast_hash_elasticity = None;
-                bridge_info.multicast_hash_max = None;
-                bridge_info.multicast_startup_query_interval = None;
-            }
-            let port1 = state.ifaces.get_mut(PORT1_NAME).unwrap();
-            if let Some(ref mut port_info) = port1.bridge_port {
-                port_info.forward_delay_timer = 0;
-            }
-            let port2 = state.ifaces.get_mut(PORT2_NAME).unwrap();
-            if let Some(ref mut port_info) = port2.bridge_port {
-                port_info.forward_delay_timer = 0;
-            }
-
-            let iface = &state.ifaces[IFACE_NAME];
-            let port1 = &state.ifaces[PORT1_NAME];
-            let port2 = &state.ifaces[PORT2_NAME];
-            assert_eq!(iface.iface_type, nispor::IfaceType::Bridge);
-            assert_eq!(
-                serde_yaml::to_string(&vec![iface, port1, port2]).unwrap(),
-                EXPECTED_IFACE_NAME
-            );
+        let mut state = NetState::retrieve().unwrap();
+        let iface = state.ifaces.get_mut(IFACE_NAME).unwrap();
+        if let Some(ref mut bridge_info) = iface.bridge {
+            bridge_info.gc_timer = None;
+            // Below are not support by Travis CI kernel
+            bridge_info.vlan_stats_per_host = None;
+            bridge_info.multi_bool_opt = None;
+            // Below are diffent value between Travis CI and RHEL/CentOS 8
+            bridge_info.multicast_hash_elasticity = None;
+            bridge_info.multicast_hash_max = None;
+            bridge_info.multicast_startup_query_interval = None;
         }
+        let port1 = state.ifaces.get_mut(PORT1_NAME).unwrap();
+        if let Some(ref mut port_info) = port1.bridge_port {
+            port_info.forward_delay_timer = 0;
+        }
+        let port2 = state.ifaces.get_mut(PORT2_NAME).unwrap();
+        if let Some(ref mut port_info) = port2.bridge_port {
+            port_info.forward_delay_timer = 0;
+        }
+
+        let iface = &state.ifaces[IFACE_NAME];
+        let port1 = &state.ifaces[PORT1_NAME];
+        let port2 = &state.ifaces[PORT2_NAME];
+        assert_eq!(iface.iface_type, nispor::IfaceType::Bridge);
+        assert_eq!(
+            serde_yaml::to_string(&vec![iface, port1, port2]).unwrap(),
+            EXPECTED_IFACE_STATE
+        );
     });
 }
 

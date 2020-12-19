@@ -7,7 +7,7 @@ mod utils;
 
 const IFACE_NAME: &str = "mac0";
 
-const EXPECTED_IFACE_NAME: &str = r#"---
+const EXPECTED_IFACE_STATE: &str = r#"---
 - name: mac0
   iface_type: mac_vlan
   state: up
@@ -36,14 +36,13 @@ const EXPECTED_IFACE_NAME: &str = r#"---
 #[test]
 fn test_get_macvlan_iface_yaml() {
     with_macvlan_iface(|| {
-        if let Ok(state) = NetState::retrieve() {
-            let iface = &state.ifaces[IFACE_NAME];
-            assert_eq!(iface.iface_type, nispor::IfaceType::MacVlan);
-            assert_eq!(
-                serde_yaml::to_string(&vec![iface]).unwrap(),
-                EXPECTED_IFACE_NAME
-            );
-        }
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(iface.iface_type, nispor::IfaceType::MacVlan);
+        assert_eq!(
+            serde_yaml::to_string(&vec![iface]).unwrap(),
+            EXPECTED_IFACE_STATE
+        );
     });
 }
 

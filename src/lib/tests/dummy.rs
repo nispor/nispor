@@ -7,7 +7,7 @@ mod utils;
 
 const IFACE_NAME: &str = "dummy1";
 
-const EXPECTED_IFACE_NAME: &str = r#"---
+const EXPECTED_IFACE_STATE: &str = r#"---
 - name: dummy1
   iface_type: dummy
   state: unknown
@@ -29,15 +29,14 @@ const EXPECTED_IFACE_NAME: &str = r#"---
 #[test]
 fn test_get_iface_dummy_yaml() {
     with_dummy_iface(|| {
-        if let Ok(state) = NetState::retrieve() {
-            let iface = &state.ifaces[IFACE_NAME];
-            let iface_type = &iface.iface_type;
-            assert_eq!(iface_type, &nispor::IfaceType::Dummy);
-            assert_eq!(
-                serde_yaml::to_string(&vec![iface]).unwrap(),
-                EXPECTED_IFACE_NAME
-            );
-        }
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        let iface_type = &iface.iface_type;
+        assert_eq!(iface_type, &nispor::IfaceType::Dummy);
+        assert_eq!(
+            serde_yaml::to_string(&vec![iface]).unwrap(),
+            EXPECTED_IFACE_STATE
+        );
     });
 }
 

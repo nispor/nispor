@@ -7,7 +7,7 @@ mod utils;
 
 const IFACE_NAME: &str = "tap1";
 
-const EXPECTED_IFACE_NAME: &str = r#"---
+const EXPECTED_IFACE_STATE: &str = r#"---
 - name: tap1
   iface_type: tun
   state: down
@@ -32,14 +32,13 @@ const EXPECTED_IFACE_NAME: &str = r#"---
 #[ignore] // Travis CI does not support TUN/TAP IFLA_INFO_DATA yet
 fn test_get_tap_iface_yaml() {
     with_tap_iface(|| {
-        if let Ok(state) = NetState::retrieve() {
-            let iface = &state.ifaces[IFACE_NAME];
-            assert_eq!(iface.iface_type, nispor::IfaceType::Tun);
-            assert_eq!(
-                serde_yaml::to_string(&vec![iface]).unwrap(),
-                EXPECTED_IFACE_NAME
-            );
-        }
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(iface.iface_type, nispor::IfaceType::Tun);
+        assert_eq!(
+            serde_yaml::to_string(&vec![iface]).unwrap(),
+            EXPECTED_IFACE_STATE
+        );
     });
 }
 
