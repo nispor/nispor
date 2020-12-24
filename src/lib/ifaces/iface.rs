@@ -37,6 +37,7 @@ use netlink_packet_route::rtnl::{
     IFF_SLAVE, IFF_UP,
 };
 
+use log::warn;
 use rtnetlink::packet::rtnl::link::nlas::Nla;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -260,7 +261,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                                 iface_state.tun = Some(info);
                             }
                             Err(e) => {
-                                eprintln!("Error parsing TUN info: {}", e);
+                                warn!("Error parsing TUN info: {}", e);
                             }
                         },
                         IfaceType::Vlan => iface_state.vlan = get_vlan_info(&d),
@@ -274,7 +275,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                         IfaceType::MacVtap => {
                             iface_state.mac_vtap = get_mac_vtap_info(&d)?
                         }
-                        _ => eprintln!(
+                        _ => warn!(
                             "Unhandled IFLA_INFO_DATA for iface type {:?}",
                             iface_state.iface_type
                         ),
@@ -307,7 +308,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                                 iface_state.vrf_subordinate =
                                     get_vrf_subordinate_info(&d)?;
                             }
-                            _ => eprintln!(
+                            _ => warn!(
                                 "Unknown controller type {:?}",
                                 controller_type
                             ),

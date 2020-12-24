@@ -6,6 +6,7 @@ use crate::netlink::nla::parse_as_ipv6;
 use crate::netlink::nla::parse_as_u32;
 use crate::netlink::nla::parse_as_u8;
 use crate::NisporError;
+use log::warn;
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 
 const IFLA_VXLAN_ID: u16 = 1;
@@ -133,13 +134,13 @@ pub(crate) fn parse_vxlan_info(raw: &[u8]) -> Result<VxlanInfo, NisporError> {
                 IFLA_VXLAN_DF => {
                     info.df = parse_as_u8(nla.value())?;
                 }
-                _ => eprintln!(
+                _ => warn!(
                     "Unhandled VxLAN IFLA_INFO_DATA: {}, {:?}",
                     nla.kind(),
                     nla.value()
                 ),
             },
-            Err(e) => eprintln!("{}", e),
+            Err(e) => warn!("{}", e),
         }
     }
     Ok(info)

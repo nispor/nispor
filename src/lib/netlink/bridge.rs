@@ -1,6 +1,7 @@
 use crate::parse_as_mac;
 use crate::BridgeInfo;
 use crate::NisporError;
+use log::warn;
 use netlink_packet_route::rtnl::link::nlas::InfoBridge;
 
 const ETH_ALEN: usize = 6;
@@ -101,7 +102,7 @@ pub(crate) fn parse_bridge_info(
         } else if let InfoBridge::MultiBoolOpt(d) = info {
             bridge_info.multi_bool_opt = Some(*d);
         } else {
-            eprintln!("Unknown NLA {:?}", &info);
+            warn!("Unknown NLA {:?}", &info);
         }
     }
     Ok(bridge_info)

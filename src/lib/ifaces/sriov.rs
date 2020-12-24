@@ -2,6 +2,7 @@ use crate::netlink::parse_as_u32;
 use crate::netlink::parse_as_u64;
 use crate::parse_as_mac;
 use crate::NisporError;
+use log::warn;
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 use serde_derive::{Deserialize, Serialize};
 
@@ -200,7 +201,7 @@ pub(crate) fn get_sriov_info(
                     vf_info.broadcast = parse_vf_mac(nla.value(), mac_len)?;
                 }
                 _ => {
-                    eprintln!(
+                    warn!(
                         "Unhandled SRIOV NLA {} {:?}",
                         nla.kind(),
                         nla.value()
@@ -253,7 +254,7 @@ fn parse_vf_stats(raw: &[u8]) -> Result<VfState, NisporError> {
             IFLA_VF_STATS_TX_DROPPED => {
                 state.tx_dropped = parse_as_u64(nla.value())?;
             }
-            _ => eprintln!(
+            _ => warn!(
                 "Unhandled IFLA_VF_STATS {}, {:?}",
                 nla.kind(),
                 nla.value()

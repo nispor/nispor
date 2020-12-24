@@ -4,6 +4,7 @@ use crate::netlink::nla::parse_as_u64;
 use crate::netlink::nla::parse_as_u8;
 use crate::BridgePortInfo;
 use crate::NisporError;
+use log::warn;
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 
 fn parse_void_port_info(
@@ -323,7 +324,7 @@ pub(crate) fn parse_bridge_port_info(
                 {
                     func(nla.value(), &mut port_info)?;
                 } else {
-                    eprintln!(
+                    warn!(
                         "Unhandled BRIDGE_PORT_INFO {} {:?}",
                         nla.kind(),
                         nla.value()
@@ -331,7 +332,7 @@ pub(crate) fn parse_bridge_port_info(
                 }
             }
             Err(e) => {
-                eprintln!("{}", e);
+                warn!("{}", e);
             }
         }
     }

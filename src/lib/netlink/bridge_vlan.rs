@@ -1,5 +1,6 @@
 use crate::BridgeVlanEntry;
 use crate::NisporError;
+use log::warn;
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 
 const IFLA_BRIDGE_VLAN_INFO: u16 = 2;
@@ -30,14 +31,14 @@ pub(crate) fn parse_af_spec_bridge_info(
                     }
                 }
                 _ => {
-                    eprintln!(
+                    warn!(
                         "Unhandled AF_SPEC_BRIDGE_INFO: {} {:?}",
                         nla.kind(),
                         nla.value()
                     );
                 }
             },
-            Err(e) => eprintln!("{}", e),
+            Err(e) => warn!("{}", e),
         }
     }
     if vlans.len() > 0 {
@@ -86,7 +87,7 @@ fn parse_vlan_info(
         entry.is_range_end = (flags & BRIDGE_VLAN_INFO_RANGE_END) > 0;
         Ok(Some(entry))
     } else {
-        eprintln!(
+        warn!(
             "Invalid kernel bridge vlan info: {:?}, should be [u8;4]",
             data
         );
@@ -114,7 +115,7 @@ fn merge_vlan_range(
                         is_egress_untagged: k_vlan.is_egress_untagged,
                     })
                 } else {
-                    eprintln!(
+                    warn!(
                         "Invalid kernel bridge vlan information: \
                         missing start VLAN for {}",
                         k_vlan.vid

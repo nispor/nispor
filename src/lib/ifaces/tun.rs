@@ -1,6 +1,7 @@
 use crate::netlink::parse_as_u32;
 use crate::netlink::parse_as_u8;
 use crate::NisporError;
+use log::warn;
 use netlink_packet_route::rtnl::link::nlas::InfoData;
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 use serde_derive::{Deserialize, Serialize};
@@ -55,7 +56,7 @@ impl From<u8> for TunMode {
             IFF_TUN => TunMode::Tun,
             IFF_TAP => TunMode::Tap,
             _ => {
-                eprintln!("Unhandled TUN mode {}", d);
+                warn!("Unhandled TUN mode {}", d);
                 TunMode::Unknown
             }
         }
@@ -98,11 +99,7 @@ pub(crate) fn get_tun_info(data: &InfoData) -> Result<TunInfo, NisporError> {
                         Some(parse_as_u32(nla.value())?);
                 }
                 _ => {
-                    eprintln!(
-                        "Unhandled TUN NLA {} {:?}",
-                        nla.kind(),
-                        nla.value()
-                    );
+                    warn!("Unhandled TUN NLA {} {:?}", nla.kind(), nla.value());
                 }
             }
         }
