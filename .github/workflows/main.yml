@@ -10,24 +10,30 @@ on:
 jobs:
   ci:
     strategy:
-      fail-fast: true
+      fail-fast: false
+      matrix:
+        include:
+          - rust_version: "stable"
+          - rust_version: "nightly"
+          - rust_version: "beta"
 
-    name: CI (stable)
+    name: CI
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install Rust Stable
+    - name: Install Rust ${{ matrix.rust_version }}
       run: |
         rustc -vV
-        rustup update stable
-        rustup default stable
+        rustup update ${{ matrix.rust_version }}
+        rustup default ${{ matrix.rust_version }}
+        rustup component add rustfmt
         rustc -vV
 
     - name: Install valgrind
       run: |
-        sudo apt-get update 
+        sudo apt-get update
         sudo apt-get -y install valgrind
 
     - name: Build
