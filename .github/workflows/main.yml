@@ -18,28 +18,38 @@ jobs:
           - rust_version: "beta"
 
     name: CI
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
     - uses: actions/checkout@v2
 
+
     - name: Install Rust ${{ matrix.rust_version }}
-      run: |
-        rustc -vV
-        rustup update ${{ matrix.rust_version }}
-        rustup default ${{ matrix.rust_version }}
-        rustup component add rustfmt
-        rustc -vV
+      uses: actions-rs/toolchain@v1
+      with:
+          toolchain: ${{ matrix.rust_version }}
+          override: true
+          components: rustfmt
 
     - name: Install valgrind
-      run: |
-        sudo apt-get update
-        sudo apt-get -y install valgrind
+      if: matrix.rust_version == 'stable'
+      run: sudo apt-get -y install valgrind
 
     - name: Check fmt
       if: matrix.rust_version == 'stable'
       run: cargo fmt -- --check
+
+    - name: Instruct cargo to use sudo as runner
+      run: |
+        echo "[target.x86_64-unknown-linux-gnu]" >> .cargo/config.toml
+        echo "runner = 'sudo -E'" >> .cargo/config.toml
+
     - name: Build
-      run: sudo env PATH=$PATH cargo build --verbose --all
-    - name: Run tests
-      run: sudo env PATH=$PATH make check
+      run: cargo build --verbose --all
+
+    - name: Run cargo tests
+      run: cargo test -- --test-threads=1 --show-output
+
+    - name: Run clib test
+      if: matrix.rust_version == 'stable'
+      run: sudo make check -C test/clib
