@@ -18,7 +18,6 @@ const EXPECTED_IFACE_STATE: &str = r#"---
     - no_arp
     - running
     - up
-  mac_address: "00:23:45:67:89:1c"
   vrf:
     table_id: 10
     subordinates:
@@ -26,11 +25,14 @@ const EXPECTED_IFACE_STATE: &str = r#"---
       - eth2"#;
 
 #[test]
-#[ignore] // Travis CI does not support VRF yet
+#[ignore] // Github Action does not have VRF kernel module
 fn test_get_vrf_iface_yaml() {
     with_vrf_iface(|| {
         let state = NetState::retrieve().unwrap();
-        let iface = &state.ifaces[IFACE_NAME];
+        let mut iface = state.ifaces[IFACE_NAME].clone();
+        // RHEL/CentOS 8 and Ubuntu 20.04 does not support changing mac
+        // address of VRF interface
+        iface.mac_address = "".into();
         assert_eq!(iface.iface_type, nispor::IfaceType::Vrf);
         assert_eq!(
             serde_yaml::to_string(&vec![iface]).unwrap(),
