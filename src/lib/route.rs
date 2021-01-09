@@ -547,10 +547,10 @@ fn get_route(
                 while (i < len) && (len - i > SIZE_OF_RTNEXTHOP) {
                     let nex_hop_len = parse_as_u16(&[
                         *d.get(i).ok_or(NisporError::bug(
-                            "wrong index at multipath next_hop_len",
+                            "wrong index at multipath next_hop_len".into(),
                         ))?,
                         *d.get(i + 1).ok_or(NisporError::bug(
-                            "wrong index at multipath next_hop_len",
+                            "wrong index at multipath next_hop_len".into(),
                         ))?,
                     ])?;
                     let nla = NlaBuffer::new(
@@ -578,7 +578,7 @@ fn get_route(
                     };
                     let iface_index = parse_as_i32(
                         &d.get(i + 4..i + 8).ok_or(NisporError::bug(
-                            "wrong index at multipath iface_index",
+                            "wrong index at multipath iface_index".into(),
                         ))?,
                     )?;
                     let iface = if let Some(iface_name) =
@@ -589,9 +589,9 @@ fn get_route(
                         format!("{}", iface_index)
                     };
                     let mut flags = Vec::new();
-                    let flags_raw = d
-                        .get(i + 2)
-                        .ok_or(NisporError::bug("wrong index at flags raw"))?;
+                    let flags_raw = d.get(i + 2).ok_or(NisporError::bug(
+                        "wrong index at flags raw".into(),
+                    ))?;
                     //TODO: Need better way to handle the bitmap.
                     if (flags_raw & RTNH_F_DEAD) > 0 {
                         flags.push(MultipathRouteFlags::Dead);
@@ -609,10 +609,9 @@ fn get_route(
 
                     let next_hop = MultipathRoute {
                         flags: flags,
-                        weight: *d
-                            .get(i + 3)
-                            .ok_or(NisporError::bug("wrong index at weight"))?
-                            as u16
+                        weight: *d.get(i + 3).ok_or(NisporError::bug(
+                            "wrong index at weight".into(),
+                        ))? as u16
                             + 1,
                         iface: iface,
                         via: via,

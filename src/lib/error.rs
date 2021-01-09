@@ -24,22 +24,22 @@ pub struct NisporError {
 }
 
 impl NisporError {
-    pub fn bug(message: &str) -> NisporError {
+    pub(crate) fn bug(message: String) -> NisporError {
         NisporError {
             kind: ErrorKind::NisporBug,
-            msg: message.to_string(),
+            msg: message,
         }
     }
-    pub fn permission_deny(message: &str) -> NisporError {
+    pub(crate) fn permission_deny(message: String) -> NisporError {
         NisporError {
             kind: ErrorKind::PermissionDeny,
-            msg: message.to_string(),
+            msg: message,
         }
     }
-    pub fn invalid_argument(message: &str) -> NisporError {
+    pub(crate) fn invalid_argument(message: String) -> NisporError {
         NisporError {
             kind: ErrorKind::InvalidArgument,
-            msg: message.to_string(),
+            msg: message,
         }
     }
 }

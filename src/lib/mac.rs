@@ -10,7 +10,7 @@ pub(crate) fn parse_as_mac(
             "{:02x}",
             *data
                 .get(i)
-                .ok_or(NisporError::bug("wrong index at mac parsing"))?
+                .ok_or(NisporError::bug("wrong index at mac parsing".into()))?
         ));
         if i != mac_len - 1 {
             rt.push_str(":");
