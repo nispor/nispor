@@ -40,6 +40,6 @@ jobs:
       if: matrix.rust_version == 'stable'
       run: cargo fmt -- --check
     - name: Build
-      run: cargo build --verbose --all
+      run: sudo env PATH=$PATH cargo build --verbose --all
     - name: Run tests
       run: sudo env PATH=$PATH make check
