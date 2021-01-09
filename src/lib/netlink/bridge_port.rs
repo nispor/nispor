@@ -342,13 +342,13 @@ fn parse_as_bridge_id(data: &[u8]) -> Result<String, NisporError> {
     let err_msg = "wrong index at bridge_id parsing";
     Ok(format!(
         "{:02x}{:02x}.{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
-        data.get(0).ok_or(NisporError::bug(err_msg))?,
-        data.get(1).ok_or(NisporError::bug(err_msg))?,
-        data.get(2).ok_or(NisporError::bug(err_msg))?,
-        data.get(3).ok_or(NisporError::bug(err_msg))?,
-        data.get(4).ok_or(NisporError::bug(err_msg))?,
-        data.get(5).ok_or(NisporError::bug(err_msg))?,
-        data.get(6).ok_or(NisporError::bug(err_msg))?,
-        data.get(7).ok_or(NisporError::bug(err_msg))?,
+        data.get(0).ok_or(NisporError::bug(err_msg.into()))?,
+        data.get(1).ok_or(NisporError::bug(err_msg.into()))?,
+        data.get(2).ok_or(NisporError::bug(err_msg.into()))?,
+        data.get(3).ok_or(NisporError::bug(err_msg.into()))?,
+        data.get(4).ok_or(NisporError::bug(err_msg.into()))?,
+        data.get(5).ok_or(NisporError::bug(err_msg.into()))?,
+        data.get(6).ok_or(NisporError::bug(err_msg.into()))?,
+        data.get(7).ok_or(NisporError::bug(err_msg.into()))?,
     ))
 }

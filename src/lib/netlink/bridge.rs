@@ -115,12 +115,12 @@ fn parse_bridge_id(
     let priority_bytes = priority.to_ne_bytes();
     Ok(format!(
         "{:02x}{:02x}.{}",
-        priority_bytes
-            .get(0)
-            .ok_or(NisporError::bug("wrong index at bridge_id parsing"))?,
-        priority_bytes
-            .get(1)
-            .ok_or(NisporError::bug("wrong index at bridge_id parsing"))?,
+        priority_bytes.get(0).ok_or(NisporError::bug(
+            "wrong index at bridge_id parsing".into()
+        ))?,
+        priority_bytes.get(1).ok_or(NisporError::bug(
+            "wrong index at bridge_id parsing".into()
+        ))?,
         parse_as_mac(ETH_ALEN, mac)
             .expect("error when parsing mac address in bridge_id")
             .to_lowercase()

@@ -35,9 +35,9 @@ fn ipv4_addr_array_to_string(
 ) -> Result<String, NisporError> {
     let mut rt = String::new();
     for i in 0..(addrs.len()) {
-        let addr = &addrs
-            .get(i)
-            .ok_or(NisporError::bug("wrong index at parsing ipv4 as string"))?;
+        let addr = &addrs.get(i).ok_or(NisporError::bug(
+            "wrong index at parsing ipv4 as string".into(),
+        ))?;
         rt.push_str(&addr.to_string());
         if i != addrs.len() - 1 {
             rt.push_str(",");

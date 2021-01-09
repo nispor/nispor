@@ -60,7 +60,7 @@ $(CLI_EXEC_RELEASE) $(VARLINK_SRV_EXEC_RELEASE) $(CLIB_SO_DEV_RELEASE):
 
 check:
 	cargo test -- --test-threads=1 --show-output;
-	if [ "CHK$(TRAVIS)" != "CHKtrue" ]; then \
+	if [ "CHK$(CI)" != "CHKtrue" ]; then \
 		cargo test -- --test-threads=1 --show-output --ignored; \
 	fi
 	make check -C test/clib

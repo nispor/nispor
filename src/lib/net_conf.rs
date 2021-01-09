@@ -19,7 +19,7 @@ impl NetConf {
                     Runtime::new()?.block_on(iface.apply(&cur_iface))?
                 } else {
                     // TODO: Create new interface
-                    return Err(NisporError::invalid_argument(&format!(
+                    return Err(NisporError::invalid_argument(format!(
                         "Interface {} not found!",
                         iface.name
                     )));

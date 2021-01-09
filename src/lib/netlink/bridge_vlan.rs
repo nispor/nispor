@@ -63,18 +63,18 @@ fn parse_vlan_info(
         let flags = u16::from_ne_bytes([
             *data
                 .get(0)
-                .ok_or(NisporError::bug("wrong index at vlan flags"))?,
+                .ok_or(NisporError::bug("wrong index at vlan flags".into()))?,
             *data
                 .get(1)
-                .ok_or(NisporError::bug("wrong index at vlan flags"))?,
+                .ok_or(NisporError::bug("wrong index at vlan flags".into()))?,
         ]);
         let vid = u16::from_ne_bytes([
             *data
                 .get(2)
-                .ok_or(NisporError::bug("wrong index at vlan id"))?,
+                .ok_or(NisporError::bug("wrong index at vlan id".into()))?,
             *data
                 .get(3)
-                .ok_or(NisporError::bug("wrong index at vlan id"))?,
+                .ok_or(NisporError::bug("wrong index at vlan id".into()))?,
         ]);
         let mut entry = KernelBridgeVlanEntry {
             vid: vid,

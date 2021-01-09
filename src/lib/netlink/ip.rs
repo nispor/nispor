@@ -138,16 +138,32 @@ fn parse_cache_info(
         let err_msg = "wrong index at cache_info_raw parsing";
         Ok(IfaCacheInfo {
             ifa_prefered: u32::from_ne_bytes([
-                *cache_info_raw.get(0).ok_or(NisporError::bug(err_msg))?,
-                *cache_info_raw.get(1).ok_or(NisporError::bug(err_msg))?,
-                *cache_info_raw.get(2).ok_or(NisporError::bug(err_msg))?,
-                *cache_info_raw.get(3).ok_or(NisporError::bug(err_msg))?,
+                *cache_info_raw
+                    .get(0)
+                    .ok_or(NisporError::bug(err_msg.into()))?,
+                *cache_info_raw
+                    .get(1)
+                    .ok_or(NisporError::bug(err_msg.into()))?,
+                *cache_info_raw
+                    .get(2)
+                    .ok_or(NisporError::bug(err_msg.into()))?,
+                *cache_info_raw
+                    .get(3)
+                    .ok_or(NisporError::bug(err_msg.into()))?,
             ]),
             ifa_valid: u32::from_ne_bytes([
-                *cache_info_raw.get(4).ok_or(NisporError::bug(err_msg))?,
-                *cache_info_raw.get(5).ok_or(NisporError::bug(err_msg))?,
-                *cache_info_raw.get(6).ok_or(NisporError::bug(err_msg))?,
-                *cache_info_raw.get(7).ok_or(NisporError::bug(err_msg))?,
+                *cache_info_raw
+                    .get(4)
+                    .ok_or(NisporError::bug(err_msg.into()))?,
+                *cache_info_raw
+                    .get(5)
+                    .ok_or(NisporError::bug(err_msg.into()))?,
+                *cache_info_raw
+                    .get(6)
+                    .ok_or(NisporError::bug(err_msg.into()))?,
+                *cache_info_raw
+                    .get(7)
+                    .ok_or(NisporError::bug(err_msg.into()))?,
             ]),
         })
     }
