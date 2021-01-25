@@ -171,6 +171,7 @@ const BOND_XMIT_POLICY_LAYER34: u8 = 1;
 const BOND_XMIT_POLICY_LAYER23: u8 = 2;
 const BOND_XMIT_POLICY_ENCAP23: u8 = 3;
 const BOND_XMIT_POLICY_ENCAP34: u8 = 4;
+const BOND_XMIT_POLICY_VLAN_SRCMAC: u8 = 5;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "lowercase")]
@@ -185,6 +186,8 @@ pub enum BondXmitHashPolicy {
     Encap23,
     #[serde(rename = "encap3+4")]
     Encap34,
+    #[serde(rename = "vlan+srcmac")]
+    VlanSrcMac,
     Other(u8),
 }
 
@@ -196,6 +199,7 @@ impl From<u8> for BondXmitHashPolicy {
             BOND_XMIT_POLICY_LAYER23 => Self::Layer23,
             BOND_XMIT_POLICY_ENCAP23 => Self::Encap23,
             BOND_XMIT_POLICY_ENCAP34 => Self::Encap34,
+            BOND_XMIT_POLICY_VLAN_SRCMAC => Self::VlanSrcMac,
             _ => Self::Other(d),
         }
     }
