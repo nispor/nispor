@@ -17,9 +17,9 @@ use netlink_packet_route::rtnl::constants::RTEXT_FILTER_BRVLAN_COMPRESSED;
 use netlink_packet_route::rtnl::constants::RTEXT_FILTER_VF;
 use rtnetlink::new_connection;
 use std::collections::HashMap;
-use tokio::runtime::Runtime;
 
-async fn _get_ifaces() -> Result<HashMap<String, Iface>, NisporError> {
+pub(crate) async fn get_ifaces() -> Result<HashMap<String, Iface>, NisporError>
+{
     let mut iface_states: HashMap<String, Iface> = HashMap::new();
     let (connection, handle, _) = new_connection()?;
     tokio::spawn(connection);
@@ -49,10 +49,6 @@ async fn _get_ifaces() -> Result<HashMap<String, Iface>, NisporError> {
 
     tidy_up(&mut iface_states);
     Ok(iface_states)
-}
-
-pub(crate) fn get_ifaces() -> Result<HashMap<String, Iface>, NisporError> {
-    Ok(Runtime::new()?.block_on(_get_ifaces())?)
 }
 
 fn tidy_up(iface_states: &mut HashMap<String, Iface>) {
