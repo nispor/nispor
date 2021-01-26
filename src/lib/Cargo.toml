@@ -23,7 +23,7 @@ rtnetlink = "0.7"
 netlink-packet-route = "0.7"
 netlink-sys = "0.6"
 netlink-packet-utils = "0.4"
-tokio = { version = "1.0.1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.0.1", features = ["macros", "rt"] }
 futures = "0.3"
 libc = "0.2.74"
 

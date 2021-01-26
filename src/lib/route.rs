@@ -26,7 +26,6 @@ use rtnetlink::new_connection;
 use rtnetlink::IpVersion;
 use serde_derive::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tokio::runtime::Runtime;
 
 const USER_HZ: u32 = 100;
 
@@ -361,30 +360,25 @@ const RTNH_F_OFFLOAD: u8 = 8; /* offloaded route */
 const RTNH_F_LINKDOWN: u8 = 16; /* carrier-down on nexthop */
 const RTNH_F_UNRESOLVED: u8 = 32; /* The entry is unresolved (ipmr) */
 
-pub(crate) fn get_routes(
+pub(crate) async fn get_routes(
     ifaces: &HashMap<String, Iface>,
 ) -> Result<Vec<Route>, NisporError> {
-    let mut ifindex_to_name = HashMap::new();
-    for iface in ifaces.values() {
-        ifindex_to_name.insert(format!("{}", iface.index), iface.name.clone());
-    }
-    Ok(Runtime::new()?.block_on(_get_routes(&ifindex_to_name))?)
-}
-
-async fn _get_routes(
-    ifindex_to_name: &HashMap<String, String>,
-) -> Result<Vec<Route>, NisporError> {
     let mut routes = Vec::new();
+    let mut ifindex_to_name = HashMap::new();
     let (connection, handle, _) = new_connection()?;
     tokio::spawn(connection);
 
+    for iface in ifaces.values() {
+        ifindex_to_name.insert(format!("{}", iface.index), iface.name.clone());
+    }
+
     let mut links = handle.route().get(IpVersion::V6).execute();
     while let Some(rt_msg) = links.try_next().await? {
-        routes.push(get_route(rt_msg, ifindex_to_name)?);
+        routes.push(get_route(rt_msg, &ifindex_to_name)?);
     }
     let mut links = handle.route().get(IpVersion::V4).execute();
     while let Some(rt_msg) = links.try_next().await? {
-        routes.push(get_route(rt_msg, ifindex_to_name)?);
+        routes.push(get_route(rt_msg, &ifindex_to_name)?);
     }
     Ok(routes)
 }

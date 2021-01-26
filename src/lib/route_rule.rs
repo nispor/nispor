@@ -10,7 +10,6 @@ use netlink_packet_route::RuleMessage;
 use rtnetlink::new_connection;
 use rtnetlink::IpVersion;
 use serde_derive::{Deserialize, Serialize};
-use tokio::runtime::Runtime;
 
 const FR_ACT_TO_TBL: u8 = 1;
 const FR_ACT_GOTO: u8 = 2;
@@ -106,11 +105,7 @@ pub struct RouteRule {
     pub l3mdev: Option<bool>,
 }
 
-pub(crate) fn get_route_rules() -> Result<Vec<RouteRule>, NisporError> {
-    Ok(Runtime::new()?.block_on(_get_route_rules())?)
-}
-
-async fn _get_route_rules() -> Result<Vec<RouteRule>, NisporError> {
+pub(crate) async fn get_route_rules() -> Result<Vec<RouteRule>, NisporError> {
     let mut rules = Vec::new();
     let (connection, handle, _) = new_connection()?;
     tokio::spawn(connection);
