@@ -31,6 +31,10 @@ jobs:
           override: true
           components: rustfmt
 
+    - name: Update repositories
+      if: matrix.rust_version == 'stable'
+      run: sudo apt-get -y update
+
     - name: Install valgrind
       if: matrix.rust_version == 'stable'
       run: sudo apt-get -y install valgrind
