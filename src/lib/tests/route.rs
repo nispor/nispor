@@ -72,7 +72,7 @@ fn test_get_route_yaml() {
             }
         }
         assert_eq!(
-            serde_yaml::to_string(&expected_routes).unwrap(),
+            serde_yaml::to_string(&expected_routes).unwrap().trim(),
             EXPECTED_YAML_OUTPUT
         );
     });

@@ -151,7 +151,7 @@ fn test_get_br_iface_yaml() {
         let port1 = &state.ifaces[PORT1_NAME];
         let port2 = &state.ifaces[PORT2_NAME];
         assert_eq!(
-            serde_yaml::to_string(&vec![port1, port2]).unwrap(),
+            serde_yaml::to_string(&vec![port1, port2]).unwrap().trim(),
             EXPECTED_IFACE_STATE
         );
     });

@@ -36,7 +36,7 @@ fn test_get_tun_iface_yaml() {
         let iface = &state.ifaces[IFACE_NAME];
         assert_eq!(iface.iface_type, nispor::IfaceType::Tun);
         assert_eq!(
-            serde_yaml::to_string(&vec![iface]).unwrap(),
+            serde_yaml::to_string(&vec![iface]).unwrap().trim(),
             EXPECTED_IFACE_STATE
         );
     });

@@ -42,7 +42,7 @@ fn test_get_route_rule_yaml() {
             }
         }
         assert_eq!(
-            serde_yaml::to_string(&expected_rules).unwrap(),
+            serde_yaml::to_string(&expected_rules).unwrap().trim(),
             EXPECTED_YAML_OUTPUT
         );
     });

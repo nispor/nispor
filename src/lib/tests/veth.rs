@@ -36,7 +36,7 @@ fn test_get_veth_iface_yaml() {
         let iface_type = &iface.iface_type;
         assert_eq!(iface_type, &nispor::IfaceType::Veth);
         assert_eq!(
-            serde_yaml::to_string(&vec![iface]).unwrap(),
+            serde_yaml::to_string(&vec![iface]).unwrap().trim(),
             EXPECTED_IFACE_STATE
         );
     });
@@ -117,7 +117,7 @@ fn test_veth_add_and_remove_ip() {
         let iface_type = &iface.iface_type;
         assert_eq!(iface_type, &nispor::IfaceType::Veth);
         assert_eq!(
-            serde_yaml::to_string(&vec![iface]).unwrap(),
+            serde_yaml::to_string(&vec![iface]).unwrap().trim(),
             EXPECTED_IFACE_STATE_ADD_IP
         );
         let conf: NetConf = serde_yaml::from_str(EMPTY_IP_CONF).unwrap();
@@ -127,7 +127,7 @@ fn test_veth_add_and_remove_ip() {
         let iface_type = &iface.iface_type;
         assert_eq!(iface_type, &nispor::IfaceType::Veth);
         assert_eq!(
-            serde_yaml::to_string(&vec![iface]).unwrap(),
+            serde_yaml::to_string(&vec![iface]).unwrap().trim(),
             EXPECTED_IFACE_STATE
         );
     });

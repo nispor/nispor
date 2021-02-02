@@ -35,7 +35,7 @@ fn test_get_vrf_iface_yaml() {
         iface.mac_address = "".into();
         assert_eq!(iface.iface_type, nispor::IfaceType::Vrf);
         assert_eq!(
-            serde_yaml::to_string(&vec![iface]).unwrap(),
+            serde_yaml::to_string(&vec![iface]).unwrap().trim(),
             EXPECTED_IFACE_STATE
         );
     });
