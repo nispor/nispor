@@ -40,7 +40,7 @@ fn test_get_macvlan_iface_yaml() {
         let iface = &state.ifaces[IFACE_NAME];
         assert_eq!(iface.iface_type, nispor::IfaceType::MacVlan);
         assert_eq!(
-            serde_yaml::to_string(&vec![iface]).unwrap(),
+            serde_yaml::to_string(&vec![iface]).unwrap().trim(),
             EXPECTED_IFACE_STATE
         );
     });

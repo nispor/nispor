@@ -34,7 +34,7 @@ fn test_get_iface_dummy_yaml() {
         let iface_type = &iface.iface_type;
         assert_eq!(iface_type, &nispor::IfaceType::Dummy);
         assert_eq!(
-            serde_yaml::to_string(&vec![iface]).unwrap(),
+            serde_yaml::to_string(&vec![iface]).unwrap().trim(),
             EXPECTED_IFACE_STATE
         );
     });

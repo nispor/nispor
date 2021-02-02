@@ -211,7 +211,9 @@ fn test_get_br_iface_yaml() {
         let port2 = &state.ifaces[PORT2_NAME];
         assert_eq!(iface.iface_type, nispor::IfaceType::Bridge);
         assert_eq!(
-            serde_yaml::to_string(&vec![iface, port1, port2]).unwrap(),
+            serde_yaml::to_string(&vec![iface, port1, port2])
+                .unwrap()
+                .trim(),
             EXPECTED_IFACE_STATE
         );
     });
