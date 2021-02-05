@@ -100,13 +100,11 @@ fn convert_base_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
         if iface.iface_type != IfaceType::Vlan {
             continue;
         }
-        if let Some(old_vlan_info) = &iface.vlan {
+        if let Some(ref mut vlan_info) = iface.vlan {
             if let Some(base_iface_name) =
-                index_to_name.get(&old_vlan_info.base_iface)
+                index_to_name.get(&vlan_info.base_iface)
             {
-                let mut new_vlan_info = old_vlan_info.clone();
-                new_vlan_info.base_iface = base_iface_name.clone();
-                iface.vlan = Some(new_vlan_info);
+                vlan_info.base_iface = base_iface_name.clone();
             }
         }
     }

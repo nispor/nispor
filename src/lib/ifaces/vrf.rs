@@ -76,12 +76,9 @@ fn gen_subordinate_list_of_controller(
     }
     for (controller, subordinates) in controller_subordinates.iter_mut() {
         if let Some(controller_iface) = iface_states.get_mut(controller) {
-            if let Some(old_vrf_info) = &controller_iface.vrf {
-                // TODO: Need better way to update this subordinate list.
-                let mut new_vrf_info = old_vrf_info.clone();
+            if let Some(ref mut vrf_info) = controller_iface.vrf {
                 subordinates.sort();
-                new_vrf_info.subordinates = subordinates.clone();
-                controller_iface.vrf = Some(new_vrf_info);
+                vrf_info.subordinates = subordinates.clone();
             }
         }
     }
