@@ -299,12 +299,9 @@ fn gen_port_list_of_controller(iface_states: &mut HashMap<String, Iface>) {
     }
     for (controller, ports) in controller_ports.iter_mut() {
         if let Some(controller_iface) = iface_states.get_mut(controller) {
-            if let Some(old_bridge_info) = &controller_iface.bridge {
-                // TODO: Need better way to update this port list.
-                let mut new_bridge_info = old_bridge_info.clone();
+            if let Some(ref mut bridge_info) = controller_iface.bridge {
                 ports.sort();
-                new_bridge_info.ports = ports.clone();
-                controller_iface.bridge = Some(new_bridge_info);
+                bridge_info.ports = ports.clone();
             }
         }
     }
@@ -319,15 +316,11 @@ fn convert_back_port_index_to_name(iface_states: &mut HashMap<String, Iface>) {
         if iface.controller_type != Some(ControllerType::Bridge) {
             continue;
         }
-        if let Some(old_port_info) = &iface.bridge_port {
-            let index = &old_port_info.backup_port;
+        if let Some(ref mut port_info) = iface.bridge_port {
+            let index = &port_info.backup_port;
             if index != "" {
                 if let Some(iface_name) = index_to_name.get(index) {
-                    // TODO: Find a way to update old_port_info instaed of
-                    // clone()
-                    let mut new_port_info = old_port_info.clone();
-                    new_port_info.backup_port = iface_name.into();
-                    iface.bridge_port = Some(new_port_info);
+                    port_info.backup_port = iface_name.into();
                 }
             }
         }
@@ -348,11 +341,8 @@ pub(crate) fn parse_bridge_vlan_info(
     iface_state: &mut Iface,
     data: &[u8],
 ) -> Result<(), NisporError> {
-    if let Some(old_port_info) = &iface_state.bridge_port {
-        // TODO: shoule update in place instead of clone
-        let mut new_port_info = old_port_info.clone();
-        new_port_info.vlans = parse_af_spec_bridge_info(data)?;
-        iface_state.bridge_port = Some(new_port_info);
+    if let Some(ref mut port_info) = iface_state.bridge_port {
+        port_info.vlans = parse_af_spec_bridge_info(data)?;
     }
     Ok(())
 }
