@@ -53,7 +53,9 @@ pub enum IpFamily {
     Ipv6,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone, Default)]
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone, Default,
+)]
 pub struct IpAddrConf {
     pub address: String,
     pub prefix_len: u8,
