@@ -5,7 +5,6 @@ Currently providing:
  * Rust crate
  * Python binding
  * C binding
- * Varlink interface -- `npd`
  * Command line tool -- `npc`
 
 ## Install
@@ -33,19 +32,6 @@ npc bond99
 
 ```bash
 npc route
-```
-
-### Varlink service
-
-```bash
-systemctl start nispor.socket
-```
-
-### Varlink client
-
-```bash
-# Please install `libvarlink-util` pacakge beforehand
-varlink call unix:/run/nispor/nispor.so/info.nispor.Get
 ```
 
 ## Supported features

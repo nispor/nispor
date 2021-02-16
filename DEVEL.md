@@ -9,7 +9,6 @@
 * [Design](#design)
     * [Rust module](#rust-module)
     * [Command line tool](#command-line-tool)
-    * [Varlink service](#varlink-service)
     * [Python binding](#python-binding)
     * [Check list for creating PR:](#check-list-for-creating-pr)
 * [Release workflow](#release-workflow)
@@ -42,10 +41,6 @@ Path: `src/lib`
 ### Command line tool
 
 Path: `src/cli`
-
-### Varlink service
-
-Path: `src/varlink`
 
 ### Python binding
 
