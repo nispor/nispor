@@ -2,9 +2,6 @@ include ./Makefile.inc
 
 RUST_DEBUG_BIN_DIR=./target/debug
 RUST_RELEASE_BIN_DIR=./target/release
-VARLINK_SRV_EXEC=npd
-VARLINK_SRV_EXEC_DEBUG=$(RUST_DEBUG_BIN_DIR)/$(VARLINK_SRV_EXEC)
-VARLINK_SRV_EXEC_RELEASE=$(RUST_RELEASE_BIN_DIR)/$(VARLINK_SRV_EXEC)
 CLI_EXEC=npc
 CLI_EXEC_DEBUG=$(RUST_DEBUG_BIN_DIR)/$(CLI_EXEC)
 CLIB_HEADER=nispor.h
@@ -18,8 +15,6 @@ CLI_EXEC_RELEASE=$(RUST_RELEASE_BIN_DIR)/$(CLI_EXEC)
 SOCKET_FILE=/run/nispor/nispor.so
 SOCKET_DIR=$(dir $(SOCKET_FILE))
 SOCKET_ADDR=unix:$(SOCKET_FILE)
-SYSTEMD_SERVICE_FILE=src/varlink/systemd/nispor.service
-SYSTEMD_SOCKET_FILE=src/varlink/systemd/nispor.socket
 PREFIX ?= /usr/local
 
 CPU_BITS = $(shell getconf LONG_BIT)
@@ -34,8 +29,7 @@ PKG_CONFIG_LIBDIR ?= $(LIBDIR)/pkgconfig
 
 SKIP_PYTHON_INSTALL ?=0
 
-all: $(VARLINK_SRV_EXEC_DEBUG) $(CLI_EXEC_DEBUG) \
-    $(VARLINK_SRV_EXEC_RELEASE) $(CLI_EXEC_RELEASE)
+all: $(CLI_EXEC_DEBUG) $(CLI_EXEC_RELEASE)
 
 SYSTEMD_SYS_UNIT_DIR ?= $(shell \
 	pkg-config --variable=systemdsystemunitdir systemd)
@@ -46,16 +40,16 @@ PYTHON3_SITE_DIR ?=$(shell \
 		 print(get_python_lib())")
 
 # Always invoke cargo build for debug
-.PHONY: $(VARLINK_SRV_EXEC_DEBUG) $(CLI_EXEC_DEBUG)
+.PHONY: $(CLI_EXEC_DEBUG)
 
 debug: $(CLI_EXEC_DEBUG)
 	$(CLI_EXEC_DEBUG) $(ARGS)
 
 
-$(CLI_EXEC_DEBUG) $(VARLINK_SRV_EXEC_DEBUG):
+$(CLI_EXEC_DEBUG):
 	cargo build --all
 
-$(CLI_EXEC_RELEASE) $(VARLINK_SRV_EXEC_RELEASE) $(CLIB_SO_DEV_RELEASE):
+$(CLI_EXEC_RELEASE) $(CLIB_SO_DEV_RELEASE):
 	cargo build --all --release
 
 check:
@@ -65,24 +59,11 @@ check:
 	fi
 	make check -C test/clib
 
-srv: $(VARLINK_SRV_EXEC_DEBUG)
-	echo $(SOCKET_DIR)
-	if [ ! -d $(SOCKET_DIR) ]; then \
-		sudo mkdir $(SOCKET_DIR); \
-		sudo chmod 0777 $(SOCKET_DIR); \
-	fi
-	$(VARLINK_SRV_EXEC_DEBUG) $(SOCKET_ADDR)
-
-cli:
-	varlink call $(SOCKET_ADDR)/info.nispor.Get
-
 clean:
 	cargo clean
 	make clean -C test/clib
 
-install: $(VARLINK_SRV_EXEC_RELEASE) $(CLI_EXEC_RELEASE)
-	install -p -v -D -m755 $(VARLINK_SRV_EXEC_RELEASE) \
-		$(DESTDIR)$(PREFIX)/bin/$(VARLINK_SRV_EXEC)
+install: $(CLI_EXEC_RELEASE)
 	install -p -v -D -m755 $(CLI_EXEC_RELEASE) \
 		$(DESTDIR)$(PREFIX)/bin/$(CLI_EXEC)
 	install -p -v -D -m644 $(SYSTEMD_SOCKET_FILE) \
@@ -120,7 +101,6 @@ install: $(VARLINK_SRV_EXEC_RELEASE) $(CLI_EXEC_RELEASE)
 
 
 uninstall:
-	- rm -fv $(DESTDIR)$(PREFIX)/bin/$(VARLINK_SRV_EXEC)
 	- rm -fv $(DESTDIR)$(PREFIX)/bin/$(CLI_EXEC)
 	- rm -fv $(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/nispor*
 	- rm -fv $(DESTDIR)$(LIBDIR)/$(CLIB_SO_DEV)
