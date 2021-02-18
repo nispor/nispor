@@ -66,10 +66,6 @@ clean:
 install: $(CLI_EXEC_RELEASE)
 	install -p -v -D -m755 $(CLI_EXEC_RELEASE) \
 		$(DESTDIR)$(PREFIX)/bin/$(CLI_EXEC)
-	install -p -v -D -m644 $(SYSTEMD_SOCKET_FILE) \
-		$(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/nispor.socket
-	install -p -D -m644 $(SYSTEMD_SERVICE_FILE) \
-		$(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/nispor.service
 	install -p -D -m755 $(CLIB_SO_DEV_RELEASE) \
 		$(DESTDIR)$(LIBDIR)/$(CLIB_SO_FULL)
 	ln -sfv $(CLIB_SO_FULL) $(DESTDIR)$(LIBDIR)/$(CLIB_SO_MAN)
@@ -102,7 +98,6 @@ install: $(CLI_EXEC_RELEASE)
 
 uninstall:
 	- rm -fv $(DESTDIR)$(PREFIX)/bin/$(CLI_EXEC)
-	- rm -fv $(DESTDIR)$(SYSTEMD_SYS_UNIT_DIR)/nispor*
 	- rm -fv $(DESTDIR)$(LIBDIR)/$(CLIB_SO_DEV)
 	- rm -fv $(DESTDIR)$(LIBDIR)/$(CLIB_SO_MAN)
 	- rm -fv $(DESTDIR)$(LIBDIR)/$(CLIB_SO_MIN)
