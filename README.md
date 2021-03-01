@@ -58,3 +58,12 @@ npc route
  * Traffic control
  * Manpage for npc/npd
  * pkgconfig file for nispor C library
+
+## What should nispor not do
+To make nispor only to small good things, this is the list of things
+could be done by nispor but should not do:
+ * Ordering the network interface configuration base on child/parent,
+   controller/port relationships.
+ * Wrapping of multiple kernel options into simple ones.
+ * User space networking.
+ * Notification on network change.
