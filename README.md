@@ -49,6 +49,7 @@ npc route
  * SR-IOV
  * MacVlan
  * MacVtap
+ * IP over Infiniband
 
 ## TODO:
  * Error handling instead of `unwrap()/panic!/etc`

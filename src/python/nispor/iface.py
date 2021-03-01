@@ -17,13 +17,14 @@ from .bond import NisporBond
 from .bond import NisporBondSubordinate
 from .bridge import NisporBridge
 from .bridge import NisporBridgePort
+from .ipoib import NisporIpoib
+from .mac_vlan import NisporMacVlan
+from .mac_vtap import NisporMacVtap
 from .tun import NisporTun
 from .veth import NisporVeth
 from .vlan import NisporVlan
 from .vrf import NisporVRF
 from .vxlan import NisporVxlan
-from .mac_vlan import NisporMacVlan
-from .mac_vtap import NisporMacVtap
 
 
 class NisporIfaceState:
@@ -72,6 +73,8 @@ def _iface_info_to_obj(iface_info):
         iface = NisporMacVlan(iface_info)
     elif iface_type == "mac_vtap":
         iface = NisporMacVtap(iface_info)
+    elif iface_type == "Ipoib":
+        iface = NisporIpoib(iface_info)
     else:
         iface = NisporBaseIface(iface_info)
     if ctrl_type == "bond":
