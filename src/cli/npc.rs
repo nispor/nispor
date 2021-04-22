@@ -1,11 +1,18 @@
-use clap::{clap_app, crate_authors, crate_version};
-use nispor::{Iface, NetConf, NetState, NisporError, Route, RouteRule};
+use clap::{clap_app, crate_authors, crate_version, Arg};
+use nispor::{
+    Iface, NetConf, NetState, NisporError, Route, RouteRule, RouteScope,
+};
 use serde_derive::Serialize;
 use serde_json;
 use serde_yaml;
 use std::fmt;
 use std::io::{stderr, stdout, Write};
 use std::process;
+
+const ROUTE_SCOPE_STRINGS: [&str; 12] = [
+    "all", "u", "universe", "global", "s", "site", "l", "link", "h", "host",
+    "n", "nowhere",
+];
 
 #[derive(Serialize)]
 pub struct CliError {
@@ -99,8 +106,25 @@ fn _is_route_to_specified_dev(route: &Route, iface_name: &str) -> bool {
     false
 }
 
-fn get_routes(state: &NetState, matches: &clap::ArgMatches) -> CliResult {
+fn get_route_scope_from_str(
+    route_scope_str: &str,
+) -> Result<RouteScope, &'static str> {
+    match route_scope_str {
+        "universe" | "global" | "u" => Ok(RouteScope::Universe),
+        "site" | "s" => Ok(RouteScope::Site),
+        "link" | "l" => Ok(RouteScope::Link),
+        "host" | "h" => Ok(RouteScope::Host),
+        "nowhere" | "n" => Ok(RouteScope::NoWhere),
+        _ => Err("Invalid route scope"),
+    }
+}
+
+fn get_routes(
+    state: &NetState,
+    matches: &clap::ArgMatches,
+) -> Result<Vec<Route>, String> {
     let mut routes = state.routes.clone();
+    let mut error: Option<String> = None;
 
     if let Some(iface_name) = matches.value_of("dev") {
         routes = routes
@@ -109,21 +133,33 @@ fn get_routes(state: &NetState, matches: &clap::ArgMatches) -> CliResult {
             .collect();
     }
 
-    CliResult::Routes(routes)
+    if let Some(scope) = matches.value_of("scope") {
+        if scope != "all" {
+            match get_route_scope_from_str(scope) {
+                Ok(route_scope) => {
+                    routes = routes
+                        .into_iter()
+                        .filter(|route| route.scope == route_scope)
+                        .collect()
+                }
+                Err(msg) => error = Some(String::from(msg)),
+            }
+        }
+    }
+
+    match error {
+        None => Ok(routes),
+        Some(error) => Err(error),
+    }
 }
 
 fn main() {
-    let matches = clap_app!(npc =>
+    let mut app = clap_app!(npc =>
         (version: crate_version!())
         (author: crate_authors!())
         (about: "Nispor CLI")
         (@arg ifname: [INTERFACE_NAME] "interface name")
         (@arg json: -j --json "Show in json format")
-        (@subcommand route =>
-            (@arg json: -j --json "Show in json format")
-            (@arg dev: -d --dev [OIF] "Show only route entries with output to the specified interface")
-            (about: "Show routes")
-        )
         (@subcommand rule =>
             (@arg json: -j --json "Show in json format")
             (about: "Show routes rules")
@@ -132,8 +168,26 @@ fn main() {
             (@arg file_path: [FILE_PATH] +required "config file to apply")
             (about: "Apply network config")
         )
-    )
-    .get_matches();
+    );
+
+    let route_subcmd = clap_app!(
+        @subcommand route =>
+            (@arg json: -j --json "Show in json format")
+            (@arg dev: -d --dev [OIF] "Show only route entries with output to the specified interface")
+            (about: "Show routes")
+    ).arg(
+        Arg::with_name("scope")
+            .short("s")
+            .long("scope")
+            .value_name("SCOPE")
+            .required(false)
+            .possible_values(&ROUTE_SCOPE_STRINGS)
+            .help("Show only route entries that match the specified scope")
+    );
+
+    app = app.subcommand(route_subcmd);
+
+    let matches = app.get_matches();
 
     let mut output_format = parse_arg_output_format(&matches);
 
@@ -158,7 +212,10 @@ fn main() {
                     }
                 } else if let Some(m) = matches.subcommand_matches("route") {
                     output_format = parse_arg_output_format(m);
-                    get_routes(&state, &m)
+                    match get_routes(&state, &m) {
+                        Ok(routes) => CliResult::Routes(routes),
+                        Err(msg) => CliResult::CliError(CliError { msg }),
+                    }
                 } else if let Some(m) = matches.subcommand_matches("rule") {
                     output_format = parse_arg_output_format(m);
                     CliResult::RouteRules(state.rules)
