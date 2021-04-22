@@ -16,8 +16,8 @@ const MACVLAN_MODE_BRIDGE: u32 = 4;
 const MACVLAN_MODE_PASSTHRU: u32 = 8;
 const MACVLAN_MODE_SOURCE: u32 = 16;
 
-#[serde(rename_all = "lowercase")]
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "lowercase")]
 pub enum MacVlanMode {
     /* don't talk to other macvlans */
     Private,

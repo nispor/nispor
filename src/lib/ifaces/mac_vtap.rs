@@ -5,8 +5,8 @@ use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas;
 use serde_derive::{Deserialize, Serialize};
 
-#[serde(rename_all = "lowercase")]
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[serde(rename_all = "lowercase")]
 pub enum MacVtapMode {
     /* don't talk to other macvlans */
     Private,
