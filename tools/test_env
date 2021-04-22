@@ -7,12 +7,13 @@ TEST_MAC2="00:23:45:67:89:1b"
 TEST_MAC3="00:23:45:67:89:1c"
 TEST_MAC4="00:23:45:67:89:1d"
 TEST_MAC5="00:23:45:67:89:1f"
+TEST_MAC_SIM0="00:23:45:67:89:20"
 
 sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 1>/dev/null
 
 if [ "CHK$1" == "CHK" ];then
     echo 'Need argument: bond, br, brv, vlan, dummy, vxlan, veth, vrf, sriov,'
-    echo 'rm, route, rule'
+    echo 'rm, route, rule, ethtool'
     exit 1
 fi
 
@@ -44,6 +45,14 @@ function create_nics {
     sudo ip link set eth2 address $TEST_MAC2
     sudo ip link set eth1.ep up
     sudo ip link set eth2.ep up
+}
+
+function create_netdevsim_nic {
+    sudo modprobe netdevsim
+    echo '1 1' | sudo tee /sys/bus/netdevsim/new_device
+    sleep 1
+    sudo ip link set eni1np1 name sim0
+    sudo ip link set sim0 address $TEST_MAC_SIM0
 }
 
 
@@ -117,14 +126,11 @@ elif [ "CHK$1" == "CHKvrf" ];then
     sudo ip link set eth1 up
     sleep $LINK_WAIT_TIME
 elif [ "CHK$1" == "CHKsriov" ];then
-    sudo modprobe netdevsim
-    echo '1 1' | sudo tee /sys/bus/netdevsim/new_device
-    sleep 5
-    sudo ip link set eni1np1 name eth1
-    echo 2 | sudo tee /sys/class/net/eth1/device/sriov_numvfs
-    sudo ip link set eth1 vf 0 vlan 100 mac 36:f7:09:ef:95:f0
-    sudo ip link set eth1 vf 1 mac 36:f7:09:ef:95:f1
-    sudo ip link set eth1 up
+    create_netdevsim_nic
+    echo 2 | sudo tee /sys/class/net/sim0/device/sriov_numvfs
+    sudo ip link set sim0 vf 0 vlan 100 mac 36:f7:09:ef:95:f0
+    sudo ip link set sim0 vf 1 mac 36:f7:09:ef:95:f1
+    sudo ip link set sim0 up
 elif [ "CHK$1" == "CHKtun" ];then
     sudo ip tuntap add name tun1 mode tun \
         user 1001 group 0 multi_queue vnet_hdr
@@ -171,6 +177,10 @@ elif [ "CHK$1" == "CHKrule" ];then
         tos 10 table 100 iif eth1 oif eth2 priority 999
     sudo ip -6 rule add from 2001:db8:f::254 to 2001:db8:f::253 \
         tos 10 table 100 iif eth1 oif eth2 priority 999
+elif [ "CHK$1" == "CHKethtool" ];then
+    create_netdevsim_nic
+    sudo ethtool -A sim0 tx on
+    sudo ethtool -A sim0 rx on
 elif [ "CHK$1" == "CHKrm" ];then
     clean_up 2>/dev/null
 fi
