@@ -23,6 +23,8 @@ rtnetlink = "0.7"
 netlink-packet-route = "0.7"
 netlink-sys = "0.6"
 netlink-packet-utils = "0.4"
+netlink-ethtool = {path ="../netlink-ethtool"}
+netlink-generic = {path ="../netlink-generic"}
 tokio = { version = "1.0.1", features = ["macros", "rt"] }
 futures = "0.3"
 libc = "0.2.74"

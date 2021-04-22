@@ -7,6 +7,7 @@ use crate::ifaces::bridge::get_bridge_port_info;
 use crate::ifaces::bridge::parse_bridge_vlan_info;
 use crate::ifaces::bridge::BridgeInfo;
 use crate::ifaces::bridge::BridgePortInfo;
+use crate::ifaces::ethtool::EthtoolInfo;
 use crate::ifaces::mac_vlan::get_mac_vlan_info;
 use crate::ifaces::mac_vlan::MacVlanInfo;
 use crate::ifaces::mac_vtap::get_mac_vtap_info;
@@ -158,6 +159,8 @@ pub struct Iface {
     pub controller: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub controller_type: Option<ControllerType>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ethtool: Option<EthtoolInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bond: Option<BondInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]

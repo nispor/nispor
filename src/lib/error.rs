@@ -1,3 +1,5 @@
+use netlink_ethtool::EthtoolError;
+use netlink_generic::GenericNetlinkError;
 use netlink_packet_utils::DecodeError;
 use rtnetlink;
 use serde_derive::Serialize;
@@ -56,6 +58,24 @@ impl std::error::Error for NisporError {
 
 impl std::convert::From<rtnetlink::Error> for NisporError {
     fn from(e: rtnetlink::Error) -> Self {
+        NisporError {
+            kind: ErrorKind::NetlinkError,
+            msg: e.to_string(),
+        }
+    }
+}
+
+impl std::convert::From<GenericNetlinkError> for NisporError {
+    fn from(e: GenericNetlinkError) -> Self {
+        NisporError {
+            kind: ErrorKind::NetlinkError,
+            msg: e.to_string(),
+        }
+    }
+}
+
+impl std::convert::From<EthtoolError> for NisporError {
+    fn from(e: EthtoolError) -> Self {
         NisporError {
             kind: ErrorKind::NetlinkError,
             msg: e.to_string(),

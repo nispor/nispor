@@ -1,5 +1,7 @@
 use crate::ifaces::bond::bond_iface_tidy_up;
 use crate::ifaces::bridge::bridge_iface_tidy_up;
+use crate::ifaces::ethtool::get_ethtool_infos;
+use crate::ifaces::ethtool::EthtoolInfo;
 use crate::ifaces::iface::fill_bridge_vlan_info;
 use crate::ifaces::iface::parse_nl_msg_to_iface;
 use crate::ifaces::mac_vlan::mac_vlan_iface_tidy_up;
@@ -47,6 +49,16 @@ pub(crate) async fn get_ifaces() -> Result<HashMap<String, Iface>, NisporError>
         fill_bridge_vlan_info(&mut iface_states, &nl_msg)?;
     }
 
+    match get_ethtool_infos().await {
+        Ok(mut ethtool_infos) => {
+            ifaces_merge_ethool_infos(&mut iface_states, &mut ethtool_infos);
+        }
+        Err(e) => {
+            // Ethtool is considered as optional
+            eprintln!("Failed to query ethtool info: {}", e);
+        }
+    };
+
     tidy_up(&mut iface_states);
     Ok(iface_states)
 }
@@ -72,6 +84,17 @@ fn controller_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
             if let Some(name) = index_to_name.get(controller) {
                 iface.controller = Some(name.to_string());
             }
+        }
+    }
+}
+
+fn ifaces_merge_ethool_infos(
+    iface_states: &mut HashMap<String, Iface>,
+    ethtool_infos: &mut HashMap<String, EthtoolInfo>,
+) {
+    for iface in iface_states.values_mut() {
+        if let Some(ethtool_info) = ethtool_infos.remove(&iface.name) {
+            iface.ethtool = Some(ethtool_info)
         }
     }
 }

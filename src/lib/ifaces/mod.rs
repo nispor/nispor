@@ -1,5 +1,6 @@
 mod bond;
 mod bridge;
+mod ethtool;
 mod iface;
 mod ifaces;
 mod mac_vlan;
@@ -28,6 +29,7 @@ pub use crate::ifaces::bond::BondXmitHashPolicy;
 pub use crate::ifaces::bridge::BridgeInfo;
 pub use crate::ifaces::bridge::BridgePortInfo;
 pub use crate::ifaces::bridge::BridgeVlanEntry;
+pub use crate::ifaces::ethtool::{EthtoolInfo, EthtoolPauseInfo};
 pub(crate) use crate::ifaces::iface::get_iface_name_by_index;
 pub use crate::ifaces::iface::ControllerType;
 pub use crate::ifaces::iface::Iface;
