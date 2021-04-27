@@ -13,7 +13,9 @@
 // limitations under the License.
 
 use futures::{self, future::Either, FutureExt, StreamExt, TryStream};
-use netlink_packet_core::{NetlinkMessage, NLM_F_DUMP, NLM_F_REQUEST};
+use netlink_packet_core::{
+    NetlinkMessage, NLM_F_ACK, NLM_F_DUMP, NLM_F_REQUEST,
+};
 
 use crate::{try_ethtool, EthtoolError, EthtoolHandle, EthtoolMessage};
 
@@ -39,7 +41,13 @@ impl PauseGetRequest {
         } = self;
 
         let nl_header_flags = match iface_name {
-            None => NLM_F_DUMP | NLM_F_REQUEST,
+            // The NLM_F_ACK is required due to bug of kernel:
+            //  https://bugzilla.redhat.com/show_bug.cgi?id=1953847
+            // without `NLM_F_MULTI`, rust-netlink will not parse
+            // multiple netlink meseasge in single socket reply.
+            // Using NLM_F_ACK will force rust-netlink to parse all till
+            // acked at the end.
+            None => NLM_F_DUMP | NLM_F_REQUEST | NLM_F_ACK,
             Some(_) => NLM_F_REQUEST,
         };
 

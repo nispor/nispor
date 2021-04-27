@@ -19,9 +19,10 @@ use std::panic;
 
 mod utils;
 
-const IFACE_NAME: &str = "sim0";
+const IFACE_NAME0: &str = "sim0";
+const IFACE_NAME1: &str = "sim1";
 
-const EXPECTED_IFACE_STATE: &str = r#"---
+const EXPECTED_IFACE_STATE0: &str = r#"---
 - name: sim0
   iface_type: ethernet
   state: down
@@ -38,17 +39,41 @@ const EXPECTED_IFACE_STATE: &str = r#"---
   sriov:
     vfs: []"#;
 
+const EXPECTED_IFACE_STATE1: &str = r#"---
+- name: sim1
+  iface_type: ethernet
+  state: down
+  mtu: 1500
+  flags:
+    - broadcast
+    - no_arp
+  mac_address: "00:23:45:67:89:21"
+  ethtool:
+    pause:
+      rx: true
+      tx: true
+      auto_negotiate: false
+  sriov:
+    vfs: []"#;
+
 #[test]
 #[ignore] // CI does not have netdevsim kernel module yet
 fn test_get_ethtool_pause_yaml() {
     with_ethtool_iface(|| {
         let state = NetState::retrieve().unwrap();
-        let iface = &state.ifaces[IFACE_NAME];
+        let iface = &state.ifaces[IFACE_NAME0];
         let iface_type = &iface.iface_type;
         assert_eq!(iface_type, &nispor::IfaceType::Ethernet);
         assert_eq!(
             serde_yaml::to_string(&vec![iface]).unwrap().trim(),
-            EXPECTED_IFACE_STATE
+            EXPECTED_IFACE_STATE0
+        );
+        let iface = &state.ifaces[IFACE_NAME1];
+        let iface_type = &iface.iface_type;
+        assert_eq!(iface_type, &nispor::IfaceType::Ethernet);
+        assert_eq!(
+            serde_yaml::to_string(&vec![iface]).unwrap().trim(),
+            EXPECTED_IFACE_STATE1
         );
     });
 }

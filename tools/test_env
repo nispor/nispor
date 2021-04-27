@@ -8,6 +8,7 @@ TEST_MAC3="00:23:45:67:89:1c"
 TEST_MAC4="00:23:45:67:89:1d"
 TEST_MAC5="00:23:45:67:89:1f"
 TEST_MAC_SIM0="00:23:45:67:89:20"
+TEST_MAC_SIM1="00:23:45:67:89:21"
 
 sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 1>/dev/null
 
@@ -49,10 +50,12 @@ function create_nics {
 
 function create_netdevsim_nic {
     sudo modprobe netdevsim
-    echo '1 1' | sudo tee /sys/bus/netdevsim/new_device
-    sleep 1
+    echo '1 2' | sudo tee /sys/bus/netdevsim/new_device
+    sleep 5
     sudo ip link set eni1np1 name sim0
+    sudo ip link set eni1np2 name sim1
     sudo ip link set sim0 address $TEST_MAC_SIM0
+    sudo ip link set sim1 address $TEST_MAC_SIM1
 }
 
 
@@ -181,6 +184,8 @@ elif [ "CHK$1" == "CHKethtool" ];then
     create_netdevsim_nic
     sudo ethtool -A sim0 tx on
     sudo ethtool -A sim0 rx on
+    sudo ethtool -A sim1 tx on
+    sudo ethtool -A sim1 rx on
 elif [ "CHK$1" == "CHKrm" ];then
     clean_up 2>/dev/null
 fi
