@@ -44,7 +44,9 @@ pub(crate) async fn get_ethtool_infos(
         netlink_ethtool::new_connection(family_id).unwrap();
     tokio::spawn(connection);
 
-    for ethtool_msg in handle.pause().get(None).execute().try_next().await? {
+    let mut ethtool_msg_handle = handle.pause().get(None).execute();
+
+    while let Some(ethtool_msg) = ethtool_msg_handle.try_next().await? {
         let EthoolAttr::Pause(nlas) = ethtool_msg.nlas;
         let mut iface_name = None;
         let mut pause_info = EthtoolPauseInfo::default();
