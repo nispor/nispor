@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+mod dns;
 mod error;
 mod ifaces;
 mod ip;
@@ -22,6 +23,7 @@ mod netlink;
 mod route;
 mod route_rule;
 
+pub use crate::dns::DnsResolver;
 pub use crate::error::NisporError;
 pub use crate::ifaces::BondAdInfo;
 pub use crate::ifaces::BondAdSelect;

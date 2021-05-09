@@ -15,6 +15,7 @@
 import json
 
 from .clib_wrapper import retrieve_net_state_json
+from .dns import NisporDnsState
 from .iface import NisporIfaceState
 from .route import NisporRouteState
 from .route_rule import NisporRouteRuleState
@@ -29,6 +30,7 @@ class NisporNetState:
         self._ifaces = NisporIfaceState(info.get("ifaces"))
         self._routes = NisporRouteState(info.get("routes"))
         self._route_rules = NisporRouteRuleState(info.get("rules"))
+        self._dns = NisporDnsState(info.get("dns_resolver"))
 
     @property
     def ifaces(self):
@@ -41,6 +43,10 @@ class NisporNetState:
     @property
     def route_rules(self):
         return self._route_rules
+
+    @property
+    def dns_resolver(self):
+        return self._dns
 
     @staticmethod
     def retrieve():

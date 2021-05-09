@@ -13,7 +13,9 @@
 // limitations under the License.
 
 use clap::{clap_app, crate_authors, crate_version};
-use nispor::{Iface, NetConf, NetState, NisporError, Route, RouteRule};
+use nispor::{
+    DnsResolver, Iface, NetConf, NetState, NisporError, Route, RouteRule,
+};
 use serde_derive::Serialize;
 use serde_json;
 use serde_yaml;
@@ -38,6 +40,7 @@ enum CliResult {
     Ifaces(Vec<Iface>),
     Routes(Vec<Route>),
     RouteRules(Vec<RouteRule>),
+    DnsResolver(DnsResolver),
     CliError(CliError),
     NisporError(NisporError),
 }
@@ -68,6 +71,10 @@ macro_rules! npc_print {
             }
             CliResult::RouteRules(rules) => {
                 writeln!(stdout(), "{}", $display_func(&rules).unwrap()).ok();
+                process::exit(0);
+            }
+            CliResult::DnsResolver(dns) => {
+                writeln!(stdout(), "{}", $display_func(&dns).unwrap()).ok();
                 process::exit(0);
             }
             CliResult::NisporError(e) => {
@@ -142,6 +149,10 @@ fn main() {
             (@arg json: -j --json "Show in json format")
             (about: "Show routes rules")
         )
+        (@subcommand dns =>
+            (@arg json: -j --json "Show in json format")
+            (about: "Show routes rules")
+        )
         (@subcommand set =>
             (@arg file_path: [FILE_PATH] +required "config file to apply")
             (about: "Apply network config")
@@ -176,6 +187,9 @@ fn main() {
                 } else if let Some(m) = matches.subcommand_matches("rule") {
                     output_format = parse_arg_output_format(m);
                     CliResult::RouteRules(state.rules)
+                } else if let Some(m) = matches.subcommand_matches("dns") {
+                    output_format = parse_arg_output_format(m);
+                    CliResult::DnsResolver(state.dns_resolver)
                 } else {
                     /* Show everything if no cmdline arg has been supplied */
                     CliResult::Full(state)

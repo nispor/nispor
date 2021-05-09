@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::dns::{get_dns_resolver, DnsResolver};
 use crate::error::NisporError;
 use crate::ifaces::get_ifaces;
 use crate::ifaces::Iface;
@@ -28,6 +29,7 @@ pub struct NetState {
     pub ifaces: HashMap<String, Iface>,
     pub routes: Vec<Route>,
     pub rules: Vec<RouteRule>,
+    pub dns_resolver: DnsResolver,
 }
 
 impl NetState {
@@ -36,10 +38,12 @@ impl NetState {
         let ifaces = rt.block_on(get_ifaces())?;
         let routes = rt.block_on(get_routes(&ifaces))?;
         let rules = rt.block_on(get_route_rules())?;
+        let dns_resolver = get_dns_resolver()?;
         Ok(NetState {
             ifaces,
             routes,
             rules,
+            dns_resolver,
         })
     }
 
