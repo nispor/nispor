@@ -19,7 +19,7 @@ use crate::ControllerType;
 use crate::IfaceType;
 use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 const BOND_MODE_ROUNDROBIN: u8 = 0;

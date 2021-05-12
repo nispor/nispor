@@ -17,7 +17,7 @@ use crate::ifaces::mac_vlan::MacVlanInfo;
 use crate::ifaces::mac_vlan::MacVlanMode;
 use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "lowercase")]

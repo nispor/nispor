@@ -23,7 +23,7 @@ use netlink_packet_route::rtnl::rule::nlas::Nla;
 use netlink_packet_route::RuleMessage;
 use rtnetlink::new_connection;
 use rtnetlink::IpVersion;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 const FR_ACT_TO_TBL: u8 = 1;
 const FR_ACT_GOTO: u8 = 2;

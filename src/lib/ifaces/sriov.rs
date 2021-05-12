@@ -17,7 +17,7 @@ use crate::netlink::parse_as_u64;
 use crate::parse_as_mac;
 use crate::NisporError;
 use netlink_packet_route::rtnl::nlas::NlasIterator;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 const IFLA_VF_MAC: u16 = 1;
 const IFLA_VF_VLAN: u16 = 2;

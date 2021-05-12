@@ -17,7 +17,7 @@ use std::collections::HashMap;
 use futures::stream::TryStreamExt;
 use netlink_ethtool::{self, EthoolAttr, EthtoolHeader, PauseAttr};
 use netlink_generic;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 use crate::NisporError;
 

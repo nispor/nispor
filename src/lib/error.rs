@@ -16,7 +16,7 @@ use netlink_ethtool::EthtoolError;
 use netlink_generic::GenericNetlinkError;
 use netlink_packet_utils::DecodeError;
 use rtnetlink;
-use serde_derive::Serialize;
+use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "snake_case")]

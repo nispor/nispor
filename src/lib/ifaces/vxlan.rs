@@ -19,7 +19,7 @@ use crate::IfaceType;
 use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas::InfoData;
 use netlink_packet_route::rtnl::link::nlas::InfoVxlan;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]

@@ -17,7 +17,7 @@ use crate::netlink::parse_as_u8;
 use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas::InfoData;
 use netlink_packet_route::rtnl::nlas::NlasIterator;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 const IFF_TUN: u8 = 1;
 const IFF_TAP: u8 = 2;

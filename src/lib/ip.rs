@@ -20,7 +20,7 @@ use crate::NisporError;
 use futures::stream::TryStreamExt;
 use netlink_packet_route;
 use netlink_packet_route::rtnl::AddressMessage;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::net::IpAddr;
