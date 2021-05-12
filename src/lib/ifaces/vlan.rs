@@ -16,7 +16,7 @@ use crate::Iface;
 use crate::IfaceType;
 use netlink_packet_route::rtnl::link::nlas::InfoData;
 use netlink_packet_route::rtnl::link::nlas::InfoVlan;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 const ETH_P_8021Q: u16 = 0x8100;

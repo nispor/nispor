@@ -19,7 +19,7 @@ use crate::route::get_routes;
 use crate::route::Route;
 use crate::route_rule::get_route_rules;
 use crate::route_rule::RouteRule;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tokio::runtime;
 

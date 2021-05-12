@@ -56,7 +56,7 @@ use netlink_packet_route::rtnl::{
 use rtnetlink::new_connection;
 
 use rtnetlink::packet::rtnl::link::nlas::Nla;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]

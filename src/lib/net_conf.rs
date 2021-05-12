@@ -15,7 +15,7 @@
 use crate::error::NisporError;
 use crate::ifaces::get_ifaces;
 use crate::ifaces::IfaceConf;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use tokio::runtime;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]

@@ -19,7 +19,7 @@ use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas::InfoData;
 use netlink_packet_route::rtnl::link::nlas::InfoVrf;
 use netlink_packet_route::rtnl::nlas::NlaBuffer;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 const IFLA_VRF_PORT_TABLE: u16 = 1;

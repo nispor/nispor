@@ -38,7 +38,7 @@ use netlink_packet_route::RouteMessage;
 use netlink_packet_utils::traits::Parseable;
 use rtnetlink::new_connection;
 use rtnetlink::IpVersion;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 const USER_HZ: u32 = 100;
