@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use anyhow::Context;
+use log::warn;
 use netlink_generic::{GenericNetlinkHeader, GenericNetlinkMessageBuffer};
 use netlink_packet_core::{
     DecodeError, NetlinkDeserializable, NetlinkHeader, NetlinkPayload,
@@ -20,14 +21,18 @@ use netlink_packet_core::{
 };
 use netlink_packet_utils::{nla::NlasIterator, Emitable, Parseable};
 
-use crate::{EthtoolHeader, PauseAttr};
+use crate::{EthtoolHeader, FeatureAttr, PauseAttr};
 
 const ETHTOOL_MSG_PAUSE_GET: u8 = 21;
 const ETHTOOL_MSG_PAUSE_GET_REPLY: u8 = 22;
+const ETHTOOL_GENL_VERSION: u8 = 1;
+const ETHTOOL_MSG_FEATURES_GET: u8 = 11;
+const ETHTOOL_MSG_FEATURES_GET_REPLY: u8 = 11;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum EthoolAttr {
     Pause(Vec<PauseAttr>),
+    Feature(Vec<FeatureAttr>),
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -49,7 +54,31 @@ impl EthtoolMessage {
             message_type,
             header: GenericNetlinkHeader {
                 cmd: ETHTOOL_MSG_PAUSE_GET,
-                version: 1, // No idea the correct version.
+                version: ETHTOOL_GENL_VERSION,
+            },
+            nlas,
+        }
+    }
+    pub fn new_feature_get(
+        message_type: u16,
+        iface_name: Option<&str>,
+    ) -> Self {
+        let nlas = match iface_name {
+            // using ETHTOOL_FLAG_COMPACT_BITSETS, the netlink package
+            // could be much smaller(without human readable string in it).
+            // But we don't have good way converting these bites to human
+            // readable strings, so we ask kernel to provide such string and
+            // hope this does not cost us too much.
+            Some(s) => EthoolAttr::Feature(vec![FeatureAttr::Header(vec![
+                EthtoolHeader::DevName(s.to_string()),
+            ])]),
+            None => EthoolAttr::Feature(vec![FeatureAttr::Header(vec![])]),
+        };
+        EthtoolMessage {
+            message_type,
+            header: GenericNetlinkHeader {
+                cmd: ETHTOOL_MSG_FEATURES_GET,
+                version: ETHTOOL_GENL_VERSION,
             },
             nlas,
         }
@@ -64,6 +93,7 @@ impl Emitable for EthtoolMessage {
         self.header.buffer_len()
             + match &self.nlas {
                 EthoolAttr::Pause(nlas) => nlas.as_slice().buffer_len(),
+                EthoolAttr::Feature(nlas) => nlas.as_slice().buffer_len(),
             }
     }
 
@@ -71,6 +101,9 @@ impl Emitable for EthtoolMessage {
         self.header.emit(buffer);
         match &self.nlas {
             EthoolAttr::Pause(nlas) => nlas
+                .as_slice()
+                .emit(&mut buffer[self.header.buffer_len()..]),
+            EthoolAttr::Feature(nlas) => nlas
                 .as_slice()
                 .emit(&mut buffer[self.header.buffer_len()..]),
         };
@@ -112,7 +145,21 @@ impl NetlinkDeserializable<EthtoolMessage> for EthtoolMessage {
                 }
                 EthoolAttr::Pause(nlas)
             }
+            ETHTOOL_MSG_FEATURES_GET_REPLY => {
+                let mut nlas = Vec::new();
+                let error_msg = "failed to parse ethtool message attributes";
+                for nla in NlasIterator::new(buf.payload()) {
+                    let nla = &nla.context(error_msg)?;
+                    let parsed = FeatureAttr::parse(nla).context(error_msg)?;
+                    nlas.push(parsed);
+                }
+                EthoolAttr::Feature(nlas)
+            }
             _ => {
+                warn!(
+                    "ERR: Unsupported EthtoolMessage cmd {} payload {:?}",
+                    header.cmd, payload
+                );
                 return Err(format!("Unknown command {}", header.cmd).into());
             }
         };
