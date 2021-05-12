@@ -20,9 +20,18 @@ class NisporEthtool:
         else:
             self._pause = None
 
+        if "features" in info:
+            self._features = NisporEthtoolFeatures(info["features"])
+        else:
+            self._features = None
+
     @property
     def pause(self):
         return self._pause
+
+    @property
+    def features(self):
+        return self._features
 
 class NisporEthtoolPause:
     def __init__(self, info):
@@ -39,3 +48,15 @@ class NisporEthtoolPause:
     @property
     def auto_negotiate(self):
         return self._info["auto_negotiate"]
+
+class NisporEthtoolFeatures:
+    def __init__(self, info):
+        self._info = info
+
+    @property
+    def fixed(self):
+        return self._info["fixed"]
+
+    @property
+    def changeable(self):
+        return self._info["changeable"]
