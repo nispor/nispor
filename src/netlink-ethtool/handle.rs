@@ -18,6 +18,7 @@ use netlink_proto::{sys::SocketAddr, ConnectionHandle};
 
 use crate::{
     CoalesceHandle, EthtoolError, EthtoolMessage, FeatureHandle, PauseHandle,
+    RingHandle,
 };
 
 #[derive(Clone, Debug)]
@@ -44,6 +45,10 @@ impl EthtoolHandle {
 
     pub fn coalesce(&mut self) -> CoalesceHandle {
         CoalesceHandle::new(self.clone())
+    }
+
+    pub fn ring(&mut self) -> RingHandle {
+        RingHandle::new(self.clone())
     }
 
     pub fn request(

@@ -21,6 +21,7 @@ mod header;
 mod macros;
 mod message;
 mod pause;
+mod ring;
 
 pub use coalesce::{CoalesceAttr, CoalesceGetRequest, CoalesceHandle};
 pub use connection::new_connection;
@@ -30,3 +31,4 @@ pub use handle::EthtoolHandle;
 pub use header::EthtoolHeader;
 pub use message::{EthoolAttr, EthtoolMessage};
 pub use pause::{PauseAttr, PauseGetRequest, PauseHandle};
+pub use ring::{RingAttr, RingGetRequest, RingHandle};
