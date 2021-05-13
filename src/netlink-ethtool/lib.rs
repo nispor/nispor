@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+mod coalesce;
 mod connection;
 mod error;
 mod feature;
@@ -21,6 +22,7 @@ mod macros;
 mod message;
 mod pause;
 
+pub use coalesce::{CoalesceAttr, CoalesceGetRequest, CoalesceHandle};
 pub use connection::new_connection;
 pub use error::EthtoolError;
 pub use feature::{FeatureAttr, FeatureBit, FeatureGetRequest, FeatureHandle};

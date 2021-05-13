@@ -21,18 +21,21 @@ use netlink_packet_core::{
 };
 use netlink_packet_utils::{nla::NlasIterator, Emitable, Parseable};
 
-use crate::{EthtoolHeader, FeatureAttr, PauseAttr};
+use crate::{CoalesceAttr, EthtoolHeader, FeatureAttr, PauseAttr};
 
 const ETHTOOL_MSG_PAUSE_GET: u8 = 21;
 const ETHTOOL_MSG_PAUSE_GET_REPLY: u8 = 22;
 const ETHTOOL_GENL_VERSION: u8 = 1;
 const ETHTOOL_MSG_FEATURES_GET: u8 = 11;
 const ETHTOOL_MSG_FEATURES_GET_REPLY: u8 = 11;
+const ETHTOOL_MSG_COALESCE_GET: u8 = 19;
+const ETHTOOL_MSG_COALESCE_GET_REPLY: u8 = 20;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum EthoolAttr {
     Pause(Vec<PauseAttr>),
     Feature(Vec<FeatureAttr>),
+    Coalesce(Vec<CoalesceAttr>),
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -59,6 +62,7 @@ impl EthtoolMessage {
             nlas,
         }
     }
+
     pub fn new_feature_get(
         message_type: u16,
         iface_name: Option<&str>,
@@ -83,6 +87,27 @@ impl EthtoolMessage {
             nlas,
         }
     }
+
+    pub fn new_coalesce_get(
+        message_type: u16,
+        iface_name: Option<&str>,
+    ) -> Self {
+        let nlas = match iface_name {
+            Some(s) => EthoolAttr::Coalesce(vec![CoalesceAttr::Header(vec![
+                EthtoolHeader::DevName(s.to_string()),
+            ])]),
+            None => EthoolAttr::Coalesce(vec![CoalesceAttr::Header(vec![])]),
+        };
+        EthtoolMessage {
+            message_type,
+            header: GenericNetlinkHeader {
+                cmd: ETHTOOL_MSG_COALESCE_GET,
+                version: ETHTOOL_GENL_VERSION,
+            },
+            nlas,
+        }
+    }
+
     fn message_type(&self) -> u16 {
         self.message_type
     }
@@ -94,6 +119,7 @@ impl Emitable for EthtoolMessage {
             + match &self.nlas {
                 EthoolAttr::Pause(nlas) => nlas.as_slice().buffer_len(),
                 EthoolAttr::Feature(nlas) => nlas.as_slice().buffer_len(),
+                EthoolAttr::Coalesce(nlas) => nlas.as_slice().buffer_len(),
             }
     }
 
@@ -104,6 +130,9 @@ impl Emitable for EthtoolMessage {
                 .as_slice()
                 .emit(&mut buffer[self.header.buffer_len()..]),
             EthoolAttr::Feature(nlas) => nlas
+                .as_slice()
+                .emit(&mut buffer[self.header.buffer_len()..]),
+            EthoolAttr::Coalesce(nlas) => nlas
                 .as_slice()
                 .emit(&mut buffer[self.header.buffer_len()..]),
         };
@@ -154,6 +183,16 @@ impl NetlinkDeserializable<EthtoolMessage> for EthtoolMessage {
                     nlas.push(parsed);
                 }
                 EthoolAttr::Feature(nlas)
+            }
+            ETHTOOL_MSG_COALESCE_GET_REPLY => {
+                let mut nlas = Vec::new();
+                let error_msg = "failed to parse ethtool message attributes";
+                for nla in NlasIterator::new(buf.payload()) {
+                    let nla = &nla.context(error_msg)?;
+                    let parsed = CoalesceAttr::parse(nla).context(error_msg)?;
+                    nlas.push(parsed);
+                }
+                EthoolAttr::Coalesce(nlas)
             }
             _ => {
                 warn!(

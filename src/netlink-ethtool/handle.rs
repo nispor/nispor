@@ -16,7 +16,9 @@ use futures::Stream;
 use netlink_packet_core::NetlinkMessage;
 use netlink_proto::{sys::SocketAddr, ConnectionHandle};
 
-use crate::{EthtoolError, EthtoolMessage, FeatureHandle, PauseHandle};
+use crate::{
+    CoalesceHandle, EthtoolError, EthtoolMessage, FeatureHandle, PauseHandle,
+};
 
 #[derive(Clone, Debug)]
 pub struct EthtoolHandle {
@@ -38,6 +40,10 @@ impl EthtoolHandle {
 
     pub fn feature(&mut self) -> FeatureHandle {
         FeatureHandle::new(self.clone())
+    }
+
+    pub fn coalesce(&mut self) -> CoalesceHandle {
+        CoalesceHandle::new(self.clone())
     }
 
     pub fn request(
