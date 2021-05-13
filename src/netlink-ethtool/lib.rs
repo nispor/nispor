@@ -18,6 +18,7 @@ mod error;
 mod feature;
 mod handle;
 mod header;
+mod link_mode;
 mod macros;
 mod message;
 mod pause;
@@ -29,6 +30,9 @@ pub use error::EthtoolError;
 pub use feature::{FeatureAttr, FeatureBit, FeatureGetRequest, FeatureHandle};
 pub use handle::EthtoolHandle;
 pub use header::EthtoolHeader;
+pub use link_mode::{
+    LinkModeAttr, LinkModeDuplex, LinkModeGetRequest, LinkModeHandle,
+};
 pub use message::{EthoolAttr, EthtoolMessage};
 pub use pause::{PauseAttr, PauseGetRequest, PauseHandle};
 pub use ring::{RingAttr, RingGetRequest, RingHandle};

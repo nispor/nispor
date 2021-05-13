@@ -142,10 +142,15 @@ where
 const IFACE_TUN_NAME: &str = "tun1";
 const EXPECTED_ETHTOOL_COALESCE: &str = r#"---
 rx_max_frames: 60"#;
+const EXPECTED_ETHTOOL_LINK_MODE: &str = r#"---
+auto_negotiate: false
+ours: []
+speed: 10
+duplex: full"#;
 
 #[test]
 #[ignore] // CI does not have netdevsim and ethtool_netlink kernel module yet
-fn test_get_ethtool_coalesce_yaml() {
+fn test_get_ethtool_coalesce_and_link_mode_yaml() {
     with_tun_iface(|| {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_TUN_NAME];
@@ -153,6 +158,11 @@ fn test_get_ethtool_coalesce_yaml() {
             serde_yaml::to_string(&iface.ethtool.as_ref().unwrap().coalesce)
                 .unwrap(),
             EXPECTED_ETHTOOL_COALESCE
+        );
+        assert_eq!(
+            serde_yaml::to_string(&iface.ethtool.as_ref().unwrap().link_mode)
+                .unwrap(),
+            EXPECTED_ETHTOOL_LINK_MODE
         );
     });
 }

@@ -17,7 +17,7 @@ use std::collections::{BTreeMap, HashMap};
 use futures::stream::TryStreamExt;
 use netlink_ethtool::{
     self, CoalesceAttr, EthoolAttr, EthtoolHandle, EthtoolHeader, FeatureAttr,
-    FeatureBit, PauseAttr, RingAttr,
+    FeatureBit, LinkModeAttr, LinkModeDuplex, PauseAttr, RingAttr,
 };
 use netlink_generic;
 use serde::{Deserialize, Serialize, Serializer};
@@ -108,6 +108,48 @@ pub struct EthtoolRingInfo {
     tx_max: Option<u32>,
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum EthtoolLinkModeDuplex {
+    Half,
+    Full,
+    Unknown,
+    Other(u8),
+}
+
+impl From<LinkModeDuplex> for EthtoolLinkModeDuplex {
+    fn from(v: LinkModeDuplex) -> Self {
+        match v {
+            LinkModeDuplex::Half => Self::Half,
+            LinkModeDuplex::Full => Self::Full,
+            LinkModeDuplex::Unknown => Self::Unknown,
+            LinkModeDuplex::Other(d) => Self::Other(d),
+        }
+    }
+}
+
+impl Default for EthtoolLinkModeDuplex {
+    fn default() -> Self {
+        EthtoolLinkModeDuplex::Unknown
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+pub struct EthtoolLinkModeInfo {
+    auto_negotiate: bool,
+    ours: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    peer: Option<Vec<String>>,
+    speed: u32,
+    duplex: EthtoolLinkModeDuplex,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    controller_subordinate_cfg: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    controller_subordinate_state: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    lanes: Option<u32>,
+}
+
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
 pub struct EthtoolInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -118,6 +160,8 @@ pub struct EthtoolInfo {
     pub coalesce: Option<EthtoolCoalesceInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ring: Option<EthtoolRingInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub link_mode: Option<EthtoolLinkModeInfo>,
 }
 
 fn ordered_map<S>(
@@ -146,6 +190,7 @@ pub(crate) async fn get_ethtool_infos(
     let mut feature_infos = dump_feature_infos(&mut handle).await?;
     let mut coalesce_infos = dump_coalesce_infos(&mut handle).await?;
     let mut ring_infos = dump_ring_infos(&mut handle).await?;
+    let mut link_mode_infos = dump_link_mode_infos(&mut handle).await?;
 
     for (iface_name, pause_info) in pause_infos.drain() {
         infos.insert(
@@ -201,6 +246,23 @@ pub(crate) async fn get_ethtool_infos(
                     iface_name,
                     EthtoolInfo {
                         ring: Some(ring_info),
+                        ..Default::default()
+                    },
+                );
+            }
+        };
+    }
+
+    for (iface_name, link_mode_info) in link_mode_infos.drain() {
+        match infos.get_mut(&iface_name) {
+            Some(ref mut info) => {
+                info.link_mode = Some(link_mode_info);
+            }
+            None => {
+                infos.insert(
+                    iface_name,
+                    EthtoolInfo {
+                        link_mode: Some(link_mode_info),
                         ..Default::default()
                     },
                 );
@@ -421,6 +483,50 @@ async fn dump_ring_infos(
             }
             if let Some(i) = iface_name {
                 infos.insert(i, ring_info);
+            }
+        }
+    }
+    Ok(infos)
+}
+
+async fn dump_link_mode_infos(
+    handle: &mut EthtoolHandle,
+) -> Result<HashMap<String, EthtoolLinkModeInfo>, NisporError> {
+    let mut infos = HashMap::new();
+    let mut link_mode_handle = handle.link_mode().get(None).execute();
+    while let Some(ethtool_msg) = link_mode_handle.try_next().await? {
+        if let EthoolAttr::LinkMode(nlas) = ethtool_msg.nlas {
+            let mut iface_name = None;
+            let mut link_mode_info = EthtoolLinkModeInfo::default();
+
+            for nla in nlas {
+                match nla {
+                    LinkModeAttr::Header(hdrs) => {
+                        iface_name = get_iface_name_from_header(&hdrs)
+                    }
+                    LinkModeAttr::Autoneg(d) => {
+                        link_mode_info.auto_negotiate = d
+                    }
+                    LinkModeAttr::Ours(d) => link_mode_info.ours = d,
+                    LinkModeAttr::Peer(d) => link_mode_info.peer = Some(d),
+                    LinkModeAttr::Speed(d) => {
+                        link_mode_info.speed =
+                            if d == std::u32::MAX { 0 } else { d }
+                    }
+                    LinkModeAttr::Duplex(d) => link_mode_info.duplex = d.into(),
+                    LinkModeAttr::ControllerSubordinateCfg(d) => {
+                        link_mode_info.controller_subordinate_cfg = Some(d)
+                    }
+                    LinkModeAttr::ControllerSubordinateState(d) => {
+                        link_mode_info.controller_subordinate_state = Some(d)
+                    }
+                    LinkModeAttr::Lanes(d) => link_mode_info.lanes = Some(d),
+
+                    _ => eprintln!("WARN: Unsupported LinkModeAttr {:?}", nla),
+                }
+            }
+            if let Some(i) = iface_name {
+                infos.insert(i, link_mode_info);
             }
         }
     }

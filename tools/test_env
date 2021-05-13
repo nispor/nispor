@@ -52,7 +52,9 @@ function create_netdevsim_nic {
     sudo modprobe netdevsim
     echo '1 2' | sudo tee /sys/bus/netdevsim/new_device
     sleep 5
+    sudo ip link set eni1np1 down
     sudo ip link set eni1np1 name sim0
+    sudo ip link set eni1np2 down
     sudo ip link set eni1np2 name sim1
     sudo ip link set sim0 address $TEST_MAC_SIM0
     sudo ip link set sim1 address $TEST_MAC_SIM1
