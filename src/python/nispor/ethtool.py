@@ -25,6 +25,11 @@ class NisporEthtool:
         else:
             self._features = None
 
+        if "coalesce" in info:
+            self._coalesce = NisporEthtoolCoalesce(info["coalesce"])
+        else:
+            self._coalesce = None
+
     @property
     def pause(self):
         return self._pause
@@ -32,6 +37,11 @@ class NisporEthtool:
     @property
     def features(self):
         return self._features
+
+    @property
+    def coalesce(self):
+        return self._coalesce
+
 
 class NisporEthtoolPause:
     def __init__(self, info):
@@ -49,6 +59,7 @@ class NisporEthtoolPause:
     def auto_negotiate(self):
         return self._info["auto_negotiate"]
 
+
 class NisporEthtoolFeatures:
     def __init__(self, info):
         self._info = info
@@ -60,3 +71,96 @@ class NisporEthtoolFeatures:
     @property
     def changeable(self):
         return self._info["changeable"]
+
+
+class NisporEthtoolCoalesce:
+    def __init__(self, info):
+        self._info = info
+
+    @property
+    def pkt_rate_high(self):
+        return self._info.get("pkt_rate_high")
+
+    @property
+    def pkt_rate_low(self):
+        return self._info.get("pkt_rate_low")
+
+    @property
+    def rate_sample_interval(self):
+        return self._info.get("rate_sample_interval")
+
+    @property
+    def rx_max_frames(self):
+        return self._info.get("rx_max_frames")
+
+    @property
+    def rx_max_frames_high(self):
+        return self._info.get("rx_max_frames_high")
+
+    @property
+    def rx_max_frames_irq(self):
+        return self._info.get("rx_max_frames_irq")
+
+    @property
+    def rx_max_frames_low(self):
+        return self._info.get("rx_max_frames_low")
+
+    @property
+    def rx_usecs(self):
+        return self._info.get("rx_usecs")
+
+    @property
+    def rx_usecs_high(self):
+        return self._info.get("rx_usecs_high")
+
+    @property
+    def rx_usecs_irq(self):
+        return self._info.get("rx_usecs_irq")
+
+    @property
+    def rx_usecs_low(self):
+        return self._info.get("rx_usecs_low")
+
+    @property
+    def stats_block_usecs(self):
+        return self._info.get("stats_block_usecs")
+
+    @property
+    def tx_max_frames(self):
+        return self._info.get("tx_max_frames")
+
+    @property
+    def tx_max_frames_high(self):
+        return self._info.get("tx_max_frames_high")
+
+    @property
+    def tx_max_frames_irq(self):
+        return self._info.get("tx_max_frames_irq")
+
+    @property
+    def tx_max_frames_low(self):
+        return self._info.get("tx_max_frames_low")
+
+    @property
+    def tx_usecs(self):
+        return self._info.get("tx_usecs")
+
+    @property
+    def tx_usecs_high(self):
+        return self._info.get("tx_usecs_high")
+
+    @property
+    def tx_usecs_irq(self):
+        return self._info.get("tx_usecs_irq")
+
+    @property
+    def tx_usecs_low(self):
+        return self._info.get("tx_usecs_low")
+
+    @property
+    def use_adaptive_rx(self):
+        return self._info.get("use_adaptive_rx")
+
+    @property
+    def use_adaptive_tx(self):
+        return self._info.get("use_adaptive_tx")

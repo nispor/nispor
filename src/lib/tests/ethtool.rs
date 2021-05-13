@@ -99,8 +99,8 @@ const EXPECTED_IFACE_STATE: &str = r#"---
     vfs: []"#;
 
 #[test]
-#[ignore] // CI does not have netdevsim kernel module yet
-fn test_get_ethtool_yaml() {
+#[ignore] // CI does not have netdevsim and ethtool_netlink kernel module yet
+fn test_get_ethtool_pause_and_features_yaml() {
     with_ethtool_iface(|| {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME0];
@@ -130,6 +130,38 @@ where
     T: FnOnce() -> () + panic::UnwindSafe,
 {
     utils::set_network_environment("ethtool");
+
+    let result = panic::catch_unwind(|| {
+        test();
+    });
+
+    utils::clear_network_environment();
+    assert!(result.is_ok())
+}
+
+const IFACE_TUN_NAME: &str = "tun1";
+const EXPECTED_ETHTOOL_COALESCE: &str = r#"---
+rx_max_frames: 60"#;
+
+#[test]
+#[ignore] // CI does not have netdevsim and ethtool_netlink kernel module yet
+fn test_get_ethtool_coalesce_yaml() {
+    with_tun_iface(|| {
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_TUN_NAME];
+        assert_eq!(
+            serde_yaml::to_string(&iface.ethtool.as_ref().unwrap().coalesce)
+                .unwrap(),
+            EXPECTED_ETHTOOL_COALESCE
+        );
+    });
+}
+
+fn with_tun_iface<T>(test: T) -> ()
+where
+    T: FnOnce() -> () + panic::UnwindSafe,
+{
+    utils::set_network_environment("tun");
 
     let result = panic::catch_unwind(|| {
         test();

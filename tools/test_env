@@ -138,6 +138,7 @@ elif [ "CHK$1" == "CHKtun" ];then
     sudo ip tuntap add name tun1 mode tun \
         user 1001 group 0 multi_queue vnet_hdr
     sudo ip link set tun1 up
+    sudo ethtool -C tun1 rx-frames 60
     sleep $LINK_WAIT_TIME
 elif [ "CHK$1" == "CHKtap" ];then
     sudo ip tuntap add name tap1 mode tap \
