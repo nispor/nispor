@@ -30,6 +30,11 @@ class NisporEthtool:
         else:
             self._coalesce = None
 
+        if "ring" in info:
+            self._ring = NisporEthtoolRing(info["ring"])
+        else:
+            self._ring = None
+
     @property
     def pause(self):
         return self._pause
@@ -41,6 +46,10 @@ class NisporEthtool:
     @property
     def coalesce(self):
         return self._coalesce
+
+    @property
+    def ring(self):
+        return self._ring
 
 
 class NisporEthtoolPause:
@@ -164,3 +173,40 @@ class NisporEthtoolCoalesce:
     @property
     def use_adaptive_tx(self):
         return self._info.get("use_adaptive_tx")
+
+
+class NisporEthtoolRing:
+    def __init__(self, info):
+        self._info = info
+
+    @property
+    def rx(self):
+        return self._info.get("rx")
+
+    @property
+    def rx_max(self):
+        return self._info.get("rx_max")
+
+    @property
+    def rx_jumbo(self):
+        return self._info.get("rx_jumbo")
+
+    @property
+    def rx_jumbo_max(self):
+        return self._info.get("rx_jumbo_max")
+
+    @property
+    def rx_mini(self):
+        return self._info.get("rx_mini")
+
+    @property
+    def rx_mini_max(self):
+        return self._info.get("rx_mini_max")
+
+    @property
+    def tx(self):
+        return self._info.get("tx")
+
+    @property
+    def tx_max(self):
+        return self._info.get("tx_max")

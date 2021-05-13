@@ -17,7 +17,7 @@ use std::collections::{BTreeMap, HashMap};
 use futures::stream::TryStreamExt;
 use netlink_ethtool::{
     self, CoalesceAttr, EthoolAttr, EthtoolHandle, EthtoolHeader, FeatureAttr,
-    FeatureBit, PauseAttr,
+    FeatureBit, PauseAttr, RingAttr,
 };
 use netlink_generic;
 use serde::{Deserialize, Serialize, Serializer};
@@ -89,6 +89,26 @@ pub struct EthtoolCoalesceInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+pub struct EthtoolRingInfo {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rx: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rx_max: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rx_jumbo: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rx_jumbo_max: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rx_mini: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    rx_mini_max: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tx: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tx_max: Option<u32>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
 pub struct EthtoolInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pause: Option<EthtoolPauseInfo>,
@@ -96,6 +116,8 @@ pub struct EthtoolInfo {
     pub features: Option<EthtoolFeatureInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub coalesce: Option<EthtoolCoalesceInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ring: Option<EthtoolRingInfo>,
 }
 
 fn ordered_map<S>(
@@ -123,6 +145,7 @@ pub(crate) async fn get_ethtool_infos(
     let mut pause_infos = dump_pause_infos(&mut handle).await?;
     let mut feature_infos = dump_feature_infos(&mut handle).await?;
     let mut coalesce_infos = dump_coalesce_infos(&mut handle).await?;
+    let mut ring_infos = dump_ring_infos(&mut handle).await?;
 
     for (iface_name, pause_info) in pause_infos.drain() {
         infos.insert(
@@ -161,6 +184,23 @@ pub(crate) async fn get_ethtool_infos(
                     iface_name,
                     EthtoolInfo {
                         coalesce: Some(coalesce_info),
+                        ..Default::default()
+                    },
+                );
+            }
+        };
+    }
+
+    for (iface_name, ring_info) in ring_infos.drain() {
+        match infos.get_mut(&iface_name) {
+            Some(ref mut info) => {
+                info.ring = Some(ring_info);
+            }
+            None => {
+                infos.insert(
+                    iface_name,
+                    EthtoolInfo {
+                        ring: Some(ring_info),
                         ..Default::default()
                     },
                 );
@@ -347,6 +387,40 @@ async fn dump_coalesce_infos(
             }
             if let Some(i) = iface_name {
                 infos.insert(i, coalesce_info);
+            }
+        }
+    }
+    Ok(infos)
+}
+
+async fn dump_ring_infos(
+    handle: &mut EthtoolHandle,
+) -> Result<HashMap<String, EthtoolRingInfo>, NisporError> {
+    let mut infos = HashMap::new();
+    let mut ring_handle = handle.ring().get(None).execute();
+    while let Some(ethtool_msg) = ring_handle.try_next().await? {
+        if let EthoolAttr::Ring(nlas) = ethtool_msg.nlas {
+            let mut iface_name = None;
+            let mut ring_info = EthtoolRingInfo::default();
+
+            for nla in nlas {
+                match nla {
+                    RingAttr::Header(hdrs) => {
+                        iface_name = get_iface_name_from_header(&hdrs)
+                    }
+                    RingAttr::RxMax(d) => ring_info.rx_max = Some(d),
+                    RingAttr::RxMiniMax(d) => ring_info.rx_mini_max = Some(d),
+                    RingAttr::RxJumboMax(d) => ring_info.rx_jumbo_max = Some(d),
+                    RingAttr::TxMax(d) => ring_info.tx_max = Some(d),
+                    RingAttr::Rx(d) => ring_info.rx = Some(d),
+                    RingAttr::RxMini(d) => ring_info.rx_mini = Some(d),
+                    RingAttr::RxJumbo(d) => ring_info.rx_jumbo = Some(d),
+                    RingAttr::Tx(d) => ring_info.tx = Some(d),
+                    _ => eprintln!("WARN: Unsupported RingAttr {:?}", nla),
+                }
+            }
+            if let Some(i) = iface_name {
+                infos.insert(i, ring_info);
             }
         }
     }
