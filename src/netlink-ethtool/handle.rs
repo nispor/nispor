@@ -17,8 +17,8 @@ use netlink_packet_core::NetlinkMessage;
 use netlink_proto::{sys::SocketAddr, ConnectionHandle};
 
 use crate::{
-    CoalesceHandle, EthtoolError, EthtoolMessage, FeatureHandle, PauseHandle,
-    RingHandle,
+    CoalesceHandle, EthtoolError, EthtoolMessage, FeatureHandle,
+    LinkModeHandle, PauseHandle, RingHandle,
 };
 
 #[derive(Clone, Debug)]
@@ -49,6 +49,10 @@ impl EthtoolHandle {
 
     pub fn ring(&mut self) -> RingHandle {
         RingHandle::new(self.clone())
+    }
+
+    pub fn link_mode(&mut self) -> LinkModeHandle {
+        LinkModeHandle::new(self.clone())
     }
 
     pub fn request(

@@ -35,6 +35,11 @@ class NisporEthtool:
         else:
             self._ring = None
 
+        if "link_mode" in info:
+            self._link_mode = NisporEthtoolLinkMode(info["link_mode"])
+        else:
+            self._link_mode = None
+
     @property
     def pause(self):
         return self._pause
@@ -51,6 +56,9 @@ class NisporEthtool:
     def ring(self):
         return self._ring
 
+    @property
+    def link_mode(self):
+        return self._link_mode
 
 class NisporEthtoolPause:
     def __init__(self, info):
@@ -210,3 +218,40 @@ class NisporEthtoolRing:
     @property
     def tx_max(self):
         return self._info.get("tx_max")
+
+
+class NisporEthtoolLinkMode:
+    def __init__(self, info):
+        self._info = info
+
+    @property
+    def auto_negotiate(self):
+        return self._info["auto_negotiate"]
+
+    @property
+    def ours(self):
+        return self._info["ours"]
+
+    @property
+    def peer(self):
+        return self._info.get("peer")
+
+    @property
+    def speed(self):
+        return self._info["speed"]
+
+    @property
+    def duplex(self):
+        return self._info["duplex"]
+
+    @property
+    def controller_subordinate_cfg(self):
+        return self._info.get("controller_subordinate_cfg")
+
+    @property
+    def controller_subordinate_state(self):
+        return self._info.get("controller_subordinate_state")
+
+    @property
+    def lanes(self):
+        return self._info.get("lanes")
