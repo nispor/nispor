@@ -1,7 +1,7 @@
 [package]
 name = "netlink-ethtool"
 version = "1.0.1"
-authors = ["Gris Ge <cnfourt@gmail.com>"]
+authors = ["Gris Ge <fge@redhat.com>"]
 license = "MIT"
 edition = "2018"
 description = "Linux Ethtool Communication Library"
