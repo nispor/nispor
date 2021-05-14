@@ -169,6 +169,8 @@ pub struct Iface {
     pub ipv6: Option<Ipv6Info>,
     #[serde(skip_serializing_if = "String::is_empty")]
     pub mac_address: String,
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub permanent_mac_address: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub controller: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -240,6 +242,9 @@ pub(crate) fn parse_nl_msg_to_iface(
         } else if let Nla::Address(mac) = nla {
             mac_len = Some(mac.len());
             iface_state.mac_address = parse_as_mac(mac.len(), mac)?;
+        } else if let Nla::PermAddress(mac) = nla {
+            mac_len = Some(mac.len());
+            iface_state.permanent_mac_address = parse_as_mac(mac.len(), mac)?;
         } else if let Nla::OperState(state) = nla {
             iface_state.state = _get_iface_state(&state);
         } else if let Nla::Master(controller) = nla {

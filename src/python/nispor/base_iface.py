@@ -71,6 +71,10 @@ class NisporBaseIface:
         return self._info.get("mac_address")
 
     @property
+    def permanent_mac_address(self):
+        return self._info.get("permanent_mac_address")
+
+    @property
     def controller(self):
         return self._info.get("controller")
 
