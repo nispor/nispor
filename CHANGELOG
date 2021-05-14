@@ -1,4 +1,18 @@
 # Changelog
+## [1.1.0] - 2021-05-14
+### New features
+ * Support ethtool link mode. (c23e7b5)
+ * Support ethtool ring. (ddb9b57)
+ * Support ethtool coalesce. (29bd758)
+ * Support ethtool features/offload. (9ddd42f)
+ * Support ethool pause. (63e2211, 0c0aeda)
+ * Support bond vlan+srcmac hashing option. (32e5d0a)
+ * Support permanent MAC address. (ef5b56d)
+ * Initial tech-preview support on changing IP address. (c6757ec)
+
+## Break changes
+ * Varlink interface been removed. (6a1d14a)
+
 ## [1.0.1] - 2020-11-10
 ## Bug fixes
  * Fix interface type of python binding. (674d186)
