@@ -39,6 +39,9 @@ jobs:
       if: matrix.rust_version == 'stable'
       run: sudo apt-get -y install valgrind
 
+    - name: Install netdevsim kernel module
+      run: sudo apt-get -y install linux-modules-extra-azure
+
     - name: Check fmt
       if: matrix.rust_version == 'stable'
       run: cargo fmt -- --check

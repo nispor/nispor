@@ -99,7 +99,6 @@ const EXPECTED_IFACE_STATE: &str = r#"---
     vfs: []"#;
 
 #[test]
-#[ignore] // CI does not have netdevsim and ethtool_netlink kernel module yet
 fn test_get_ethtool_pause_and_features_yaml() {
     with_ethtool_iface(|| {
         let state = NetState::retrieve().unwrap();
@@ -149,7 +148,6 @@ speed: 10
 duplex: full"#;
 
 #[test]
-#[ignore] // CI does not have netdevsim and ethtool_netlink kernel module yet
 fn test_get_ethtool_coalesce_and_link_mode_yaml() {
     with_tun_iface(|| {
         let state = NetState::retrieve().unwrap();
