@@ -13,17 +13,186 @@
 // limitations under the License.
 
 use clap::{clap_app, crate_authors, crate_version};
-use nispor::{Iface, NetConf, NetState, NisporError, Route, RouteRule};
+use nispor::{
+    Iface, IfaceState, NetConf, NetState, NisporError, Route, RouteRule,
+};
 use serde_derive::Serialize;
 use serde_json;
 use serde_yaml;
+use std::collections::HashMap;
 use std::fmt;
 use std::io::{stderr, stdout, Write};
 use std::process;
 
-#[derive(Serialize)]
+const INDENT: &str = "    ";
+
+#[derive(Serialize, Debug)]
 pub struct CliError {
     pub msg: String,
+}
+
+#[derive(Serialize, Default)]
+struct CliIfaceBrief {
+    index: u32,
+    name: String,
+    state: IfaceState,
+    flags: Vec<String>,
+    mac: String,
+    permanent_mac: String,
+    mtu: i64,
+    ipv4: Vec<String>,
+    ipv6: Vec<String>,
+    gw4: Vec<String>,
+    gw6: Vec<String>,
+}
+
+impl CliIfaceBrief {
+    fn to_string(briefs: &[CliIfaceBrief]) -> String {
+        let mut ret = Vec::new();
+        for brief in briefs {
+            ret.push(format!(
+                "{}: {}: <{}> state {} mtu {}",
+                brief.index,
+                brief.name,
+                brief.flags.join(","),
+                brief.state,
+                brief.mtu,
+            ));
+            if &brief.mac != "" {
+                ret.push(format!(
+                    "{}mac {}{}",
+                    INDENT,
+                    brief.mac,
+                    if &brief.permanent_mac != ""
+                        && &brief.permanent_mac != &brief.mac
+                    {
+                        format!(" permanent_mac: {}", brief.permanent_mac)
+                    } else {
+                        "".into()
+                    }
+                ));
+            }
+            if brief.ipv4.len() > 0 {
+                ret.push(format!(
+                    "{}ipv4 {}{}",
+                    INDENT,
+                    brief.ipv4.join(" "),
+                    if brief.gw4.len() > 0 {
+                        format!(" gw4 {}", brief.gw4.join(" "))
+                    } else {
+                        "".into()
+                    },
+                ));
+            }
+            if brief.ipv6.len() > 0 {
+                ret.push(format!(
+                    "{}ipv6 {}{}",
+                    INDENT,
+                    brief.ipv6.join(" "),
+                    if brief.gw6.len() > 0 {
+                        format!(" gw6 {}", brief.gw6.join(" "))
+                    } else {
+                        "".into()
+                    }
+                ));
+            }
+        }
+        ret.join("\n")
+    }
+
+    fn from_net_state(netstate: &NetState) -> Vec<Self> {
+        let mut ret = Vec::new();
+        let mut iface_to_gw4: HashMap<String, Vec<String>> = HashMap::new();
+        let mut iface_to_gw6: HashMap<String, Vec<String>> = HashMap::new();
+
+        for route in &netstate.routes {
+            if let Route {
+                dst: None,
+                gateway: Some(gw),
+                oif: Some(iface_name),
+                ..
+            } = route
+            {
+                if gw.contains(":") {
+                    match iface_to_gw6.get_mut(iface_name) {
+                        Some(gateways) => {
+                            gateways.push(gw.to_string());
+                        }
+                        None => {
+                            iface_to_gw6.insert(
+                                iface_name.to_string(),
+                                vec![gw.to_string()],
+                            );
+                        }
+                    }
+                } else {
+                    match iface_to_gw4.get_mut(iface_name) {
+                        Some(gateways) => {
+                            gateways.push(gw.to_string());
+                        }
+                        None => {
+                            iface_to_gw4.insert(
+                                iface_name.to_string(),
+                                vec![gw.to_string()],
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        for iface in netstate.ifaces.values() {
+            ret.push(CliIfaceBrief {
+                index: iface.index,
+                name: iface.name.clone(),
+                flags: (&iface.flags)
+                    .into_iter()
+                    .map(|flag| format!("{:?}", flag).to_uppercase())
+                    .collect(),
+                state: iface.state.clone(),
+                mac: iface.mac_address.clone(),
+                permanent_mac: iface.permanent_mac_address.clone(),
+                mtu: iface.mtu,
+                ipv4: match &iface.ipv4 {
+                    Some(ip_info) => {
+                        let mut addr_strs = Vec::new();
+                        for addr in &ip_info.addresses {
+                            addr_strs.push(format!(
+                                "{}/{}",
+                                addr.address, addr.prefix_len
+                            ));
+                        }
+                        addr_strs
+                    }
+                    None => Vec::new(),
+                },
+                ipv6: match &iface.ipv6 {
+                    Some(ip_info) => {
+                        let mut addr_strs = Vec::new();
+                        for addr in &ip_info.addresses {
+                            addr_strs.push(format!(
+                                "{}/{}",
+                                addr.address, addr.prefix_len
+                            ));
+                        }
+                        addr_strs
+                    }
+                    None => Vec::new(),
+                },
+                gw4: match &iface_to_gw4.get(&iface.name) {
+                    Some(gws) => gws.to_vec(),
+                    None => Vec::new(),
+                },
+                gw6: match &iface_to_gw6.get(&iface.name) {
+                    Some(gws) => gws.to_vec(),
+                    None => Vec::new(),
+                },
+                ..Default::default()
+            })
+        }
+        ret.sort_by(|a, b| a.index.cmp(&b.index));
+        ret
+    }
 }
 
 impl fmt::Display for CliError {
@@ -34,6 +203,7 @@ impl fmt::Display for CliError {
 
 enum CliResult {
     Pass,
+    Brief(Vec<CliIfaceBrief>),
     Full(NetState),
     Ifaces(Vec<Iface>),
     Routes(Vec<Route>),
@@ -42,6 +212,7 @@ enum CliResult {
     NisporError(NisporError),
 }
 
+#[derive(PartialEq)]
 enum CliOutputType {
     Json,
     Yaml,
@@ -53,6 +224,7 @@ macro_rules! npc_print {
             CliResult::Pass => {
                 process::exit(0);
             }
+            CliResult::Brief(_) => unreachable!(),
             CliResult::Full(netstate) => {
                 writeln!(stdout(), "{}", $display_func(&netstate).unwrap())
                     .ok();
@@ -83,9 +255,24 @@ macro_rules! npc_print {
 }
 
 fn print_result(result: &CliResult, output_type: CliOutputType) {
-    match output_type {
-        CliOutputType::Json => npc_print!(serde_json::to_string_pretty, result),
-        CliOutputType::Yaml => npc_print!(serde_yaml::to_string, result),
+    if let CliResult::Brief(briefs) = result {
+        if output_type == CliOutputType::Json {
+            writeln!(
+                stdout(),
+                "{}",
+                serde_json::to_string_pretty(&briefs).unwrap()
+            )
+            .ok();
+        } else {
+            writeln!(stdout(), "{}", CliIfaceBrief::to_string(&briefs)).ok();
+        }
+    } else {
+        match output_type {
+            CliOutputType::Json => {
+                npc_print!(serde_json::to_string_pretty, result)
+            }
+            CliOutputType::Yaml => npc_print!(serde_yaml::to_string, result),
+        }
     }
 }
 
@@ -133,6 +320,11 @@ fn main() {
         (about: "Nispor CLI")
         (@arg ifname: [INTERFACE_NAME] "interface name")
         (@arg json: -j --json "Show in json format")
+        (@subcommand iface =>
+            (@arg json: -j --json "Show in json format")
+            (@arg ifname: [INTERFACE_NAME] "Show only specified interface")
+            (about: "Show interface")
+        )
         (@subcommand route =>
             (@arg json: -j --json "Show in json format")
             (@arg dev: -d --dev [OIF] "Show only route entries with output to the specified interface")
@@ -162,13 +354,21 @@ fn main() {
     } else {
         let result = match NetState::retrieve() {
             Ok(mut state) => {
-                if let Some(ifname) = matches.value_of("ifname") {
-                    if let Some(iface) = state.ifaces.remove(ifname) {
-                        CliResult::Ifaces(vec![iface])
+                if let Some(m) = matches.subcommand_matches("iface") {
+                    output_format = parse_arg_output_format(m);
+                    if let Some(ifname) = m.value_of("ifname") {
+                        if let Some(iface) = state.ifaces.remove(ifname) {
+                            CliResult::Ifaces(vec![iface])
+                        } else {
+                            CliResult::CliError(CliError {
+                                msg: format!(
+                                    "Interface '{}' not found",
+                                    ifname
+                                ),
+                            })
+                        }
                     } else {
-                        CliResult::CliError(CliError {
-                            msg: format!("Interface '{}' not found", ifname),
-                        })
+                        CliResult::Full(state)
                     }
                 } else if let Some(m) = matches.subcommand_matches("route") {
                     output_format = parse_arg_output_format(m);
@@ -176,9 +376,17 @@ fn main() {
                 } else if let Some(m) = matches.subcommand_matches("rule") {
                     output_format = parse_arg_output_format(m);
                     CliResult::RouteRules(state.rules)
+                } else if let Some(ifname) = matches.value_of("ifname") {
+                    if let Some(iface) = state.ifaces.remove(ifname) {
+                        CliResult::Ifaces(vec![iface])
+                    } else {
+                        CliResult::CliError(CliError {
+                            msg: format!("Interface '{}' not found", ifname),
+                        })
+                    }
                 } else {
                     /* Show everything if no cmdline arg has been supplied */
-                    CliResult::Full(state)
+                    CliResult::Brief(CliIfaceBrief::from_net_state(&state))
                 }
             }
             Err(e) => CliResult::NisporError(e),
