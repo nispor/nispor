@@ -313,6 +313,14 @@ async fn dump_feature_infos(
             let mut fixed_features = HashMap::new();
             let mut changeable_features = HashMap::new();
 
+            for nla in &nlas {
+                if let FeatureAttr::NoChange(feature_bits) = nla {
+                    for FeatureBit { name, .. } in feature_bits {
+                        fixed_features.insert(name.to_string(), false);
+                    }
+                }
+            }
+
             for nla in nlas {
                 if let FeatureAttr::Header(hdrs) = nla {
                     iface_name = get_iface_name_from_header(&hdrs);
@@ -324,7 +332,16 @@ async fn dump_feature_infos(
                                 name,
                                 value: true,
                             } => {
-                                changeable_features.insert(name, false);
+                                // Dummy interface show `tx-lockless` is
+                                // changeable, but FeatureAttr::NoChange() says
+                                // otherwise. The kernel code
+                                // `NETIF_F_NEVER_CHANGE` shows `tx-lockless`
+                                // should never been changeable.
+                                if fixed_features.contains_key(&name) {
+                                    fixed_features.insert(name, false);
+                                } else {
+                                    changeable_features.insert(name, false);
+                                }
                             }
                             FeatureBit {
                                 index: _,

@@ -40,6 +40,66 @@ const EXPECTED_IFACE_STATE: &str = r#"---
         preferred_lft: forever
   mac_address: "00:23:45:67:89:1a""#;
 
+const EXPECTED_ETHTOOL_FEATURE: &str = r#"---
+fixed:
+  esp-hw-offload: false
+  esp-tx-csum-hw-offload: false
+  fcoe-mtu: false
+  hw-tc-offload: false
+  l2-fwd-offload: false
+  loopback: false
+  macsec-hw-offload: false
+  netns-local: false
+  rx-all: false
+  rx-checksum: false
+  rx-fcs: false
+  rx-gro-hw: false
+  rx-hashing: false
+  rx-lro: false
+  rx-ntuple-filter: false
+  rx-udp_tunnel-port-offload: false
+  rx-vlan-filter: false
+  rx-vlan-hw-parse: false
+  rx-vlan-stag-filter: false
+  rx-vlan-stag-hw-parse: false
+  tls-hw-record: false
+  tls-hw-rx-offload: false
+  tls-hw-tx-offload: false
+  tx-checksum-fcoe-crc: false
+  tx-checksum-ipv4: false
+  tx-checksum-ipv6: false
+  tx-checksum-sctp: false
+  tx-esp-segmentation: false
+  tx-fcoe-segmentation: false
+  tx-gso-list: false
+  tx-gso-partial: false
+  tx-gso-robust: false
+  tx-lockless: true
+  tx-sctp-segmentation: false
+  tx-tunnel-remcsum-segmentation: false
+  tx-udp-segmentation: false
+  tx-vlan-hw-insert: false
+  tx-vlan-stag-hw-insert: false
+  vlan-challenged: false
+changeable:
+  highdma: true
+  rx-gro: true
+  rx-gro-list: false
+  tx-checksum-ip-generic: true
+  tx-generic-segmentation: true
+  tx-gre-csum-segmentation: true
+  tx-gre-segmentation: true
+  tx-ipxip4-segmentation: true
+  tx-ipxip6-segmentation: true
+  tx-nocache-copy: false
+  tx-scatter-gather-fraglist: true
+  tx-tcp-ecn-segmentation: true
+  tx-tcp-mangleid-segmentation: true
+  tx-tcp-segmentation: true
+  tx-tcp6-segmentation: true
+  tx-udp_tnl-csum-segmentation: true
+  tx-udp_tnl-segmentation: true"#;
+
 #[test]
 fn test_get_iface_dummy_yaml() {
     with_dummy_iface(|| {
@@ -50,6 +110,20 @@ fn test_get_iface_dummy_yaml() {
         assert_eq!(
             serde_yaml::to_string(&vec![iface]).unwrap().trim(),
             EXPECTED_IFACE_STATE
+        );
+    });
+}
+
+#[test]
+#[ignore] // CI does not have ethtool_netlink kernel module yet
+fn test_get_iface_dummy_ethtool_feature() {
+    with_dummy_iface(|| {
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(
+            serde_yaml::to_string(&iface.ethtool.as_ref().unwrap().features)
+                .unwrap(),
+            EXPECTED_ETHTOOL_FEATURE
         );
     });
 }
