@@ -48,10 +48,10 @@ use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas;
 use netlink_packet_route::rtnl::LinkMessage;
 use netlink_packet_route::rtnl::{
-    ARPHRD_ETHER, IFF_ALLMULTI, IFF_AUTOMEDIA, IFF_BROADCAST, IFF_DEBUG,
-    IFF_DORMANT, IFF_LOOPBACK, IFF_LOWER_UP, IFF_MASTER, IFF_MULTICAST,
-    IFF_NOARP, IFF_POINTOPOINT, IFF_PORTSEL, IFF_PROMISC, IFF_RUNNING,
-    IFF_SLAVE, IFF_UP,
+    ARPHRD_ETHER, ARPHRD_LOOPBACK, IFF_ALLMULTI, IFF_AUTOMEDIA, IFF_BROADCAST,
+    IFF_DEBUG, IFF_DORMANT, IFF_LOOPBACK, IFF_LOWER_UP, IFF_MASTER,
+    IFF_MULTICAST, IFF_NOARP, IFF_POINTOPOINT, IFF_PORTSEL, IFF_PROMISC,
+    IFF_RUNNING, IFF_SLAVE, IFF_UP,
 };
 use rtnetlink::new_connection;
 
@@ -247,8 +247,10 @@ pub(crate) fn parse_nl_msg_to_iface(
         name: name.clone(),
         ..Default::default()
     };
-    if nl_msg.header.link_layer_type == ARPHRD_ETHER {
-        iface_state.iface_type = IfaceType::Ethernet
+    match nl_msg.header.link_layer_type {
+        ARPHRD_ETHER => iface_state.iface_type = IfaceType::Ethernet,
+        ARPHRD_LOOPBACK => iface_state.iface_type = IfaceType::Loopback,
+        _ => (),
     }
     iface_state.index = nl_msg.header.index;
     let mut link: Option<u32> = None;
@@ -391,9 +393,6 @@ pub(crate) fn parse_nl_msg_to_iface(
             }
             _ => (),
         }
-    }
-    if (nl_msg.header.flags & IFF_LOOPBACK) > 0 {
-        iface_state.iface_type = IfaceType::Loopback;
     }
     iface_state.flags = _parse_iface_flags(nl_msg.header.flags);
     Ok(Some(iface_state))
