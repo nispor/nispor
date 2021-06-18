@@ -136,7 +136,7 @@ impl nla::Nla for GenericNetlinkMulticastGroup {
             Self::Unspec(ref bytes) => buffer.copy_from_slice(bytes.as_slice()),
             Self::Id(value) => NativeEndian::write_u32(buffer, *value),
             Self::Name(value) => {
-                str_to_zero_ended_u8_array(&value, buffer, GENL_NAMSIZ)
+                str_to_zero_ended_u8_array(value, buffer, GENL_NAMSIZ)
             }
             Self::Other(ref attr) => attr.emit_value(buffer),
         }
@@ -222,7 +222,7 @@ impl nla::Nla for CtrlAttr {
             Self::Unspec(ref bytes) => buffer.copy_from_slice(bytes.as_slice()),
             Self::FamilyId(value) => NativeEndian::write_u16(buffer, *value),
             Self::FamilyName(value) => {
-                str_to_zero_ended_u8_array(&value, buffer, GENL_NAMSIZ)
+                str_to_zero_ended_u8_array(value, buffer, GENL_NAMSIZ)
             }
             Self::Version(value)
             | Self::HeaderSize(value)

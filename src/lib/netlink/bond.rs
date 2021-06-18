@@ -49,12 +49,12 @@ fn ipv4_addr_array_to_string(
 ) -> Result<String, NisporError> {
     let mut rt = String::new();
     for i in 0..(addrs.len()) {
-        let addr = &addrs.get(i).ok_or(NisporError::bug(
-            "wrong index at parsing ipv4 as string".into(),
-        ))?;
+        let addr = &addrs.get(i).ok_or_else(|| {
+            NisporError::bug("wrong index at parsing ipv4 as string".into())
+        })?;
         rt.push_str(&addr.to_string());
         if i != addrs.len() - 1 {
-            rt.push_str(",");
+            rt.push(',');
         }
     }
     Ok(rt)
@@ -111,12 +111,11 @@ fn get_bond_mode(raw: &[u8]) -> Result<BondMode, NisporError> {
     let nlas = NlasIterator::new(raw);
     for nla in nlas {
         match nla {
-            Ok(nla) => match nla.kind() {
-                IFLA_BOND_MODE => {
+            Ok(nla) => {
+                if nla.kind() == IFLA_BOND_MODE {
                     return Ok(parse_as_u8(nla.value())?.into());
                 }
-                _ => (),
-            },
+            }
             Err(e) => {
                 eprintln!("{}", e);
             }
@@ -390,42 +389,45 @@ fn parse_peer_notif_delay(
     Ok(())
 }
 
-const NLA_PARSE_FUNS: &[fn(&[u8], &mut BondInfo) -> Result<(), NisporError>] =
-    &[
-        parse_void, // IFLA_BOND_UNSPEC
-        parse_void, // IFLA_BOND_MODE parsed by get_bond_mode()
-        parse_void, // IFLA_BOND_ACTIVE_SLAVE is deprecated
-        parse_miimon,
-        parse_updelay,
-        parse_downdelay,
-        parse_use_carrier,
-        parse_arp_interval,
-        parse_arp_ip_target,
-        parse_arp_validate,
-        parse_arp_all_targets,
-        parse_primary,
-        parse_primary_reselect,
-        parse_fail_over_mac,
-        parse_xmit_hash_policy,
-        parse_resend_igmp,
-        parse_num_peer_notif,
-        parse_all_subordinates_active,
-        parse_min_links,
-        parse_lp_interval,
-        parse_packets_per_subordinate,
-        parse_ad_lacp_rate,
-        parse_ad_select,
-        parse_void, // IFLA_BOND_AD_INFO, handled by parse_ad_info().
-        parse_ad_actor_sys_prio,
-        parse_ad_user_port_key,
-        parse_ad_actor_system,
-        parse_tlb_dynamic_lb,
-        parse_peer_notif_delay,
-    ];
+type BondNlaParseFunc = fn(&[u8], &mut BondInfo) -> Result<(), NisporError>;
+
+const NLA_PARSE_FUNS: &[BondNlaParseFunc] = &[
+    parse_void, // IFLA_BOND_UNSPEC
+    parse_void, // IFLA_BOND_MODE parsed by get_bond_mode()
+    parse_void, // IFLA_BOND_ACTIVE_SLAVE is deprecated
+    parse_miimon,
+    parse_updelay,
+    parse_downdelay,
+    parse_use_carrier,
+    parse_arp_interval,
+    parse_arp_ip_target,
+    parse_arp_validate,
+    parse_arp_all_targets,
+    parse_primary,
+    parse_primary_reselect,
+    parse_fail_over_mac,
+    parse_xmit_hash_policy,
+    parse_resend_igmp,
+    parse_num_peer_notif,
+    parse_all_subordinates_active,
+    parse_min_links,
+    parse_lp_interval,
+    parse_packets_per_subordinate,
+    parse_ad_lacp_rate,
+    parse_ad_select,
+    parse_void, // IFLA_BOND_AD_INFO, handled by parse_ad_info().
+    parse_ad_actor_sys_prio,
+    parse_ad_user_port_key,
+    parse_ad_actor_system,
+    parse_tlb_dynamic_lb,
+    parse_peer_notif_delay,
+];
 
 pub(crate) fn parse_bond_info(raw: &[u8]) -> Result<BondInfo, NisporError> {
-    let mut bond_info = BondInfo::default();
-    bond_info.mode = get_bond_mode(raw)?;
+    let mut bond_info = BondInfo {
+        mode: get_bond_mode(raw)?,
+        ..BondInfo::default()
+    };
     let nlas = NlasIterator::new(raw);
     for nla in nlas {
         match nla {

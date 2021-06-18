@@ -15,7 +15,6 @@
 use netlink_ethtool::EthtoolError;
 use netlink_generic::GenericNetlinkError;
 use netlink_packet_utils::DecodeError;
-use rtnetlink;
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]

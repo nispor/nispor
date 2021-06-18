@@ -18,7 +18,6 @@ use crate::netlink::{
 use crate::Iface;
 use crate::NisporError;
 use futures::stream::TryStreamExt;
-use netlink_packet_route;
 use netlink_packet_route::rtnl::AddressMessage;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -179,7 +178,7 @@ async fn remove_ip_addr_conf(
 }
 
 fn is_ipv6_addr(addr: &str) -> bool {
-    addr.contains(":")
+    addr.contains(':')
 }
 
 async fn add_ip_addr_conf(

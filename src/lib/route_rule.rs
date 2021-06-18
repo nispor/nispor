@@ -203,10 +203,10 @@ fn get_rule(rule_msg: RuleMessage) -> Result<RouteRule, NisporError> {
                 }
             }
             Nla::Protocol(ref d) => {
-                rl.protocol = Some(d.clone().into());
+                rl.protocol = Some((*d).into());
             }
             Nla::IpProto(ref d) => {
-                rl.ip_proto = Some(d.clone().into());
+                rl.ip_proto = Some((*d).into());
             }
             Nla::L3MDev(ref d) => {
                 rl.l3mdev = Some(*d > 0);

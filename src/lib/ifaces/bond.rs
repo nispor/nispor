@@ -454,8 +454,8 @@ fn gen_subordinate_list_of_controller(
                 match controller_subordinates.get_mut(controller) {
                     Some(subordinates) => subordinates.push(iface.name.clone()),
                     None => {
-                        let mut new_subordinates: Vec<String> = Vec::new();
-                        new_subordinates.push(iface.name.clone());
+                        let new_subordinates: Vec<String> =
+                            vec![iface.name.clone()];
                         controller_subordinates
                             .insert(controller.clone(), new_subordinates);
                     }

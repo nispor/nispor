@@ -277,7 +277,7 @@ pub(crate) fn get_bridge_info(
     data: &nlas::InfoData,
 ) -> Result<Option<BridgeInfo>, NisporError> {
     if let nlas::InfoData::Bridge(infos) = data {
-        Ok(Some(parse_bridge_info(&infos)?))
+        Ok(Some(parse_bridge_info(infos)?))
     } else {
         Ok(None)
     }
@@ -303,8 +303,7 @@ fn gen_port_list_of_controller(iface_states: &mut HashMap<String, Iface>) {
                 match controller_ports.get_mut(controller) {
                     Some(ports) => ports.push(iface.name.clone()),
                     None => {
-                        let mut new_ports: Vec<String> = Vec::new();
-                        new_ports.push(iface.name.clone());
+                        let new_ports: Vec<String> = vec![iface.name.clone()];
                         controller_ports.insert(controller.clone(), new_ports);
                     }
                 };
@@ -332,7 +331,7 @@ fn convert_back_port_index_to_name(iface_states: &mut HashMap<String, Iface>) {
         }
         if let Some(ref mut port_info) = iface.bridge_port {
             let index = &port_info.backup_port;
-            if index != "" {
+            if !index.is_empty() {
                 if let Some(iface_name) = index_to_name.get(index) {
                     port_info.backup_port = iface_name.into();
                 }

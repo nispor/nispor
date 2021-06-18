@@ -195,7 +195,6 @@ fn parse_bitset_bits_nla(raw: &[u8]) -> Result<Vec<String>, DecodeError> {
                         ETHTOOL_A_BITSET_BIT_INDEX
                         | ETHTOOL_A_BITSET_BIT_VALUE => {
                             // ignored
-                            ()
                         }
                         ETHTOOL_A_BITSET_BIT_NAME => {
                             modes.push(parse_string(payload).context(

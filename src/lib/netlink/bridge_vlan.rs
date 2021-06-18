@@ -54,7 +54,7 @@ pub(crate) fn parse_af_spec_bridge_info(
             Err(e) => eprintln!("{}", e),
         }
     }
-    if vlans.len() > 0 {
+    if !vlans.is_empty() {
         Ok(Some(merge_vlan_range(&vlans)))
     } else {
         Ok(None)
@@ -75,23 +75,23 @@ fn parse_vlan_info(
 ) -> Result<Option<KernelBridgeVlanEntry>, NisporError> {
     if data.len() == 4 {
         let flags = u16::from_ne_bytes([
-            *data
-                .get(0)
-                .ok_or(NisporError::bug("wrong index at vlan flags".into()))?,
-            *data
-                .get(1)
-                .ok_or(NisporError::bug("wrong index at vlan flags".into()))?,
+            *data.get(0).ok_or_else(|| {
+                NisporError::bug("wrong index at vlan flags".into())
+            })?,
+            *data.get(1).ok_or_else(|| {
+                NisporError::bug("wrong index at vlan flags".into())
+            })?,
         ]);
         let vid = u16::from_ne_bytes([
-            *data
-                .get(2)
-                .ok_or(NisporError::bug("wrong index at vlan id".into()))?,
-            *data
-                .get(3)
-                .ok_or(NisporError::bug("wrong index at vlan id".into()))?,
+            *data.get(2).ok_or_else(|| {
+                NisporError::bug("wrong index at vlan id".into())
+            })?,
+            *data.get(3).ok_or_else(|| {
+                NisporError::bug("wrong index at vlan id".into())
+            })?,
         ]);
         let mut entry = KernelBridgeVlanEntry {
-            vid: vid,
+            vid,
             ..Default::default()
         };
         entry.is_pvid = (flags & BRIDGE_VLAN_INFO_PVID) > 0;

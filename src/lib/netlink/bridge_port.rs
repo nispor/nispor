@@ -282,10 +282,10 @@ fn parse_brport_backup_port(
     Ok(())
 }
 
-const NLA_PORT_PARSE_FUNS: &[fn(
-    &[u8],
-    &mut BridgePortInfo,
-) -> Result<(), NisporError>] = &[
+type BridgePortParseFunc =
+    fn(&[u8], &mut BridgePortInfo) -> Result<(), NisporError>;
+
+const NLA_PORT_PARSE_FUNS: &[BridgePortParseFunc] = &[
     parse_void_port_info, // IFLA_BRPORT_UNSPEC
     parse_brport_state,
     parse_brport_priority,
@@ -356,13 +356,21 @@ fn parse_as_bridge_id(data: &[u8]) -> Result<String, NisporError> {
     let err_msg = "wrong index at bridge_id parsing";
     Ok(format!(
         "{:02x}{:02x}.{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
-        data.get(0).ok_or(NisporError::bug(err_msg.into()))?,
-        data.get(1).ok_or(NisporError::bug(err_msg.into()))?,
-        data.get(2).ok_or(NisporError::bug(err_msg.into()))?,
-        data.get(3).ok_or(NisporError::bug(err_msg.into()))?,
-        data.get(4).ok_or(NisporError::bug(err_msg.into()))?,
-        data.get(5).ok_or(NisporError::bug(err_msg.into()))?,
-        data.get(6).ok_or(NisporError::bug(err_msg.into()))?,
-        data.get(7).ok_or(NisporError::bug(err_msg.into()))?,
+        data.get(0)
+            .ok_or_else(|| NisporError::bug(err_msg.into()))?,
+        data.get(1)
+            .ok_or_else(|| NisporError::bug(err_msg.into()))?,
+        data.get(2)
+            .ok_or_else(|| NisporError::bug(err_msg.into()))?,
+        data.get(3)
+            .ok_or_else(|| NisporError::bug(err_msg.into()))?,
+        data.get(4)
+            .ok_or_else(|| NisporError::bug(err_msg.into()))?,
+        data.get(5)
+            .ok_or_else(|| NisporError::bug(err_msg.into()))?,
+        data.get(6)
+            .ok_or_else(|| NisporError::bug(err_msg.into()))?,
+        data.get(7)
+            .ok_or_else(|| NisporError::bug(err_msg.into()))?,
     ))
 }

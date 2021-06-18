@@ -22,12 +22,12 @@ pub(crate) fn parse_as_mac(
     for i in 0..mac_len {
         rt.push_str(&format!(
             "{:02x}",
-            *data
-                .get(i)
-                .ok_or(NisporError::bug("wrong index at mac parsing".into()))?
+            *data.get(i).ok_or_else(|| NisporError::bug(
+                "wrong index at mac parsing".into()
+            ))?
         ));
         if i != mac_len - 1 {
-            rt.push_str(":");
+            rt.push(':');
         }
     }
     Ok(rt)

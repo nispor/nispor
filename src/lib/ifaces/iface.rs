@@ -239,12 +239,12 @@ pub(crate) fn get_iface_name_by_index(
 pub(crate) fn parse_nl_msg_to_iface(
     nl_msg: &LinkMessage,
 ) -> Result<Option<Iface>, NisporError> {
-    let name = _get_iface_name(&nl_msg);
-    if name.len() <= 0 {
+    let name = _get_iface_name(nl_msg);
+    if name.is_empty() {
         return Ok(None);
     }
     let mut iface_state = Iface {
-        name: name.clone(),
+        name,
         ..Default::default()
     };
     match nl_msg.header.link_layer_type {
@@ -265,7 +265,7 @@ pub(crate) fn parse_nl_msg_to_iface(
             mac_len = Some(mac.len());
             iface_state.permanent_mac_address = parse_as_mac(mac.len(), mac)?;
         } else if let Nla::OperState(state) = nla {
-            iface_state.state = _get_iface_state(&state);
+            iface_state.state = _get_iface_state(state);
         } else if let Nla::Master(controller) = nla {
             iface_state.controller = Some(format!("{}", controller));
         } else if let Nla::Link(l) = nla {
@@ -295,13 +295,11 @@ pub(crate) fn parse_nl_msg_to_iface(
             for info in infos {
                 if let nlas::Info::Data(d) = info {
                     match iface_state.iface_type {
-                        IfaceType::Bond => {
-                            iface_state.bond = get_bond_info(&d)?
-                        }
+                        IfaceType::Bond => iface_state.bond = get_bond_info(d)?,
                         IfaceType::Bridge => {
-                            iface_state.bridge = get_bridge_info(&d)?
+                            iface_state.bridge = get_bridge_info(d)?
                         }
-                        IfaceType::Tun => match get_tun_info(&d) {
+                        IfaceType::Tun => match get_tun_info(d) {
                             Ok(info) => {
                                 iface_state.tun = Some(info);
                             }
@@ -309,16 +307,16 @@ pub(crate) fn parse_nl_msg_to_iface(
                                 eprintln!("Error parsing TUN info: {}", e);
                             }
                         },
-                        IfaceType::Vlan => iface_state.vlan = get_vlan_info(&d),
+                        IfaceType::Vlan => iface_state.vlan = get_vlan_info(d),
                         IfaceType::Vxlan => {
-                            iface_state.vxlan = get_vxlan_info(&d)?
+                            iface_state.vxlan = get_vxlan_info(d)?
                         }
-                        IfaceType::Vrf => iface_state.vrf = get_vrf_info(&d),
+                        IfaceType::Vrf => iface_state.vrf = get_vrf_info(d),
                         IfaceType::MacVlan => {
-                            iface_state.mac_vlan = get_mac_vlan_info(&d)?
+                            iface_state.mac_vlan = get_mac_vlan_info(d)?
                         }
                         IfaceType::MacVtap => {
-                            iface_state.mac_vtap = get_mac_vtap_info(&d)?
+                            iface_state.mac_vtap = get_mac_vtap_info(d)?
                         }
                         _ => eprintln!(
                             "Unhandled IFLA_INFO_DATA for iface type {:?}",
@@ -331,7 +329,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                 if let nlas::Info::SlaveKind(d) = info {
                     // Remove the tailing \0
                     iface_state.controller_type = Some(
-                        std::ffi::CStr::from_bytes_with_nul(&d.as_slice())?
+                        std::ffi::CStr::from_bytes_with_nul(d.as_slice())?
                             .to_str()?
                             .into(),
                     )
@@ -343,15 +341,15 @@ pub(crate) fn parse_nl_msg_to_iface(
                         match controller_type {
                             ControllerType::Bond => {
                                 iface_state.bond_subordinate =
-                                    get_bond_subordinate_info(&d)?;
+                                    get_bond_subordinate_info(d)?;
                             }
                             ControllerType::Bridge => {
                                 iface_state.bridge_port =
-                                    get_bridge_port_info(&d)?;
+                                    get_bridge_port_info(d)?;
                             }
                             ControllerType::Vrf => {
                                 iface_state.vrf_subordinate =
-                                    get_vrf_subordinate_info(&d)?;
+                                    get_vrf_subordinate_info(d)?;
                             }
                             _ => eprintln!(
                                 "Unknown controller type {:?}",
@@ -411,14 +409,14 @@ pub(crate) fn fill_bridge_vlan_info(
     iface_states: &mut HashMap<String, Iface>,
     nl_msg: &LinkMessage,
 ) -> Result<(), NisporError> {
-    let name = _get_iface_name(&nl_msg);
-    if name.len() <= 0 {
+    let name = _get_iface_name(nl_msg);
+    if name.is_empty() {
         return Ok(());
     }
     if let Some(mut iface_state) = iface_states.get_mut(&name) {
         for nla in &nl_msg.nlas {
             if let Nla::AfSpecBridge(data) = nla {
-                parse_bridge_vlan_info(&mut iface_state, &data)?;
+                parse_bridge_vlan_info(&mut iface_state, data)?;
                 break;
             }
         }
@@ -505,21 +503,21 @@ impl IfaceConf {
         let (connection, handle, _) = new_connection()?;
         tokio::spawn(connection);
         if let Some(ipv6_conf) = &self.ipv6 {
-            ipv6_conf.apply(&handle, &cur_iface, IpFamily::Ipv6).await?;
+            ipv6_conf.apply(&handle, cur_iface, IpFamily::Ipv6).await?;
         } else {
             IpConf {
                 addresses: Vec::new(),
             }
-            .apply(&handle, &cur_iface, IpFamily::Ipv6)
+            .apply(&handle, cur_iface, IpFamily::Ipv6)
             .await?;
         }
         if let Some(ipv4_conf) = &self.ipv4 {
-            ipv4_conf.apply(&handle, &cur_iface, IpFamily::Ipv4).await?;
+            ipv4_conf.apply(&handle, cur_iface, IpFamily::Ipv4).await?;
         } else {
             IpConf {
                 addresses: Vec::new(),
             }
-            .apply(&handle, &cur_iface, IpFamily::Ipv4)
+            .apply(&handle, cur_iface, IpFamily::Ipv4)
             .await?;
         }
         Ok(())

@@ -46,6 +46,10 @@ jobs:
       if: matrix.rust_version == 'stable'
       run: cargo fmt -- --check
 
+    - name: Check clippy
+      if: matrix.rust_version == 'stable'
+      run: cargo clippy -- -D warnings
+
     - name: Build
       run: cargo build --verbose --all
 
