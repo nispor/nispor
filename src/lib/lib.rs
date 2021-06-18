@@ -42,6 +42,7 @@ pub use crate::ifaces::BridgePortInfo;
 pub use crate::ifaces::BridgeVlanEntry;
 pub use crate::ifaces::ControllerType;
 pub use crate::ifaces::Iface;
+pub use crate::ifaces::IfaceFlags;
 pub use crate::ifaces::IfaceState;
 pub use crate::ifaces::IfaceType;
 pub use crate::ifaces::VlanInfo;

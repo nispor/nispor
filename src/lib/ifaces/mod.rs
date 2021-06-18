@@ -48,6 +48,7 @@ pub(crate) use crate::ifaces::iface::get_iface_name_by_index;
 pub use crate::ifaces::iface::ControllerType;
 pub use crate::ifaces::iface::Iface;
 pub use crate::ifaces::iface::IfaceConf;
+pub use crate::ifaces::iface::IfaceFlags;
 pub use crate::ifaces::iface::IfaceState;
 pub use crate::ifaces::iface::IfaceType;
 pub(crate) use crate::ifaces::ifaces::get_ifaces;

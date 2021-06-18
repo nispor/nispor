@@ -21,36 +21,21 @@ mod utils;
 
 const IFACE_NAME: &str = "vrf0";
 
-const EXPECTED_IFACE_STATE: &str = r#"---
-- name: vrf0
-  iface_type: vrf
-  state: up
-  mtu: 65536
-  flags:
-    - lower_up
-    - controller
-    - no_arp
-    - running
-    - up
-  vrf:
-    table_id: 10
-    subordinates:
-      - eth1
-      - eth2"#;
+const EXPECTED_VRF_INFO: &str = r#"---
+table_id: 10
+subordinates:
+  - eth1
+  - eth2"#;
 
 #[test]
-#[ignore] // Github Action does not have VRF kernel module
 fn test_get_vrf_iface_yaml() {
     with_vrf_iface(|| {
         let state = NetState::retrieve().unwrap();
-        let mut iface = state.ifaces[IFACE_NAME].clone();
-        // RHEL/CentOS 8 and Ubuntu 20.04 does not support changing mac
-        // address of VRF interface
-        iface.mac_address = "".into();
+        let iface = &state.ifaces[IFACE_NAME];
         assert_eq!(iface.iface_type, nispor::IfaceType::Vrf);
         assert_eq!(
-            serde_yaml::to_string(&vec![iface]).unwrap().trim(),
-            EXPECTED_IFACE_STATE
+            serde_yaml::to_string(&iface.vrf).unwrap().trim(),
+            EXPECTED_VRF_INFO
         );
     });
 }

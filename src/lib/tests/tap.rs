@@ -21,37 +21,26 @@ mod utils;
 
 const IFACE_NAME: &str = "tap1";
 
-const EXPECTED_IFACE_STATE: &str = r#"---
-- name: tap1
-  iface_type: tun
-  state: down
-  mtu: 1500
-  flags:
-    - broadcast
-    - multicast
-    - up
-  mac_address: "00:23:45:67:89:1c"
-  tun:
-    mode: tap
-    owner: 1001
-    group: 0
-    pi: false
-    vnet_hdr: true
-    multi_queue: true
-    persist: true
-    num_queues: 0
-    num_disabled_queues: 0"#;
+const EXPECTED_TAP_INFO: &str = r#"---
+mode: tap
+owner: 1001
+group: 0
+pi: false
+vnet_hdr: true
+multi_queue: true
+persist: true
+num_queues: 0
+num_disabled_queues: 0"#;
 
 #[test]
-#[ignore] // Travis CI does not support TUN/TAP IFLA_INFO_DATA yet
 fn test_get_tap_iface_yaml() {
     with_tap_iface(|| {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         assert_eq!(iface.iface_type, nispor::IfaceType::Tun);
         assert_eq!(
-            serde_yaml::to_string(&vec![iface]).unwrap().trim(),
-            EXPECTED_IFACE_STATE
+            serde_yaml::to_string(&iface.tun).unwrap().trim(),
+            EXPECTED_TAP_INFO
         );
     });
 }

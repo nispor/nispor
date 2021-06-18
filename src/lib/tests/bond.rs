@@ -23,105 +23,65 @@ const IFACE_NAME: &str = "bond99";
 const PORT1_NAME: &str = "eth1";
 const PORT2_NAME: &str = "eth2";
 
-const EXPECTED_IFACE_STATE: &str = r#"---
-- name: bond99
-  iface_type: bond
-  state: up
-  mtu: 1500
-  flags:
-    - broadcast
-    - lower_up
-    - controller
-    - multicast
-    - running
-    - up
-  ipv6:
-    addresses:
-      - address: "fe80::223:45ff:fe67:891c"
-        prefix_len: 64
-        valid_lft: forever
-        preferred_lft: forever
-  mac_address: "00:23:45:67:89:1c"
-  bond:
-    subordinates:
-      - eth1
-      - eth2
-    mode: balance-rr
-    miimon: 0
-    updelay: 0
-    downdelay: 0
-    use_carrier: true
-    arp_interval: 0
-    arp_all_targets: any
-    arp_validate: none
-    resend_igmp: 1
-    all_subordinates_active: dropped
-    packets_per_subordinate: 1
-- name: eth1
-  iface_type: veth
-  state: up
-  mtu: 1500
-  flags:
-    - broadcast
-    - lower_up
-    - multicast
-    - running
-    - subordinate
-    - up
-  mac_address: "00:23:45:67:89:1c"
-  controller: bond99
-  controller_type: bond
-  bond_subordinate:
-    subordinate_state: active
-    mii_status: link_up
-    link_failure_count: 0
-    perm_hwaddr: "00:23:45:67:89:1a"
-    queue_id: 0
-  veth:
-    peer: eth1.ep
-- name: eth2
-  iface_type: veth
-  state: up
-  mtu: 1500
-  flags:
-    - broadcast
-    - lower_up
-    - multicast
-    - running
-    - subordinate
-    - up
-  mac_address: "00:23:45:67:89:1c"
-  controller: bond99
-  controller_type: bond
-  bond_subordinate:
-    subordinate_state: active
-    mii_status: link_up
-    link_failure_count: 0
-    perm_hwaddr: "00:23:45:67:89:1b"
-    queue_id: 0
-  veth:
-    peer: eth2.ep"#;
+const EXPECTED_BOND_INFO: &str = r#"---
+subordinates:
+  - eth1
+  - eth2
+mode: balance-rr
+miimon: 0
+updelay: 0
+downdelay: 0
+use_carrier: true
+arp_interval: 0
+arp_all_targets: any
+arp_validate: none
+resend_igmp: 1
+all_subordinates_active: dropped
+packets_per_subordinate: 1
+peer_notif_delay: 0"#;
+
+const EXPECTED_PORT1_INFO: &str = r#"---
+subordinate_state: active
+mii_status: link_up
+link_failure_count: 0
+perm_hwaddr: "00:23:45:67:89:1a"
+queue_id: 0"#;
+
+const EXPECTED_PORT2_INFO: &str = r#"---
+subordinate_state: active
+mii_status: link_up
+link_failure_count: 0
+perm_hwaddr: "00:23:45:67:89:1b"
+queue_id: 0"#;
 
 #[test]
 fn test_get_iface_bond_yaml() {
     with_bond_iface(|| {
-        let mut state = NetState::retrieve().unwrap();
-        let iface = state.ifaces.get_mut(IFACE_NAME).unwrap();
-        // The peer_notif_delay is supported by kernel 5.3 and not
-        // supported by Travis CI Ubuntu 18.04 kernel 4.15.
-        if let Some(ref mut bond_info) = iface.bond {
-            bond_info.peer_notif_delay = None;
-        }
+        let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         let port1 = &state.ifaces[PORT1_NAME];
         let port2 = &state.ifaces[PORT2_NAME];
         assert_eq!(&iface.iface_type, &nispor::IfaceType::Bond);
         assert_eq!(
-            serde_yaml::to_string(&vec![iface, port1, port2])
+            serde_yaml::to_string(&iface.bond).unwrap().trim(),
+            EXPECTED_BOND_INFO
+        );
+        assert_eq!(
+            serde_yaml::to_string(&port1.bond_subordinate)
                 .unwrap()
                 .trim(),
-            EXPECTED_IFACE_STATE
+            EXPECTED_PORT1_INFO
         );
+        assert_eq!(
+            serde_yaml::to_string(&port2.bond_subordinate)
+                .unwrap()
+                .trim(),
+            EXPECTED_PORT2_INFO
+        );
+        assert_eq!(port1.controller, Some("bond99".to_string()));
+        assert_eq!(port2.controller, Some("bond99".to_string()));
+        assert_eq!(port1.controller_type, Some(nispor::ControllerType::Bond));
+        assert_eq!(port2.controller_type, Some(nispor::ControllerType::Bond));
     });
 }
 
