@@ -182,7 +182,7 @@ pub(crate) async fn get_ethtool_infos(
     let family_id = get_ethtool_family_id().await?;
 
     let (connection, mut handle, _) =
-        netlink_ethtool::new_connection(family_id).unwrap();
+        netlink_ethtool::new_connection(family_id)?;
 
     tokio::spawn(connection);
 
@@ -551,8 +551,7 @@ async fn dump_link_mode_infos(
 }
 
 async fn get_ethtool_family_id() -> Result<u16, NisporError> {
-    let (connection, mut handle, _) =
-        netlink_generic::new_connection().unwrap();
+    let (connection, mut handle, _) = netlink_generic::new_connection()?;
     tokio::spawn(connection);
 
     Ok(handle.resolve_family_name("ethtool").await?)
