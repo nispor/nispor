@@ -1,4 +1,14 @@
 # Changelog
+## [1.1.1] - 2021-06-19
+## Break changes
+ * Running `npc` command without argument will only show bridge network
+   information. (69cc9aa)
+
+### Bug fixes
+ * Fix ethool feature on tx-lockless which is always unchangable. (235458b)
+ * Fix detection of loopback interface type. (11eb434)
+ * Remove the use of `unwrap()` in ethtool code. (6ea512e)
+
 ## [1.1.0] - 2021-05-14
 ### New features
  * Support ethtool link mode. (c23e7b5)
