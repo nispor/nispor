@@ -31,7 +31,7 @@ impl NetConf {
         if let Some(ifaces) = &self.ifaces {
             for iface in ifaces {
                 if let Some(cur_iface) = cur_ifaces.get(&iface.name) {
-                    rt.block_on(iface.apply(&cur_iface))?
+                    rt.block_on(iface.apply(cur_iface))?
                 } else {
                     // TODO: Create new interface
                     return Err(NisporError::invalid_argument(format!(

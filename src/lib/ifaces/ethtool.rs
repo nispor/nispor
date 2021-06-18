@@ -12,14 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{hash_map::Entry, BTreeMap, HashMap};
 
 use futures::stream::TryStreamExt;
 use netlink_ethtool::{
     self, CoalesceAttr, EthoolAttr, EthtoolHandle, EthtoolHeader, FeatureAttr,
     FeatureBit, LinkModeAttr, LinkModeDuplex, PauseAttr, RingAttr,
 };
-use netlink_generic;
 use serde::{Deserialize, Serialize, Serializer};
 
 use crate::NisporError;
@@ -310,8 +309,8 @@ async fn dump_feature_infos(
     while let Some(ethtool_msg) = feature_handle.try_next().await? {
         if let EthoolAttr::Feature(nlas) = ethtool_msg.nlas {
             let mut iface_name = None;
-            let mut fixed_features = HashMap::new();
-            let mut changeable_features = HashMap::new();
+            let mut fixed_features: HashMap<String, bool> = HashMap::new();
+            let mut changeable_features: HashMap<String, bool> = HashMap::new();
 
             for nla in &nlas {
                 if let FeatureAttr::NoChange(feature_bits) = nla {
@@ -337,8 +336,10 @@ async fn dump_feature_infos(
                                 // otherwise. The kernel code
                                 // `NETIF_F_NEVER_CHANGE` shows `tx-lockless`
                                 // should never been changeable.
-                                if fixed_features.contains_key(&name) {
-                                    fixed_features.insert(name, false);
+                                if let Entry::Occupied(mut e) =
+                                    fixed_features.entry(name.clone())
+                                {
+                                    e.insert(false);
                                 } else {
                                     changeable_features.insert(name, false);
                                 }
@@ -354,8 +355,10 @@ async fn dump_feature_infos(
                     }
                 } else if let FeatureAttr::Active(feature_bits) = nla {
                     for feature_bit in feature_bits {
-                        if fixed_features.contains_key(&feature_bit.name) {
-                            fixed_features.insert(feature_bit.name, true);
+                        if let Entry::Occupied(mut e) =
+                            fixed_features.entry(feature_bit.name.clone())
+                        {
+                            e.insert(true);
                         } else if changeable_features
                             .contains_key(&feature_bit.name)
                         {

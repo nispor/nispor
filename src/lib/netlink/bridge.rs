@@ -101,7 +101,7 @@ pub(crate) fn parse_bridge_info(
         } else if let InfoBridge::NfCallArpTables(d) = info {
             bridge_info.nf_call_arptables = Some(*d > 0);
         } else if let InfoBridge::VlanDefaultPvid(d) = info {
-            bridge_info.default_pvid = Some((*d).into());
+            bridge_info.default_pvid = Some(*d);
         } else if let InfoBridge::VlanStatsEnabled(d) = info {
             bridge_info.vlan_stats_enabled = Some(*d > 0);
         } else if let InfoBridge::MulticastStatsEnabled(d) = info {
@@ -129,10 +129,10 @@ fn parse_bridge_id(
     let priority_bytes = priority.to_ne_bytes();
     Ok(format!(
         "{:02x}{:02x}.{}",
-        priority_bytes.get(0).ok_or(NisporError::bug(
+        priority_bytes.get(0).ok_or_else(|| NisporError::bug(
             "wrong index at bridge_id parsing".into()
         ))?,
-        priority_bytes.get(1).ok_or(NisporError::bug(
+        priority_bytes.get(1).ok_or_else(|| NisporError::bug(
             "wrong index at bridge_id parsing".into()
         ))?,
         parse_as_mac(ETH_ALEN, mac)

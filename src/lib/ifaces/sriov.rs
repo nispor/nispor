@@ -131,55 +131,60 @@ pub(crate) fn get_sriov_info(
                 IFLA_VF_MAC => {
                     vf_info.id = parse_as_u32(nla.value())?;
                     vf_info.mac = parse_vf_mac(
-                        &nla.value().get(4..).ok_or(NisporError::bug(
-                            "invalid index into nla".into(),
-                        ))?,
+                        nla.value().get(4..).ok_or_else(|| {
+                            NisporError::bug("invalid index into nla".into())
+                        })?,
                         mac_len,
                     )?;
                 }
                 IFLA_VF_VLAN => {
-                    vf_info.vlan_id =
-                        parse_as_u32(&nla.value().get(4..).ok_or(
-                            NisporError::bug("invalid index into nla".into()),
-                        )?)?;
-                    vf_info.qos = parse_as_u32(&nla.value().get(8..).ok_or(
-                        NisporError::bug("invalid index into nla".into()),
-                    )?)?;
+                    vf_info.vlan_id = parse_as_u32(
+                        nla.value().get(4..).ok_or_else(|| {
+                            NisporError::bug("invalid index into nla".into())
+                        })?,
+                    )?;
+                    vf_info.qos = parse_as_u32(
+                        nla.value().get(8..).ok_or_else(|| {
+                            NisporError::bug("invalid index into nla".into())
+                        })?,
+                    )?;
                 }
                 IFLA_VF_TX_RATE => {
-                    vf_info.tx_rate =
-                        parse_as_u32(&nla.value().get(4..).ok_or(
-                            NisporError::bug("invalid index into nla".into()),
-                        )?)?;
+                    vf_info.tx_rate = parse_as_u32(
+                        nla.value().get(4..).ok_or_else(|| {
+                            NisporError::bug("invalid index into nla".into())
+                        })?,
+                    )?;
                 }
                 IFLA_VF_SPOOFCHK => {
-                    let d = parse_as_u32(&nla.value().get(4..).ok_or(
-                        NisporError::bug("invalid index into nla".into()),
+                    let d = parse_as_u32(nla.value().get(4..).ok_or_else(
+                        || NisporError::bug("invalid index into nla".into()),
                     )?)?;
                     vf_info.spoof_check = d > 0 && d != std::u32::MAX;
                 }
                 IFLA_VF_LINK_STATE => {
-                    vf_info.link_state =
-                        parse_as_u32(&nla.value().get(4..).ok_or(
-                            NisporError::bug("invalid index into nla".into()),
-                        )?)?
-                        .into();
+                    vf_info.link_state = parse_as_u32(
+                        nla.value().get(4..).ok_or_else(|| {
+                            NisporError::bug("invalid index into nla".into())
+                        })?,
+                    )?
+                    .into();
                 }
                 IFLA_VF_RATE => {
-                    vf_info.min_tx_rate =
-                        parse_as_u32(&nla.value().get(4..).ok_or(
-                            NisporError::bug("invalid index into nla".into()),
-                        )?)?
-                        .into();
-                    vf_info.max_tx_rate =
-                        parse_as_u32(&nla.value().get(8..).ok_or(
-                            NisporError::bug("invalid index into nla".into()),
-                        )?)?
-                        .into();
+                    vf_info.min_tx_rate = parse_as_u32(
+                        nla.value().get(4..).ok_or_else(|| {
+                            NisporError::bug("invalid index into nla".into())
+                        })?,
+                    )?;
+                    vf_info.max_tx_rate = parse_as_u32(
+                        nla.value().get(8..).ok_or_else(|| {
+                            NisporError::bug("invalid index into nla".into())
+                        })?,
+                    )?;
                 }
                 IFLA_VF_RSS_QUERY_EN => {
-                    let d = parse_as_u32(&nla.value().get(4..).ok_or(
-                        NisporError::bug("invalid index into nla".into()),
+                    let d = parse_as_u32(nla.value().get(4..).ok_or_else(
+                        || NisporError::bug("invalid index into nla".into()),
                     )?)?;
                     vf_info.query_rss = d > 0 && d != std::u32::MAX;
                 }
@@ -187,18 +192,18 @@ pub(crate) fn get_sriov_info(
                     vf_info.state = parse_vf_stats(nla.value())?;
                 }
                 IFLA_VF_TRUST => {
-                    let d = parse_as_u32(&nla.value().get(4..).ok_or(
-                        NisporError::bug("invalid index into nla".into()),
+                    let d = parse_as_u32(nla.value().get(4..).ok_or_else(
+                        || NisporError::bug("invalid index into nla".into()),
                     )?)?;
                     vf_info.trust = d > 0 && d != std::u32::MAX;
                 }
                 IFLA_VF_IB_NODE_GUID => {
                     vf_info.ib_node_guid =
-                        Some(format!("{:X}", parse_as_u64(&nla.value())?));
+                        Some(format!("{:X}", parse_as_u64(nla.value())?));
                 }
                 IFLA_VF_IB_PORT_GUID => {
                     vf_info.ib_port_guid =
-                        Some(format!("{:X}", parse_as_u64(&nla.value())?));
+                        Some(format!("{:X}", parse_as_u64(nla.value())?));
                 }
                 IFLA_VF_VLAN_LIST => {
                     // The kernel just store IFLA_VF_VLAN in a list with single
@@ -228,8 +233,8 @@ fn parse_vf_mac(
     mac_len: Option<usize>,
 ) -> Result<String, NisporError> {
     match mac_len {
-        Some(mac_len) => parse_as_mac(mac_len, &raw),
-        None => parse_as_mac(32, &raw),
+        Some(mac_len) => parse_as_mac(mac_len, raw),
+        None => parse_as_mac(32, raw),
     }
 }
 

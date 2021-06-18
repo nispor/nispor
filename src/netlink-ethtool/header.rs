@@ -65,7 +65,7 @@ impl nla::Nla for EthtoolHeader {
                 NativeEndian::write_u32(buffer, *value)
             }
             Self::DevName(s) => {
-                str_to_zero_ended_u8_array(&s, buffer, ALTIFNAMSIZ)
+                str_to_zero_ended_u8_array(s, buffer, ALTIFNAMSIZ)
             }
             Self::Other(ref attr) => attr.emit_value(buffer),
         }

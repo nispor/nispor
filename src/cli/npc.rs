@@ -17,8 +17,6 @@ use nispor::{
     Iface, IfaceState, NetConf, NetState, NisporError, Route, RouteRule,
 };
 use serde_derive::Serialize;
-use serde_json;
-use serde_yaml;
 use std::collections::HashMap;
 use std::fmt;
 use std::io::{stderr, stdout, Write};
@@ -47,7 +45,7 @@ struct CliIfaceBrief {
 }
 
 impl CliIfaceBrief {
-    fn to_string(briefs: &[CliIfaceBrief]) -> String {
+    fn list_show(briefs: &[CliIfaceBrief]) -> String {
         let mut ret = Vec::new();
         for brief in briefs {
             ret.push(format!(
@@ -58,13 +56,13 @@ impl CliIfaceBrief {
                 brief.state,
                 brief.mtu,
             ));
-            if &brief.mac != "" {
+            if !&brief.mac.is_empty() {
                 ret.push(format!(
                     "{}mac {}{}",
                     INDENT,
                     brief.mac,
-                    if &brief.permanent_mac != ""
-                        && &brief.permanent_mac != &brief.mac
+                    if !&brief.permanent_mac.is_empty()
+                        && brief.permanent_mac != brief.mac
                     {
                         format!(" permanent_mac: {}", brief.permanent_mac)
                     } else {
@@ -72,24 +70,24 @@ impl CliIfaceBrief {
                     }
                 ));
             }
-            if brief.ipv4.len() > 0 {
+            if !brief.ipv4.is_empty() {
                 ret.push(format!(
                     "{}ipv4 {}{}",
                     INDENT,
                     brief.ipv4.join(" "),
-                    if brief.gw4.len() > 0 {
+                    if !brief.gw4.is_empty() {
                         format!(" gw4 {}", brief.gw4.join(" "))
                     } else {
                         "".into()
                     },
                 ));
             }
-            if brief.ipv6.len() > 0 {
+            if !brief.ipv6.is_empty() {
                 ret.push(format!(
                     "{}ipv6 {}{}",
                     INDENT,
                     brief.ipv6.join(" "),
-                    if brief.gw6.len() > 0 {
+                    if !brief.gw6.is_empty() {
                         format!(" gw6 {}", brief.gw6.join(" "))
                     } else {
                         "".into()
@@ -113,7 +111,7 @@ impl CliIfaceBrief {
                 ..
             } = route
             {
-                if gw.contains(":") {
+                if gw.contains(':') {
                     match iface_to_gw6.get_mut(iface_name) {
                         Some(gateways) => {
                             gateways.push(gw.to_string());
@@ -146,7 +144,7 @@ impl CliIfaceBrief {
                 index: iface.index,
                 name: iface.name.clone(),
                 flags: (&iface.flags)
-                    .into_iter()
+                    .iter()
                     .map(|flag| format!("{:?}", flag).to_uppercase())
                     .collect(),
                 state: iface.state.clone(),
@@ -187,7 +185,6 @@ impl CliIfaceBrief {
                     Some(gws) => gws.to_vec(),
                     None => Vec::new(),
                 },
-                ..Default::default()
             })
         }
         ret.sort_by(|a, b| a.index.cmp(&b.index));
@@ -264,7 +261,7 @@ fn print_result(result: &CliResult, output_type: CliOutputType) {
             )
             .ok();
         } else {
-            writeln!(stdout(), "{}", CliIfaceBrief::to_string(&briefs)).ok();
+            writeln!(stdout(), "{}", CliIfaceBrief::list_show(briefs)).ok();
         }
     } else {
         match output_type {
@@ -345,7 +342,7 @@ fn main() {
 
     if let Some(m) = matches.subcommand_matches("set") {
         if let Some(file_path) = m.value_of("file_path") {
-            print_result(&apply_conf(&file_path), output_format);
+            print_result(&apply_conf(file_path), output_format);
             process::exit(0);
         } else {
             eprintln!("file path undefined");
@@ -372,7 +369,7 @@ fn main() {
                     }
                 } else if let Some(m) = matches.subcommand_matches("route") {
                     output_format = parse_arg_output_format(m);
-                    get_routes(&state, &m)
+                    get_routes(&state, m)
                 } else if let Some(m) = matches.subcommand_matches("rule") {
                     output_format = parse_arg_output_format(m);
                     CliResult::RouteRules(state.rules)

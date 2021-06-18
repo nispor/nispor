@@ -34,7 +34,7 @@ impl FeatureBit {
         Self {
             index: 0,
             name: "".into(),
-            value: if has_mask { false } else { true },
+            value: !has_mask,
         }
     }
 }
@@ -176,7 +176,7 @@ fn parse_bitset_bits_nla(
                     match nla.kind() {
                         ETHTOOL_A_BITSET_BIT_INDEX => {
                             if cur_bit_info.index != 0
-                                && &cur_bit_info.name != ""
+                                && !&cur_bit_info.name.is_empty()
                             {
                                 feature_bits.push(cur_bit_info);
                                 cur_bit_info = FeatureBit::new(has_mask);
@@ -202,7 +202,7 @@ fn parse_bitset_bits_nla(
                         }
                     }
                 }
-                if cur_bit_info.index != 0 && &cur_bit_info.name != "" {
+                if cur_bit_info.index != 0 && !&cur_bit_info.name.is_empty() {
                     feature_bits.push(cur_bit_info);
                 }
             }

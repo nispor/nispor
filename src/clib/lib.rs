@@ -13,10 +13,9 @@
 // limitations under the License.
 
 use libc::{c_char, c_int};
-use nispor;
-use serde_json;
 use std::ffi::CString;
 
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
 pub extern "C" fn nispor_net_state_retrieve(
     state: *mut *mut c_char,
@@ -49,28 +48,31 @@ pub extern "C" fn nispor_net_state_retrieve(
     }
 }
 
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
 pub extern "C" fn nispor_net_state_free(state: *mut c_char) {
     unsafe {
-        if state != std::ptr::null_mut() {
+        if !state.is_null() {
             CString::from_raw(state);
         }
     }
 }
 
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
 pub extern "C" fn nispor_err_kind_free(err_kind: *mut c_char) {
     unsafe {
-        if err_kind != std::ptr::null_mut() {
+        if !err_kind.is_null() {
             CString::from_raw(err_kind);
         }
     }
 }
 
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]
 pub extern "C" fn nispor_err_msg_free(err_msg: *mut c_char) {
     unsafe {
-        if err_msg != std::ptr::null_mut() {
+        if !err_msg.is_null() {
             CString::from_raw(err_msg);
         }
     }
