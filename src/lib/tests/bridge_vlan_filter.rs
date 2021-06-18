@@ -54,6 +54,7 @@ broadcast_flood: true
 group_fwd_mask: 0
 neigh_suppress: false
 isolated: false
+mrp_ring_open: false
 vlans:
   - vid: 1
     is_pvid: false
@@ -93,6 +94,7 @@ broadcast_flood: true
 group_fwd_mask: 0
 neigh_suppress: false
 isolated: false
+mrp_ring_open: false
 vlans:
   - vid: 1
     is_pvid: true
@@ -110,10 +112,14 @@ fn test_get_br_vlan_filter_iface_yaml() {
         let port1 = state.ifaces.get_mut(PORT1_NAME).unwrap();
         if let Some(ref mut port_info) = port1.bridge_port {
             port_info.forward_delay_timer = 0;
+            // Below values are not supported by Github CI Ubuntu 20.04
+            port_info.mrp_in_open = None;
         }
         let port2 = state.ifaces.get_mut(PORT2_NAME).unwrap();
         if let Some(ref mut port_info) = port2.bridge_port {
             port_info.forward_delay_timer = 0;
+            // Below values are not supported by Github CI Ubuntu 20.04
+            port_info.mrp_in_open = None;
         }
         let iface = state.ifaces.get(IFACE_NAME).unwrap();
         if let Some(bridge_info) = &iface.bridge {

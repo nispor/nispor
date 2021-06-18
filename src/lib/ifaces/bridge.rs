@@ -270,6 +270,14 @@ pub struct BridgePortInfo {
     #[serde(skip_serializing_if = "String::is_empty")]
     pub backup_port: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub mrp_ring_open: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mrp_in_open: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mcast_eht_hosts_limit: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mcast_eht_hosts_cnt: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub vlans: Option<Vec<BridgeVlanEntry>>,
 }
 
