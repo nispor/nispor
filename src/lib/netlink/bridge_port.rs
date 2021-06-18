@@ -282,6 +282,38 @@ fn parse_brport_backup_port(
     Ok(())
 }
 
+fn parse_brport_mrp_ring_open(
+    data: &[u8],
+    cost_info: &mut BridgePortInfo,
+) -> Result<(), NisporError> {
+    cost_info.mrp_ring_open = Some(parse_as_u8(data)? > 0);
+    Ok(())
+}
+
+fn parse_brport_mrp_in_open(
+    data: &[u8],
+    cost_info: &mut BridgePortInfo,
+) -> Result<(), NisporError> {
+    cost_info.mrp_in_open = Some(parse_as_u8(data)? > 0);
+    Ok(())
+}
+
+fn parse_brport_mcast_eht_hosts_limit(
+    data: &[u8],
+    cost_info: &mut BridgePortInfo,
+) -> Result<(), NisporError> {
+    cost_info.mcast_eht_hosts_limit = Some(parse_as_u32(data)?);
+    Ok(())
+}
+
+fn parse_brport_mcast_eht_hosts_cnt(
+    data: &[u8],
+    cost_info: &mut BridgePortInfo,
+) -> Result<(), NisporError> {
+    cost_info.mcast_eht_hosts_cnt = Some(parse_as_u32(data)?);
+    Ok(())
+}
+
 type BridgePortParseFunc =
     fn(&[u8], &mut BridgePortInfo) -> Result<(), NisporError>;
 
@@ -321,6 +353,10 @@ const NLA_PORT_PARSE_FUNS: &[BridgePortParseFunc] = &[
     parse_brport_neigh_suppress,
     parse_brport_isolated,
     parse_brport_backup_port,
+    parse_brport_mrp_ring_open,
+    parse_brport_mrp_in_open,
+    parse_brport_mcast_eht_hosts_limit,
+    parse_brport_mcast_eht_hosts_cnt,
 ];
 
 pub(crate) fn parse_bridge_port_info(
