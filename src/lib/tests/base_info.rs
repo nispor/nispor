@@ -14,32 +14,22 @@
 
 use nispor::NetState;
 use pretty_assertions::assert_eq;
-use std::panic;
-
-mod utils;
-
-const IFACE_NAME: &str = "dummy1";
 
 #[test]
-fn test_get_iface_dummy_yaml() {
-    with_dummy_iface(|| {
-        let state = NetState::retrieve().unwrap();
-        let iface = &state.ifaces[IFACE_NAME];
-        let iface_type = &iface.iface_type;
-        assert_eq!(iface_type, &nispor::IfaceType::Dummy);
-    });
-}
-
-fn with_dummy_iface<T>(test: T) -> ()
-where
-    T: FnOnce() -> () + panic::UnwindSafe,
-{
-    utils::set_network_environment("dummy");
-
-    let result = panic::catch_unwind(|| {
-        test();
-    });
-
-    utils::clear_network_environment();
-    assert!(result.is_ok())
+fn test_iface_info_loopback() {
+    let state = NetState::retrieve().unwrap();
+    let iface = &state.ifaces["lo"];
+    assert_eq!(iface.iface_type, nispor::IfaceType::Loopback);
+    assert_eq!(iface.state, nispor::IfaceState::Unknown);
+    assert_eq!(iface.mtu, 65536);
+    assert_eq!(&iface.mac_address, "00:00:00:00:00:00");
+    assert_eq!(
+        iface.flags,
+        &[
+            nispor::IfaceFlags::Loopback,
+            nispor::IfaceFlags::LowerUp,
+            nispor::IfaceFlags::Running,
+            nispor::IfaceFlags::Up,
+        ]
+    );
 }

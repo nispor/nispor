@@ -21,31 +21,13 @@ mod utils;
 
 const IFACE_NAME: &str = "mac0";
 
-const EXPECTED_IFACE_STATE: &str = r#"---
-- name: mac0
-  iface_type: mac_vlan
-  state: up
-  mtu: 1500
-  flags:
-    - broadcast
-    - lower_up
-    - multicast
-    - running
-    - up
-  ipv6:
-    addresses:
-      - address: "fe80::223:45ff:fe67:891f"
-        prefix_len: 64
-        valid_lft: forever
-        preferred_lft: forever
-  mac_address: "00:23:45:67:89:1f"
-  mac_vlan:
-    base_iface: eth1
-    mode: source
-    flags: 0
-    allowed_mac_addresses:
-      - "00:23:45:67:89:1d"
-      - "00:23:45:67:89:1c""#;
+const EXPECTED_MAC_VLAN_STATE: &str = r#"---
+base_iface: eth1
+mode: source
+flags: 0
+allowed_mac_addresses:
+  - "00:23:45:67:89:1d"
+  - "00:23:45:67:89:1c""#;
 
 #[test]
 fn test_get_macvlan_iface_yaml() {
@@ -54,8 +36,8 @@ fn test_get_macvlan_iface_yaml() {
         let iface = &state.ifaces[IFACE_NAME];
         assert_eq!(iface.iface_type, nispor::IfaceType::MacVlan);
         assert_eq!(
-            serde_yaml::to_string(&vec![iface]).unwrap().trim(),
-            EXPECTED_IFACE_STATE
+            serde_yaml::to_string(&iface.mac_vlan).unwrap().trim(),
+            EXPECTED_MAC_VLAN_STATE
         );
     });
 }

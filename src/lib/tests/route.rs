@@ -73,7 +73,6 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
         - on_link"#;
 
 #[test]
-#[ignore] // Travis CI Ubuntu 18.04 has bug on IPv6 multipath route weight
 fn test_get_route_yaml() {
     with_route_test_iface(|| {
         let state = NetState::retrieve().unwrap();

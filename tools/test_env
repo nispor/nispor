@@ -14,7 +14,7 @@ sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 1>/dev/null
 
 if [ "CHK$1" == "CHK" ];then
     echo 'Need argument: bond, br, brv, vlan, dummy, vxlan, veth, vrf, sriov,'
-    echo 'rm, route, rule, ethtool'
+    echo 'rm, route, rule, sim'
     exit 1
 fi
 
@@ -32,6 +32,7 @@ function clean_up {
     sudo ip link del eth2
     sudo ip link del vrf0
     sudo ip link del tun1
+    sudo ip link del tun2
     sudo ip link del tap1
     sudo ip rule del priority 999
     sudo ip -6 rule del priority 999
@@ -141,6 +142,10 @@ elif [ "CHK$1" == "CHKtun" ];then
         user 1001 group 0 multi_queue vnet_hdr
     sudo ip link set tun1 up
     sudo ethtool -C tun1 rx-frames 60
+    sudo ip tuntap add name tun2 mode tun \
+        user 1001 group 0 multi_queue vnet_hdr
+    sudo ip link set tun2 up
+    sudo ethtool -C tun2 rx-frames 60
     sleep $LINK_WAIT_TIME
 elif [ "CHK$1" == "CHKtap" ];then
     sudo ip tuntap add name tap1 mode tap \
@@ -183,7 +188,7 @@ elif [ "CHK$1" == "CHKrule" ];then
         tos 10 table 100 iif eth1 oif eth2 priority 999
     sudo ip -6 rule add from 2001:db8:f::254 to 2001:db8:f::253 \
         tos 10 table 100 iif eth1 oif eth2 priority 999
-elif [ "CHK$1" == "CHKethtool" ];then
+elif [ "CHK$1" == "CHKsim" ];then
     create_netdevsim_nic
     sudo ethtool -A sim0 tx on
     sudo ethtool -A sim0 rx on

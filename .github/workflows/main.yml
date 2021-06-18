@@ -39,14 +39,12 @@ jobs:
       if: matrix.rust_version == 'stable'
       run: sudo apt-get -y install valgrind
 
+    - name: Install extra kernel module(like netdevsim)
+      run: sudo apt-get -y install linux-modules-extra-azure
+
     - name: Check fmt
       if: matrix.rust_version == 'stable'
       run: cargo fmt -- --check
-
-    - name: Instruct cargo to use sudo as runner
-      run: |
-        echo "[target.x86_64-unknown-linux-gnu]" >> .cargo/config.toml
-        echo "runner = 'sudo -E'" >> .cargo/config.toml
 
     - name: Build
       run: cargo build --verbose --all
