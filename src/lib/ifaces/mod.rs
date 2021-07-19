@@ -41,8 +41,10 @@ pub use crate::ifaces::vxlan::*;
 use crate::ifaces::bond::bond_iface_tidy_up;
 use crate::ifaces::bridge::bridge_iface_tidy_up;
 use crate::ifaces::ethtool::get_ethtool_infos;
-use crate::ifaces::iface::fill_bridge_vlan_info;
-use crate::ifaces::iface::parse_nl_msg_to_iface;
+use crate::ifaces::iface::{
+    fill_bridge_vlan_info, parse_nl_msg_to_iface,
+    parse_nl_msg_to_name_and_index,
+};
 use crate::ifaces::mac_vlan::mac_vlan_iface_tidy_up;
 use crate::ifaces::veth::veth_iface_tidy_up;
 use crate::ifaces::vlan::vlan_iface_tidy_up;
@@ -135,4 +137,21 @@ fn ifaces_merge_ethool_infos(
             iface.ethtool = Some(ethtool_info)
         }
     }
+}
+
+pub(crate) async fn get_iface_name2index(
+) -> Result<HashMap<String, u32>, NisporError> {
+    let mut name2index: HashMap<String, u32> = HashMap::new();
+    let (connection, handle, _) = new_connection()?;
+    tokio::spawn(connection);
+
+    let mut links = handle.link().get().execute();
+    while let Some(nl_msg) = links.try_next().await? {
+        if let Some((iface_name, iface_index)) =
+            parse_nl_msg_to_name_and_index(&nl_msg)
+        {
+            name2index.insert(iface_name, iface_index);
+        }
+    }
+    Ok(name2index)
 }
