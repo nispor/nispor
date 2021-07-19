@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::mac::parse_as_mac;
 use crate::netlink::parse_as_u32;
 use crate::netlink::parse_as_u64;
-use crate::parse_as_mac;
 use crate::NisporError;
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 use serde::{Deserialize, Serialize};
