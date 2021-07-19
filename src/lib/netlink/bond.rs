@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::mac::parse_as_mac;
 use crate::netlink::nla::parse_as_ipv4;
 use crate::netlink::nla::parse_as_u16;
 use crate::netlink::nla::parse_as_u32;
 use crate::netlink::nla::parse_as_u8;
-use crate::parse_as_mac;
 use crate::BondAdInfo;
 use crate::BondInfo;
 use crate::BondMiiStatus;

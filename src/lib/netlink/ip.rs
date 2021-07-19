@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ifaces::get_iface_name_by_index;
 use crate::netlink::nla::parse_as_ipv4;
 use crate::netlink::nla::parse_as_ipv6;
 use crate::Iface;
@@ -221,4 +220,16 @@ pub(crate) fn get_ip_addr(nl_addr_msg: &AddressMessage) -> String {
 
 pub(crate) fn get_ip_prefix_len(nl_addr_msg: &AddressMessage) -> u8 {
     nl_addr_msg.header.prefix_len
+}
+
+fn get_iface_name_by_index(
+    iface_states: &HashMap<String, Iface>,
+    iface_index: u32,
+) -> String {
+    for (iface_name, iface) in iface_states.iter() {
+        if iface.index == iface_index {
+            return iface_name.clone();
+        }
+    }
+    "".into()
 }

@@ -224,18 +224,6 @@ pub struct Iface {
 
 // TODO: impl From Iface to IfaceConf
 
-pub(crate) fn get_iface_name_by_index(
-    iface_states: &HashMap<String, Iface>,
-    iface_index: u32,
-) -> String {
-    for (iface_name, iface) in iface_states.iter() {
-        if iface.index == iface_index {
-            return iface_name.clone();
-        }
-    }
-    "".into()
-}
-
 pub(crate) fn parse_nl_msg_to_iface(
     nl_msg: &LinkMessage,
 ) -> Result<Option<Iface>, NisporError> {
