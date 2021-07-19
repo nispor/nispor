@@ -13,8 +13,7 @@
 // limitations under the License.
 
 use crate::error::NisporError;
-use crate::ifaces::get_ifaces;
-use crate::ifaces::Iface;
+use crate::ifaces::{get_ifaces, Iface};
 use crate::route::get_routes;
 use crate::route::Route;
 use crate::route_rule::get_route_rules;
