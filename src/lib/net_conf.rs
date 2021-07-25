@@ -13,8 +13,11 @@
 // limitations under the License.
 
 use crate::error::NisporError;
-use crate::ifaces::get_ifaces;
-use crate::ifaces::IfaceConf;
+use crate::ifaces::{
+    change_ifaces, create_ifaces, delete_ifaces, get_iface_name2index,
+    get_ifaces, IfaceConf, IfaceState,
+};
+
 use serde::{Deserialize, Serialize};
 use tokio::runtime;
 
@@ -24,22 +27,31 @@ pub struct NetConf {
 }
 
 impl NetConf {
-    // TODO: Return bool for whether change was made
     pub fn apply(&self) -> Result<(), NisporError> {
         let rt = runtime::Builder::new_current_thread().enable_io().build()?;
-        let cur_ifaces = rt.block_on(get_ifaces())?;
-        if let Some(ifaces) = &self.ifaces {
+        let cur_iface_name_2_index = rt.block_on(get_iface_name2index())?;
+        if let Some(ref ifaces) = &self.ifaces {
+            let mut new_ifaces = Vec::new();
+            let mut del_ifaces = Vec::new();
+            let mut chg_ifaces = Vec::new();
             for iface in ifaces {
-                if let Some(cur_iface) = cur_ifaces.get(&iface.name) {
-                    rt.block_on(iface.apply(cur_iface))?
+                let cur_iface_index = cur_iface_name_2_index.get(&iface.name);
+                if iface.state == Some(IfaceState::Absent) {
+                    if let Some(cur_iface_index) = cur_iface_index {
+                        del_ifaces
+                            .push((iface.name.as_str(), *cur_iface_index));
+                    }
+                } else if cur_iface_index == None {
+                    new_ifaces.push(iface);
                 } else {
-                    // TODO: Create new interface
-                    return Err(NisporError::invalid_argument(format!(
-                        "Interface {} not found!",
-                        iface.name
-                    )));
+                    chg_ifaces.push(iface);
                 }
             }
+            rt.block_on(delete_ifaces(&del_ifaces))?;
+            rt.block_on(create_ifaces(&new_ifaces))?;
+
+            let cur_ifaces = rt.block_on(get_ifaces())?;
+            rt.block_on(change_ifaces(&chg_ifaces, &cur_ifaces))?;
         }
         Ok(())
     }

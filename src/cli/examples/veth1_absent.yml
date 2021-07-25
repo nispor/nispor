@@ -1,0 +1,4 @@
+---
+ifaces:
+  - name: veth1
+    state: absent

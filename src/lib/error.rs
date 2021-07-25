@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use libc::{EEXIST, EPERM};
 use netlink_ethtool::EthtoolError;
 use netlink_generic::GenericNetlinkError;
 use netlink_packet_utils::DecodeError;
@@ -71,9 +72,27 @@ impl std::error::Error for NisporError {
 
 impl std::convert::From<rtnetlink::Error> for NisporError {
     fn from(e: rtnetlink::Error) -> Self {
-        NisporError {
-            kind: ErrorKind::NetlinkError,
-            msg: e.to_string(),
+        match e {
+            rtnetlink::Error::NetlinkError(netlink_err) => {
+                match netlink_err.code.abs() {
+                    EEXIST => NisporError::bug(format!(
+                        "Got netlink EEXIST error: {}",
+                        netlink_err
+                    )),
+                    EPERM => NisporError::permission_deny(format!(
+                        "{}",
+                        netlink_err,
+                    )),
+                    _ => NisporError::bug(format!(
+                        "Got netlink unknown error: code {}, msg: {}",
+                        netlink_err.code, netlink_err,
+                    )),
+                }
+            }
+            _ => NisporError {
+                kind: ErrorKind::NetlinkError,
+                msg: e.to_string(),
+            },
         }
     }
 }
