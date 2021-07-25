@@ -28,6 +28,7 @@ subordinates:
   - eth2"#;
 
 #[test]
+#[ignore] // Github Action does not have VRF supported
 fn test_get_vrf_iface_yaml() {
     with_vrf_iface(|| {
         let state = NetState::retrieve().unwrap();
