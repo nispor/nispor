@@ -12,16 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::Iface;
-use crate::IfaceType;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use rtnetlink::Handle;
+use serde::{Deserialize, Serialize};
+
+use crate::{Iface, IfaceType, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct VethInfo {
     // Interface name of peer.
     // Use interface index number when peer interface is in other namespace.
     pub peer: String,
+}
+
+pub type VethConf = VethInfo;
+
+impl VethConf {
+    pub(crate) async fn create(
+        &self,
+        handle: &Handle,
+        name: &str,
+    ) -> Result<(), NisporError> {
+        match handle
+            .link()
+            .add()
+            .veth(name.to_string(), self.peer.clone())
+            .execute()
+            .await
+        {
+            Ok(_) => Ok(()),
+            Err(e) => Err(NisporError::bug(format!(
+                "Failed to create new veth pair '{}' '{}': {}",
+                &name, &self.peer, e
+            ))),
+        }
+    }
 }
 
 pub(crate) fn veth_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {

@@ -73,7 +73,7 @@ pub(crate) fn fill_ip_addr(
             }
         }
         _ => {
-            println!(
+            eprintln!(
                 "unknown address family {} {:?}",
                 nl_msg.header.family, nl_msg
             );

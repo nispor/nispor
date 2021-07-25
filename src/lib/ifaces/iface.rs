@@ -12,50 +12,40 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ifaces::bond::get_bond_info;
-use crate::ifaces::bond::get_bond_subordinate_info;
-use crate::ifaces::bond::BondInfo;
-use crate::ifaces::bond::BondSubordinateInfo;
-use crate::ifaces::bridge::get_bridge_info;
-use crate::ifaces::bridge::get_bridge_port_info;
-use crate::ifaces::bridge::parse_bridge_vlan_info;
-use crate::ifaces::bridge::BridgeInfo;
-use crate::ifaces::bridge::BridgePortInfo;
-use crate::ifaces::ethtool::EthtoolInfo;
-use crate::ifaces::mac_vlan::get_mac_vlan_info;
-use crate::ifaces::mac_vlan::MacVlanInfo;
-use crate::ifaces::mac_vtap::get_mac_vtap_info;
-use crate::ifaces::mac_vtap::MacVtapInfo;
-use crate::ifaces::sriov::get_sriov_info;
-use crate::ifaces::sriov::SriovInfo;
-use crate::ifaces::tun::get_tun_info;
-use crate::ifaces::tun::TunInfo;
-use crate::ifaces::veth::VethInfo;
-use crate::ifaces::vlan::get_vlan_info;
-use crate::ifaces::vlan::VlanInfo;
-use crate::ifaces::vrf::get_vrf_info;
-use crate::ifaces::vrf::get_vrf_subordinate_info;
-use crate::ifaces::vrf::VrfInfo;
-use crate::ifaces::vrf::VrfSubordinateInfo;
-use crate::ifaces::vxlan::get_vxlan_info;
-use crate::ifaces::vxlan::VxlanInfo;
-use crate::mac::parse_as_mac;
-use crate::IpConf;
-use crate::IpFamily;
-use crate::Ipv4Info;
-use crate::Ipv6Info;
-use crate::NisporError;
-use netlink_packet_route::rtnl::link::nlas;
-use netlink_packet_route::rtnl::LinkMessage;
-use netlink_packet_route::rtnl::{
-    ARPHRD_ETHER, ARPHRD_LOOPBACK, IFF_ALLMULTI, IFF_AUTOMEDIA, IFF_BROADCAST,
-    IFF_DEBUG, IFF_DORMANT, IFF_LOOPBACK, IFF_LOWER_UP, IFF_MASTER,
-    IFF_MULTICAST, IFF_NOARP, IFF_POINTOPOINT, IFF_PORTSEL, IFF_PROMISC,
-    IFF_RUNNING, IFF_SLAVE, IFF_UP,
+use crate::{
+    ifaces::{
+        bond::{
+            get_bond_info, get_bond_subordinate_info, BondInfo,
+            BondSubordinateInfo,
+        },
+        bridge::{
+            get_bridge_info, get_bridge_port_info, parse_bridge_vlan_info,
+            BridgeInfo, BridgePortInfo,
+        },
+        ethtool::EthtoolInfo,
+        mac_vlan::{get_mac_vlan_info, MacVlanInfo},
+        mac_vtap::{get_mac_vtap_info, MacVtapInfo},
+        sriov::{get_sriov_info, SriovInfo},
+        tun::{get_tun_info, TunInfo},
+        veth::{VethConf, VethInfo},
+        vlan::{get_vlan_info, VlanInfo},
+        vrf::{
+            get_vrf_info, get_vrf_subordinate_info, VrfInfo, VrfSubordinateInfo,
+        },
+        vxlan::{get_vxlan_info, VxlanInfo},
+    },
+    ip::{change_ips, IpConf, Ipv4Info, Ipv6Info},
+    mac::parse_as_mac,
+    NisporError,
 };
-use rtnetlink::new_connection;
 
-use rtnetlink::packet::rtnl::link::nlas::Nla;
+use netlink_packet_route::rtnl::{
+    link::nlas, LinkMessage, ARPHRD_ETHER, ARPHRD_LOOPBACK, IFF_ALLMULTI,
+    IFF_AUTOMEDIA, IFF_BROADCAST, IFF_DEBUG, IFF_DORMANT, IFF_LOOPBACK,
+    IFF_LOWER_UP, IFF_MASTER, IFF_MULTICAST, IFF_NOARP, IFF_POINTOPOINT,
+    IFF_PORTSEL, IFF_PROMISC, IFF_RUNNING, IFF_SLAVE, IFF_UP,
+};
+use rtnetlink::{new_connection, packet::rtnl::link::nlas::Nla};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -92,6 +82,7 @@ pub enum IfaceState {
     Dormant,
     Down,
     LowerLayerDown,
+    Absent, // Only for IfaceConf
     Other(String),
     Unknown,
 }
@@ -112,6 +103,7 @@ impl std::fmt::Display for IfaceState {
                 Self::Dormant => "dormant",
                 Self::Down => "down",
                 Self::LowerLayerDown => "lower_layer_down",
+                Self::Absent => "absent",
                 Self::Other(s) => s.as_str(),
                 Self::Unknown => "unknown",
             }
@@ -223,6 +215,18 @@ pub struct Iface {
 }
 
 // TODO: impl From Iface to IfaceConf
+
+pub(crate) fn parse_nl_msg_to_name_and_index(
+    nl_msg: &LinkMessage,
+) -> Option<(String, u32)> {
+    let index = nl_msg.header.index;
+    let name = _get_iface_name(nl_msg);
+    if name.is_empty() {
+        None
+    } else {
+        Some((name, index))
+    }
+}
 
 pub(crate) fn parse_nl_msg_to_iface(
     nl_msg: &LinkMessage,
@@ -480,34 +484,68 @@ fn _parse_iface_flags(flags: u32) -> Vec<IfaceFlags> {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct IfaceConf {
     pub name: String,
+    pub state: Option<IfaceState>,
     pub iface_type: Option<IfaceType>,
     pub ipv4: Option<IpConf>,
     pub ipv6: Option<IpConf>,
+    pub veth: Option<VethConf>,
 }
 
 impl IfaceConf {
-    // pub async fn create() { }
     pub async fn apply(&self, cur_iface: &Iface) -> Result<(), NisporError> {
-        let (connection, handle, _) = new_connection()?;
-        tokio::spawn(connection);
-        if let Some(ipv6_conf) = &self.ipv6 {
-            ipv6_conf.apply(&handle, cur_iface, IpFamily::Ipv6).await?;
-        } else {
-            IpConf {
-                addresses: Vec::new(),
-            }
-            .apply(&handle, cur_iface, IpFamily::Ipv6)
-            .await?;
-        }
-        if let Some(ipv4_conf) = &self.ipv4 {
-            ipv4_conf.apply(&handle, cur_iface, IpFamily::Ipv4).await?;
-        } else {
-            IpConf {
-                addresses: Vec::new(),
-            }
-            .apply(&handle, cur_iface, IpFamily::Ipv4)
-            .await?;
-        }
-        Ok(())
+        eprintln!(
+            "WARN: IfaceConf::apply() is deprecated, \
+            please use NetConf::apply() instead"
+        );
+        let ifaces = vec![self];
+        let mut cur_ifaces = HashMap::new();
+        cur_ifaces.insert(self.name.to_string(), cur_iface.clone());
+        change_ifaces(&ifaces, &cur_ifaces).await
     }
+}
+
+pub(crate) async fn delete_ifaces(
+    ifaces: &[(&str, u32)],
+) -> Result<(), NisporError> {
+    let (connection, handle, _) = new_connection()?;
+    tokio::spawn(connection);
+    for (iface_name, iface_index) in ifaces {
+        if let Err(e) = handle.link().del(*iface_index).execute().await {
+            return Err(NisporError::bug(format!(
+                "Failed to delete interface {} with index {}: {}",
+                iface_name, iface_index, e
+            )));
+        }
+    }
+
+    Ok(())
+}
+
+pub(crate) async fn create_ifaces(
+    ifaces: &[&IfaceConf],
+) -> Result<(), NisporError> {
+    let (connection, handle, _) = new_connection()?;
+    tokio::spawn(connection);
+    for iface in ifaces {
+        if let Some(veth_conf) = &iface.veth {
+            veth_conf.create(&handle, &iface.name).await?;
+        } else {
+            return Err(NisporError::invalid_argument(format!(
+                "Cannot create unsupported interface {:?}",
+                &iface
+            )));
+        }
+    }
+
+    Ok(())
+}
+
+pub(crate) async fn change_ifaces(
+    ifaces: &[&IfaceConf],
+    cur_ifaces: &HashMap<String, Iface>,
+) -> Result<(), NisporError> {
+    let (connection, handle, _) = new_connection()?;
+    tokio::spawn(connection);
+    change_ips(&handle, ifaces, cur_ifaces).await?;
+    Ok(())
 }
