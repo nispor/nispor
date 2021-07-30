@@ -33,10 +33,12 @@ nispor_test: nispor_test.c nispor.h libnispor.so
 	$(CC) $(CFLAGS) $(LDFLAGS) -o nispor_test nispor_test.c $(LIBS)
 
 check: nispor_test
+	sudo \
+	RUST_BACKTRACE=1 \
 	LD_LIBRARY_PATH=$(TMPDIR) \
-		valgrind --trace-children=yes --leak-check=full \
+		valgrind -s --trace-children=yes --leak-check=full \
 		--error-exitcode=1 \
-		./nispor_test 1>/dev/null
+		./nispor_test
 	rm -rf $(TMPDIR)
 
 clean:

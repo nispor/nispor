@@ -61,6 +61,34 @@ extern "C" {
  */
 int nispor_net_state_retrieve(char **state, char **err_kind, char **err_msg);
 
+/**
+ * nispor_net_state_apply - Apply network state
+ *
+ * Version:
+ *      0.2
+ *
+ * Description:
+ *      Apply network state in the format of JSON.
+ *
+ * @state:
+ *      Input const char array for network state in json format. 
+ *      Program will quit by assert when input pointer is NULL.
+ * @err_kind:
+ *      Output pointer of char array for error kind.
+ *      The memory should be freed by nispor_err_kind_free().
+ * @err_msg:
+ *      Output pointer of char array for error message.
+ *      The memory should be freed by nispor_err_msg_free().
+ *
+ * Return:
+ *      Error code:
+ *          * NISPOR_PASS
+ *              On success.
+ *          * NISPOR_FAIL
+ *              On failure.
+ */
+int nispor_net_state_apply(const char *state, char **err_kind, char **err_msg);
+
 void nispor_net_state_free(char *state);
 
 void nispor_err_msg_free(char *err_msg);

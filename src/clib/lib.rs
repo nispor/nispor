@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use libc::{c_char, c_int};
+use std::ffi::CStr;
 use std::ffi::CString;
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
@@ -41,8 +42,48 @@ pub extern "C" fn nispor_net_state_retrieve(
         },
         Err(e) => unsafe {
             *err_msg = CString::new(e.msg).unwrap().into_raw();
-            *err_kind =
-                CString::new(format!("{}", &e.kind)).unwrap().into_raw();
+            *err_kind = CString::new(format!("{}", e.kind)).unwrap().into_raw();
+            libc::EXIT_FAILURE
+        },
+    }
+}
+
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+#[no_mangle]
+pub extern "C" fn nispor_net_state_apply(
+    state_cstr: *mut c_char,
+    err_kind: *mut *mut c_char,
+    err_msg: *mut *mut c_char,
+) -> c_int {
+    assert!(!state_cstr.is_null());
+    assert!(!err_kind.is_null());
+    assert!(!err_msg.is_null());
+
+    unsafe {
+        *err_kind = std::ptr::null_mut();
+        *err_msg = std::ptr::null_mut();
+    }
+    match unsafe { CStr::from_ptr(state_cstr) }.to_str() {
+        Ok(state_str) => match serde_json::from_str(state_str) {
+            Ok(state) => match nispor::NetConf::apply(&state) {
+                Ok(_) => libc::EXIT_SUCCESS,
+                Err(e) => unsafe {
+                    *err_msg = CString::new(e.msg).unwrap().into_raw();
+                    *err_kind = CString::new(format!("{}", &e.kind))
+                        .unwrap()
+                        .into_raw();
+                    libc::EXIT_FAILURE
+                },
+            },
+            Err(e) => unsafe {
+                *err_msg = CString::new(e.to_string()).unwrap().into_raw();
+                *err_kind = CString::new("bad format").unwrap().into_raw();
+                libc::EXIT_FAILURE
+            },
+        },
+        Err(e) => unsafe {
+            *err_msg = CString::new(e.to_string()).unwrap().into_raw();
+            *err_kind = CString::new("bad input").unwrap().into_raw();
             libc::EXIT_FAILURE
         },
     }

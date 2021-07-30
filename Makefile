@@ -52,12 +52,16 @@ $(CLI_EXEC_DEBUG):
 $(CLI_EXEC_RELEASE) $(CLIB_SO_DEV_RELEASE):
 	cargo build --all --release
 
-check:
+lib-check:
 	cargo test -- --test-threads=1 --show-output;
 	if [ "CHK$(CI)" != "CHKtrue" ]; then \
 		cargo test -- --test-threads=1 --show-output --ignored; \
 	fi
+
+clib-check:
 	make check -C test/clib
+
+check: lib-check clib-check
 
 clean:
 	cargo clean
