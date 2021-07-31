@@ -190,6 +190,9 @@ pub(crate) async fn create_ifaces(
                     veth_conf.create(&handle, &iface.name).await?;
                 }
             }
+            Some(IfaceType::Bond) => {
+                BondConf::create(&handle, &iface.name).await?;
+            }
             Some(_) => {
                 return Err(NisporError::invalid_argument(format!(
                     "Cannot create unsupported interface {:?}",
