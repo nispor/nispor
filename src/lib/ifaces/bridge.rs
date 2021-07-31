@@ -12,15 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::netlink::parse_af_spec_bridge_info;
-use crate::netlink::parse_bridge_info;
-use crate::netlink::parse_bridge_port_info;
-use crate::ControllerType;
-use crate::Iface;
-use crate::NisporError;
-use netlink_packet_route::rtnl::link::nlas;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use netlink_packet_route::rtnl::link::nlas;
+use rtnetlink::Handle;
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    netlink::{
+        parse_af_spec_bridge_info, parse_bridge_info, parse_bridge_port_info,
+    },
+    ControllerType, Iface, NisporError,
+};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
@@ -366,4 +369,22 @@ pub(crate) fn parse_bridge_vlan_info(
         port_info.vlans = parse_af_spec_bridge_info(data)?;
     }
     Ok(())
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+pub struct BridgeConf {}
+
+impl BridgeConf {
+    pub(crate) async fn create(
+        handle: &Handle,
+        name: &str,
+    ) -> Result<(), NisporError> {
+        match handle.link().add().bridge(name.to_string()).execute().await {
+            Ok(_) => Ok(()),
+            Err(e) => Err(NisporError::bug(format!(
+                "Failed to create new bridge '{}': {}",
+                &name, e
+            ))),
+        }
+    }
 }
