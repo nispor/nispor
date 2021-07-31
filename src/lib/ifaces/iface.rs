@@ -22,6 +22,7 @@ use crate::{
             get_bridge_info, get_bridge_port_info, parse_bridge_vlan_info,
             BridgeConf, BridgeInfo, BridgePortInfo,
         },
+        change_ifaces,
         ethtool::EthtoolInfo,
         mac_vlan::{get_mac_vlan_info, MacVlanInfo},
         mac_vtap::{get_mac_vtap_info, MacVtapInfo},
@@ -34,7 +35,7 @@ use crate::{
         },
         vxlan::{get_vxlan_info, VxlanInfo},
     },
-    ip::{change_ips, IpConf, Ipv4Info, Ipv6Info},
+    ip::{IpConf, Ipv4Info, Ipv6Info},
     mac::parse_as_mac,
     NisporError,
 };
@@ -45,7 +46,7 @@ use netlink_packet_route::rtnl::{
     IFF_LOWER_UP, IFF_MASTER, IFF_MULTICAST, IFF_NOARP, IFF_POINTOPOINT,
     IFF_PORTSEL, IFF_PROMISC, IFF_RUNNING, IFF_SLAVE, IFF_UP,
 };
-use rtnetlink::{new_connection, packet::rtnl::link::nlas::Nla};
+use rtnetlink::packet::rtnl::link::nlas::Nla;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -484,7 +485,8 @@ fn _parse_iface_flags(flags: u32) -> Vec<IfaceFlags> {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct IfaceConf {
     pub name: String,
-    pub state: Option<IfaceState>,
+    #[serde(default = "default_iface_state_in_conf")]
+    pub state: IfaceState,
     #[serde(rename = "type")]
     pub iface_type: Option<IfaceType>,
     pub ipv4: Option<IpConf>,
@@ -506,50 +508,6 @@ impl IfaceConf {
     }
 }
 
-pub(crate) async fn delete_ifaces(
-    ifaces: &[(&str, u32)],
-) -> Result<(), NisporError> {
-    let (connection, handle, _) = new_connection()?;
-    tokio::spawn(connection);
-    for (iface_name, iface_index) in ifaces {
-        if let Err(e) = handle.link().del(*iface_index).execute().await {
-            return Err(NisporError::bug(format!(
-                "Failed to delete interface {} with index {}: {}",
-                iface_name, iface_index, e
-            )));
-        }
-    }
-
-    Ok(())
-}
-
-pub(crate) async fn create_ifaces(
-    ifaces: &[&IfaceConf],
-) -> Result<(), NisporError> {
-    let (connection, handle, _) = new_connection()?;
-    tokio::spawn(connection);
-    for iface in ifaces {
-        if let Some(veth_conf) = &iface.veth {
-            veth_conf.create(&handle, &iface.name).await?;
-        } else if Some(IfaceType::Bridge) == iface.iface_type {
-            BridgeConf::create(&handle, &iface.name).await?;
-        } else {
-            return Err(NisporError::invalid_argument(format!(
-                "Cannot create unsupported interface {:?}",
-                &iface
-            )));
-        }
-    }
-
-    Ok(())
-}
-
-pub(crate) async fn change_ifaces(
-    ifaces: &[&IfaceConf],
-    cur_ifaces: &HashMap<String, Iface>,
-) -> Result<(), NisporError> {
-    let (connection, handle, _) = new_connection()?;
-    tokio::spawn(connection);
-    change_ips(&handle, ifaces, cur_ifaces).await?;
-    Ok(())
+fn default_iface_state_in_conf() -> IfaceState {
+    IfaceState::Up
 }

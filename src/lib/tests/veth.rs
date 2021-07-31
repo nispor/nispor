@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use nispor::{NetConf, NetState};
+use nispor::{IfaceState, NetConf, NetState};
 use pretty_assertions::assert_eq;
 use serde_yaml;
 use std::panic;
@@ -58,7 +58,15 @@ ifaces:
     type: veth
     mac_address: 00:23:45:67:89:1a
     veth:
-      peer: veth1.ep"#;
+      peer: veth1.ep
+  - name: veth1.ep
+    type: veth"#;
+
+const VETH_DOWN_YML: &str = r#"---
+ifaces:
+  - name: veth1
+    type: veth
+    state: down"#;
 
 const VETH_DELETE_YML: &str = r#"---
 ifaces:
@@ -67,13 +75,20 @@ ifaces:
     state: absent"#;
 
 #[test]
-fn test_create_delete_veth() {
+fn test_create_down_delete_veth() {
     let net_conf: NetConf = serde_yaml::from_str(VETH_CREATE_YML).unwrap();
     net_conf.apply().unwrap();
     let state = NetState::retrieve().unwrap();
     let iface = &state.ifaces[IFACE_NAME];
     assert_eq!(&iface.iface_type, &nispor::IfaceType::Veth);
     assert_eq!(iface.veth.as_ref().unwrap().peer, "veth1.ep");
+    assert_eq!(iface.state, IfaceState::Up);
+
+    let net_conf: NetConf = serde_yaml::from_str(VETH_DOWN_YML).unwrap();
+    net_conf.apply().unwrap();
+    let state = NetState::retrieve().unwrap();
+    let iface = &state.ifaces[IFACE_NAME];
+    assert_eq!(iface.state, IfaceState::Down);
 
     let net_conf: NetConf = serde_yaml::from_str(VETH_DELETE_YML).unwrap();
     net_conf.apply().unwrap();

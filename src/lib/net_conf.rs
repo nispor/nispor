@@ -36,13 +36,14 @@ impl NetConf {
             let mut chg_ifaces = Vec::new();
             for iface in ifaces {
                 let cur_iface_index = cur_iface_name_2_index.get(&iface.name);
-                if iface.state == Some(IfaceState::Absent) {
+                if iface.state == IfaceState::Absent {
                     if let Some(cur_iface_index) = cur_iface_index {
                         del_ifaces
                             .push((iface.name.as_str(), *cur_iface_index));
                     }
                 } else if cur_iface_index == None {
                     new_ifaces.push(iface);
+                    chg_ifaces.push(iface);
                 } else {
                     chg_ifaces.push(iface);
                 }
