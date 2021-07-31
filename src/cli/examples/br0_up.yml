@@ -1,0 +1,4 @@
+---
+ifaces:
+  - name: br0
+    type: bridge

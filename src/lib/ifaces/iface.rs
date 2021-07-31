@@ -20,7 +20,7 @@ use crate::{
         },
         bridge::{
             get_bridge_info, get_bridge_port_info, parse_bridge_vlan_info,
-            BridgeInfo, BridgePortInfo,
+            BridgeConf, BridgeInfo, BridgePortInfo,
         },
         ethtool::EthtoolInfo,
         mac_vlan::{get_mac_vlan_info, MacVlanInfo},
@@ -485,10 +485,12 @@ fn _parse_iface_flags(flags: u32) -> Vec<IfaceFlags> {
 pub struct IfaceConf {
     pub name: String,
     pub state: Option<IfaceState>,
+    #[serde(rename = "type")]
     pub iface_type: Option<IfaceType>,
     pub ipv4: Option<IpConf>,
     pub ipv6: Option<IpConf>,
     pub veth: Option<VethConf>,
+    pub bridge: Option<BridgeConf>,
 }
 
 impl IfaceConf {
@@ -529,6 +531,8 @@ pub(crate) async fn create_ifaces(
     for iface in ifaces {
         if let Some(veth_conf) = &iface.veth {
             veth_conf.create(&handle, &iface.name).await?;
+        } else if Some(IfaceType::Bridge) == iface.iface_type {
+            BridgeConf::create(&handle, &iface.name).await?;
         } else {
             return Err(NisporError::invalid_argument(format!(
                 "Cannot create unsupported interface {:?}",
