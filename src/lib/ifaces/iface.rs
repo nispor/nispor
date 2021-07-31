@@ -489,6 +489,7 @@ pub struct IfaceConf {
     pub state: IfaceState,
     #[serde(rename = "type")]
     pub iface_type: Option<IfaceType>,
+    pub controller: Option<String>,
     pub ipv4: Option<IpConf>,
     pub ipv6: Option<IpConf>,
     pub veth: Option<VethConf>,
