@@ -102,12 +102,28 @@ where
 const BOND_CREATE_YML: &str = r#"---
 ifaces:
   - name: bond99
-    type: bond"#;
+    type: bond
+  - name: veth1
+    type: veth
+    controller: bond99
+    veth:
+      peer: veth1.ep
+  - name: veth1.ep
+    type: veth
+    state: up"#;
+
+const BOND_PORT_REMOVE_YML: &str = r#"---
+ifaces:
+  - name: veth1
+    type: veth
+    veth:
+      peer: veth1.ep"#;
 
 const BOND_DELETE_YML: &str = r#"---
 ifaces:
   - name: bond99
-    type: bond
+    state: absent
+  - name: veth1
     state: absent"#;
 
 #[test]
@@ -117,6 +133,18 @@ fn test_create_delete_bond() {
     let state = NetState::retrieve().unwrap();
     let iface = &state.ifaces[IFACE_NAME];
     assert_eq!(&iface.iface_type, &nispor::IfaceType::Bond);
+    assert_eq!(
+        &iface.bond.as_ref().unwrap().subordinates,
+        &vec!["veth1".to_string()]
+    );
+
+    let net_conf: NetConf = serde_yaml::from_str(BOND_PORT_REMOVE_YML).unwrap();
+    net_conf.apply().unwrap();
+    let state = NetState::retrieve().unwrap();
+    let iface = &state.ifaces[IFACE_NAME];
+    assert_eq!(&iface.iface_type, &nispor::IfaceType::Bond);
+    let empty_vec: Vec<String> = Vec::new();
+    assert_eq!(&iface.bond.as_ref().unwrap().subordinates, &empty_vec);
 
     let net_conf: NetConf = serde_yaml::from_str(BOND_DELETE_YML).unwrap();
     net_conf.apply().unwrap();

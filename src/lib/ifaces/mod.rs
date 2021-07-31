@@ -217,12 +217,13 @@ pub(crate) async fn change_ifaces(
 ) -> Result<(), NisporError> {
     let (connection, handle, _) = new_connection()?;
     tokio::spawn(connection);
+    change_ifaces_controller(&handle, ifaces, cur_ifaces).await?;
     change_ifaces_state(&handle, ifaces, cur_ifaces).await?;
     change_ips(&handle, ifaces, cur_ifaces).await?;
     Ok(())
 }
 
-pub(crate) async fn change_ifaces_state(
+async fn change_ifaces_state(
     handle: &rtnetlink::Handle,
     ifaces: &[&IfaceConf],
     cur_ifaces: &HashMap<String, Iface>,
@@ -241,6 +242,54 @@ pub(crate) async fn change_ifaces_state(
                     )));
                 }
             }
+        }
+    }
+
+    Ok(())
+}
+
+async fn change_ifaces_controller(
+    handle: &rtnetlink::Handle,
+    ifaces: &[&IfaceConf],
+    cur_ifaces: &HashMap<String, Iface>,
+) -> Result<(), NisporError> {
+    for iface in ifaces {
+        if let Some(cur_iface) = cur_ifaces.get(&iface.name) {
+            if cur_iface.controller != iface.controller {
+                match &iface.controller {
+                    Some(ref ctrl_name) => match cur_ifaces.get(ctrl_name) {
+                        None => {
+                            return Err(NisporError::invalid_argument(
+                                format!(
+                                    "Controller interface {} not found",
+                                    &ctrl_name
+                                ),
+                            ));
+                        }
+                        Some(ctrl_iface) => {
+                            handle
+                                .link()
+                                .set(cur_iface.index)
+                                .master(ctrl_iface.index)
+                                .execute()
+                                .await?;
+                        }
+                    },
+                    None => {
+                        handle
+                            .link()
+                            .set(cur_iface.index)
+                            .nomaster()
+                            .execute()
+                            .await?;
+                    }
+                }
+            }
+        } else {
+            return Err(NisporError::invalid_argument(format!(
+                "Interface {} not found",
+                iface.name
+            )));
         }
     }
 

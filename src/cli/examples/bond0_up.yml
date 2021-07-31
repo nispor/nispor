@@ -2,3 +2,11 @@
 ifaces:
   - name: bond0
     type: bond
+  - name: veth1
+    type: veth
+    controller: bond0
+    veth:
+      peer: veth1.ep
+  - name: veth1.ep
+    type: veth
+    state: up
