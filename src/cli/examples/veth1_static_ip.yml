@@ -12,3 +12,5 @@ ifaces:
       addresses:
         - address: "2001:db8:a::9"
           prefix_len: 64
+  - name: veth1.ep
+    type: veth

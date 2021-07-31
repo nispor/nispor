@@ -50,8 +50,10 @@ use crate::ifaces::veth::veth_iface_tidy_up;
 use crate::ifaces::vlan::vlan_iface_tidy_up;
 use crate::ifaces::vrf::vrf_iface_tidy_up;
 use crate::ifaces::vxlan::vxlan_iface_tidy_up;
+use crate::ip::change_ips;
 use crate::netlink::fill_ip_addr;
 use crate::NisporError;
+
 use futures::stream::TryStreamExt;
 use netlink_packet_route::rtnl::constants::AF_BRIDGE;
 use netlink_packet_route::rtnl::constants::AF_UNSPEC;
@@ -154,4 +156,90 @@ pub(crate) async fn get_iface_name2index(
         }
     }
     Ok(name2index)
+}
+
+pub(crate) async fn delete_ifaces(
+    ifaces: &[(&str, u32)],
+) -> Result<(), NisporError> {
+    let (connection, handle, _) = new_connection()?;
+    tokio::spawn(connection);
+    for (iface_name, iface_index) in ifaces {
+        if let Err(e) = handle.link().del(*iface_index).execute().await {
+            return Err(NisporError::bug(format!(
+                "Failed to delete interface {} with index {}: {}",
+                iface_name, iface_index, e
+            )));
+        }
+    }
+
+    Ok(())
+}
+
+pub(crate) async fn create_ifaces(
+    ifaces: &[&IfaceConf],
+) -> Result<(), NisporError> {
+    let (connection, handle, _) = new_connection()?;
+    tokio::spawn(connection);
+    for iface in ifaces {
+        match iface.iface_type {
+            Some(IfaceType::Bridge) => {
+                BridgeConf::create(&handle, &iface.name).await?;
+            }
+            Some(IfaceType::Veth) => {
+                if let Some(veth_conf) = &iface.veth {
+                    veth_conf.create(&handle, &iface.name).await?;
+                }
+            }
+            Some(_) => {
+                return Err(NisporError::invalid_argument(format!(
+                    "Cannot create unsupported interface {:?}",
+                    &iface
+                )));
+            }
+            None => {
+                return Err(NisporError::invalid_argument(format!(
+                    "No interface type defined for new interface {:?}",
+                    &iface
+                )));
+            }
+        }
+    }
+
+    Ok(())
+}
+
+pub(crate) async fn change_ifaces(
+    ifaces: &[&IfaceConf],
+    cur_ifaces: &HashMap<String, Iface>,
+) -> Result<(), NisporError> {
+    let (connection, handle, _) = new_connection()?;
+    tokio::spawn(connection);
+    change_ifaces_state(&handle, ifaces, cur_ifaces).await?;
+    change_ips(&handle, ifaces, cur_ifaces).await?;
+    Ok(())
+}
+
+pub(crate) async fn change_ifaces_state(
+    handle: &rtnetlink::Handle,
+    ifaces: &[&IfaceConf],
+    cur_ifaces: &HashMap<String, Iface>,
+) -> Result<(), NisporError> {
+    for iface in ifaces {
+        if let Some(cur_iface) = cur_ifaces.get(&iface.name) {
+            if cur_iface.state != iface.state {
+                if iface.state == IfaceState::Up {
+                    handle.link().set(cur_iface.index).up().execute().await?;
+                } else if iface.state == IfaceState::Down {
+                    handle.link().set(cur_iface.index).down().execute().await?;
+                } else {
+                    return Err(NisporError::invalid_argument(format!(
+                        "Unsupported interface state in NetConf: {}",
+                        iface.state
+                    )));
+                }
+            }
+        }
+    }
+
+    Ok(())
 }
