@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ifaces::Iface;
-use crate::netlink::parse_bond_info;
-use crate::netlink::parse_bond_subordinate_info;
-use crate::ControllerType;
-use crate::IfaceType;
-use crate::NisporError;
-use netlink_packet_route::rtnl::link::nlas;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use netlink_packet_route::rtnl::link::nlas;
+use rtnetlink::{packet::rtnl::link::nlas::Nla, Handle};
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    ifaces::Iface,
+    netlink::{parse_bond_info, parse_bond_subordinate_info},
+    ControllerType, IfaceType, NisporError,
+};
 
 const BOND_MODE_ROUNDROBIN: u8 = 0;
 const BOND_MODE_ACTIVEBACKUP: u8 = 1;
@@ -489,6 +491,31 @@ fn primary_index_to_iface_name(iface_states: &mut HashMap<String, Iface>) {
                     bond_info.primary = Some(iface_name.clone());
                 }
             }
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+pub struct BondConf {}
+
+impl BondConf {
+    pub(crate) async fn create(
+        handle: &Handle,
+        name: &str,
+    ) -> Result<(), NisporError> {
+        // Unlink bridge, rust-rtnetlink does not support bond creation out of
+        // box.
+        let mut req = handle.link().add();
+        let mutator = req.message_mut();
+        let info = Nla::Info(vec![nlas::Info::Kind(nlas::InfoKind::Bond)]);
+        mutator.nlas.push(info);
+        mutator.nlas.push(Nla::IfName(name.to_string()));
+        match req.execute().await {
+            Ok(_) => Ok(()),
+            Err(e) => Err(NisporError::bug(format!(
+                "Failed to create new bridge '{}': {}",
+                &name, e
+            ))),
         }
     }
 }

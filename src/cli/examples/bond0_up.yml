@@ -1,0 +1,4 @@
+---
+ifaces:
+  - name: bond0
+    type: bond
