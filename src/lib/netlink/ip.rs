@@ -73,9 +73,10 @@ pub(crate) fn fill_ip_addr(
             }
         }
         _ => {
-            eprintln!(
+            log::warn!(
                 "unknown address family {} {:?}",
-                nl_msg.header.family, nl_msg
+                nl_msg.header.family,
+                nl_msg
             );
         }
     };
@@ -209,9 +210,10 @@ pub(crate) fn get_ip_addr(nl_addr_msg: &AddressMessage) -> String {
             }
         }
         _ => {
-            eprintln!(
+            log::warn!(
                 "unknown address family {} {:?}",
-                nl_addr_msg.header.family, nl_addr_msg
+                nl_addr_msg.header.family,
+                nl_addr_msg
             );
         }
     }

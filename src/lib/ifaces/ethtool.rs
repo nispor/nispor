@@ -464,7 +464,7 @@ async fn dump_coalesce_infos(
                     CoalesceAttr::RateSampleInterval(d) => {
                         coalesce_info.rate_sample_interval = Some(d)
                     }
-                    _ => eprintln!("WARN: Unsupported CoalesceAttr {:?}", nla),
+                    _ => log::warn!("WARN: Unsupported CoalesceAttr {:?}", nla),
                 }
             }
             if let Some(i) = iface_name {
@@ -498,7 +498,7 @@ async fn dump_ring_infos(
                     RingAttr::RxMini(d) => ring_info.rx_mini = Some(d),
                     RingAttr::RxJumbo(d) => ring_info.rx_jumbo = Some(d),
                     RingAttr::Tx(d) => ring_info.tx = Some(d),
-                    _ => eprintln!("WARN: Unsupported RingAttr {:?}", nla),
+                    _ => log::warn!("WARN: Unsupported RingAttr {:?}", nla),
                 }
             }
             if let Some(i) = iface_name {
@@ -542,7 +542,7 @@ async fn dump_link_mode_infos(
                     }
                     LinkModeAttr::Lanes(d) => link_mode_info.lanes = Some(d),
 
-                    _ => eprintln!("WARN: Unsupported LinkModeAttr {:?}", nla),
+                    _ => log::warn!("WARN: Unsupported LinkModeAttr {:?}", nla),
                 }
             }
             if let Some(i) = iface_name {

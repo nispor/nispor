@@ -44,14 +44,14 @@ pub(crate) fn parse_af_spec_bridge_info(
                     }
                 }
                 _ => {
-                    eprintln!(
+                    log::warn!(
                         "Unhandled AF_SPEC_BRIDGE_INFO: {} {:?}",
                         nla.kind(),
                         nla.value()
                     );
                 }
             },
-            Err(e) => eprintln!("{}", e),
+            Err(e) => log::warn!("{}", e),
         }
     }
     if !vlans.is_empty() {
@@ -100,7 +100,7 @@ fn parse_vlan_info(
         entry.is_range_end = (flags & BRIDGE_VLAN_INFO_RANGE_END) > 0;
         Ok(Some(entry))
     } else {
-        eprintln!(
+        log::warn!(
             "Invalid kernel bridge vlan info: {:?}, should be [u8;4]",
             data
         );
@@ -128,7 +128,7 @@ fn merge_vlan_range(
                         is_egress_untagged: k_vlan.is_egress_untagged,
                     })
                 } else {
-                    eprintln!(
+                    log::warn!(
                         "Invalid kernel bridge vlan information: \
                         missing start VLAN for {}",
                         k_vlan.vid

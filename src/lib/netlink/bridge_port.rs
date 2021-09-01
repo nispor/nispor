@@ -373,7 +373,7 @@ pub(crate) fn parse_bridge_port_info(
                 {
                     func(nla.value(), &mut port_info)?;
                 } else {
-                    eprintln!(
+                    log::warn!(
                         "Unhandled BRIDGE_PORT_INFO {} {:?}",
                         nla.kind(),
                         nla.value()
@@ -381,7 +381,7 @@ pub(crate) fn parse_bridge_port_info(
                 }
             }
             Err(e) => {
-                eprintln!("{}", e);
+                log::warn!("{}", e);
             }
         }
     }

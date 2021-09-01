@@ -113,7 +113,7 @@ impl IpConf {
         cur_iface: &Iface,
         family: IpFamily,
     ) -> Result<(), NisporError> {
-        eprintln!("WARN: Deprecated, please use NetConf::apply() instead");
+        log::warn!("WARN: Deprecated, please use NetConf::apply() instead");
         let iface = match family {
             IpFamily::Ipv4 => IfaceConf {
                 ipv4: Some(self.clone()),

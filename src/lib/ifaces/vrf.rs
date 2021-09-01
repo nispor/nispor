@@ -42,7 +42,7 @@ pub(crate) fn get_vrf_info(data: &InfoData) -> Option<VrfInfo> {
             if let InfoVrf::TableId(d) = *info {
                 vrf_info.table_id = d;
             } else {
-                eprintln!("Unknown VRF info {:?}", info)
+                log::warn!("Unknown VRF info {:?}", info)
             }
         }
         Some(vrf_info)

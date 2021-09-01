@@ -115,7 +115,7 @@ pub(crate) fn parse_bridge_info(
         } else if let InfoBridge::MultiBoolOpt(d) = info {
             bridge_info.multi_bool_opt = Some(*d);
         } else {
-            eprintln!("Unknown NLA {:?}", &info);
+            log::warn!("Unknown NLA {:?}", &info);
         }
     }
     Ok(bridge_info)
