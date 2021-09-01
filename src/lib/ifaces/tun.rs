@@ -69,7 +69,7 @@ impl From<u8> for TunMode {
             IFF_TUN => TunMode::Tun,
             IFF_TAP => TunMode::Tap,
             _ => {
-                eprintln!("Unhandled TUN mode {}", d);
+                log::warn!("Unhandled TUN mode {}", d);
                 TunMode::Unknown
             }
         }
@@ -112,7 +112,7 @@ pub(crate) fn get_tun_info(data: &InfoData) -> Result<TunInfo, NisporError> {
                         Some(parse_as_u32(nla.value())?);
                 }
                 _ => {
-                    eprintln!(
+                    log::warn!(
                         "Unhandled TUN NLA {} {:?}",
                         nla.kind(),
                         nla.value()

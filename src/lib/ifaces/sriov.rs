@@ -215,7 +215,7 @@ pub(crate) fn get_sriov_info(
                     vf_info.broadcast = parse_vf_mac(nla.value(), mac_len)?;
                 }
                 _ => {
-                    eprintln!(
+                    log::warn!(
                         "Unhandled SRIOV NLA {} {:?}",
                         nla.kind(),
                         nla.value()
@@ -268,7 +268,7 @@ fn parse_vf_stats(raw: &[u8]) -> Result<VfState, NisporError> {
             IFLA_VF_STATS_TX_DROPPED => {
                 state.tx_dropped = parse_as_u64(nla.value())?;
             }
-            _ => eprintln!(
+            _ => log::warn!(
                 "Unhandled IFLA_VF_STATS {}, {:?}",
                 nla.kind(),
                 nla.value()

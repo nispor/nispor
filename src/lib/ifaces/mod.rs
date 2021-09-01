@@ -97,7 +97,7 @@ pub(crate) async fn get_ifaces() -> Result<HashMap<String, Iface>, NisporError>
         }
         Err(e) => {
             // Ethtool is considered as optional
-            eprintln!("Failed to query ethtool info: {}", e);
+            log::warn!("Failed to query ethtool info: {}", e);
         }
     };
 

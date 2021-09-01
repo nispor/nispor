@@ -297,7 +297,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                                 iface_state.tun = Some(info);
                             }
                             Err(e) => {
-                                eprintln!("Error parsing TUN info: {}", e);
+                                log::warn!("Error parsing TUN info: {}", e);
                             }
                         },
                         IfaceType::Vlan => iface_state.vlan = get_vlan_info(d),
@@ -311,7 +311,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                         IfaceType::MacVtap => {
                             iface_state.mac_vtap = get_mac_vtap_info(d)?
                         }
-                        _ => eprintln!(
+                        _ => log::warn!(
                             "Unhandled IFLA_INFO_DATA for iface type {:?}",
                             iface_state.iface_type
                         ),
@@ -344,7 +344,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                                 iface_state.vrf_subordinate =
                                     get_vrf_subordinate_info(d)?;
                             }
-                            _ => eprintln!(
+                            _ => log::warn!(
                                 "Unknown controller type {:?}",
                                 controller_type
                             ),
@@ -498,7 +498,7 @@ pub struct IfaceConf {
 
 impl IfaceConf {
     pub async fn apply(&self, cur_iface: &Iface) -> Result<(), NisporError> {
-        eprintln!(
+        log::warn!(
             "WARN: IfaceConf::apply() is deprecated, \
             please use NetConf::apply() instead"
         );

@@ -27,6 +27,7 @@ netlink-generic = {path ="../netlink-generic"}
 tokio = { version = "1.9.0", features = ["macros", "rt"] }
 futures = "0.3"
 libc = "0.2.99"
+log = "0.4.14"
 
 [dev-dependencies]
 serde_yaml = "0.8"

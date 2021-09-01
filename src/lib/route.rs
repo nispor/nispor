@@ -510,7 +510,7 @@ fn get_route(
                             rt.fastopen_no_cookie = Some(d);
                         }
                         _ => {
-                            eprintln!(
+                            log::warn!(
                                 "Unknown RTA_METRICS message {:?}",
                                 metric
                             );
@@ -573,14 +573,14 @@ fn get_route(
                         RTA_VIA => {
                             // Kernel will use RTA_VIA when gateway family does
                             // not match nexthop family
-                            eprintln!(
+                            log::warn!(
                                 "dual stack(RTA_VIA) multipath route next hop
                                  is not supported by nispor yet"
                             );
                             continue;
                         }
                         _ => {
-                            eprintln!(
+                            log::warn!(
                                 "Got unexpected RTA_MULTIPATH NLA {} {:?}",
                                 nla.kind(),
                                 nla.value()
@@ -638,7 +638,7 @@ fn get_route(
             Nla::Pref(d) => {
                 rt.perf = Some(d[0]);
             }
-            _ => eprintln!("Unknown NLA message for route {:?}", nla),
+            _ => log::warn!("Unknown NLA message for route {:?}", nla),
         }
     }
 

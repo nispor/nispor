@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use clap::{clap_app, crate_authors, crate_version};
+use clap::{crate_authors, crate_version};
 use nispor::{
     Iface, IfaceState, NetConf, NetState, NisporError, Route, RouteRule,
 };
@@ -311,32 +311,100 @@ fn get_routes(state: &NetState, matches: &clap::ArgMatches) -> CliResult {
 }
 
 fn main() {
-    let matches = clap_app!(npc =>
-        (version: crate_version!())
-        (author: crate_authors!())
-        (about: "Nispor CLI")
-        (@arg ifname: [INTERFACE_NAME] "interface name")
-        (@arg json: -j --json "Show in json format")
-        (@subcommand iface =>
-            (@arg json: -j --json "Show in json format")
-            (@arg ifname: [INTERFACE_NAME] "Show only specified interface")
-            (about: "Show interface")
+    let matches = clap::App::new("npc")
+        .version(crate_version!())
+        .author(crate_authors!())
+        .about("Nispor CLI")
+        .arg(
+            clap::Arg::with_name("verbose")
+                .short("v")
+                .multiple(true)
+                .help("Set verbose level"),
         )
-        (@subcommand route =>
-            (@arg json: -j --json "Show in json format")
-            (@arg dev: -d --dev [OIF] "Show only route entries with output to the specified interface")
-            (about: "Show routes")
+        .arg(
+            clap::Arg::with_name("json")
+                .short("j")
+                .takes_value(false)
+                .help("Show in json format"),
         )
-        (@subcommand rule =>
-            (@arg json: -j --json "Show in json format")
-            (about: "Show routes rules")
+        .arg(
+            clap::Arg::with_name("INTERFACE_NAME")
+                .index(1)
+                .help("Show speific interface only"),
         )
-        (@subcommand set =>
-            (@arg file_path: [FILE_PATH] +required "config file to apply")
-            (about: "Apply network config")
+        .subcommand(
+            clap::SubCommand::with_name("iface")
+                .about("Show interface")
+                .arg(
+                    clap::Arg::with_name("json")
+                        .short("j")
+                        .takes_value(false)
+                        .help("Show in json format"),
+                )
+                .arg(
+                    clap::Arg::with_name("INTERFACE_NAME")
+                        .index(1)
+                        .help("Show speific interface only"),
+                ),
         )
-    )
-    .get_matches();
+        .subcommand(
+            clap::SubCommand::with_name("route")
+                .about("Show route")
+                .arg(
+                    clap::Arg::with_name("json")
+                        .short("j")
+                        .takes_value(false)
+                        .help("Show in json format"),
+                )
+                .arg(
+                    clap::Arg::with_name("dev")
+                        .short("d")
+                        .takes_value(true)
+                        .help(
+                            "Show only route entries output to \
+                            the specified interface",
+                        ),
+                ),
+        )
+        .subcommand(
+            clap::SubCommand::with_name("rule")
+                .about("Show route route")
+                .arg(
+                    clap::Arg::with_name("json")
+                        .short("j")
+                        .takes_value(false)
+                        .help("Show in json format"),
+                ),
+        )
+        .subcommand(
+            clap::SubCommand::with_name("set")
+                .about("Set network state from file")
+                .arg(
+                    clap::Arg::with_name("json")
+                        .short("j")
+                        .takes_value(false)
+                        .help("Show in json format"),
+                )
+                .arg(
+                    clap::Arg::with_name("FILE_PATH")
+                        .required(true)
+                        .index(1)
+                        .help("Network state file to apply"),
+                ),
+        )
+        .get_matches();
+
+    let (log_module_filter, log_level) = match matches.occurrences_of("verbose")
+    {
+        0 => (Some("nispor"), log::LevelFilter::Warn),
+        1 => (Some("nispor"), log::LevelFilter::Info),
+        2 => (Some("nispor"), log::LevelFilter::Debug),
+        _ => (None, log::LevelFilter::Debug),
+    };
+
+    let mut log_builder = env_logger::Builder::new();
+    log_builder.filter(log_module_filter, log_level);
+    log_builder.init();
 
     let mut output_format = parse_arg_output_format(&matches);
 
@@ -345,7 +413,7 @@ fn main() {
             print_result(&apply_conf(file_path), output_format);
             process::exit(0);
         } else {
-            eprintln!("file path undefined");
+            log::warn!("file path undefined");
             process::exit(1);
         }
     } else {

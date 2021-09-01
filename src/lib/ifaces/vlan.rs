@@ -92,7 +92,7 @@ pub(crate) fn get_vlan_info(data: &InfoData) -> Option<VlanInfo> {
                     vlan_info.is_bridge_binding = true
                 }
             } else {
-                eprintln!("Unknown VLAN info: {:?}", info);
+                log::warn!("Unknown VLAN info: {:?}", info);
             }
         }
         Some(vlan_info)

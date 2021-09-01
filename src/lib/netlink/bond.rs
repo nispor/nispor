@@ -37,7 +37,7 @@ fn parse_as_nested_ipv4_addr(raw: &[u8]) -> Vec<Ipv4Addr> {
         match nla {
             Ok(nla) => addresses.push(parse_as_ipv4(nla.value())),
             Err(e) => {
-                eprintln!("{}", e);
+                log::warn!("{}", e);
             }
         }
     }
@@ -92,7 +92,7 @@ fn parse_ad_info(raw: &[u8]) -> Result<BondAdInfo, NisporError> {
                     ad_info.partner_mac = parse_as_48_bits_mac(nla.value())?;
                 }
                 _ => {
-                    eprintln!(
+                    log::warn!(
                         "unknown nla kind {} value: {:?}",
                         nla.kind(),
                         nla.value()
@@ -100,7 +100,7 @@ fn parse_ad_info(raw: &[u8]) -> Result<BondAdInfo, NisporError> {
                 }
             },
             Err(e) => {
-                eprintln!("{}", e);
+                log::warn!("{}", e);
             }
         }
     }
@@ -117,11 +117,11 @@ fn get_bond_mode(raw: &[u8]) -> Result<BondMode, NisporError> {
                 }
             }
             Err(e) => {
-                eprintln!("{}", e);
+                log::warn!("{}", e);
             }
         }
     }
-    eprintln!("Failed to parse bond mode from NLAS: {:?}", nlas);
+    log::warn!("Failed to parse bond mode from NLAS: {:?}", nlas);
     Ok(BondMode::Unknown)
 }
 
@@ -439,7 +439,7 @@ pub(crate) fn parse_bond_info(raw: &[u8]) -> Result<BondInfo, NisporError> {
                 } else if nla.kind() == IFLA_BOND_AD_INFO {
                     bond_info.ad_info = Some(parse_ad_info(nla.value())?);
                 } else {
-                    eprintln!(
+                    log::warn!(
                         "Failed to parse IFLA_LINKINFO for bond: {:?} {:?}",
                         nla.kind(),
                         nla.value()
@@ -447,7 +447,7 @@ pub(crate) fn parse_bond_info(raw: &[u8]) -> Result<BondInfo, NisporError> {
                 }
             }
             Err(e) => {
-                eprintln!("Failed to parse IFLA_LINKINFO {:?}", e);
+                log::warn!("Failed to parse IFLA_LINKINFO {:?}", e);
             }
         }
     }
@@ -505,7 +505,7 @@ pub(crate) fn parse_bond_subordinate_info(
                         Some(parse_as_u16(nla.value())?);
                 }
                 _ => {
-                    eprintln!(
+                    log::warn!(
                         "unknown nla kind {} value: {:?}",
                         nla.kind(),
                         nla.value()
@@ -513,7 +513,7 @@ pub(crate) fn parse_bond_subordinate_info(
                 }
             },
             Err(e) => {
-                eprintln!("{}", e);
+                log::warn!("{}", e);
             }
         }
     }

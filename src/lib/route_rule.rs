@@ -211,7 +211,7 @@ fn get_rule(rule_msg: RuleMessage) -> Result<RouteRule, NisporError> {
             Nla::L3MDev(ref d) => {
                 rl.l3mdev = Some(*d > 0);
             }
-            _ => eprintln!("Unknown NLA message for route rule {:?}", nla),
+            _ => log::warn!("Unknown NLA message for route rule {:?}", nla),
         }
     }
 

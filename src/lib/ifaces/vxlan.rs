@@ -118,7 +118,7 @@ pub(crate) fn get_vxlan_info(
             } else if let InfoVxlan::Df(d) = *info {
                 vxlan_info.df = d;
             } else {
-                eprintln!("Unknown VXLAN info {:?}", info)
+                log::warn!("Unknown VXLAN info {:?}", info)
             }
         }
         Ok(Some(vxlan_info))
