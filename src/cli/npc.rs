@@ -328,7 +328,7 @@ fn main() {
                 .help("Show in json format"),
         )
         .arg(
-            clap::Arg::with_name("INTERFACE_NAME")
+            clap::Arg::with_name("iface_name")
                 .index(1)
                 .help("Show speific interface only"),
         )
@@ -342,7 +342,7 @@ fn main() {
                         .help("Show in json format"),
                 )
                 .arg(
-                    clap::Arg::with_name("INTERFACE_NAME")
+                    clap::Arg::with_name("iface_name")
                         .index(1)
                         .help("Show speific interface only"),
                 ),
@@ -386,7 +386,7 @@ fn main() {
                         .help("Show in json format"),
                 )
                 .arg(
-                    clap::Arg::with_name("FILE_PATH")
+                    clap::Arg::with_name("file_path")
                         .required(true)
                         .index(1)
                         .help("Network state file to apply"),
@@ -421,14 +421,14 @@ fn main() {
             Ok(mut state) => {
                 if let Some(m) = matches.subcommand_matches("iface") {
                     output_format = parse_arg_output_format(m);
-                    if let Some(ifname) = m.value_of("ifname") {
-                        if let Some(iface) = state.ifaces.remove(ifname) {
+                    if let Some(iface_name) = m.value_of("iface_name") {
+                        if let Some(iface) = state.ifaces.remove(iface_name) {
                             CliResult::Ifaces(vec![iface])
                         } else {
                             CliResult::CliError(CliError {
                                 msg: format!(
                                     "Interface '{}' not found",
-                                    ifname
+                                    iface_name
                                 ),
                             })
                         }
@@ -441,12 +441,33 @@ fn main() {
                 } else if let Some(m) = matches.subcommand_matches("rule") {
                     output_format = parse_arg_output_format(m);
                     CliResult::RouteRules(state.rules)
-                } else if let Some(ifname) = matches.value_of("ifname") {
-                    if let Some(iface) = state.ifaces.remove(ifname) {
-                        CliResult::Ifaces(vec![iface])
+                } else if let Some(iface_name) = matches.value_of("iface_name")
+                {
+                    if state.ifaces.get(iface_name).is_some() {
+                        let mut iface_briefs = Vec::new();
+                        for iface_brief in CliIfaceBrief::from_net_state(&state)
+                        {
+                            if iface_brief.name == iface_name {
+                                iface_briefs.push(iface_brief);
+                                break;
+                            }
+                        }
+                        if iface_briefs.is_empty() {
+                            CliResult::CliError(CliError {
+                            msg: format!(
+                                "BUG: Interface '{}' not found in CliIfaceBrief",
+                                iface_name
+                            ),
+                        })
+                        } else {
+                            CliResult::Brief(iface_briefs)
+                        }
                     } else {
                         CliResult::CliError(CliError {
-                            msg: format!("Interface '{}' not found", ifname),
+                            msg: format!(
+                                "Interface '{}' not found",
+                                iface_name
+                            ),
                         })
                     }
                 } else {
