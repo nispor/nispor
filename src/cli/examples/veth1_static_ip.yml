@@ -2,6 +2,7 @@
 ifaces:
   - name: veth1
     type: veth
+    mac_address: "00:02:03:04:05:06"
     veth:
       peer: veth1.ep
     ipv4:

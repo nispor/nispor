@@ -83,6 +83,7 @@ fn test_create_down_delete_veth() {
     assert_eq!(&iface.iface_type, &nispor::IfaceType::Veth);
     assert_eq!(iface.veth.as_ref().unwrap().peer, "veth1.ep");
     assert_eq!(iface.state, IfaceState::Up);
+    assert_eq!(iface.mac_address, "00:23:45:67:89:1a".to_string());
 
     let net_conf: NetConf = serde_yaml::from_str(VETH_DOWN_YML).unwrap();
     net_conf.apply().unwrap();

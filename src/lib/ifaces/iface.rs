@@ -36,7 +36,7 @@ use crate::{
         vxlan::{get_vxlan_info, VxlanInfo},
     },
     ip::{IpConf, Ipv4Info, Ipv6Info},
-    mac::parse_as_mac,
+    mac::{mac_str_to_raw, parse_as_mac},
     NisporError,
 };
 
@@ -492,6 +492,7 @@ pub struct IfaceConf {
     pub controller: Option<String>,
     pub ipv4: Option<IpConf>,
     pub ipv6: Option<IpConf>,
+    pub mac_address: Option<String>,
     pub veth: Option<VethConf>,
     pub bridge: Option<BridgeConf>,
 }
@@ -511,4 +512,32 @@ impl IfaceConf {
 
 fn default_iface_state_in_conf() -> IfaceState {
     IfaceState::Up
+}
+
+pub(crate) async fn change_iface_state(
+    handle: &rtnetlink::Handle,
+    index: u32,
+    up: bool,
+) -> Result<(), NisporError> {
+    if up {
+        handle.link().set(index).up().execute().await?;
+    } else {
+        handle.link().set(index).down().execute().await?;
+    }
+    Ok(())
+}
+
+pub(crate) async fn change_iface_mac(
+    handle: &rtnetlink::Handle,
+    index: u32,
+    mac_address: &str,
+) -> Result<(), NisporError> {
+    change_iface_state(handle, index, false).await?;
+    handle
+        .link()
+        .set(index)
+        .address(mac_str_to_raw(mac_address)?)
+        .execute()
+        .await?;
+    Ok(())
 }

@@ -217,6 +217,7 @@ pub(crate) async fn change_ifaces(
 ) -> Result<(), NisporError> {
     let (connection, handle, _) = new_connection()?;
     tokio::spawn(connection);
+    change_ifaces_mac(&handle, ifaces, cur_ifaces).await?;
     change_ifaces_controller(&handle, ifaces, cur_ifaces).await?;
     change_ifaces_state(&handle, ifaces, cur_ifaces).await?;
     change_ips(&handle, ifaces, cur_ifaces).await?;
@@ -232,9 +233,9 @@ async fn change_ifaces_state(
         if let Some(cur_iface) = cur_ifaces.get(&iface.name) {
             if cur_iface.state != iface.state {
                 if iface.state == IfaceState::Up {
-                    handle.link().set(cur_iface.index).up().execute().await?;
+                    change_iface_state(handle, cur_iface.index, true).await?;
                 } else if iface.state == IfaceState::Down {
-                    handle.link().set(cur_iface.index).down().execute().await?;
+                    change_iface_state(handle, cur_iface.index, false).await?;
                 } else {
                     return Err(NisporError::invalid_argument(format!(
                         "Unsupported interface state in NetConf: {}",
@@ -293,5 +294,20 @@ async fn change_ifaces_controller(
         }
     }
 
+    Ok(())
+}
+
+async fn change_ifaces_mac(
+    handle: &rtnetlink::Handle,
+    ifaces: &[&IfaceConf],
+    cur_ifaces: &HashMap<String, Iface>,
+) -> Result<(), NisporError> {
+    for iface in ifaces {
+        if let Some(mac_addr) = &iface.mac_address {
+            if let Some(cur_iface) = cur_ifaces.get(&iface.name) {
+                change_iface_mac(handle, cur_iface.index, mac_addr).await?;
+            }
+        }
+    }
     Ok(())
 }
