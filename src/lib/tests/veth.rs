@@ -62,6 +62,12 @@ ifaces:
   - name: veth1.ep
     type: veth"#;
 
+const VETH_CHANGE_MAC_YML: &str = r#"---
+ifaces:
+  - name: veth1
+    type: veth
+    mac_address: 00:23:45:67:89:2a"#;
+
 const VETH_DOWN_YML: &str = r#"---
 ifaces:
   - name: veth1
@@ -84,6 +90,14 @@ fn test_create_down_delete_veth() {
     assert_eq!(iface.veth.as_ref().unwrap().peer, "veth1.ep");
     assert_eq!(iface.state, IfaceState::Up);
     assert_eq!(iface.mac_address, "00:23:45:67:89:1a".to_string());
+
+    // Change the MAC should have the interface as UP state
+    let net_conf: NetConf = serde_yaml::from_str(VETH_CHANGE_MAC_YML).unwrap();
+    net_conf.apply().unwrap();
+    let state = NetState::retrieve().unwrap();
+    let iface = &state.ifaces[IFACE_NAME];
+    assert_eq!(iface.state, IfaceState::Up);
+    assert_eq!(iface.mac_address, "00:23:45:67:89:2a".to_string());
 
     let net_conf: NetConf = serde_yaml::from_str(VETH_DOWN_YML).unwrap();
     net_conf.apply().unwrap();

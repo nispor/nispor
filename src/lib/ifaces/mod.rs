@@ -305,7 +305,17 @@ async fn change_ifaces_mac(
     for iface in ifaces {
         if let Some(mac_addr) = &iface.mac_address {
             if let Some(cur_iface) = cur_ifaces.get(&iface.name) {
+                if cur_iface.state != IfaceState::Down {
+                    // We can only change MAC address when link down
+                    change_iface_state(handle, cur_iface.index, false).await?;
+                }
                 change_iface_mac(handle, cur_iface.index, mac_addr).await?;
+                if cur_iface.state == IfaceState::Up
+                    && iface.state == IfaceState::Up
+                {
+                    // Restore the interface state
+                    change_iface_state(handle, cur_iface.index, true).await?;
+                }
             }
         }
     }
