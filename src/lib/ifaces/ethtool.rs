@@ -14,11 +14,12 @@
 
 use std::collections::{hash_map::Entry, BTreeMap, HashMap};
 
-use futures::stream::TryStreamExt;
-use netlink_ethtool::{
-    self, CoalesceAttr, EthoolAttr, EthtoolHandle, EthtoolHeader, FeatureAttr,
-    FeatureBit, LinkModeAttr, LinkModeDuplex, PauseAttr, RingAttr,
+use ethtool::{
+    EthtoolAttr, EthtoolCoalesceAttr, EthtoolFeatureAttr, EthtoolFeatureBit,
+    EthtoolHandle, EthtoolHeader, EthtoolLinkModeAttr, EthtoolPauseAttr,
+    EthtoolRingAttr,
 };
+use futures::stream::TryStreamExt;
 use serde::{Deserialize, Serialize, Serializer};
 
 use crate::NisporError;
@@ -116,13 +117,13 @@ pub enum EthtoolLinkModeDuplex {
     Other(u8),
 }
 
-impl From<LinkModeDuplex> for EthtoolLinkModeDuplex {
-    fn from(v: LinkModeDuplex) -> Self {
+impl From<&ethtool::EthtoolLinkModeDuplex> for EthtoolLinkModeDuplex {
+    fn from(v: &ethtool::EthtoolLinkModeDuplex) -> Self {
         match v {
-            LinkModeDuplex::Half => Self::Half,
-            LinkModeDuplex::Full => Self::Full,
-            LinkModeDuplex::Unknown => Self::Unknown,
-            LinkModeDuplex::Other(d) => Self::Other(d),
+            ethtool::EthtoolLinkModeDuplex::Half => Self::Half,
+            ethtool::EthtoolLinkModeDuplex::Full => Self::Full,
+            ethtool::EthtoolLinkModeDuplex::Unknown => Self::Unknown,
+            ethtool::EthtoolLinkModeDuplex::Other(d) => Self::Other(*d),
         }
     }
 }
@@ -178,10 +179,7 @@ pub(crate) async fn get_ethtool_infos(
 ) -> Result<HashMap<String, EthtoolInfo>, NisporError> {
     let mut infos: HashMap<String, EthtoolInfo> = HashMap::new();
 
-    let family_id = get_ethtool_family_id().await?;
-
-    let (connection, mut handle, _) =
-        netlink_ethtool::new_connection(family_id)?;
+    let (connection, mut handle, _) = ethtool::new_connection()?;
 
     tokio::spawn(connection);
 
@@ -276,26 +274,27 @@ async fn dump_pause_infos(
     handle: &mut EthtoolHandle,
 ) -> Result<HashMap<String, EthtoolPauseInfo>, NisporError> {
     let mut infos = HashMap::new();
-    let mut pause_handle = handle.pause().get(None).execute();
-    while let Some(ethtool_msg) = pause_handle.try_next().await? {
-        if let EthoolAttr::Pause(nlas) = ethtool_msg.nlas {
-            let mut iface_name = None;
-            let mut pause_info = EthtoolPauseInfo::default();
+    let mut pause_handle = handle.pause().get(None).execute().await;
+    while let Some(genl_msg) = pause_handle.try_next().await? {
+        let ethtool_msg = genl_msg.payload;
+        let mut iface_name = None;
+        let mut pause_info = EthtoolPauseInfo::default();
 
-            for nla in nlas {
-                if let PauseAttr::Header(hdrs) = nla {
-                    iface_name = get_iface_name_from_header(&hdrs);
-                } else if let PauseAttr::AutoNeg(v) = nla {
-                    pause_info.auto_negotiate = v
-                } else if let PauseAttr::Rx(v) = nla {
-                    pause_info.rx = v
-                } else if let PauseAttr::Tx(v) = nla {
-                    pause_info.tx = v
+        for nla in &ethtool_msg.nlas {
+            if let EthtoolAttr::Pause(nla) = nla {
+                if let EthtoolPauseAttr::Header(hdrs) = nla {
+                    iface_name = get_iface_name_from_header(hdrs);
+                } else if let EthtoolPauseAttr::AutoNeg(v) = nla {
+                    pause_info.auto_negotiate = *v
+                } else if let EthtoolPauseAttr::Rx(v) = nla {
+                    pause_info.rx = *v
+                } else if let EthtoolPauseAttr::Tx(v) = nla {
+                    pause_info.tx = *v
                 }
             }
-            if let Some(i) = iface_name {
-                infos.insert(i, pause_info);
-            }
+        }
+        if let Some(i) = iface_name {
+            infos.insert(i, pause_info);
         }
     }
     Ok(infos)
@@ -305,78 +304,97 @@ async fn dump_feature_infos(
     handle: &mut EthtoolHandle,
 ) -> Result<HashMap<String, EthtoolFeatureInfo>, NisporError> {
     let mut infos = HashMap::new();
-    let mut feature_handle = handle.feature().get(None).execute();
-    while let Some(ethtool_msg) = feature_handle.try_next().await? {
-        if let EthoolAttr::Feature(nlas) = ethtool_msg.nlas {
-            let mut iface_name = None;
-            let mut fixed_features: HashMap<String, bool> = HashMap::new();
-            let mut changeable_features: HashMap<String, bool> = HashMap::new();
+    let mut feature_handle = handle.feature().get(None).execute().await;
+    while let Some(genl_msg) = feature_handle.try_next().await? {
+        let ethtool_msg = genl_msg.payload;
+        let mut iface_name = None;
+        let mut fixed_features: HashMap<String, bool> = HashMap::new();
+        let mut changeable_features: HashMap<String, bool> = HashMap::new();
 
-            for nla in &nlas {
-                if let FeatureAttr::NoChange(feature_bits) = nla {
-                    for FeatureBit { name, .. } in feature_bits {
-                        fixed_features.insert(name.to_string(), false);
+        for nla in &ethtool_msg.nlas {
+            if let EthtoolAttr::Feature(EthtoolFeatureAttr::NoChange(
+                feature_bits,
+            )) = nla
+            {
+                for EthtoolFeatureBit { name, .. } in feature_bits {
+                    fixed_features.insert(name.to_string(), false);
+                }
+            }
+        }
+
+        for nla in &ethtool_msg.nlas {
+            if let EthtoolAttr::Feature(EthtoolFeatureAttr::Header(hdrs)) = nla
+            {
+                iface_name = get_iface_name_from_header(hdrs);
+                break;
+            }
+        }
+
+        for nla in &ethtool_msg.nlas {
+            if let EthtoolAttr::Feature(EthtoolFeatureAttr::Hw(feature_bits)) =
+                nla
+            {
+                for feature_bit in feature_bits {
+                    match feature_bit {
+                        EthtoolFeatureBit {
+                            index: _,
+                            name,
+                            value: true,
+                        } => {
+                            // Dummy interface show `tx-lockless` is
+                            // changeable, but EthtoolFeatureAttr::NoChange() says
+                            // otherwise. The kernel code
+                            // `NETIF_F_NEVER_CHANGE` shows `tx-lockless`
+                            // should never been changeable.
+                            if let Entry::Occupied(mut e) =
+                                fixed_features.entry(name.clone())
+                            {
+                                e.insert(false);
+                            } else {
+                                changeable_features
+                                    .insert(name.to_string(), false);
+                            }
+                        }
+                        EthtoolFeatureBit {
+                            index: _,
+                            name,
+                            value: false,
+                        } => {
+                            fixed_features.insert(name.to_string(), false);
+                        }
                     }
                 }
             }
+        }
 
-            for nla in nlas {
-                if let FeatureAttr::Header(hdrs) = nla {
-                    iface_name = get_iface_name_from_header(&hdrs);
-                } else if let FeatureAttr::Hw(feature_bits) = nla {
-                    for feature_bit in feature_bits {
-                        match feature_bit {
-                            FeatureBit {
-                                index: _,
-                                name,
-                                value: true,
-                            } => {
-                                // Dummy interface show `tx-lockless` is
-                                // changeable, but FeatureAttr::NoChange() says
-                                // otherwise. The kernel code
-                                // `NETIF_F_NEVER_CHANGE` shows `tx-lockless`
-                                // should never been changeable.
-                                if let Entry::Occupied(mut e) =
-                                    fixed_features.entry(name.clone())
-                                {
-                                    e.insert(false);
-                                } else {
-                                    changeable_features.insert(name, false);
-                                }
-                            }
-                            FeatureBit {
-                                index: _,
-                                name,
-                                value: false,
-                            } => {
-                                fixed_features.insert(name, false);
-                            }
-                        }
-                    }
-                } else if let FeatureAttr::Active(feature_bits) = nla {
-                    for feature_bit in feature_bits {
-                        if let Entry::Occupied(mut e) =
-                            fixed_features.entry(feature_bit.name.clone())
-                        {
-                            e.insert(true);
-                        } else if changeable_features
-                            .contains_key(&feature_bit.name)
-                        {
-                            changeable_features.insert(feature_bit.name, true);
-                        }
+        for nla in &ethtool_msg.nlas {
+            if let EthtoolAttr::Feature(EthtoolFeatureAttr::Active(
+                feature_bits,
+            )) = nla
+            {
+                for feature_bit in feature_bits {
+                    if let Entry::Occupied(mut e) =
+                        fixed_features.entry(feature_bit.name.clone())
+                    {
+                        e.insert(true);
+                    } else if changeable_features
+                        .contains_key(&feature_bit.name)
+                    {
+                        changeable_features
+                            .insert(feature_bit.name.clone(), true);
                     }
                 }
             }
+        }
 
-            if let Some(i) = iface_name {
-                infos.insert(
-                    i.to_string(),
-                    EthtoolFeatureInfo {
-                        fixed: fixed_features,
-                        changeable: changeable_features,
-                    },
-                );
-            }
+        if let Some(i) = iface_name {
+            infos.insert(
+                i.to_string(),
+                EthtoolFeatureInfo {
+                    fixed: fixed_features,
+                    changeable: changeable_features,
+                },
+            );
         }
     }
 
@@ -387,89 +405,92 @@ async fn dump_coalesce_infos(
     handle: &mut EthtoolHandle,
 ) -> Result<HashMap<String, EthtoolCoalesceInfo>, NisporError> {
     let mut infos = HashMap::new();
-    let mut coalesce_handle = handle.coalesce().get(None).execute();
-    while let Some(ethtool_msg) = coalesce_handle.try_next().await? {
-        if let EthoolAttr::Coalesce(nlas) = ethtool_msg.nlas {
-            let mut iface_name = None;
-            let mut coalesce_info = EthtoolCoalesceInfo::default();
-
-            for nla in nlas {
+    let mut coalesce_handle = handle.coalesce().get(None).execute().await;
+    while let Some(genl_msg) = coalesce_handle.try_next().await? {
+        let ethtool_msg = genl_msg.payload;
+        let mut iface_name = None;
+        let mut coalesce_info = EthtoolCoalesceInfo::default();
+        for nla in &ethtool_msg.nlas {
+            if let EthtoolAttr::Coalesce(nla) = nla {
                 match nla {
-                    CoalesceAttr::Header(hdrs) => {
-                        iface_name = get_iface_name_from_header(&hdrs)
+                    EthtoolCoalesceAttr::Header(hdrs) => {
+                        iface_name = get_iface_name_from_header(hdrs)
                     }
-                    CoalesceAttr::RxUsecs(d) => {
-                        coalesce_info.rx_usecs = Some(d)
+                    EthtoolCoalesceAttr::RxUsecs(d) => {
+                        coalesce_info.rx_usecs = Some(*d)
                     }
-                    CoalesceAttr::RxMaxFrames(d) => {
-                        coalesce_info.rx_max_frames = Some(d)
+                    EthtoolCoalesceAttr::RxMaxFrames(d) => {
+                        coalesce_info.rx_max_frames = Some(*d)
                     }
-                    CoalesceAttr::RxUsecsIrq(d) => {
-                        coalesce_info.rx_usecs_irq = Some(d)
+                    EthtoolCoalesceAttr::RxUsecsIrq(d) => {
+                        coalesce_info.rx_usecs_irq = Some(*d)
                     }
-                    CoalesceAttr::RxMaxFramesIrq(d) => {
-                        coalesce_info.rx_max_frames_irq = Some(d)
+                    EthtoolCoalesceAttr::RxMaxFramesIrq(d) => {
+                        coalesce_info.rx_max_frames_irq = Some(*d)
                     }
-                    CoalesceAttr::TxUsecs(d) => {
-                        coalesce_info.tx_usecs = Some(d)
+                    EthtoolCoalesceAttr::TxUsecs(d) => {
+                        coalesce_info.tx_usecs = Some(*d)
                     }
-                    CoalesceAttr::TxMaxFrames(d) => {
-                        coalesce_info.tx_max_frames = Some(d)
+                    EthtoolCoalesceAttr::TxMaxFrames(d) => {
+                        coalesce_info.tx_max_frames = Some(*d)
                     }
-                    CoalesceAttr::TxUsecsIrq(d) => {
-                        coalesce_info.tx_usecs_irq = Some(d)
+                    EthtoolCoalesceAttr::TxUsecsIrq(d) => {
+                        coalesce_info.tx_usecs_irq = Some(*d)
                     }
-                    CoalesceAttr::TxMaxFramesIrq(d) => {
-                        coalesce_info.tx_max_frames_irq = Some(d)
+                    EthtoolCoalesceAttr::TxMaxFramesIrq(d) => {
+                        coalesce_info.tx_max_frames_irq = Some(*d)
                     }
-                    CoalesceAttr::StatsBlockUsecs(d) => {
-                        coalesce_info.stats_block_usecs = Some(d)
+                    EthtoolCoalesceAttr::StatsBlockUsecs(d) => {
+                        coalesce_info.stats_block_usecs = Some(*d)
                     }
-                    CoalesceAttr::UseAdaptiveRx(d) => {
-                        coalesce_info.use_adaptive_rx = Some(d)
+                    EthtoolCoalesceAttr::UseAdaptiveRx(d) => {
+                        coalesce_info.use_adaptive_rx = Some(*d)
                     }
-                    CoalesceAttr::UseAdaptiveTx(d) => {
-                        coalesce_info.use_adaptive_tx = Some(d)
+                    EthtoolCoalesceAttr::UseAdaptiveTx(d) => {
+                        coalesce_info.use_adaptive_tx = Some(*d)
                     }
-                    CoalesceAttr::PktRateLow(d) => {
-                        coalesce_info.pkt_rate_low = Some(d)
+                    EthtoolCoalesceAttr::PktRateLow(d) => {
+                        coalesce_info.pkt_rate_low = Some(*d)
                     }
-                    CoalesceAttr::RxUsecsLow(d) => {
-                        coalesce_info.rx_usecs_low = Some(d)
+                    EthtoolCoalesceAttr::RxUsecsLow(d) => {
+                        coalesce_info.rx_usecs_low = Some(*d)
                     }
-                    CoalesceAttr::RxMaxFramesLow(d) => {
-                        coalesce_info.rx_max_frames_low = Some(d)
+                    EthtoolCoalesceAttr::RxMaxFramesLow(d) => {
+                        coalesce_info.rx_max_frames_low = Some(*d)
                     }
-                    CoalesceAttr::TxUsecsLow(d) => {
-                        coalesce_info.tx_usecs_low = Some(d)
+                    EthtoolCoalesceAttr::TxUsecsLow(d) => {
+                        coalesce_info.tx_usecs_low = Some(*d)
                     }
-                    CoalesceAttr::TxMaxFramesLow(d) => {
-                        coalesce_info.tx_max_frames_low = Some(d)
+                    EthtoolCoalesceAttr::TxMaxFramesLow(d) => {
+                        coalesce_info.tx_max_frames_low = Some(*d)
                     }
-                    CoalesceAttr::PktRateHigh(d) => {
-                        coalesce_info.pkt_rate_high = Some(d)
+                    EthtoolCoalesceAttr::PktRateHigh(d) => {
+                        coalesce_info.pkt_rate_high = Some(*d)
                     }
-                    CoalesceAttr::RxUsecsHigh(d) => {
-                        coalesce_info.rx_usecs_high = Some(d)
+                    EthtoolCoalesceAttr::RxUsecsHigh(d) => {
+                        coalesce_info.rx_usecs_high = Some(*d)
                     }
-                    CoalesceAttr::RxMaxFramesHigh(d) => {
-                        coalesce_info.rx_max_frames_high = Some(d)
+                    EthtoolCoalesceAttr::RxMaxFramesHigh(d) => {
+                        coalesce_info.rx_max_frames_high = Some(*d)
                     }
-                    CoalesceAttr::TxUsecsHigh(d) => {
-                        coalesce_info.tx_usecs_high = Some(d)
+                    EthtoolCoalesceAttr::TxUsecsHigh(d) => {
+                        coalesce_info.tx_usecs_high = Some(*d)
                     }
-                    CoalesceAttr::TxMaxFramesHigh(d) => {
-                        coalesce_info.tx_max_frames_high = Some(d)
+                    EthtoolCoalesceAttr::TxMaxFramesHigh(d) => {
+                        coalesce_info.tx_max_frames_high = Some(*d)
                     }
-                    CoalesceAttr::RateSampleInterval(d) => {
-                        coalesce_info.rate_sample_interval = Some(d)
+                    EthtoolCoalesceAttr::RateSampleInterval(d) => {
+                        coalesce_info.rate_sample_interval = Some(*d)
                     }
-                    _ => log::warn!("WARN: Unsupported CoalesceAttr {:?}", nla),
+                    _ => log::warn!(
+                        "WARN: Unsupported EthtoolCoalesceAttr {:?}",
+                        nla
+                    ),
                 }
             }
-            if let Some(i) = iface_name {
-                infos.insert(i, coalesce_info);
-            }
+        }
+        if let Some(i) = iface_name {
+            infos.insert(i, coalesce_info);
         }
     }
     Ok(infos)
@@ -479,31 +500,40 @@ async fn dump_ring_infos(
     handle: &mut EthtoolHandle,
 ) -> Result<HashMap<String, EthtoolRingInfo>, NisporError> {
     let mut infos = HashMap::new();
-    let mut ring_handle = handle.ring().get(None).execute();
-    while let Some(ethtool_msg) = ring_handle.try_next().await? {
-        if let EthoolAttr::Ring(nlas) = ethtool_msg.nlas {
-            let mut iface_name = None;
-            let mut ring_info = EthtoolRingInfo::default();
-
-            for nla in nlas {
+    let mut ring_handle = handle.ring().get(None).execute().await;
+    while let Some(genl_msg) = ring_handle.try_next().await? {
+        let ethtool_msg = genl_msg.payload;
+        let mut iface_name = None;
+        let mut ring_info = EthtoolRingInfo::default();
+        for nla in &ethtool_msg.nlas {
+            if let EthtoolAttr::Ring(nla) = nla {
                 match nla {
-                    RingAttr::Header(hdrs) => {
-                        iface_name = get_iface_name_from_header(&hdrs)
+                    EthtoolRingAttr::Header(hdrs) => {
+                        iface_name = get_iface_name_from_header(hdrs)
                     }
-                    RingAttr::RxMax(d) => ring_info.rx_max = Some(d),
-                    RingAttr::RxMiniMax(d) => ring_info.rx_mini_max = Some(d),
-                    RingAttr::RxJumboMax(d) => ring_info.rx_jumbo_max = Some(d),
-                    RingAttr::TxMax(d) => ring_info.tx_max = Some(d),
-                    RingAttr::Rx(d) => ring_info.rx = Some(d),
-                    RingAttr::RxMini(d) => ring_info.rx_mini = Some(d),
-                    RingAttr::RxJumbo(d) => ring_info.rx_jumbo = Some(d),
-                    RingAttr::Tx(d) => ring_info.tx = Some(d),
-                    _ => log::warn!("WARN: Unsupported RingAttr {:?}", nla),
+                    EthtoolRingAttr::RxMax(d) => ring_info.rx_max = Some(*d),
+                    EthtoolRingAttr::RxMiniMax(d) => {
+                        ring_info.rx_mini_max = Some(*d)
+                    }
+                    EthtoolRingAttr::RxJumboMax(d) => {
+                        ring_info.rx_jumbo_max = Some(*d)
+                    }
+                    EthtoolRingAttr::TxMax(d) => ring_info.tx_max = Some(*d),
+                    EthtoolRingAttr::Rx(d) => ring_info.rx = Some(*d),
+                    EthtoolRingAttr::RxMini(d) => ring_info.rx_mini = Some(*d),
+                    EthtoolRingAttr::RxJumbo(d) => {
+                        ring_info.rx_jumbo = Some(*d)
+                    }
+                    EthtoolRingAttr::Tx(d) => ring_info.tx = Some(*d),
+                    _ => log::warn!(
+                        "WARN: Unsupported EthtoolRingAttr {:?}",
+                        nla
+                    ),
                 }
             }
-            if let Some(i) = iface_name {
-                infos.insert(i, ring_info);
-            }
+        }
+        if let Some(i) = iface_name {
+            infos.insert(i, ring_info);
         }
     }
     Ok(infos)
@@ -513,51 +543,55 @@ async fn dump_link_mode_infos(
     handle: &mut EthtoolHandle,
 ) -> Result<HashMap<String, EthtoolLinkModeInfo>, NisporError> {
     let mut infos = HashMap::new();
-    let mut link_mode_handle = handle.link_mode().get(None).execute();
-    while let Some(ethtool_msg) = link_mode_handle.try_next().await? {
-        if let EthoolAttr::LinkMode(nlas) = ethtool_msg.nlas {
-            let mut iface_name = None;
-            let mut link_mode_info = EthtoolLinkModeInfo::default();
-
-            for nla in nlas {
+    let mut link_mode_handle = handle.link_mode().get(None).execute().await;
+    while let Some(genl_msg) = link_mode_handle.try_next().await? {
+        let ethtool_msg = genl_msg.payload;
+        let mut iface_name = None;
+        let mut link_mode_info = EthtoolLinkModeInfo::default();
+        for nla in &ethtool_msg.nlas {
+            if let EthtoolAttr::LinkMode(nla) = nla {
                 match nla {
-                    LinkModeAttr::Header(hdrs) => {
-                        iface_name = get_iface_name_from_header(&hdrs)
+                    EthtoolLinkModeAttr::Header(hdrs) => {
+                        iface_name = get_iface_name_from_header(hdrs)
                     }
-                    LinkModeAttr::Autoneg(d) => {
-                        link_mode_info.auto_negotiate = d
+                    EthtoolLinkModeAttr::Autoneg(d) => {
+                        link_mode_info.auto_negotiate = *d
                     }
-                    LinkModeAttr::Ours(d) => link_mode_info.ours = d,
-                    LinkModeAttr::Peer(d) => link_mode_info.peer = Some(d),
-                    LinkModeAttr::Speed(d) => {
+                    EthtoolLinkModeAttr::Ours(d) => {
+                        link_mode_info.ours = d.clone()
+                    }
+                    EthtoolLinkModeAttr::Peer(d) => {
+                        link_mode_info.peer = Some(d.clone())
+                    }
+                    EthtoolLinkModeAttr::Speed(d) => {
                         link_mode_info.speed =
-                            if d == std::u32::MAX { 0 } else { d }
+                            if *d == std::u32::MAX { 0 } else { *d }
                     }
-                    LinkModeAttr::Duplex(d) => link_mode_info.duplex = d.into(),
-                    LinkModeAttr::ControllerSubordinateCfg(d) => {
-                        link_mode_info.controller_subordinate_cfg = Some(d)
+                    EthtoolLinkModeAttr::Duplex(d) => {
+                        link_mode_info.duplex = d.into()
                     }
-                    LinkModeAttr::ControllerSubordinateState(d) => {
-                        link_mode_info.controller_subordinate_state = Some(d)
+                    EthtoolLinkModeAttr::ControllerSubordinateCfg(d) => {
+                        link_mode_info.controller_subordinate_cfg = Some(*d)
                     }
-                    LinkModeAttr::Lanes(d) => link_mode_info.lanes = Some(d),
+                    EthtoolLinkModeAttr::ControllerSubordinateState(d) => {
+                        link_mode_info.controller_subordinate_state = Some(*d)
+                    }
+                    EthtoolLinkModeAttr::Lanes(d) => {
+                        link_mode_info.lanes = Some(*d)
+                    }
 
-                    _ => log::warn!("WARN: Unsupported LinkModeAttr {:?}", nla),
+                    _ => log::warn!(
+                        "WARN: Unsupported EthtoolLinkModeAttr {:?}",
+                        nla
+                    ),
                 }
             }
-            if let Some(i) = iface_name {
-                infos.insert(i, link_mode_info);
-            }
+        }
+        if let Some(i) = iface_name {
+            infos.insert(i, link_mode_info);
         }
     }
     Ok(infos)
-}
-
-async fn get_ethtool_family_id() -> Result<u16, NisporError> {
-    let (connection, mut handle, _) = netlink_generic::new_connection()?;
-    tokio::spawn(connection);
-
-    Ok(handle.resolve_family_name("ethtool").await?)
 }
 
 fn get_iface_name_from_header(hdrs: &[EthtoolHeader]) -> Option<String> {
