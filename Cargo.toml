@@ -3,6 +3,4 @@ members = [
     "src/lib",
     "src/cli",
     "src/clib",
-    "src/netlink-generic",
-    "src/netlink-ethtool",
 ]

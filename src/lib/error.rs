@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use ethtool::EthtoolError;
 use libc::{EEXIST, EPERM};
-use netlink_ethtool::EthtoolError;
-use netlink_generic::GenericNetlinkError;
 use netlink_packet_utils::DecodeError;
 use serde::Serialize;
 
@@ -93,15 +92,6 @@ impl std::convert::From<rtnetlink::Error> for NisporError {
                 kind: ErrorKind::NetlinkError,
                 msg: e.to_string(),
             },
-        }
-    }
-}
-
-impl std::convert::From<GenericNetlinkError> for NisporError {
-    fn from(e: GenericNetlinkError) -> Self {
-        NisporError {
-            kind: ErrorKind::NetlinkError,
-            msg: e.to_string(),
         }
     }
 }
