@@ -177,6 +177,7 @@ pub(crate) async fn delete_ifaces(
 
 pub(crate) async fn create_ifaces(
     ifaces: &[&IfaceConf],
+    cur_iface_name_2_index: &HashMap<String, u32>,
 ) -> Result<(), NisporError> {
     let (connection, handle, _) = new_connection()?;
     tokio::spawn(connection);
@@ -192,6 +193,26 @@ pub(crate) async fn create_ifaces(
             }
             Some(IfaceType::Bond) => {
                 BondConf::create(&handle, &iface.name).await?;
+            }
+            Some(IfaceType::Vlan) => {
+                if let Some(vlan_conf) = &iface.vlan {
+                    if let Some(base_iface_index) =
+                        cur_iface_name_2_index.get(&vlan_conf.base_iface)
+                    {
+                        VlanConf::create(
+                            &handle,
+                            &iface.name,
+                            vlan_conf.vlan_id,
+                            *base_iface_index,
+                        )
+                        .await?;
+                    } else {
+                        return Err(NisporError::invalid_argument(format!(
+                            "Base interface {} for VLAN {} not found",
+                            &vlan_conf.base_iface, iface.name
+                        )));
+                    }
+                }
             }
             Some(_) => {
                 return Err(NisporError::invalid_argument(format!(

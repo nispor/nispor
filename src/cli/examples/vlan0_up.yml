@@ -1,0 +1,7 @@
+---
+ifaces:
+  - name: vlan0
+    type: vlan
+    vlan:
+      base_iface: eth1
+      vlan_id: 99

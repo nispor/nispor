@@ -29,8 +29,8 @@ pub struct NetConf {
 impl NetConf {
     pub fn apply(&self) -> Result<(), NisporError> {
         let rt = runtime::Builder::new_current_thread().enable_io().build()?;
-        let cur_iface_name_2_index = rt.block_on(get_iface_name2index())?;
         if let Some(ref ifaces) = &self.ifaces {
+            let cur_iface_name_2_index = rt.block_on(get_iface_name2index())?;
             let mut new_ifaces = Vec::new();
             let mut del_ifaces = Vec::new();
             let mut chg_ifaces = Vec::new();
@@ -49,7 +49,7 @@ impl NetConf {
                 }
             }
             rt.block_on(delete_ifaces(&del_ifaces))?;
-            rt.block_on(create_ifaces(&new_ifaces))?;
+            rt.block_on(create_ifaces(&new_ifaces, &cur_iface_name_2_index))?;
 
             let cur_ifaces = rt.block_on(get_ifaces())?;
             rt.block_on(change_ifaces(&chg_ifaces, &cur_ifaces))?;
