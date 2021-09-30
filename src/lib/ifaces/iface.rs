@@ -29,7 +29,7 @@ use crate::{
         sriov::{get_sriov_info, SriovInfo},
         tun::{get_tun_info, TunInfo},
         veth::{VethConf, VethInfo},
-        vlan::{get_vlan_info, VlanInfo},
+        vlan::{get_vlan_info, VlanConf, VlanInfo},
         vrf::{
             get_vrf_info, get_vrf_subordinate_info, VrfInfo, VrfSubordinateInfo,
         },
@@ -495,6 +495,7 @@ pub struct IfaceConf {
     pub mac_address: Option<String>,
     pub veth: Option<VethConf>,
     pub bridge: Option<BridgeConf>,
+    pub vlan: Option<VlanConf>,
 }
 
 impl IfaceConf {

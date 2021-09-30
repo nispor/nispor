@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use nispor::NetState;
+use nispor::{NetConf, NetState};
 use pretty_assertions::assert_eq;
 use serde_yaml;
 use std::panic;
@@ -56,4 +56,55 @@ where
 
     utils::clear_network_environment();
     assert!(result.is_ok())
+}
+
+const VETH_CREATE_YML: &str = r#"---
+ifaces:
+  - name: veth1
+    type: veth
+    veth:
+      peer: veth1.ep
+  - name: veth1.ep
+    type: veth"#;
+
+const VETH_DELETE_YML: &str = r#"---
+ifaces:
+  - name: veth1
+    type: veth
+    state: absent"#;
+
+const VLAN_CREATE_YML: &str = r#"---
+ifaces:
+  - name: veth1.99
+    type: vlan
+    vlan:
+      base_iface: veth1
+      vlan_id: 99"#;
+
+const VLAN_DELETE_YML: &str = r#"---
+ifaces:
+  - name: veth1.99
+    type: vlan
+    state: absent"#;
+
+#[test]
+fn test_create_delete_vlan() {
+    let net_conf: NetConf = serde_yaml::from_str(VETH_CREATE_YML).unwrap();
+    net_conf.apply().unwrap();
+
+    let net_conf: NetConf = serde_yaml::from_str(VLAN_CREATE_YML).unwrap();
+    net_conf.apply().unwrap();
+    let state = NetState::retrieve().unwrap();
+    let iface = &state.ifaces["veth1.99"];
+    assert_eq!(&iface.iface_type, &nispor::IfaceType::Vlan);
+    assert_eq!(iface.vlan.as_ref().unwrap().vlan_id, 99);
+    assert_eq!(iface.vlan.as_ref().unwrap().base_iface.as_str(), "veth1");
+
+    let net_conf: NetConf = serde_yaml::from_str(VLAN_DELETE_YML).unwrap();
+    net_conf.apply().unwrap();
+    let state = NetState::retrieve().unwrap();
+    assert_eq!(None, state.ifaces.get("veth1.99"));
+
+    let net_conf: NetConf = serde_yaml::from_str(VETH_DELETE_YML).unwrap();
+    net_conf.apply().unwrap();
 }
