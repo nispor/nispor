@@ -1,6 +1,6 @@
 [package]
 name = "nispor-cli"
-version = "1.1.1"
+version = "1.2.0"
 authors = ["Gris Ge <fge@redhat.com>"]
 edition = "2018"
 

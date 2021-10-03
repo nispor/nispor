@@ -1,4 +1,21 @@
 # Changelog
+## [1.2.0] - 2021-09-30
+## Break changes
+ * N/A
+
+## New features
+ * Support creating linux bridge. (b1f1e0f)
+ * Support creating veth. (af09cab)
+ * Support changing MAC address. (f582227)
+ * Support creating VLAN. (5b172da)
+ * Support changing link state(up/down). (d5de240)
+ * Support creating bond. (466c785)
+ * support changing controller. (b1815e7)
+
+## Bug fixes
+ * Use upstream ethtool crate instead vendoring. (4202aa7)
+ * Fix CLI interface name filter on querying. (1e0f092)
+
 ## [1.1.1] - 2021-06-19
 ## Break changes
  * Running `npc` command without argument will only show bridge network
