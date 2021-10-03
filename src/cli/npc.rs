@@ -14,7 +14,8 @@
 
 use clap::{crate_authors, crate_version};
 use nispor::{
-    Iface, IfaceState, NetConf, NetState, NisporError, Route, RouteRule,
+    Iface, IfaceConf, IfaceState, NetConf, NetState, NisporError, Route,
+    RouteRule,
 };
 use serde_derive::Serialize;
 use std::collections::HashMap;
@@ -336,6 +337,12 @@ fn main() {
             clap::SubCommand::with_name("iface")
                 .about("Show interface")
                 .arg(
+                    clap::Arg::with_name("delete")
+                        .short("d")
+                        .takes_value(false)
+                        .help("Delete the specified interface"),
+                )
+                .arg(
                     clap::Arg::with_name("json")
                         .short("j")
                         .takes_value(false)
@@ -344,7 +351,7 @@ fn main() {
                 .arg(
                     clap::Arg::with_name("iface_name")
                         .index(1)
-                        .help("Show speific interface only"),
+                        .help("Show specific interface only"),
                 ),
         )
         .subcommand(
@@ -423,7 +430,11 @@ fn main() {
                     output_format = parse_arg_output_format(m);
                     if let Some(iface_name) = m.value_of("iface_name") {
                         if let Some(iface) = state.ifaces.remove(iface_name) {
-                            CliResult::Ifaces(vec![iface])
+                            if m.is_present("delete") {
+                                delete_iface(&iface.name)
+                            } else {
+                                CliResult::Ifaces(vec![iface])
+                            }
                         } else {
                             CliResult::CliError(CliError {
                                 msg: format!(
@@ -432,6 +443,11 @@ fn main() {
                                 ),
                             })
                         }
+                    } else if matches.is_present("delete") {
+                        CliResult::CliError(CliError {
+                            msg: "Need to specific a interface to delete"
+                                .to_string(),
+                        })
                     } else {
                         CliResult::Full(state)
                     }
@@ -531,4 +547,20 @@ fn filter_iface_state(
         }
     }
     new_ifaces
+}
+
+fn delete_iface(iface_name: &str) -> CliResult {
+    if let Err(e) = (NetConf {
+        ifaces: Some(vec![IfaceConf {
+            name: iface_name.to_string(),
+            state: IfaceState::Absent,
+            ..Default::default()
+        }]),
+    }
+    .apply())
+    {
+        CliResult::NisporError(e)
+    } else {
+        CliResult::Pass
+    }
 }
