@@ -238,6 +238,19 @@ impl From<u8> for BridgePortMulticastRouterType {
     }
 }
 
+impl From<BridgePortMulticastRouterType> for u8 {
+    fn from(value: BridgePortMulticastRouterType) -> u8 {
+        match value {
+            BridgePortMulticastRouterType::Disabled => MDB_RTR_TYPE_DISABLED,
+            BridgePortMulticastRouterType::TempQuery => MDB_RTR_TYPE_TEMP_QUERY,
+            BridgePortMulticastRouterType::Perm => MDB_RTR_TYPE_PERM,
+            BridgePortMulticastRouterType::Temp => MDB_RTR_TYPE_TEMP,
+            BridgePortMulticastRouterType::Other(d) => d,
+            BridgePortMulticastRouterType::Unknown => u8::MAX,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct BridgePortInfo {
     pub stp_state: BridgePortStpState,
