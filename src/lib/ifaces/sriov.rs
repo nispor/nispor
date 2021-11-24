@@ -92,6 +92,8 @@ pub struct SriovInfo {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct VfInfo {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub iface_name: Option<String>,
     pub id: u32,
     pub mac: String,
     pub broadcast: String,
@@ -116,6 +118,7 @@ pub struct VfInfo {
 }
 
 pub(crate) fn get_sriov_info(
+    pf_iface_name: &str,
     raw: &[u8],
     mac_len: Option<usize>,
 ) -> Result<SriovInfo, NisporError> {
@@ -130,6 +133,8 @@ pub(crate) fn get_sriov_info(
             match nla.kind() {
                 IFLA_VF_MAC => {
                     vf_info.id = parse_as_u32(nla.value())?;
+                    vf_info.iface_name =
+                        get_vf_iface_name(pf_iface_name, &vf_info.id);
                     vf_info.mac = parse_vf_mac(
                         nla.value().get(4..).ok_or_else(|| {
                             NisporError::bug("invalid index into nla".into())
@@ -223,6 +228,7 @@ pub(crate) fn get_sriov_info(
                 }
             }
         }
+
         sriov_info.vfs.push(vf_info);
     }
     Ok(sriov_info)
@@ -276,4 +282,40 @@ fn parse_vf_stats(raw: &[u8]) -> Result<VfState, NisporError> {
         }
     }
     Ok(state)
+}
+
+// Currently there is no valid netlink way to get information as the kernel code
+// is in at PCI level: drivers/pci/iov.c
+// We use sysfs content /sys/class/net/<pf_name>/devices/virtfn<sriov_id>/net/
+fn get_vf_iface_name(pf_name: &str, sriov_id: &u32) -> Option<String> {
+    let sysfs_path =
+        format!("/sys/class/net/{}/device/virtfn{}/net/", pf_name, sriov_id);
+    read_folder(&sysfs_path).pop()
+}
+
+fn read_folder(folder_path: &str) -> Vec<String> {
+    let mut folder_contents = Vec::new();
+    let fd = match std::fs::read_dir(folder_path) {
+        Ok(f) => f,
+        Err(e) => {
+            log::warn!("Failed to read dir {}: {}", folder_path, e);
+            return folder_contents;
+        }
+    };
+    for entry in fd {
+        let entry = match entry {
+            Ok(e) => e,
+            Err(e) => {
+                log::warn!("Failed to read dir {}: {}", folder_path, e);
+                continue;
+            }
+        };
+        let path = entry.path();
+        if let Ok(content) = path.strip_prefix(folder_path) {
+            if let Some(content_str) = content.to_str() {
+                folder_contents.push(content_str.to_string());
+            }
+        }
+    }
+    folder_contents
 }

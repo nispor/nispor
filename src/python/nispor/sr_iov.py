@@ -27,6 +27,10 @@ class NisporSriovVf:
         self._info = info
 
     @property
+    def iface_name(self):
+        return self._info.get("iface_name")
+
+    @property
     def vf_id(self):
         return self._info["id"]
 
