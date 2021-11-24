@@ -406,10 +406,10 @@ pub(crate) fn fill_bridge_vlan_info(
     if name.is_empty() {
         return Ok(());
     }
-    if let Some(mut iface_state) = iface_states.get_mut(&name) {
+    if let Some(iface_state) = iface_states.get_mut(&name) {
         for nla in &nl_msg.nlas {
             if let Nla::AfSpecBridge(data) = nla {
-                parse_bridge_vlan_info(&mut iface_state, data)?;
+                parse_bridge_vlan_info(iface_state, data)?;
                 break;
             }
         }
