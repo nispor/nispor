@@ -62,7 +62,6 @@ fixed:
   tx-fcoe-segmentation: false
   tx-gre-csum-segmentation: false
   tx-gre-segmentation: false
-  tx-gso-list: false
   tx-gso-partial: false
   tx-gso-robust: false
   tx-ipxip4-segmentation: false
@@ -71,7 +70,6 @@ fixed:
   tx-nocache-copy: false
   tx-scatter-gather-fraglist: true
   tx-tunnel-remcsum-segmentation: false
-  tx-udp-segmentation: false
   tx-udp_tnl-csum-segmentation: false
   tx-udp_tnl-segmentation: false
   tx-vlan-hw-insert: false
@@ -113,8 +111,37 @@ fn test_get_ethtool_pause_yaml() {
 
 #[test]
 fn test_get_ethtool_feature_yaml_of_loopback() {
-    let state = NetState::retrieve().unwrap();
-    let iface = &state.ifaces["lo"];
+    let mut state = NetState::retrieve().unwrap();
+    let iface = state.ifaces.get_mut("lo").unwrap();
+    // These property value is different between Github CI and my Archlinux
+    iface
+        .ethtool
+        .as_mut()
+        .unwrap()
+        .features
+        .as_mut()
+        .map(|features| features.fixed.remove("tx-gso-list"));
+    iface
+        .ethtool
+        .as_mut()
+        .unwrap()
+        .features
+        .as_mut()
+        .map(|features| features.changeable.remove("tx-gso-list"));
+    iface
+        .ethtool
+        .as_mut()
+        .unwrap()
+        .features
+        .as_mut()
+        .map(|features| features.fixed.remove("tx-udp-segmentation"));
+    iface
+        .ethtool
+        .as_mut()
+        .unwrap()
+        .features
+        .as_mut()
+        .map(|features| features.changeable.remove("tx-udp-segmentation"));
     assert_eq!(&iface.iface_type, &nispor::IfaceType::Loopback);
     assert_eq!(
         serde_yaml::to_string(&iface.ethtool.as_ref().unwrap().features)
