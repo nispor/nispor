@@ -353,7 +353,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                 }
             }
         } else if let Nla::VfInfoList(data) = nla {
-            if let Ok(info) = get_sriov_info(data, mac_len) {
+            if let Ok(info) = get_sriov_info(&iface_state.name, data, mac_len) {
                 iface_state.sriov = Some(info);
             }
         } else {
