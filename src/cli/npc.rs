@@ -338,7 +338,6 @@ fn main() {
                 .about("Show interface")
                 .arg(
                     clap::Arg::with_name("delete")
-                        .short("d")
                         .takes_value(false)
                         .help("Delete the specified interface"),
                 )
