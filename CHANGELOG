@@ -1,4 +1,18 @@
 # Changelog
+## [1.2.1] - 2021-10-25
+## Break changes
+ * N/A
+
+## New features
+ * Include SR-IOV VF interface name in `VfInfo`. (1e74459)
+ * Implement From BridgePortMulticastRouterType to u8. (b15f82a)
+ * Added `--delete` option to npc for deleting a interface. (0b273d5, e8b0a49)
+ * Expose VlanConf. (bd64243)
+
+## Bug fixes
+
+ * N/A
+
 ## [1.2.0] - 2021-09-30
 ## Break changes
  * N/A
