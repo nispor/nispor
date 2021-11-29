@@ -12,6 +12,6 @@ path = "lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-nispor = { path = "../lib" }
+nispor = { path = "../lib", version="1.0" }
 libc = "0.2.74"
 serde_json = "1.0"
