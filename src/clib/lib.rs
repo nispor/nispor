@@ -53,7 +53,7 @@ pub extern "C" fn nispor_net_state_retrieve(
 pub extern "C" fn nispor_net_state_free(state: *mut c_char) {
     unsafe {
         if !state.is_null() {
-            CString::from_raw(state);
+            drop(CString::from_raw(state));
         }
     }
 }
@@ -63,7 +63,7 @@ pub extern "C" fn nispor_net_state_free(state: *mut c_char) {
 pub extern "C" fn nispor_err_kind_free(err_kind: *mut c_char) {
     unsafe {
         if !err_kind.is_null() {
-            CString::from_raw(err_kind);
+            drop(CString::from_raw(err_kind));
         }
     }
 }
@@ -73,7 +73,7 @@ pub extern "C" fn nispor_err_kind_free(err_kind: *mut c_char) {
 pub extern "C" fn nispor_err_msg_free(err_msg: *mut c_char) {
     unsafe {
         if !err_msg.is_null() {
-            CString::from_raw(err_msg);
+            drop(CString::from_raw(err_msg));
         }
     }
 }
