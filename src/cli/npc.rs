@@ -326,6 +326,7 @@ fn main() {
             clap::Arg::with_name("json")
                 .short("j")
                 .takes_value(false)
+                .global(true)
                 .help("Show in json format"),
         )
         .arg(
@@ -337,31 +338,19 @@ fn main() {
             clap::SubCommand::with_name("iface")
                 .about("Show interface")
                 .arg(
-                    clap::Arg::with_name("delete")
-                        .takes_value(false)
-                        .help("Delete the specified interface"),
-                )
-                .arg(
-                    clap::Arg::with_name("json")
-                        .short("j")
-                        .takes_value(false)
-                        .help("Show in json format"),
-                )
-                .arg(
                     clap::Arg::with_name("iface_name")
                         .index(1)
                         .help("Show specific interface only"),
+                )
+                .arg(
+                    clap::Arg::with_name("delete")
+                        .takes_value(false)
+                        .help("Delete the specified interface"),
                 ),
         )
         .subcommand(
             clap::SubCommand::with_name("route")
                 .about("Show route")
-                .arg(
-                    clap::Arg::with_name("json")
-                        .short("j")
-                        .takes_value(false)
-                        .help("Show in json format"),
-                )
                 .arg(
                     clap::Arg::with_name("dev")
                         .short("d")
@@ -373,24 +362,11 @@ fn main() {
                 ),
         )
         .subcommand(
-            clap::SubCommand::with_name("rule")
-                .about("Show route route")
-                .arg(
-                    clap::Arg::with_name("json")
-                        .short("j")
-                        .takes_value(false)
-                        .help("Show in json format"),
-                ),
+            clap::SubCommand::with_name("rule").about("Show route route"),
         )
         .subcommand(
             clap::SubCommand::with_name("set")
                 .about("Set network state from file")
-                .arg(
-                    clap::Arg::with_name("json")
-                        .short("j")
-                        .takes_value(false)
-                        .help("Show in json format"),
-                )
                 .arg(
                     clap::Arg::with_name("file_path")
                         .required(true)
