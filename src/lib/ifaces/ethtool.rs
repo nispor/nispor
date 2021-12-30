@@ -26,9 +26,9 @@ use crate::NisporError;
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
 pub struct EthtoolPauseInfo {
-    rx: bool,
-    tx: bool,
-    auto_negotiate: bool,
+    pub rx: bool,
+    pub tx: bool,
+    pub auto_negotiate: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
@@ -91,21 +91,21 @@ pub struct EthtoolCoalesceInfo {
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
 pub struct EthtoolRingInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
-    rx: Option<u32>,
+    pub rx: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    rx_max: Option<u32>,
+    pub rx_max: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    rx_jumbo: Option<u32>,
+    pub rx_jumbo: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    rx_jumbo_max: Option<u32>,
+    pub rx_jumbo_max: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    rx_mini: Option<u32>,
+    pub rx_mini: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    rx_mini_max: Option<u32>,
+    pub rx_mini_max: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    tx: Option<u32>,
+    pub tx: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    tx_max: Option<u32>,
+    pub tx_max: Option<u32>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -136,18 +136,18 @@ impl Default for EthtoolLinkModeDuplex {
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
 pub struct EthtoolLinkModeInfo {
-    auto_negotiate: bool,
-    ours: Vec<String>,
+    pub auto_negotiate: bool,
+    pub ours: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    peer: Option<Vec<String>>,
-    speed: u32,
-    duplex: EthtoolLinkModeDuplex,
+    pub peer: Option<Vec<String>>,
+    pub speed: u32,
+    pub duplex: EthtoolLinkModeDuplex,
     #[serde(skip_serializing_if = "Option::is_none")]
-    controller_subordinate_cfg: Option<u8>,
+    pub controller_subordinate_cfg: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    controller_subordinate_state: Option<u8>,
+    pub controller_subordinate_state: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    lanes: Option<u32>,
+    pub lanes: Option<u32>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
