@@ -379,7 +379,12 @@ pub(crate) fn parse_bridge_vlan_info(
     data: &[u8],
 ) -> Result<(), NisporError> {
     if let Some(ref mut port_info) = iface_state.bridge_port {
-        port_info.vlans = parse_af_spec_bridge_info(data)?;
+        if let Some(cur_vlans) = parse_af_spec_bridge_info(data)? {
+            match port_info.vlans.as_mut() {
+                Some(vlans) => vlans.extend(cur_vlans),
+                None => port_info.vlans = Some(cur_vlans),
+            };
+        }
     }
     Ok(())
 }
