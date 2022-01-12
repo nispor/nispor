@@ -1,4 +1,16 @@
 # Changelog
+## [1.2.3] - 2022-01-12
+## Break changes
+ * N/A
+
+## New features
+ * N/A
+
+## Bug fixes
+
+ * Fix bridge vlan filtering on i40e. (5bc1603)
+ * Expose struct member of ethtool. (60483d9)
+
 ## [1.2.2] - 2021-11-29
 ## Break changes
  * N/A
