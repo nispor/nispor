@@ -98,6 +98,14 @@ class NisporBaseIface:
     def ethtool(self):
         return self._ethtool
 
+    @property
+    def max_mtu(self):
+        return self._info["max_mtu"]
+
+    @property
+    def min_mtu(self):
+        return self._info["min_mtu"]
+
 
 class NisporBaseSubordinateIface:
     def __init__(self):
