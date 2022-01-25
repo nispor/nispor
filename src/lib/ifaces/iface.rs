@@ -172,6 +172,8 @@ pub struct Iface {
     pub iface_type: IfaceType,
     pub state: IfaceState,
     pub mtu: i64,
+    pub max_mtu: u32,
+    pub min_mtu: u32,
     pub flags: Vec<IfaceFlags>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ipv4: Option<Ipv4Info>,
@@ -263,6 +265,10 @@ pub(crate) fn parse_nl_msg_to_iface(
             iface_state.controller = Some(format!("{}", controller));
         } else if let Nla::Link(l) = nla {
             link = Some(*l);
+        } else if let Nla::MaxMtu(l) = nla {
+            iface_state.max_mtu = *l;
+        } else if let Nla::MinMtu(l) = nla {
+            iface_state.min_mtu = *l;
         } else if let Nla::Info(infos) = nla {
             for info in infos {
                 if let nlas::Info::Kind(t) = info {
