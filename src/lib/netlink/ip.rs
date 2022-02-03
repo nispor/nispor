@@ -20,10 +20,10 @@ use crate::Ipv4Info;
 use crate::Ipv6AddrInfo;
 use crate::Ipv6Info;
 use crate::NisporError;
-use netlink_packet_route::rtnl::address::nlas::Nla::{
-    Address, CacheInfo, Local,
-};
+use netlink_packet_route::address::{CacheInfo, CacheInfoBuffer};
+use netlink_packet_route::rtnl::address::nlas::Nla;
 use netlink_packet_route::rtnl::AddressMessage;
+use netlink_packet_utils::Parseable;
 use std::collections::HashMap;
 
 pub(crate) const AF_INET: u8 = 2;
@@ -94,13 +94,15 @@ fn parse_ipv4_nlas(
     };
     let mut peer = String::new();
     for nla in &nl_msg.nlas {
-        if let Local(addr_vec) = nla {
+        if let Nla::Local(addr_vec) = nla {
             addr.address = parse_as_ipv4(addr_vec.as_slice()).to_string();
-        } else if let Address(addr_vec) = nla {
+        } else if let Nla::Address(addr_vec) = nla {
             peer = parse_as_ipv4(addr_vec.as_slice()).to_string();
-        } else if let CacheInfo(cache_info_vec) = nla {
-            let cache_info = parse_cache_info(cache_info_vec)?;
-            addr.preferred_lft = left_time_to_string(cache_info.ifa_prefered);
+        } else if let Nla::CacheInfo(cache_info_vec) = nla {
+            let cache_info = CacheInfo::parse(&CacheInfoBuffer::new(
+                cache_info_vec.as_slice(),
+            ))?;
+            addr.preferred_lft = left_time_to_string(cache_info.ifa_preferred);
             addr.valid_lft = left_time_to_string(cache_info.ifa_valid);
         }
     }
@@ -122,11 +124,13 @@ fn parse_ipv6_nlas(
     };
 
     for nla in &nl_msg.nlas {
-        if let Address(addr_vec) = nla {
+        if let Nla::Address(addr_vec) = nla {
             addr.address = parse_as_ipv6(addr_vec.as_slice()).to_string();
-        } else if let CacheInfo(cache_info_vec) = nla {
-            let cache_info = parse_cache_info(cache_info_vec)?;
-            addr.preferred_lft = left_time_to_string(cache_info.ifa_prefered);
+        } else if let Nla::CacheInfo(cache_info_vec) = nla {
+            let cache_info = CacheInfo::parse(&CacheInfoBuffer::new(
+                cache_info_vec.as_slice(),
+            ))?;
+            addr.preferred_lft = left_time_to_string(cache_info.ifa_preferred);
             addr.valid_lft = left_time_to_string(cache_info.ifa_valid);
         }
     }
@@ -134,59 +138,8 @@ fn parse_ipv6_nlas(
     Ok((iface_index, addr))
 }
 
-struct IfaCacheInfo {
-    ifa_prefered: u32,
-    ifa_valid: u32,
-    /*cstamp: u32,
-    tstamp: u32, */
-}
-
-fn parse_cache_info(
-    cache_info_raw: &[u8],
-) -> Result<IfaCacheInfo, NisporError> {
-    if cache_info_raw.len() != 16 {
-        panic!(
-            "Got invalid ifa_cacheinfo, expect [u8; 32], got {} u8",
-            cache_info_raw.len()
-        );
-    } else {
-        // The struct ifa_cacheinfo is storing valid time as second u32
-        let err_msg = "wrong index at cache_info_raw parsing";
-        Ok(IfaCacheInfo {
-            ifa_prefered: u32::from_ne_bytes([
-                *cache_info_raw
-                    .get(0)
-                    .ok_or_else(|| NisporError::bug(err_msg.into()))?,
-                *cache_info_raw
-                    .get(1)
-                    .ok_or_else(|| NisporError::bug(err_msg.into()))?,
-                *cache_info_raw
-                    .get(2)
-                    .ok_or_else(|| NisporError::bug(err_msg.into()))?,
-                *cache_info_raw
-                    .get(3)
-                    .ok_or_else(|| NisporError::bug(err_msg.into()))?,
-            ]),
-            ifa_valid: u32::from_ne_bytes([
-                *cache_info_raw
-                    .get(4)
-                    .ok_or_else(|| NisporError::bug(err_msg.into()))?,
-                *cache_info_raw
-                    .get(5)
-                    .ok_or_else(|| NisporError::bug(err_msg.into()))?,
-                *cache_info_raw
-                    .get(6)
-                    .ok_or_else(|| NisporError::bug(err_msg.into()))?,
-                *cache_info_raw
-                    .get(7)
-                    .ok_or_else(|| NisporError::bug(err_msg.into()))?,
-            ]),
-        })
-    }
-}
-
-fn left_time_to_string(left_time: u32) -> String {
-    if left_time == std::u32::MAX {
+fn left_time_to_string(left_time: i32) -> String {
+    if left_time == -1 {
         "forever".into()
     } else {
         format!("{}sec", left_time)
@@ -197,14 +150,14 @@ pub(crate) fn get_ip_addr(nl_addr_msg: &AddressMessage) -> String {
     match nl_addr_msg.header.family {
         AF_INET => {
             for nla in &nl_addr_msg.nlas {
-                if let Local(addr_vec) = nla {
+                if let Nla::Local(addr_vec) = nla {
                     return parse_as_ipv4(addr_vec.as_slice()).to_string();
                 }
             }
         }
         AF_INET6 => {
             for nla in &nl_addr_msg.nlas {
-                if let Address(addr_vec) = nla {
+                if let Nla::Address(addr_vec) = nla {
                     return parse_as_ipv6(addr_vec.as_slice()).to_string();
                 }
             }

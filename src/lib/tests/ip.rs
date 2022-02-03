@@ -47,6 +47,22 @@ ifaces:
         - address: "2001:db8:a::9"
           prefix_len: 64"#;
 
+const ADD_IP_CONF_DYNAMIC: &str = r#"---
+ifaces:
+  - name: veth1
+    ipv4:
+      addresses:
+        - address: "192.0.2.1"
+          prefix_len: 24
+          valid_lft: 120sec
+          preferred_lft: 60sec
+    ipv6:
+      addresses:
+        - address: "2001:db8:a::9"
+          prefix_len: 64
+          valid_lft: 121sec
+          preferred_lft: 61sec"#;
+
 const EMPTY_IP_CONF: &str = r#"---
 ifaces:
   - name: veth1
@@ -62,12 +78,30 @@ addresses:
     valid_lft: forever
     preferred_lft: forever"#;
 
+const EXPECTED_IPV4_DYNAMIC_INFO: &str = r#"---
+addresses:
+  - address: 192.0.2.1
+    prefix_len: 24
+    valid_lft: 120sec
+    preferred_lft: 60sec"#;
+
 const EXPECTED_IPV6_INFO: &str = r#"---
 addresses:
   - address: "2001:db8:a::9"
     prefix_len: 64
     valid_lft: forever
     preferred_lft: forever
+  - address: "fe80::223:45ff:fe67:891a"
+    prefix_len: 64
+    valid_lft: forever
+    preferred_lft: forever"#;
+
+const EXPECTED_IPV6_DYNAMIC_INFO: &str = r#"---
+addresses:
+  - address: "2001:db8:a::9"
+    prefix_len: 64
+    valid_lft: 121sec
+    preferred_lft: 61sec
   - address: "fe80::223:45ff:fe67:891a"
     prefix_len: 64
     valid_lft: forever
@@ -107,6 +141,26 @@ fn test_add_and_remove_ip() {
         assert_eq!(
             serde_yaml::to_string(&iface.ipv6).unwrap().trim(),
             EXPECTED_EMPTY_IPV6_INFO
+        );
+    });
+}
+
+#[test]
+fn test_add_and_remove_dynamic_ip() {
+    with_veth_iface(|| {
+        let conf: NetConf = serde_yaml::from_str(ADD_IP_CONF_DYNAMIC).unwrap();
+        conf.apply().unwrap();
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        let iface_type = &iface.iface_type;
+        assert_eq!(iface_type, &nispor::IfaceType::Veth);
+        assert_eq!(
+            serde_yaml::to_string(&iface.ipv4).unwrap().trim(),
+            EXPECTED_IPV4_DYNAMIC_INFO
+        );
+        assert_eq!(
+            serde_yaml::to_string(&iface.ipv6).unwrap().trim(),
+            EXPECTED_IPV6_DYNAMIC_INFO
         );
     });
 }

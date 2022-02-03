@@ -17,7 +17,12 @@ use std::net::IpAddr;
 use std::str::FromStr;
 
 use futures::stream::TryStreamExt;
-use netlink_packet_route::rtnl::AddressMessage;
+use netlink_packet_route::rtnl::{
+    address::nlas::{CacheInfo, Nla, ADDRESSS_CACHE_INFO_LEN},
+    AddressMessage,
+};
+use netlink_packet_utils::Emitable;
+use rtnetlink::AddressAddRequest;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -70,6 +75,8 @@ impl From<&Ipv4Info> for IpConf {
                 addrs.push(IpAddrConf {
                     address: addr_info.address.clone(),
                     prefix_len: addr_info.prefix_len,
+                    preferred_lft: addr_info.preferred_lft.clone(),
+                    valid_lft: addr_info.valid_lft.clone(),
                 });
             }
         }
@@ -85,6 +92,8 @@ impl From<&Ipv6Info> for IpConf {
                 addrs.push(IpAddrConf {
                     address: addr_info.address.clone(),
                     prefix_len: addr_info.prefix_len,
+                    preferred_lft: addr_info.preferred_lft.clone(),
+                    valid_lft: addr_info.valid_lft.clone(),
                 });
             }
         }
@@ -104,6 +113,10 @@ pub enum IpFamily {
 pub struct IpAddrConf {
     pub address: String,
     pub prefix_len: u8,
+    #[serde(default)]
+    pub valid_lft: String,
+    #[serde(default)]
+    pub preferred_lft: String,
 }
 
 impl IpConf {
@@ -272,15 +285,17 @@ async fn apply_ip_conf(
         (Some(ip_conf), None) => {
             // Desire would like to add more address
             for addr_conf in &ip_conf.addresses {
-                handle
-                    .address()
-                    .add(
-                        iface_index,
-                        ip_addr_str_to_enum(&addr_conf.address)?,
-                        addr_conf.prefix_len,
-                    )
-                    .execute()
-                    .await?;
+                let mut req = handle.address().add(
+                    iface_index,
+                    ip_addr_str_to_enum(&addr_conf.address)?,
+                    addr_conf.prefix_len,
+                );
+                handle_dynamic_ip(
+                    &mut req,
+                    &addr_conf.preferred_lft,
+                    &addr_conf.valid_lft,
+                )?;
+                req.execute().await?;
             }
         }
         (Some(ip_conf), Some(cur_ip_conf)) => {
@@ -290,12 +305,16 @@ async fn apply_ip_conf(
                 des_ip_addr_confs.insert(IpAddrConf {
                     address: des_addr.address.clone(),
                     prefix_len: des_addr.prefix_len,
+                    valid_lft: des_addr.valid_lft.clone(),
+                    preferred_lft: des_addr.preferred_lft.clone(),
                 });
             }
             for cur_addr in &cur_ip_conf.addresses {
                 cur_ip_addr_confs.insert(IpAddrConf {
                     address: cur_addr.address.clone(),
                     prefix_len: cur_addr.prefix_len,
+                    valid_lft: cur_addr.valid_lft.clone(),
+                    preferred_lft: cur_addr.preferred_lft.clone(),
                 });
             }
             let has_ipv6_link_local_in_desire = if ip_family == IpFamily::Ipv4 {
@@ -334,15 +353,17 @@ async fn apply_ip_conf(
             }
 
             for addr_to_add in &des_ip_addr_confs - &cur_ip_addr_confs {
-                handle
-                    .address()
-                    .add(
-                        iface_index,
-                        ip_addr_str_to_enum(&addr_to_add.address)?,
-                        addr_to_add.prefix_len,
-                    )
-                    .execute()
-                    .await?;
+                let mut req = handle.address().add(
+                    iface_index,
+                    ip_addr_str_to_enum(&addr_to_add.address)?,
+                    addr_to_add.prefix_len,
+                );
+                handle_dynamic_ip(
+                    &mut req,
+                    &addr_to_add.preferred_lft,
+                    &addr_to_add.valid_lft,
+                )?;
+                req.execute().await?;
             }
         }
     }
@@ -355,4 +376,50 @@ fn ip_addr_str_to_enum(address: &str) -> Result<IpAddr, NisporError> {
     } else {
         IpAddr::V4(std::net::Ipv4Addr::from_str(address)?)
     })
+}
+
+fn gen_cache_info_u8(
+    preferred_lft: &str,
+    valid_lft: &str,
+) -> Result<[u8; ADDRESSS_CACHE_INFO_LEN], NisporError> {
+    let cache_info = CacheInfo {
+        ifa_preferred: parse_lft_sec("preferred_lft", preferred_lft)?,
+        ifa_valid: parse_lft_sec("valid_lft", valid_lft)?,
+        ..Default::default()
+    };
+    let mut buff = [0u8; ADDRESSS_CACHE_INFO_LEN];
+    cache_info.emit(&mut buff);
+    Ok(buff)
+}
+
+fn handle_dynamic_ip(
+    req: &mut AddressAddRequest,
+    preferred_lft: &str,
+    valid_lft: &str,
+) -> Result<(), NisporError> {
+    if (preferred_lft != "forever" && !preferred_lft.is_empty())
+        || (valid_lft != "forever" && !valid_lft.is_empty())
+    {
+        req.message_mut().nlas.push(Nla::CacheInfo(
+            gen_cache_info_u8(preferred_lft, valid_lft)?.to_vec(),
+        ));
+    }
+    Ok(())
+}
+
+fn parse_lft_sec(name: &str, lft_str: &str) -> Result<i32, NisporError> {
+    let e = NisporError::invalid_argument(format!(
+        "Invalid {} format: expect format 50sec, got {}",
+        name, lft_str
+    ));
+    match lft_str.strip_suffix("sec") {
+        Some(a) => a.parse().map_err(|_| {
+            log::error!("{}", e);
+            e
+        }),
+        None => {
+            log::error!("{}", e);
+            Err(e)
+        }
+    }
 }
