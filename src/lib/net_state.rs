@@ -23,6 +23,7 @@ use std::collections::HashMap;
 use tokio::runtime;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[non_exhaustive]
 pub struct NetState {
     pub ifaces: HashMap<String, Iface>,
     pub routes: Vec<Route>,

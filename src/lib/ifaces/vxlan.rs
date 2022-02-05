@@ -23,6 +23,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct VxlanInfo {
     pub remote: String,
     pub vxlan_id: u32,

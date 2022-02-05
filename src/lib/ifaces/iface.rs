@@ -52,6 +52,7 @@ use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum IfaceType {
     Bond,
     Veth,
@@ -78,6 +79,7 @@ impl Default for IfaceType {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum IfaceState {
     Up,
     Dormant,
@@ -114,6 +116,7 @@ impl std::fmt::Display for IfaceState {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum IfaceFlags {
     AllMulti,
     AutoMedia,
@@ -143,6 +146,7 @@ impl Default for IfaceFlags {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum ControllerType {
     Bond,
     Bridge,
@@ -165,6 +169,7 @@ impl From<&str> for ControllerType {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct Iface {
     pub name: String,
     #[serde(skip_serializing)]
@@ -488,6 +493,7 @@ fn _parse_iface_flags(flags: u32) -> Vec<IfaceFlags> {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct IfaceConf {
     pub name: String,
     #[serde(default = "default_iface_state_in_conf")]

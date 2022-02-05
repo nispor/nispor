@@ -31,11 +31,13 @@ use crate::{
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct Ipv4Info {
     pub addresses: Vec<Ipv4AddrInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct Ipv4AddrInfo {
     pub address: String,
     pub prefix_len: u8,
@@ -48,11 +50,13 @@ pub struct Ipv4AddrInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct Ipv6Info {
     pub addresses: Vec<Ipv6AddrInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct Ipv6AddrInfo {
     pub address: String,
     pub prefix_len: u8,
@@ -63,6 +67,7 @@ pub struct Ipv6AddrInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct IpConf {
     pub addresses: Vec<IpAddrConf>,
 }
@@ -110,6 +115,7 @@ pub enum IpFamily {
 #[derive(
     Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone, Default,
 )]
+#[non_exhaustive]
 pub struct IpAddrConf {
     pub address: String,
     pub prefix_len: u8,

@@ -25,6 +25,7 @@ const ETH_P_8021AD: u16 = 0x88A8;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum VlanProtocol {
     #[serde(rename = "802.1q")]
     Ieee8021Q,
@@ -56,6 +57,7 @@ const VLAN_FLAG_MVRP: u32 = 0x8;
 const VLAN_FLAG_BRIDGE_BINDING: u32 = 0x10;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct VlanInfo {
     pub vlan_id: u16,
     pub protocol: VlanProtocol,
@@ -126,6 +128,7 @@ fn convert_base_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[non_exhaustive]
 pub struct VlanConf {
     pub vlan_id: u16,
     pub base_iface: String,

@@ -44,6 +44,7 @@ use std::collections::HashMap;
 const USER_HZ: u32 = 100;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct Route {
     pub address_family: AddressFamily,
     pub tos: u8,
@@ -346,6 +347,7 @@ const SIZE_OF_RTNEXTHOP: usize = 8;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 pub struct MultipathRoute {
     pub via: String,
     pub iface: String,

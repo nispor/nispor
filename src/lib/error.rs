@@ -33,6 +33,7 @@ impl std::fmt::Display for ErrorKind {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[non_exhaustive]
 pub struct NisporError {
     pub kind: ErrorKind,
     pub msg: String,

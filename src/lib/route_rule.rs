@@ -74,6 +74,7 @@ impl Default for RuleAction {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct RouteRule {
     pub action: RuleAction,
     pub address_family: AddressFamily,

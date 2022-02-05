@@ -21,6 +21,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 pub enum MacVtapMode {
     /* don't talk to other macvlans */
     Private,
@@ -58,6 +59,7 @@ impl From<MacVlanMode> for MacVtapMode {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct MacVtapInfo {
     pub base_iface: String,
     pub mode: MacVtapMode,
