@@ -164,3 +164,26 @@ fn test_add_and_remove_dynamic_ip() {
         );
     });
 }
+
+#[test]
+fn test_add_dynamic_ip_repeat() {
+    with_veth_iface(|| {
+        let conf: NetConf = serde_yaml::from_str(ADD_IP_CONF_DYNAMIC).unwrap();
+        conf.apply().unwrap();
+        conf.apply().unwrap();
+        std::thread::sleep(std::time::Duration::from_secs(2));
+        conf.apply().unwrap();
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        let iface_type = &iface.iface_type;
+        assert_eq!(iface_type, &nispor::IfaceType::Veth);
+        assert_eq!(
+            serde_yaml::to_string(&iface.ipv4).unwrap().trim(),
+            EXPECTED_IPV4_DYNAMIC_INFO
+        );
+        assert_eq!(
+            serde_yaml::to_string(&iface.ipv6).unwrap().trim(),
+            EXPECTED_IPV6_DYNAMIC_INFO
+        );
+    });
+}
