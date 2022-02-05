@@ -21,7 +21,7 @@ use crate::ifaces::{
 use serde::{Deserialize, Serialize};
 use tokio::runtime;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 pub struct NetConf {
     pub ifaces: Option<Vec<IfaceConf>>,
 }
