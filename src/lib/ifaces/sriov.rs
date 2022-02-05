@@ -49,6 +49,7 @@ const IFLA_VF_STATS_TX_DROPPED: u16 = 8;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum VfLinkState {
     Auto,
     Enable,
@@ -74,6 +75,7 @@ impl From<u32> for VfLinkState {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Default)]
+#[non_exhaustive]
 pub struct VfState {
     pub rx_packets: u64,
     pub tx_packets: u64,
@@ -86,11 +88,13 @@ pub struct VfState {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct SriovInfo {
     pub vfs: Vec<VfInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct VfInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub iface_name: Option<String>,

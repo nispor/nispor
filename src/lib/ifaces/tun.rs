@@ -33,6 +33,7 @@ const IFLA_TUN_NUM_QUEUES: u16 = 8;
 const IFLA_TUN_NUM_DISABLED_QUEUES: u16 = 9;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct TunInfo {
     pub mode: TunMode,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -51,6 +52,7 @@ pub struct TunInfo {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum TunMode {
     Tun,
     Tap,

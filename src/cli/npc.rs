@@ -531,15 +531,12 @@ fn filter_iface_state(
 }
 
 fn delete_iface(iface_name: &str) -> CliResult {
-    if let Err(e) = (NetConf {
-        ifaces: Some(vec![IfaceConf {
-            name: iface_name.to_string(),
-            state: IfaceState::Absent,
-            ..Default::default()
-        }]),
-    }
-    .apply())
-    {
+    let mut conf = NetConf::default();
+    let mut iface_conf = IfaceConf::default();
+    iface_conf.name = iface_name.to_string();
+    iface_conf.state = IfaceState::Absent;
+    conf.ifaces = Some(vec![iface_conf]);
+    if let Err(e) = conf.apply() {
         CliResult::NisporError(e)
     } else {
         CliResult::Pass

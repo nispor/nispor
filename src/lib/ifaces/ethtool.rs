@@ -25,6 +25,7 @@ use serde::{Deserialize, Serialize, Serializer};
 use crate::NisporError;
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct EthtoolPauseInfo {
     pub rx: bool,
     pub tx: bool,
@@ -33,6 +34,7 @@ pub struct EthtoolPauseInfo {
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub struct EthtoolFeatureInfo {
     #[serde(serialize_with = "ordered_map")]
     pub fixed: HashMap<String, bool>,
@@ -41,6 +43,7 @@ pub struct EthtoolFeatureInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct EthtoolCoalesceInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pkt_rate_high: Option<u32>,
@@ -89,6 +92,7 @@ pub struct EthtoolCoalesceInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct EthtoolRingInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub rx: Option<u32>,
@@ -110,6 +114,7 @@ pub struct EthtoolRingInfo {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum EthtoolLinkModeDuplex {
     Half,
     Full,
@@ -135,6 +140,7 @@ impl Default for EthtoolLinkModeDuplex {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct EthtoolLinkModeInfo {
     pub auto_negotiate: bool,
     pub ours: Vec<String>,
@@ -151,6 +157,7 @@ pub struct EthtoolLinkModeInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct EthtoolInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pause: Option<EthtoolPauseInfo>,

@@ -25,12 +25,14 @@ use std::collections::HashMap;
 const IFLA_VRF_PORT_TABLE: u16 = 1;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct VrfInfo {
     pub table_id: u32,
     pub subordinates: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct VrfSubordinateInfo {
     pub table_id: u32,
 }

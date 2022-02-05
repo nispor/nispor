@@ -22,6 +22,7 @@ use serde::{Deserialize, Serialize};
 use tokio::runtime;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct NetConf {
     pub ifaces: Option<Vec<IfaceConf>>,
 }

@@ -27,6 +27,7 @@ use crate::{
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum BridgeStpState {
     Disabled,
     KernelStp,
@@ -52,6 +53,7 @@ impl From<u32> for BridgeStpState {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum BridgeVlanProtocol {
     #[serde(rename = "802.1q")]
     Ieee8021Q,
@@ -75,6 +77,7 @@ impl From<u16> for BridgeVlanProtocol {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct BridgeInfo {
     pub ports: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -169,6 +172,7 @@ pub struct BridgeInfo {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum BridgePortStpState {
     Disabled,
     Listening,
@@ -206,6 +210,7 @@ impl From<u8> for BridgePortStpState {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
+#[non_exhaustive]
 pub enum BridgePortMulticastRouterType {
     Disabled,
     TempQuery,
@@ -252,6 +257,7 @@ impl From<BridgePortMulticastRouterType> for u8 {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct BridgePortInfo {
     pub stp_state: BridgePortStpState,
     pub stp_priority: u16,
@@ -365,6 +371,7 @@ fn convert_back_port_index_to_name(iface_states: &mut HashMap<String, Iface>) {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct BridgeVlanEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vid: Option<u16>,
@@ -390,6 +397,7 @@ pub(crate) fn parse_bridge_vlan_info(
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct BridgeConf {}
 
 impl BridgeConf {

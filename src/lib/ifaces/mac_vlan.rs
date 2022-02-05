@@ -32,6 +32,7 @@ const MACVLAN_MODE_SOURCE: u32 = 16;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "lowercase")]
+#[non_exhaustive]
 pub enum MacVlanMode {
     /* don't talk to other macvlans */
     Private,
@@ -68,6 +69,7 @@ impl From<u32> for MacVlanMode {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[non_exhaustive]
 pub struct MacVlanInfo {
     pub base_iface: String,
     pub mode: MacVlanMode,
