@@ -157,8 +157,11 @@ impl CliIfaceBrief {
                         let mut addr_strs = Vec::new();
                         for addr in &ip_info.addresses {
                             addr_strs.push(format!(
-                                "{}/{}",
-                                addr.address, addr.prefix_len
+                                "{}/{} {} {}",
+                                addr.address,
+                                addr.prefix_len,
+                                addr.preferred_lft,
+                                addr.valid_lft
                             ));
                         }
                         addr_strs
@@ -170,8 +173,11 @@ impl CliIfaceBrief {
                         let mut addr_strs = Vec::new();
                         for addr in &ip_info.addresses {
                             addr_strs.push(format!(
-                                "{}/{}",
-                                addr.address, addr.prefix_len
+                                "{}/{} {} {}",
+                                addr.address,
+                                addr.prefix_len,
+                                addr.preferred_lft,
+                                addr.valid_lft
                             ));
                         }
                         addr_strs

@@ -353,6 +353,36 @@ async fn apply_ip_conf(
             }
 
             for addr_to_add in &des_ip_addr_confs - &cur_ip_addr_confs {
+                // Due to the difference of preferred_lft or valid_lft, existing
+                // current IP will not deleted by previous codes.
+                // Manually delete the existing IP address.
+                if is_dynamic_ip(
+                    addr_to_add.preferred_lft.as_str(),
+                    addr_to_add.valid_lft.as_str(),
+                ) {
+                    if let Some(nl_addr_msgs) = nl_addr_msgs {
+                        if let Some(nl_addr_msg) = nl_addr_msgs.get(&format!(
+                            "{}/{}",
+                            &addr_to_add.address, addr_to_add.prefix_len
+                        )) {
+                            let mut nl_addr_msg = nl_addr_msg.clone();
+                            // The cache info should be purged from request
+                            // nl_addr when deleting
+                            nl_addr_msg.nlas.retain(|nla| {
+                                !matches!(nla, Nla::CacheInfo(_))
+                            });
+                            log::debug!(
+                                "deleting current dynamic IP {:?}",
+                                nl_addr_msg
+                            );
+                            handle
+                                .address()
+                                .del(nl_addr_msg.clone())
+                                .execute()
+                                .await?;
+                        }
+                    }
+                }
                 let mut req = handle.address().add(
                     iface_index,
                     ip_addr_str_to_enum(&addr_to_add.address)?,
@@ -397,14 +427,17 @@ fn handle_dynamic_ip(
     preferred_lft: &str,
     valid_lft: &str,
 ) -> Result<(), NisporError> {
-    if (preferred_lft != "forever" && !preferred_lft.is_empty())
-        || (valid_lft != "forever" && !valid_lft.is_empty())
-    {
+    if is_dynamic_ip(preferred_lft, valid_lft) {
         req.message_mut().nlas.push(Nla::CacheInfo(
             gen_cache_info_u8(preferred_lft, valid_lft)?.to_vec(),
         ));
     }
     Ok(())
+}
+
+fn is_dynamic_ip(preferred_lft: &str, valid_lft: &str) -> bool {
+    (preferred_lft != "forever" && !preferred_lft.is_empty())
+        || (valid_lft != "forever" && !valid_lft.is_empty())
 }
 
 fn parse_lft_sec(name: &str, lft_str: &str) -> Result<i32, NisporError> {
