@@ -161,7 +161,7 @@ impl Default for AddressFamily {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum RouteProtocol {
     UnSpec,
@@ -218,6 +218,37 @@ const RTPROT_ISIS: u8 = 187;
 const RTPROT_OSPF: u8 = 188;
 const RTPROT_RIP: u8 = 189;
 const RTPROT_EIGRP: u8 = 192;
+
+impl From<&RouteProtocol> for u8 {
+    fn from(t: &RouteProtocol) -> u8 {
+        match t {
+            RouteProtocol::UnSpec => RTPROT_UNSPEC,
+            RouteProtocol::IcmpRedirect => RTPROT_REDIRECT,
+            RouteProtocol::Kernel => RTPROT_KERNEL,
+            RouteProtocol::Boot => RTPROT_BOOT,
+            RouteProtocol::Static => RTPROT_STATIC,
+            RouteProtocol::Gated => RTPROT_GATED,
+            RouteProtocol::Ra => RTPROT_RA,
+            RouteProtocol::Mrt => RTPROT_MRT,
+            RouteProtocol::Zebra => RTPROT_ZEBRA,
+            RouteProtocol::Bird => RTPROT_BIRD,
+            RouteProtocol::DnRouted => RTPROT_DNROUTED,
+            RouteProtocol::Xorp => RTPROT_XORP,
+            RouteProtocol::Ntk => RTPROT_NTK,
+            RouteProtocol::Dhcp => RTPROT_DHCP,
+            RouteProtocol::Mrouted => RTPROT_MROUTED,
+            RouteProtocol::KeepAlived => RTPROT_KEEPALIVED,
+            RouteProtocol::Babel => RTPROT_BABEL,
+            RouteProtocol::Bgp => RTPROT_BGP,
+            RouteProtocol::Isis => RTPROT_ISIS,
+            RouteProtocol::Ospf => RTPROT_OSPF,
+            RouteProtocol::Rip => RTPROT_RIP,
+            RouteProtocol::Eigrp => RTPROT_EIGRP,
+            RouteProtocol::Unknown => u8::MAX,
+            RouteProtocol::Other(d) => *d,
+        }
+    }
+}
 
 impl From<u8> for RouteProtocol {
     fn from(d: u8) -> Self {
@@ -662,6 +693,7 @@ pub struct RouteConf {
     pub via: Option<String>,
     pub metric: Option<u32>,
     pub table: Option<u8>,
+    pub protocol: Option<RouteProtocol>,
 }
 
 pub(crate) async fn apply_routes_conf(
@@ -683,7 +715,11 @@ async fn apply_route_conf(
 ) -> Result<(), NisporError> {
     let mut nl_msg = RouteMessage::default();
     nl_msg.header.kind = RTN_UNICAST;
-    nl_msg.header.protocol = RTPROT_STATIC;
+    if let Some(p) = route.protocol.as_ref() {
+        nl_msg.header.protocol = p.into();
+    } else {
+        nl_msg.header.protocol = RTPROT_STATIC;
+    }
     nl_msg.header.scope = RT_SCOPE_UNIVERSE;
     nl_msg.header.table = RT_TABLE_MAIN;
     let (dst_addr, dst_prefix) = parse_ip_net_addr_str(route.dst.as_str())?;
