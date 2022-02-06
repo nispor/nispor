@@ -12,34 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ifaces::Iface;
-use crate::netlink::parse_as_i32;
-use crate::netlink::parse_as_ipv4;
-use crate::netlink::parse_as_ipv6;
-use crate::netlink::parse_as_u16;
-use crate::netlink::parse_as_u32;
-use crate::netlink::AF_INET;
-use crate::netlink::AF_INET6;
-use crate::NisporError;
-use futures::stream::TryStreamExt;
-use netlink_packet_route::rtnl::nlas::route::CacheInfo;
-use netlink_packet_route::rtnl::nlas::route::CacheInfoBuffer;
-use netlink_packet_route::rtnl::nlas::route::Metrics;
-use netlink_packet_route::rtnl::nlas::route::Nla;
-use netlink_packet_route::rtnl::nlas::NlaBuffer;
-use netlink_packet_route::rtnl::nlas::NlasIterator;
-use netlink_packet_route::rtnl::{
-    RTA_GATEWAY, RTA_VIA, RTN_ANYCAST, RTN_BLACKHOLE, RTN_BROADCAST, RTN_LOCAL,
-    RTN_MULTICAST, RTN_NAT, RTN_PROHIBIT, RTN_THROW, RTN_UNICAST,
-    RTN_UNREACHABLE, RTN_UNSPEC, RTN_XRESOLVE, RT_SCOPE_HOST, RT_SCOPE_LINK,
-    RT_SCOPE_NOWHERE, RT_SCOPE_SITE, RT_SCOPE_UNIVERSE,
-};
-use netlink_packet_route::RouteMessage;
-use netlink_packet_utils::traits::Parseable;
-use rtnetlink::new_connection;
-use rtnetlink::IpVersion;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::net::IpAddr;
+
+use futures::stream::TryStreamExt;
+use netlink_packet_route::rtnl::{
+    nlas::route::{CacheInfo, CacheInfoBuffer, Metrics, Nla},
+    nlas::{NlaBuffer, NlasIterator},
+    RouteMessage, RTA_GATEWAY, RTA_VIA, RTN_ANYCAST, RTN_BLACKHOLE,
+    RTN_BROADCAST, RTN_LOCAL, RTN_MULTICAST, RTN_NAT, RTN_PROHIBIT, RTN_THROW,
+    RTN_UNICAST, RTN_UNREACHABLE, RTN_UNSPEC, RTN_XRESOLVE, RT_SCOPE_HOST,
+    RT_SCOPE_LINK, RT_SCOPE_NOWHERE, RT_SCOPE_SITE, RT_SCOPE_UNIVERSE,
+    RT_TABLE_MAIN,
+};
+use netlink_packet_utils::traits::Parseable;
+use rtnetlink::{new_connection, IpVersion};
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    ifaces::Iface,
+    ip::{parse_ip_addr_str, parse_ip_net_addr_str},
+    netlink::{
+        parse_as_i32, parse_as_ipv4, parse_as_ipv6, parse_as_u16, parse_as_u32,
+        AF_INET, AF_INET6,
+    },
+    NisporError,
+};
 
 const USER_HZ: u32 = 100;
 
@@ -653,4 +651,102 @@ fn _addr_to_string(data: &[u8], family: &AddressFamily) -> String {
         AddressFamily::IPv6 => parse_as_ipv6(data).to_string(),
         _ => format!("{:?}", data),
     }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RouteConf {
+    #[serde(default)]
+    pub remove: bool,
+    pub dst: String,
+    pub oif: Option<String>,
+    pub via: Option<String>,
+    pub metric: Option<u32>,
+    pub table: Option<u8>,
+}
+
+pub(crate) async fn apply_routes_conf(
+    routes: &[RouteConf],
+    iface_name_2_index: &HashMap<String, u32>,
+) -> Result<(), NisporError> {
+    let (connection, handle, _) = rtnetlink::new_connection()?;
+    tokio::spawn(connection);
+    for route in routes {
+        apply_route_conf(&handle, route, iface_name_2_index).await?;
+    }
+    Ok(())
+}
+
+async fn apply_route_conf(
+    handle: &rtnetlink::Handle,
+    route: &RouteConf,
+    iface_name_2_index: &HashMap<String, u32>,
+) -> Result<(), NisporError> {
+    let mut nl_msg = RouteMessage::default();
+    nl_msg.header.kind = RTN_UNICAST;
+    nl_msg.header.protocol = RTPROT_STATIC;
+    nl_msg.header.scope = RT_SCOPE_UNIVERSE;
+    nl_msg.header.table = RT_TABLE_MAIN;
+    let (dst_addr, dst_prefix) = parse_ip_net_addr_str(route.dst.as_str())?;
+    nl_msg.header.destination_prefix_length = dst_prefix;
+    match dst_addr {
+        IpAddr::V4(addr) => {
+            nl_msg.header.address_family = AF_INET as u8;
+            nl_msg.nlas.push(Nla::Destination(addr.octets().to_vec()));
+        }
+        IpAddr::V6(addr) => {
+            nl_msg.header.address_family = AF_INET6 as u8;
+            nl_msg.nlas.push(Nla::Destination(addr.octets().to_vec()));
+        }
+    };
+    if let Some(t) = route.table.as_ref() {
+        nl_msg.header.table = *t;
+    }
+    if let Some(m) = route.metric.as_ref() {
+        nl_msg.nlas.push(Nla::Priority(*m));
+    }
+    if let Some(oif) = route.oif.as_deref() {
+        if let Some(iface_index) = iface_name_2_index.get(oif) {
+            nl_msg.nlas.push(Nla::Iif(*iface_index));
+        } else {
+            let e = NisporError::invalid_argument(format!(
+                "Interface {} does not exist",
+                oif
+            ));
+            log::error!("{}", e);
+            return Err(e);
+        }
+    }
+    if let Some(via) = route.via.as_deref() {
+        match parse_ip_addr_str(via)? {
+            IpAddr::V4(i) => {
+                nl_msg.nlas.push(Nla::Gateway(i.octets().to_vec()));
+            }
+            IpAddr::V6(i) => {
+                nl_msg.nlas.push(Nla::Gateway(i.octets().to_vec()));
+            }
+        };
+    }
+    if route.remove {
+        if let Err(e) = handle.route().del(nl_msg).execute().await {
+            if let rtnetlink::Error::NetlinkError(ref e) = e {
+                if e.code == -libc::ESRCH {
+                    return Ok(());
+                }
+            }
+            return Err(e.into());
+        }
+    } else {
+        let mut req = handle.route().add();
+        req.message_mut().header = nl_msg.header;
+        req.message_mut().nlas = nl_msg.nlas;
+        if let Err(e) = req.execute().await {
+            if let rtnetlink::Error::NetlinkError(ref e) = e {
+                if e.code == -libc::EEXIST {
+                    return Ok(());
+                }
+            }
+            return Err(e.into());
+        }
+    }
+    Ok(())
 }
