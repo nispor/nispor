@@ -44,7 +44,7 @@ pub use crate::ip::{
 pub use crate::net_conf::NetConf;
 pub use crate::net_state::NetState;
 pub use crate::route::{
-    AddressFamily, MultipathRoute, MultipathRouteFlags, Route, RouteProtocol,
-    RouteScope, RouteType,
+    AddressFamily, MultipathRoute, MultipathRouteFlags, Route, RouteConf,
+    RouteProtocol, RouteScope, RouteType,
 };
 pub use crate::route_rule::{RouteRule, RuleAction};

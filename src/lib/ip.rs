@@ -174,7 +174,7 @@ fn is_ipv6_unicast_link_local(address_full: &str) -> bool {
     }
 }
 
-fn is_ipv6_addr(addr: &str) -> bool {
+pub(crate) fn is_ipv6_addr(addr: &str) -> bool {
     addr.contains(':')
 }
 
@@ -461,4 +461,47 @@ fn parse_lft_sec(name: &str, lft_str: &str) -> Result<i32, NisporError> {
             Err(e)
         }
     }
+}
+
+pub(crate) fn parse_ip_addr_str(
+    ip_addr_str: &str,
+) -> Result<IpAddr, NisporError> {
+    IpAddr::from_str(ip_addr_str).map_err(|e| {
+        let e = NisporError::invalid_argument(format!(
+            "Invalid IP address {}: {}",
+            ip_addr_str, e
+        ));
+        log::error!("{}", e);
+        e
+    })
+}
+
+pub(crate) fn parse_ip_net_addr_str(
+    ip_net_str: &str,
+) -> Result<(IpAddr, u8), NisporError> {
+    let splits: Vec<&str> = ip_net_str.split('/').collect();
+    if splits.len() > 2 || splits.is_empty() {
+        let e = NisporError::invalid_argument(format!(
+            "Invalid IP network address {}",
+            ip_net_str,
+        ));
+        log::error!("{}", e);
+        return Err(e);
+    }
+    let addr_str = splits[0];
+    let prefix_len = if let Some(prefix_len_str) = splits.get(1) {
+        prefix_len_str.parse::<u8>().map_err(|e| {
+            let e = NisporError::invalid_argument(format!(
+                "Invalid IP network prefix {}: {}",
+                ip_net_str, e
+            ));
+            log::error!("{}", e);
+            e
+        })?
+    } else if is_ipv6_addr(addr_str) {
+        128
+    } else {
+        32
+    };
+    Ok((parse_ip_addr_str(addr_str)?, prefix_len))
 }

@@ -17,6 +17,7 @@ use crate::ifaces::{
     change_ifaces, create_ifaces, delete_ifaces, get_iface_name2index,
     get_ifaces, IfaceConf, IfaceState,
 };
+use crate::route::{apply_routes_conf, RouteConf};
 
 use serde::{Deserialize, Serialize};
 use tokio::runtime;
@@ -25,6 +26,7 @@ use tokio::runtime;
 #[non_exhaustive]
 pub struct NetConf {
     pub ifaces: Option<Vec<IfaceConf>>,
+    pub routes: Option<Vec<RouteConf>>,
 }
 
 impl NetConf {
@@ -54,6 +56,11 @@ impl NetConf {
 
             let cur_ifaces = rt.block_on(get_ifaces())?;
             rt.block_on(change_ifaces(&chg_ifaces, &cur_ifaces))?;
+        }
+
+        if let Some(routes) = self.routes.as_ref() {
+            let cur_iface_name_2_index = rt.block_on(get_iface_name2index())?;
+            rt.block_on(apply_routes_conf(routes, &cur_iface_name_2_index))?;
         }
         Ok(())
     }
