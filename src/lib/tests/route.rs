@@ -75,7 +75,7 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
 - address_family: ipv6
   tos: 0
   table: 254
-  protocol: static
+  protocol: dhcp
   scope: universe
   route_type: unicast
   flags: 0
@@ -95,7 +95,7 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
 - address_family: ipv4
   tos: 0
   table: 254
-  protocol: static
+  protocol: dhcp
   scope: universe
   route_type: unicast
   flags: 0
@@ -110,11 +110,13 @@ routes:
   oif: veth1
   via: 192.0.2.2
   metric: 500
+  protocol: dhcp
   table: 254
 - dst: 2001:db8:e::/64
   oif: veth1
   via: 2001:db8:a::2
   metric: 501
+  protocol: dhcp
   table: 254"#;
 
 const REMOVE_ROUTE_YML: &str = r#"---
@@ -124,12 +126,14 @@ routes:
   oif: veth1
   via: 192.0.2.2
   metric: 500
+  protocol: dhcp
   table: 254
 - remove: true
   dst: 2001:db8:e::/64
   oif: veth1
   via: 2001:db8:a::2
   metric: 501
+  protocol: dhcp
   table: 254"#;
 
 #[test]
