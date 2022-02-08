@@ -20,6 +20,7 @@ from .bridge import NisporBridgePort
 from .clib_wrapper import NisporError
 from .clib_wrapper import retrieve_net_state_json
 from .iface import NisporIfaceState
+from .route import NisporMultipathRoute
 from .route import NisporRoute
 from .route import NisporRouteState
 from .route_rule import NisporRouteRule
