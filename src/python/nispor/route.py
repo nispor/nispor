@@ -201,3 +201,32 @@ class NisporRoute:
     @property
     def perf(self):
         return self._info.get("perf")
+
+    @property
+    def multipath(self):
+        mp_rts = self._info.get("multipath")
+        if mp_rts:
+            return [NisporMultipathRoute(m) for m in mp_rts]
+        else:
+            None
+
+
+class NisporMultipathRoute:
+    def __init__(self, info):
+        self._info = info
+
+    @property
+    def via(self):
+        return self._info["via"]
+
+    @property
+    def iface(self):
+        return self._info["iface"]
+
+    @property
+    def weight(self):
+        return self._info["weight"]
+
+    @property
+    def flags(self):
+        return self._info["flags"]
