@@ -63,13 +63,19 @@ ifaces:
           valid_lft: 121sec
           preferred_lft: 61sec"#;
 
-const EMPTY_IP_CONF: &str = r#"---
+const DEL_IP_CONF: &str = r#"---
 ifaces:
   - name: veth1
     ipv4:
-      addresses: []
+      addresses:
+        - address: "192.0.2.1"
+          prefix_len: 24
+          remove: true
     ipv6:
-      addresses: []"#;
+      addresses:
+        - address: "2001:db8:a::9"
+          prefix_len: 64
+          remove: true"#;
 
 const EXPECTED_IPV4_INFO: &str = r#"---
 addresses:
@@ -131,7 +137,7 @@ fn test_add_and_remove_ip() {
             serde_yaml::to_string(&iface.ipv6).unwrap().trim(),
             EXPECTED_IPV6_INFO
         );
-        let conf: NetConf = serde_yaml::from_str(EMPTY_IP_CONF).unwrap();
+        let conf: NetConf = serde_yaml::from_str(DEL_IP_CONF).unwrap();
         conf.apply().unwrap();
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
@@ -161,6 +167,17 @@ fn test_add_and_remove_dynamic_ip() {
         assert_eq!(
             serde_yaml::to_string(&iface.ipv6).unwrap().trim(),
             EXPECTED_IPV6_DYNAMIC_INFO
+        );
+        let conf: NetConf = serde_yaml::from_str(DEL_IP_CONF).unwrap();
+        conf.apply().unwrap();
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        let iface_type = &iface.iface_type;
+        assert_eq!(iface_type, &nispor::IfaceType::Veth);
+        assert_eq!(iface.ipv4, None);
+        assert_eq!(
+            serde_yaml::to_string(&iface.ipv6).unwrap().trim(),
+            EXPECTED_EMPTY_IPV6_INFO
         );
     });
 }
