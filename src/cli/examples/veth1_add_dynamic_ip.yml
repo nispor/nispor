@@ -1,0 +1,21 @@
+---
+ifaces:
+  - name: veth1
+    type: veth
+    mac_address: "00:02:03:04:05:06"
+    veth:
+      peer: veth1.ep
+    ipv4:
+      addresses:
+        - address: "192.0.2.1"
+          prefix_len: 24
+          valid_lft: 1200sec
+          preferred_lft: 600sec
+    ipv6:
+      addresses:
+        - address: "2001:db8:a::9"
+          prefix_len: 64
+          valid_lft: 1201sec
+          preferred_lft: 601sec
+  - name: veth1.ep
+    type: veth
