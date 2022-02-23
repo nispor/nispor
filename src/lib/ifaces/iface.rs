@@ -177,8 +177,10 @@ pub struct Iface {
     pub iface_type: IfaceType,
     pub state: IfaceState,
     pub mtu: i64,
-    pub max_mtu: u32,
-    pub min_mtu: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub min_mtu: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_mtu: Option<i64>,
     pub flags: Vec<IfaceFlags>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ipv4: Option<Ipv4Info>,
@@ -258,6 +260,12 @@ pub(crate) fn parse_nl_msg_to_iface(
     for nla in &nl_msg.nlas {
         if let Nla::Mtu(mtu) = nla {
             iface_state.mtu = *mtu as i64;
+        } else if let Nla::MinMtu(mtu) = nla {
+            iface_state.min_mtu =
+                if *mtu != 0 { Some(*mtu as i64) } else { None };
+        } else if let Nla::MaxMtu(mtu) = nla {
+            iface_state.max_mtu =
+                if *mtu != 0 { Some(*mtu as i64) } else { None };
         } else if let Nla::Address(mac) = nla {
             mac_len = Some(mac.len());
             iface_state.mac_address = parse_as_mac(mac.len(), mac)?;
@@ -270,10 +278,6 @@ pub(crate) fn parse_nl_msg_to_iface(
             iface_state.controller = Some(format!("{}", controller));
         } else if let Nla::Link(l) = nla {
             link = Some(*l);
-        } else if let Nla::MaxMtu(l) = nla {
-            iface_state.max_mtu = *l;
-        } else if let Nla::MinMtu(l) = nla {
-            iface_state.min_mtu = *l;
         } else if let Nla::Info(infos) = nla {
             for info in infos {
                 if let nlas::Info::Kind(t) = info {

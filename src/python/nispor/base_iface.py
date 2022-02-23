@@ -100,11 +100,11 @@ class NisporBaseIface:
 
     @property
     def max_mtu(self):
-        return self._info["max_mtu"]
+        return self._info.get("max_mtu")
 
     @property
     def min_mtu(self):
-        return self._info["min_mtu"]
+        return self._info.get("min_mtu")
 
 
 class NisporBaseSubordinateIface:
