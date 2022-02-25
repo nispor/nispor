@@ -101,16 +101,20 @@ pub(crate) fn parse_as_u64(data: &[u8]) -> Result<u64, NisporError> {
     ]))
 }
 
-pub(crate) fn parse_as_ipv4(data: &[u8]) -> Ipv4Addr {
-    let addr_bytes: [u8; 4] = data
-        .try_into()
-        .expect("Got invalid IPv4 address u8, the length is not 4 ");
-    Ipv4Addr::from(addr_bytes)
+pub(crate) fn parse_as_ipv4(data: &[u8]) -> Result<Ipv4Addr, NisporError> {
+    let addr_bytes: [u8; 4] = data.try_into().map_err(|_| {
+        NisporError::invalid_argument(
+            "Got invalid IPv4 address u8, the length is not 4".into(),
+        )
+    })?;
+    Ok(Ipv4Addr::from(addr_bytes))
 }
 
-pub(crate) fn parse_as_ipv6(data: &[u8]) -> Ipv6Addr {
-    let addr_bytes: [u8; 16] = data
-        .try_into()
-        .expect("Got invalid IPv6 address u8, the length is not 16 ");
-    Ipv6Addr::from(addr_bytes)
+pub(crate) fn parse_as_ipv6(data: &[u8]) -> Result<Ipv6Addr, NisporError> {
+    let addr_bytes: [u8; 16] = data.try_into().map_err(|_| {
+        NisporError::invalid_argument(
+            "Got invalid IPv6 address u8, the length is not 16".into(),
+        )
+    })?;
+    Ok(Ipv6Addr::from(addr_bytes))
 }

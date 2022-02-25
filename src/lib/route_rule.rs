@@ -224,8 +224,8 @@ fn _addr_to_string(
     family: &AddressFamily,
 ) -> Result<String, NisporError> {
     match family {
-        AddressFamily::IPv4 => Ok(parse_as_ipv4(data).to_string()),
-        AddressFamily::IPv6 => Ok(parse_as_ipv6(data).to_string()),
+        AddressFamily::IPv4 => Ok(parse_as_ipv4(data)?.to_string()),
+        AddressFamily::IPv6 => Ok(parse_as_ipv6(data)?.to_string()),
         _ => Err(NisporError {
             kind: ErrorKind::NisporBug,
             msg: "The rule is not a valid IPv4 and IPv6 rule".to_string(),

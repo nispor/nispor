@@ -136,7 +136,9 @@ fn parse_bridge_id(
             "wrong index at bridge_id parsing".into()
         ))?,
         parse_as_mac(ETH_ALEN, mac)
-            .expect("error when parsing mac address in bridge_id")
+            .map_err(|_| NisporError::invalid_argument(
+                "invalid mac address in bridge_id".into()
+            ))?
             .to_lowercase()
             .replace(':', "")
     ))

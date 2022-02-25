@@ -449,7 +449,7 @@ fn get_route(
             Nla::Destination(ref d) => {
                 rt.dst = Some(format!(
                     "{}/{}",
-                    _addr_to_string(d, family),
+                    _addr_to_string(d, family)?,
                     dst_prefix_len
                 ));
             }
@@ -463,7 +463,7 @@ fn get_route(
                 }
             }
             Nla::PrefSource(ref d) => {
-                rt.prefered_src = Some(_addr_to_string(d, family));
+                rt.prefered_src = Some(_addr_to_string(d, family)?);
             }
             Nla::Table(d) => {
                 rt.table = *d;
@@ -474,15 +474,15 @@ fn get_route(
             Nla::Source(ref d) => {
                 rt.src = Some(format!(
                     "{}/{}",
-                    _addr_to_string(d, family),
+                    _addr_to_string(d, family)?,
                     src_prefix_len
                 ));
             }
             Nla::Gateway(ref d) => {
-                rt.gateway = Some(_addr_to_string(d, family));
+                rt.gateway = Some(_addr_to_string(d, family)?);
             }
             Nla::Via(ref d) => {
-                rt.via = Some(_addr_to_string(d, family));
+                rt.via = Some(_addr_to_string(d, family)?);
             }
             Nla::Metrics(ref d) => {
                 let nlas = NlasIterator::new(d);
@@ -600,7 +600,7 @@ fn get_route(
                         &d[i + SIZE_OF_RTNEXTHOP..i + nex_hop_len as usize],
                     );
                     let via = match nla.kind() {
-                        RTA_GATEWAY => _addr_to_string(nla.value(), family),
+                        RTA_GATEWAY => _addr_to_string(nla.value(), family)?,
                         RTA_VIA => {
                             // Kernel will use RTA_VIA when gateway family does
                             // not match nexthop family
@@ -676,12 +676,15 @@ fn get_route(
     Ok(rt)
 }
 
-fn _addr_to_string(data: &[u8], family: &AddressFamily) -> String {
-    match family {
-        AddressFamily::IPv4 => parse_as_ipv4(data).to_string(),
-        AddressFamily::IPv6 => parse_as_ipv6(data).to_string(),
+fn _addr_to_string(
+    data: &[u8],
+    family: &AddressFamily,
+) -> Result<String, NisporError> {
+    Ok(match family {
+        AddressFamily::IPv4 => parse_as_ipv4(data)?.to_string(),
+        AddressFamily::IPv6 => parse_as_ipv6(data)?.to_string(),
         _ => format!("{:?}", data),
-    }
+    })
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
