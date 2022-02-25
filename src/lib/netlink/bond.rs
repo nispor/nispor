@@ -35,7 +35,10 @@ fn parse_as_nested_ipv4_addr(raw: &[u8]) -> Vec<Ipv4Addr> {
     let nlas = NlasIterator::new(raw);
     for nla in nlas {
         match nla {
-            Ok(nla) => addresses.push(parse_as_ipv4(nla.value())),
+            Ok(nla) => match parse_as_ipv4(nla.value()) {
+                Ok(addr) => addresses.push(addr),
+                Err(e) => log::warn!("{}", e),
+            },
             Err(e) => {
                 log::warn!("{}", e);
             }

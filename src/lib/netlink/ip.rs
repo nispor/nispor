@@ -95,9 +95,9 @@ fn parse_ipv4_nlas(
     let mut peer = String::new();
     for nla in &nl_msg.nlas {
         if let Nla::Local(addr_vec) = nla {
-            addr.address = parse_as_ipv4(addr_vec.as_slice()).to_string();
+            addr.address = parse_as_ipv4(addr_vec.as_slice())?.to_string();
         } else if let Nla::Address(addr_vec) = nla {
-            peer = parse_as_ipv4(addr_vec.as_slice()).to_string();
+            peer = parse_as_ipv4(addr_vec.as_slice())?.to_string();
         } else if let Nla::CacheInfo(cache_info_vec) = nla {
             let cache_info = CacheInfo::parse(&CacheInfoBuffer::new(
                 cache_info_vec.as_slice(),
@@ -125,7 +125,7 @@ fn parse_ipv6_nlas(
 
     for nla in &nl_msg.nlas {
         if let Nla::Address(addr_vec) = nla {
-            addr.address = parse_as_ipv6(addr_vec.as_slice()).to_string();
+            addr.address = parse_as_ipv6(addr_vec.as_slice())?.to_string();
         } else if let Nla::CacheInfo(cache_info_vec) = nla {
             let cache_info = CacheInfo::parse(&CacheInfoBuffer::new(
                 cache_info_vec.as_slice(),
