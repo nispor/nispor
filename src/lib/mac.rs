@@ -34,11 +34,11 @@ pub(crate) fn parse_as_mac(
 }
 
 pub(crate) fn mac_str_to_raw(mac_addr: &str) -> Result<Vec<u8>, NisporError> {
-    let mac_addr = mac_addr.to_string().replace(":", "").replace("-", "");
+    let mac_addr = mac_addr.to_string().replace(':', "").replace('-', "");
 
     let mut mac_raw: Vec<u8> = Vec::new();
 
-    let mac_addr = mac_addr.replace(":", "");
+    let mac_addr = mac_addr.replace(':', "");
     let mut chars = mac_addr.chars().peekable();
 
     while chars.peek().is_some() {
