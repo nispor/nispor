@@ -138,6 +138,6 @@ fn parse_bridge_id(
         parse_as_mac(ETH_ALEN, mac)
             .expect("error when parsing mac address in bridge_id")
             .to_lowercase()
-            .replace(":", "")
+            .replace(':', "")
     ))
 }
