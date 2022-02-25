@@ -23,8 +23,8 @@ fn test_iface_info_loopback() {
     assert_eq!(iface.state, nispor::IfaceState::Unknown);
     assert_eq!(iface.mtu, 65536);
     assert_eq!(&iface.mac_address, "00:00:00:00:00:00");
-    assert_eq!(iface.max_mtu, 0);
-    assert_eq!(iface.min_mtu, 0);
+    assert_eq!(iface.max_mtu, None);
+    assert_eq!(iface.min_mtu, None);
     assert_eq!(
         iface.flags,
         &[
