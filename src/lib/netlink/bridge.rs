@@ -127,19 +127,17 @@ fn parse_bridge_id(
 ) -> Result<String, NisporError> {
     //Following the format of sysfs
     let priority_bytes = priority.to_ne_bytes();
+    let mac = parse_as_mac(ETH_ALEN, mac)
+        .map_err(|_| {
+            NisporError::invalid_argument(
+                "invalid mac address in bridge_id".into(),
+            )
+        })?
+        .to_lowercase()
+        .replace(':', "");
+
     Ok(format!(
         "{:02x}{:02x}.{}",
-        priority_bytes.get(0).ok_or_else(|| NisporError::bug(
-            "wrong index at bridge_id parsing".into()
-        ))?,
-        priority_bytes.get(1).ok_or_else(|| NisporError::bug(
-            "wrong index at bridge_id parsing".into()
-        ))?,
-        parse_as_mac(ETH_ALEN, mac)
-            .map_err(|_| NisporError::invalid_argument(
-                "invalid mac address in bridge_id".into()
-            ))?
-            .to_lowercase()
-            .replace(':', "")
+        priority_bytes[0], priority_bytes[1], mac
     ))
 }
