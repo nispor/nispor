@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use nispor::{NetConf, NetState};
+use nispor::{NetConf, NetState, RouteProtocol};
 use pretty_assertions::assert_eq;
 use serde_yaml;
 
@@ -72,6 +72,46 @@ const EXPECTED_MULTIPATH_YAML_OUTPUT: &str = r#"---
         - on_link"#;
 
 const EXPECTED_YAML_OUTPUT: &str = r#"---
+- address_family: ipv4
+  tos: 0
+  table: 254
+  protocol: dhcp
+  scope: universe
+  route_type: unicast
+  flags: 0
+  oif: veth1
+  gateway: 192.0.2.3
+  metric: 500
+- address_family: ipv4
+  tos: 0
+  table: 254
+  protocol: dhcp
+  scope: universe
+  route_type: unicast
+  flags: 0
+  dst: 198.51.100.0/24
+  oif: veth1
+  gateway: 192.0.2.2
+  metric: 501
+- address_family: ipv6
+  tos: 0
+  table: 254
+  protocol: dhcp
+  scope: universe
+  route_type: unicast
+  flags: 0
+  oif: veth1
+  gateway: "2001:db8:a::3"
+  cache_clntref: 0
+  cache_last_use: 0
+  cache_expires: 0
+  cache_error: 0
+  cache_used: 0
+  cache_id: 0
+  cache_ts: 0
+  cache_ts_age: 0
+  metric: 502
+  perf: 0
 - address_family: ipv6
   tos: 0
   table: 254
@@ -90,51 +130,66 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
   cache_id: 0
   cache_ts: 0
   cache_ts_age: 0
-  metric: 501
-  perf: 0
-- address_family: ipv4
-  tos: 0
-  table: 254
-  protocol: dhcp
-  scope: universe
-  route_type: unicast
-  flags: 0
-  dst: 198.51.100.0/24
-  oif: veth1
-  gateway: 192.0.2.2
-  metric: 500"#;
+  metric: 503
+  perf: 0"#;
 
 const ADD_ROUTE_YML: &str = r#"---
 routes:
+- dst: 0.0.0.0/0
+  oif: veth1
+  via: 192.0.2.3
+  metric: 500
+  protocol: dhcp
+  table: 254
 - dst: 198.51.100.0/24
   oif: veth1
   via: 192.0.2.2
-  metric: 500
+  metric: 501
+  protocol: dhcp
+  table: 254
+- dst: ::/0
+  oif: veth1
+  via: 2001:db8:a::3
+  metric: 502
   protocol: dhcp
   table: 254
 - dst: 2001:db8:e::/64
   oif: veth1
   via: 2001:db8:a::2
-  metric: 501
+  metric: 503
   protocol: dhcp
   table: 254"#;
 
 const REMOVE_ROUTE_YML: &str = r#"---
 routes:
-- remove: true
-  dst: 198.51.100.0/24
+- dst: 0.0.0.0/0
   oif: veth1
-  via: 192.0.2.2
+  via: 192.0.2.3
   metric: 500
   protocol: dhcp
   table: 254
-- remove: true
-  dst: 2001:db8:e::/64
+  remove: true
+- dst: 198.51.100.0/24
   oif: veth1
-  via: 2001:db8:a::2
+  via: 192.0.2.2
   metric: 501
   protocol: dhcp
-  table: 254"#;
+  table: 254
+  remove: true
+- dst: ::/0
+  oif: veth1
+  via: 2001:db8:a::3
+  metric: 502
+  protocol: dhcp
+  table: 254
+  remove: true
+- dst: 2001:db8:e::/64
+  oif: veth1
+  via: 2001:db8:a::2
+  metric: 503
+  protocol: dhcp
+  table: 254
+  remove: true"#;
 
 #[test]
 fn test_add_remove_route_yaml() {
@@ -146,12 +201,13 @@ fn test_add_remove_route_yaml() {
         let state = NetState::retrieve().unwrap();
         let mut expected_routes = Vec::new();
         for route in state.routes {
-            if Some(TEST_ROUTE_DST_V4.into()) == route.dst {
-                expected_routes.push(route)
-            } else if Some(TEST_ROUTE_DST_V6.into()) == route.dst {
+            if RouteProtocol::Dhcp == route.protocol
+                && route.oif.as_deref() == Some("veth1")
+            {
                 expected_routes.push(route)
             }
         }
+        expected_routes.sort_unstable_by_key(|r| r.metric);
         assert_eq!(
             serde_yaml::to_string(&expected_routes).unwrap().trim(),
             EXPECTED_YAML_OUTPUT
@@ -164,9 +220,9 @@ fn test_add_remove_route_yaml() {
         let state = NetState::retrieve().unwrap();
         let mut expected_routes = Vec::new();
         for route in state.routes {
-            if Some(TEST_ROUTE_DST_V4.into()) == route.dst {
-                expected_routes.push(route)
-            } else if Some(TEST_ROUTE_DST_V6.into()) == route.dst {
+            if RouteProtocol::Dhcp == route.protocol
+                && route.oif.as_deref() == Some("veth1")
+            {
                 expected_routes.push(route)
             }
         }
