@@ -54,7 +54,7 @@ impl CliIfaceBrief {
         let mut ret = Vec::new();
         for brief in briefs {
             ret.push(format!(
-                "{}: {}: <{}> state {} mtu {}",
+                "{: >2}: {}: <{}> state {} mtu {}",
                 brief.index,
                 brief.name,
                 brief.flags.join(","),
@@ -344,7 +344,7 @@ fn main() {
         .arg(
             clap::Arg::new("iface_name")
                 .index(1)
-                .help("Show speific interface only"),
+                .help("Show specific interface only"),
         )
         .subcommand(
             clap::Command::new("iface")
@@ -357,14 +357,12 @@ fn main() {
                 .arg(
                     clap::Arg::new("delete")
                         .long("delete")
-                        .takes_value(false)
                         .help("Delete the specified interface"),
                 ),
         )
         .subcommand(clap::Command::new("route").about("Show route").arg(
             clap::Arg::new("dev").short('d').takes_value(true).help(
-                "Show only route entries output to \
-                            the specified interface",
+                "Show only route entries output to the specified interface",
             ),
         ))
         .subcommand(clap::Command::new("rule").about("Show route route"))
@@ -422,7 +420,7 @@ fn main() {
                                 ),
                             })
                         }
-                    } else if matches.is_present("delete") {
+                    } else if m.is_present("delete") {
                         CliResult::CliError(CliError {
                             msg: "Need to specific a interface to delete"
                                 .to_string(),
