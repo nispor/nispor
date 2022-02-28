@@ -24,6 +24,7 @@ use std::io::{stderr, stdout, Write};
 use std::process;
 
 const INDENT: &str = "    ";
+const LIST_SPLITER: &str = ",";
 
 #[derive(Serialize, Debug)]
 pub struct CliError {
@@ -35,6 +36,8 @@ struct CliIfaceBrief {
     index: u32,
     name: String,
     iface_type: IfaceType,
+    controller: Option<String>,
+    link_info: String,
     state: IfaceState,
     flags: Vec<String>,
     mac: String,
@@ -58,23 +61,31 @@ impl CliIfaceBrief {
                 brief.state,
                 brief.mtu,
             ));
-            if !&brief.mac.is_empty() {
-                ret.push(format!(
-                    "{}link {} mac {}{}",
-                    INDENT,
-                    brief.iface_type,
-                    brief.mac,
-                    if !&brief.permanent_mac.is_empty()
-                        && brief.permanent_mac != brief.mac
-                    {
-                        format!(" permanent_mac: {}", brief.permanent_mac)
-                    } else {
-                        "".into()
-                    }
-                ));
-            } else {
-                ret.push(format!("{}link {}", INDENT, brief.iface_type));
+            let mut link_string =
+                format!("{}link {}", INDENT, brief.iface_type);
+
+            if !brief.link_info.is_empty() {
+                link_string += &format!(" {}", brief.link_info.as_str());
             }
+            if let Some(ctrl) = brief.controller.as_ref() {
+                link_string += &format!(" controller {}", ctrl);
+            }
+
+            ret.push(link_string);
+
+            let mut mac_string = String::new();
+            if !&brief.mac.is_empty() {
+                mac_string += &format!("{}mac {}", INDENT, brief.mac);
+                if !&brief.permanent_mac.is_empty() {
+                    mac_string +=
+                        &format!(" permanent_mac {}", brief.permanent_mac);
+                }
+            }
+
+            if !mac_string.is_empty() {
+                ret.push(mac_string);
+            }
+
             for ip in &brief.ipv4 {
                 ret.push(format!("{}ipv4 {}", INDENT, ip));
             }
@@ -136,6 +147,8 @@ impl CliIfaceBrief {
             ret.push(CliIfaceBrief {
                 index: iface.index,
                 iface_type: iface.iface_type.clone(),
+                controller: iface.controller.clone(),
+                link_info: get_link_info(iface),
                 name: iface.name.clone(),
                 flags: (&iface.flags)
                     .iter()
@@ -525,5 +538,42 @@ fn delete_iface(iface_name: &str) -> CliResult {
         CliResult::NisporError(e)
     } else {
         CliResult::Pass
+    }
+}
+
+fn get_link_info(iface: &Iface) -> String {
+    if let Some(bond) = iface.bond.as_ref() {
+        let mut bond_line = format!(
+            "mode {} ports {}",
+            bond.mode,
+            bond.subordinates.join(LIST_SPLITER)
+        );
+        if let Some(p) = bond.primary.as_deref() {
+            bond_line += &format!(" primary {}", p);
+        }
+        bond_line
+    } else if let Some(bridge) = iface.bridge.as_ref() {
+        format!("ports {}", bridge.ports.join(LIST_SPLITER))
+    } else if let Some(vrf) = iface.vrf.as_ref() {
+        format!(
+            "table {} ports {}",
+            vrf.table_id,
+            vrf.subordinates.join(LIST_SPLITER)
+        )
+    } else if let Some(veth) = iface.veth.as_ref() {
+        format!("peer {}", veth.peer)
+    } else if let Some(vlan) = iface.vlan.as_ref() {
+        format!("parent {} id {}", vlan.base_iface, vlan.vlan_id)
+    } else if let Some(vxlan) = iface.vxlan.as_ref() {
+        format!(
+            "parent {} id {} remote {} dst_port {} local {}",
+            vxlan.base_iface,
+            vxlan.vxlan_id,
+            vxlan.remote,
+            vxlan.dst_port,
+            vxlan.local
+        )
+    } else {
+        "".into()
     }
 }
