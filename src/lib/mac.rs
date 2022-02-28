@@ -22,8 +22,8 @@ pub(crate) fn parse_as_mac(
         return Err(NisporError::bug("wrong size at mac parsing".into()));
     }
     let mut rt = String::new();
-    for i in 0..mac_len {
-        rt.push_str(&format!("{:02x}", data[i]));
+    for (i, &val) in data.iter().enumerate() {
+        rt.push_str(&format!("{:02x}", val));
         if i != mac_len - 1 {
             rt.push(':');
         }
