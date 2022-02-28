@@ -8,21 +8,46 @@ on:
       - base
 
 jobs:
-  ci:
+  lint:
+    name: lint
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - rust_version: "stable"
+          - rust_version: "beta"
+          - rust_version: "nightly"
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Rust ${{ matrix.rust_version }}
+      uses: actions-rs/toolchain@v1
+      with:
+          toolchain: ${{ matrix.rust_version }}
+          override: true
+          components: rustfmt, clippy
+
+    - name: Check fmt
+      run: cargo fmt -- --check
+
+    - name: Check clippy
+      run: cargo clippy -- -D warnings
+
+  integ:
+    name: integ
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
         include:
           - rust_version: "stable"
-          - rust_version: "nightly"
           - rust_version: "beta"
-
-    name: CI
-    runs-on: ubuntu-20.04
+          - rust_version: "nightly"
 
     steps:
     - uses: actions/checkout@v2
-
 
     - name: Install Rust ${{ matrix.rust_version }}
       uses: actions-rs/toolchain@v1
@@ -40,14 +65,6 @@ jobs:
 
     - name: Install extra kernel module(like netdevsim)
       run: sudo apt-get -y install linux-modules-extra-azure
-
-    - name: Check fmt
-      if: matrix.rust_version == 'stable'
-      run: cargo fmt -- --check
-
-    - name: Check clippy
-      if: matrix.rust_version == 'stable'
-      run: cargo clippy -- -D warnings
 
     - name: Build
       run: cargo build --verbose --all
