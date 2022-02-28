@@ -77,6 +77,32 @@ impl Default for IfaceType {
     }
 }
 
+impl std::fmt::Display for IfaceType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Self::Bond => "bond",
+                Self::Veth => "veth",
+                Self::Bridge => "bridge",
+                Self::Vlan => "vlan",
+                Self::Dummy => "dummy",
+                Self::Vxlan => "vxlan",
+                Self::Loopback => "loopback",
+                Self::Ethernet => "ethernet",
+                Self::Vrf => "vrf",
+                Self::Tun => "tun",
+                Self::MacVlan => "macvlan",
+                Self::MacVtap => "macvtap",
+                Self::OpenvSwitch => "openvswitch",
+                Self::Unknown => "unknown",
+                Self::Other(s) => s,
+            }
+        )
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
