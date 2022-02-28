@@ -14,8 +14,8 @@
 
 use clap::{crate_authors, crate_version};
 use nispor::{
-    Iface, IfaceConf, IfaceState, NetConf, NetState, NisporError, Route,
-    RouteRule,
+    Iface, IfaceConf, IfaceState, IfaceType, NetConf, NetState, NisporError,
+    Route, RouteRule,
 };
 use serde_derive::Serialize;
 use std::collections::HashMap;
@@ -34,6 +34,7 @@ pub struct CliError {
 struct CliIfaceBrief {
     index: u32,
     name: String,
+    iface_type: IfaceType,
     state: IfaceState,
     flags: Vec<String>,
     mac: String,
@@ -59,8 +60,9 @@ impl CliIfaceBrief {
             ));
             if !&brief.mac.is_empty() {
                 ret.push(format!(
-                    "{}mac {}{}",
+                    "{}link {} mac {}{}",
                     INDENT,
+                    brief.iface_type,
                     brief.mac,
                     if !&brief.permanent_mac.is_empty()
                         && brief.permanent_mac != brief.mac
@@ -70,30 +72,20 @@ impl CliIfaceBrief {
                         "".into()
                     }
                 ));
+            } else {
+                ret.push(format!("{}link {}", INDENT, brief.iface_type));
             }
-            if !brief.ipv4.is_empty() {
-                ret.push(format!(
-                    "{}ipv4 {}{}",
-                    INDENT,
-                    brief.ipv4.join(" "),
-                    if !brief.gw4.is_empty() {
-                        format!(" gw4 {}", brief.gw4.join(" "))
-                    } else {
-                        "".into()
-                    },
-                ));
+            for ip in &brief.ipv4 {
+                ret.push(format!("{}ipv4 {}", INDENT, ip));
             }
-            if !brief.ipv6.is_empty() {
-                ret.push(format!(
-                    "{}ipv6 {}{}",
-                    INDENT,
-                    brief.ipv6.join(" "),
-                    if !brief.gw6.is_empty() {
-                        format!(" gw6 {}", brief.gw6.join(" "))
-                    } else {
-                        "".into()
-                    }
-                ));
+            for gw in &brief.gw4 {
+                ret.push(format!("{}gw4 {}", INDENT, gw));
+            }
+            for ip in &brief.ipv6 {
+                ret.push(format!("{}ipv6 {}", INDENT, ip));
+            }
+            for gw in &brief.gw6 {
+                ret.push(format!("{}gw6 {}", INDENT, gw));
             }
         }
         ret.join("\n")
@@ -143,6 +135,7 @@ impl CliIfaceBrief {
         for iface in netstate.ifaces.values() {
             ret.push(CliIfaceBrief {
                 index: iface.index,
+                iface_type: iface.iface_type.clone(),
                 name: iface.name.clone(),
                 flags: (&iface.flags)
                     .iter()
@@ -157,11 +150,11 @@ impl CliIfaceBrief {
                         let mut addr_strs = Vec::new();
                         for addr in &ip_info.addresses {
                             addr_strs.push(format!(
-                                "{}/{} {} {}",
+                                "{}/{} valid_lft {} preferred_lft {}",
                                 addr.address,
                                 addr.prefix_len,
+                                addr.valid_lft,
                                 addr.preferred_lft,
-                                addr.valid_lft
                             ));
                         }
                         addr_strs
@@ -173,11 +166,11 @@ impl CliIfaceBrief {
                         let mut addr_strs = Vec::new();
                         for addr in &ip_info.addresses {
                             addr_strs.push(format!(
-                                "{}/{} {} {}",
+                                "{}/{} valid_lft {} preferred_lft {}",
                                 addr.address,
                                 addr.prefix_len,
+                                addr.valid_lft,
                                 addr.preferred_lft,
-                                addr.valid_lft
                             ));
                         }
                         addr_strs
@@ -318,63 +311,55 @@ fn get_routes(state: &NetState, matches: &clap::ArgMatches) -> CliResult {
 }
 
 fn main() {
-    let matches = clap::App::new("npc")
+    let matches = clap::Command::new("npc")
         .version(crate_version!())
         .author(crate_authors!())
         .about("Nispor CLI")
         .arg(
-            clap::Arg::with_name("verbose")
-                .short("v")
-                .multiple(true)
+            clap::Arg::new("verbose")
+                .short('v')
+                .multiple_occurrences(true)
                 .help("Set verbose level"),
         )
         .arg(
-            clap::Arg::with_name("json")
-                .short("j")
+            clap::Arg::new("json")
+                .short('j')
                 .takes_value(false)
                 .global(true)
                 .help("Show in json format"),
         )
         .arg(
-            clap::Arg::with_name("iface_name")
+            clap::Arg::new("iface_name")
                 .index(1)
                 .help("Show speific interface only"),
         )
         .subcommand(
-            clap::SubCommand::with_name("iface")
+            clap::Command::new("iface")
                 .about("Show interface")
                 .arg(
-                    clap::Arg::with_name("iface_name")
+                    clap::Arg::new("iface_name")
                         .index(1)
                         .help("Show specific interface only"),
                 )
                 .arg(
-                    clap::Arg::with_name("delete")
+                    clap::Arg::new("delete")
+                        .long("delete")
                         .takes_value(false)
                         .help("Delete the specified interface"),
                 ),
         )
-        .subcommand(
-            clap::SubCommand::with_name("route")
-                .about("Show route")
-                .arg(
-                    clap::Arg::with_name("dev")
-                        .short("d")
-                        .takes_value(true)
-                        .help(
-                            "Show only route entries output to \
+        .subcommand(clap::Command::new("route").about("Show route").arg(
+            clap::Arg::new("dev").short('d').takes_value(true).help(
+                "Show only route entries output to \
                             the specified interface",
-                        ),
-                ),
-        )
+            ),
+        ))
+        .subcommand(clap::Command::new("rule").about("Show route route"))
         .subcommand(
-            clap::SubCommand::with_name("rule").about("Show route route"),
-        )
-        .subcommand(
-            clap::SubCommand::with_name("set")
+            clap::Command::new("set")
                 .about("Set network state from file")
                 .arg(
-                    clap::Arg::with_name("file_path")
+                    clap::Arg::new("file_path")
                         .required(true)
                         .index(1)
                         .help("Network state file to apply"),
