@@ -688,6 +688,7 @@ fn _addr_to_string(
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub struct RouteConf {
     #[serde(default)]
     pub remove: bool,
