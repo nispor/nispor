@@ -14,8 +14,8 @@
 
 use clap::{crate_authors, crate_version};
 use nispor::{
-    Iface, IfaceConf, IfaceState, NetConf, NetState, NisporError, Route,
-    RouteRule,
+    Iface, IfaceConf, IfaceState, IfaceType, NetConf, NetState, NisporError,
+    Route, RouteRule,
 };
 use serde_derive::Serialize;
 use std::collections::HashMap;
@@ -24,6 +24,7 @@ use std::io::{stderr, stdout, Write};
 use std::process;
 
 const INDENT: &str = "    ";
+const LIST_SPLITER: &str = ",";
 
 #[derive(Serialize, Debug)]
 pub struct CliError {
@@ -34,6 +35,9 @@ pub struct CliError {
 struct CliIfaceBrief {
     index: u32,
     name: String,
+    iface_type: IfaceType,
+    controller: Option<String>,
+    link_info: String,
     state: IfaceState,
     flags: Vec<String>,
     mac: String,
@@ -50,50 +54,49 @@ impl CliIfaceBrief {
         let mut ret = Vec::new();
         for brief in briefs {
             ret.push(format!(
-                "{}: {}: <{}> state {} mtu {}",
+                "{: >2}: {}: <{}> state {} mtu {}",
                 brief.index,
                 brief.name,
                 brief.flags.join(","),
                 brief.state,
                 brief.mtu,
             ));
+            let mut link_string =
+                format!("{}link {}", INDENT, brief.iface_type);
+
+            if !brief.link_info.is_empty() {
+                link_string += &format!(" {}", brief.link_info.as_str());
+            }
+            if let Some(ctrl) = brief.controller.as_ref() {
+                link_string += &format!(" controller {}", ctrl);
+            }
+
+            ret.push(link_string);
+
+            let mut mac_string = String::new();
             if !&brief.mac.is_empty() {
-                ret.push(format!(
-                    "{}mac {}{}",
-                    INDENT,
-                    brief.mac,
-                    if !&brief.permanent_mac.is_empty()
-                        && brief.permanent_mac != brief.mac
-                    {
-                        format!(" permanent_mac: {}", brief.permanent_mac)
-                    } else {
-                        "".into()
-                    }
-                ));
+                mac_string += &format!("{}mac {}", INDENT, brief.mac);
+                if !&brief.permanent_mac.is_empty() {
+                    mac_string +=
+                        &format!(" permanent_mac {}", brief.permanent_mac);
+                }
             }
-            if !brief.ipv4.is_empty() {
-                ret.push(format!(
-                    "{}ipv4 {}{}",
-                    INDENT,
-                    brief.ipv4.join(" "),
-                    if !brief.gw4.is_empty() {
-                        format!(" gw4 {}", brief.gw4.join(" "))
-                    } else {
-                        "".into()
-                    },
-                ));
+
+            if !mac_string.is_empty() {
+                ret.push(mac_string);
             }
-            if !brief.ipv6.is_empty() {
-                ret.push(format!(
-                    "{}ipv6 {}{}",
-                    INDENT,
-                    brief.ipv6.join(" "),
-                    if !brief.gw6.is_empty() {
-                        format!(" gw6 {}", brief.gw6.join(" "))
-                    } else {
-                        "".into()
-                    }
-                ));
+
+            for ip in &brief.ipv4 {
+                ret.push(format!("{}ipv4 {}", INDENT, ip));
+            }
+            for gw in &brief.gw4 {
+                ret.push(format!("{}gw4 {}", INDENT, gw));
+            }
+            for ip in &brief.ipv6 {
+                ret.push(format!("{}ipv6 {}", INDENT, ip));
+            }
+            for gw in &brief.gw6 {
+                ret.push(format!("{}gw6 {}", INDENT, gw));
             }
         }
         ret.join("\n")
@@ -143,6 +146,9 @@ impl CliIfaceBrief {
         for iface in netstate.ifaces.values() {
             ret.push(CliIfaceBrief {
                 index: iface.index,
+                iface_type: iface.iface_type.clone(),
+                controller: iface.controller.clone(),
+                link_info: get_link_info(iface),
                 name: iface.name.clone(),
                 flags: (&iface.flags)
                     .iter()
@@ -157,11 +163,11 @@ impl CliIfaceBrief {
                         let mut addr_strs = Vec::new();
                         for addr in &ip_info.addresses {
                             addr_strs.push(format!(
-                                "{}/{} {} {}",
+                                "{}/{} valid_lft {} preferred_lft {}",
                                 addr.address,
                                 addr.prefix_len,
+                                addr.valid_lft,
                                 addr.preferred_lft,
-                                addr.valid_lft
                             ));
                         }
                         addr_strs
@@ -173,11 +179,11 @@ impl CliIfaceBrief {
                         let mut addr_strs = Vec::new();
                         for addr in &ip_info.addresses {
                             addr_strs.push(format!(
-                                "{}/{} {} {}",
+                                "{}/{} valid_lft {} preferred_lft {}",
                                 addr.address,
                                 addr.prefix_len,
+                                addr.valid_lft,
                                 addr.preferred_lft,
-                                addr.valid_lft
                             ));
                         }
                         addr_strs
@@ -318,63 +324,53 @@ fn get_routes(state: &NetState, matches: &clap::ArgMatches) -> CliResult {
 }
 
 fn main() {
-    let matches = clap::App::new("npc")
+    let matches = clap::Command::new("npc")
         .version(crate_version!())
         .author(crate_authors!())
         .about("Nispor CLI")
         .arg(
-            clap::Arg::with_name("verbose")
-                .short("v")
-                .multiple(true)
+            clap::Arg::new("verbose")
+                .short('v')
+                .multiple_occurrences(true)
                 .help("Set verbose level"),
         )
         .arg(
-            clap::Arg::with_name("json")
-                .short("j")
+            clap::Arg::new("json")
+                .short('j')
                 .takes_value(false)
                 .global(true)
                 .help("Show in json format"),
         )
         .arg(
-            clap::Arg::with_name("iface_name")
+            clap::Arg::new("iface_name")
                 .index(1)
-                .help("Show speific interface only"),
+                .help("Show specific interface only"),
         )
         .subcommand(
-            clap::SubCommand::with_name("iface")
+            clap::Command::new("iface")
                 .about("Show interface")
                 .arg(
-                    clap::Arg::with_name("iface_name")
+                    clap::Arg::new("iface_name")
                         .index(1)
                         .help("Show specific interface only"),
                 )
                 .arg(
-                    clap::Arg::with_name("delete")
-                        .takes_value(false)
+                    clap::Arg::new("delete")
+                        .long("delete")
                         .help("Delete the specified interface"),
                 ),
         )
+        .subcommand(clap::Command::new("route").about("Show route").arg(
+            clap::Arg::new("dev").short('d').takes_value(true).help(
+                "Show only route entries output to the specified interface",
+            ),
+        ))
+        .subcommand(clap::Command::new("rule").about("Show route route"))
         .subcommand(
-            clap::SubCommand::with_name("route")
-                .about("Show route")
-                .arg(
-                    clap::Arg::with_name("dev")
-                        .short("d")
-                        .takes_value(true)
-                        .help(
-                            "Show only route entries output to \
-                            the specified interface",
-                        ),
-                ),
-        )
-        .subcommand(
-            clap::SubCommand::with_name("rule").about("Show route route"),
-        )
-        .subcommand(
-            clap::SubCommand::with_name("set")
+            clap::Command::new("set")
                 .about("Set network state from file")
                 .arg(
-                    clap::Arg::with_name("file_path")
+                    clap::Arg::new("file_path")
                         .required(true)
                         .index(1)
                         .help("Network state file to apply"),
@@ -424,7 +420,7 @@ fn main() {
                                 ),
                             })
                         }
-                    } else if matches.is_present("delete") {
+                    } else if m.is_present("delete") {
                         CliResult::CliError(CliError {
                             msg: "Need to specific a interface to delete"
                                 .to_string(),
@@ -540,5 +536,42 @@ fn delete_iface(iface_name: &str) -> CliResult {
         CliResult::NisporError(e)
     } else {
         CliResult::Pass
+    }
+}
+
+fn get_link_info(iface: &Iface) -> String {
+    if let Some(bond) = iface.bond.as_ref() {
+        let mut bond_line = format!(
+            "mode {} ports {}",
+            bond.mode,
+            bond.subordinates.join(LIST_SPLITER)
+        );
+        if let Some(p) = bond.primary.as_deref() {
+            bond_line += &format!(" primary {}", p);
+        }
+        bond_line
+    } else if let Some(bridge) = iface.bridge.as_ref() {
+        format!("ports {}", bridge.ports.join(LIST_SPLITER))
+    } else if let Some(vrf) = iface.vrf.as_ref() {
+        format!(
+            "table {} ports {}",
+            vrf.table_id,
+            vrf.subordinates.join(LIST_SPLITER)
+        )
+    } else if let Some(veth) = iface.veth.as_ref() {
+        format!("peer {}", veth.peer)
+    } else if let Some(vlan) = iface.vlan.as_ref() {
+        format!("parent {} id {}", vlan.base_iface, vlan.vlan_id)
+    } else if let Some(vxlan) = iface.vxlan.as_ref() {
+        format!(
+            "parent {} id {} remote {} dst_port {} local {}",
+            vxlan.base_iface,
+            vxlan.vxlan_id,
+            vxlan.remote,
+            vxlan.dst_port,
+            vxlan.local
+        )
+    } else {
+        "".into()
     }
 }

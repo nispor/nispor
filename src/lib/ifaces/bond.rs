@@ -75,6 +75,22 @@ impl From<u8> for BondMode {
     }
 }
 
+impl std::fmt::Display for BondMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::BalanceRoundRobin => write!(f, "balance-rr"),
+            Self::ActiveBackup => write!(f, "active-backup"),
+            Self::BalanceXor => write!(f, "balance-xor"),
+            Self::Broadcast => write!(f, "broadcast"),
+            Self::Ieee8021AD => write!(f, "802.3ad"),
+            Self::BalanceTlb => write!(f, "balance-tlb"),
+            Self::BalanceAlb => write!(f, "balance-alb"),
+            Self::Other(u) => write!(f, "{}", u),
+            Self::Unknown => write!(f, "unknown"),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
