@@ -327,6 +327,33 @@ impl Default for RouteScope {
     }
 }
 
+impl std::fmt::Display for RouteScope {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Universe => write!(f, "universe"),
+            Self::Site => write!(f, "site"),
+            Self::Link => write!(f, "link"),
+            Self::Host => write!(f, "host"),
+            Self::NoWhere => write!(f, "no_where"),
+            Self::Unknown => write!(f, "unknown"),
+            Self::Other(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+impl From<&str> for RouteScope {
+    fn from(v: &str) -> Self {
+        match v {
+            "u" | "universe" | "g" | "global" => RouteScope::Universe,
+            "s" | "site" => RouteScope::Site,
+            "l" | "link" => RouteScope::Link,
+            "h" | "host" => RouteScope::Host,
+            "n" | "nowhere" | "no_where" => RouteScope::NoWhere,
+            _ => RouteScope::Unknown,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum RouteType {
