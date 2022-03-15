@@ -1,4 +1,19 @@
 # Changelog
+## [1.2.4] - 2022-03-15
+## Break changes
+ * Mark all public struct/enum as `non_exhaustive`. (58fa534)
+
+## New features
+ * Support max and min MTU. (892dcc5, cebe8ea)
+ * Support changing dynamic IP. (43e9496)
+ * Support changing route. (b8ffe1a, 06cc9c8)
+ * Support mulitpath route in python binding. (e70991e)
+ * Support IP over InfiniBand. (f374d62)
+
+## Bug fixes
+
+ * Remove all usages of `expect`. (25f1868)
+
 ## [1.2.3] - 2022-01-12
 ## Break changes
  * N/A
