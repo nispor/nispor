@@ -10,6 +10,7 @@ edition = "2018"
 name = "nispor"
 path = "lib.rs"
 crate-type = ["cdylib"]
+doc = false
 
 [dependencies]
 nispor = { path = "../lib", version="1.0" }

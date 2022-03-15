@@ -319,6 +319,14 @@ fn get_routes(state: &NetState, matches: &clap::ArgMatches) -> CliResult {
             .filter(|route| _is_route_to_specified_dev(route, iface_name))
             .collect();
     }
+    if let Some(scope) = matches.value_of("scope") {
+        if scope != "a" && scope != "all" {
+            routes = routes
+                .into_iter()
+                .filter(|route| route.scope == scope.into())
+                .collect();
+        }
+    }
 
     CliResult::Routes(routes)
 }
@@ -360,11 +368,26 @@ fn main() {
                         .help("Delete the specified interface"),
                 ),
         )
-        .subcommand(clap::Command::new("route").about("Show route").arg(
-            clap::Arg::new("dev").short('d').takes_value(true).help(
-                "Show only route entries output to the specified interface",
-            ),
-        ))
+        .subcommand(
+            clap::Command::new("route")
+                .about("Show route")
+                .arg(clap::Arg::new("dev").short('d').takes_value(true).help(
+                    "Show only route entries output \
+                    to the specified interface",
+                ))
+                .arg(
+                    clap::Arg::new("scope")
+                        .short('s')
+                        .long("scope")
+                        .takes_value(true)
+                        .help("Show only route entries with specified scope")
+                        .possible_values([
+                            "a", "all", "u", "universe", "g", "global", "s",
+                            "site", "l", "link", "h", "host", "n", "nowhere",
+                            "no_where",
+                        ]),
+                ),
+        )
         .subcommand(clap::Command::new("rule").about("Show route route"))
         .subcommand(
             clap::Command::new("set")
