@@ -32,10 +32,10 @@ pub use crate::ifaces::{
     BridgeVlanEntry, BridgeVlanProtocol, ControllerType, EthtoolCoalesceInfo,
     EthtoolFeatureInfo, EthtoolInfo, EthtoolLinkModeDuplex,
     EthtoolLinkModeInfo, EthtoolPauseInfo, EthtoolRingInfo, Iface, IfaceConf,
-    IfaceFlags, IfaceState, IfaceType, MacVlanInfo, MacVlanMode, MacVtapInfo,
-    MacVtapMode, SriovInfo, TunInfo, TunMode, VethConf, VethInfo, VfInfo,
-    VfLinkState, VfState, VlanConf, VlanInfo, VlanProtocol, VrfInfo,
-    VrfSubordinateInfo, VxlanInfo,
+    IfaceFlags, IfaceState, IfaceType, IpoibInfo, IpoibMode, MacVlanInfo,
+    MacVlanMode, MacVtapInfo, MacVtapMode, SriovInfo, TunInfo, TunMode,
+    VethConf, VethInfo, VfInfo, VfLinkState, VfState, VlanConf, VlanInfo,
+    VlanProtocol, VrfInfo, VrfSubordinateInfo, VxlanInfo,
 };
 pub use crate::ip::{
     IpAddrConf, IpConf, IpFamily, Ipv4AddrInfo, Ipv4Info, Ipv6AddrInfo,

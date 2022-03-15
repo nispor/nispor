@@ -24,6 +24,7 @@ use crate::{
         },
         change_ifaces,
         ethtool::EthtoolInfo,
+        ipoib::{get_ipoib_info, IpoibInfo},
         mac_vlan::{get_mac_vlan_info, MacVlanInfo},
         mac_vtap::{get_mac_vtap_info, MacVtapInfo},
         sriov::{get_sriov_info, SriovInfo},
@@ -67,6 +68,7 @@ pub enum IfaceType {
     MacVlan,
     MacVtap,
     OpenvSwitch,
+    Ipoib,
     Unknown,
     Other(String),
 }
@@ -96,6 +98,7 @@ impl std::fmt::Display for IfaceType {
                 Self::MacVlan => "macvlan",
                 Self::MacVtap => "macvtap",
                 Self::OpenvSwitch => "openvswitch",
+                Self::Ipoib => "ipoib",
                 Self::Unknown => "unknown",
                 Self::Other(s) => s,
             }
@@ -248,6 +251,8 @@ pub struct Iface {
     pub mac_vtap: Option<MacVtapInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sriov: Option<SriovInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ipoib: Option<IpoibInfo>,
 }
 
 // TODO: impl From Iface to IfaceConf
@@ -318,6 +323,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                         nlas::InfoKind::Vrf => IfaceType::Vrf,
                         nlas::InfoKind::MacVlan => IfaceType::MacVlan,
                         nlas::InfoKind::MacVtap => IfaceType::MacVtap,
+                        nlas::InfoKind::Ipoib => IfaceType::Ipoib,
                         nlas::InfoKind::Other(s) => match s.as_ref() {
                             "openvswitch" => IfaceType::OpenvSwitch,
                             _ => IfaceType::Other(s.clone()),
@@ -351,6 +357,9 @@ pub(crate) fn parse_nl_msg_to_iface(
                         }
                         IfaceType::MacVtap => {
                             iface_state.mac_vtap = get_mac_vtap_info(d)?
+                        }
+                        IfaceType::Ipoib => {
+                            iface_state.ipoib = get_ipoib_info(d);
                         }
                         _ => log::warn!(
                             "Unhandled IFLA_INFO_DATA for iface type {:?}",
