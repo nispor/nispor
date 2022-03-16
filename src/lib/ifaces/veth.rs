@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceType, NisporError};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 #[non_exhaustive]
 pub struct VethInfo {
     // Interface name of peer.
