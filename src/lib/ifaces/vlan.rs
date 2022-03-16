@@ -127,7 +127,7 @@ fn convert_base_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
 #[non_exhaustive]
 pub struct VlanConf {
     pub vlan_id: u16,
