@@ -1,6 +1,10 @@
+use std::collections::HashMap;
+
 use netlink_packet_route::rtnl::link::nlas::InfoData;
 use netlink_packet_route::rtnl::link::nlas::InfoIpoib;
 use serde::{Deserialize, Serialize};
+
+use crate::{Iface, IfaceType};
 
 const IPOIB_MODE_DATAGRAM: u16 = 0;
 const IPOIB_MODE_CONNECTED: u16 = 1;
@@ -39,6 +43,8 @@ pub struct IpoibInfo {
     pub pkey: u16,
     pub mode: IpoibMode,
     pub umcast: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_iface: Option<String>,
 }
 
 pub(crate) fn get_ipoib_info(data: &InfoData) -> Option<IpoibInfo> {
@@ -58,5 +64,30 @@ pub(crate) fn get_ipoib_info(data: &InfoData) -> Option<IpoibInfo> {
         Some(ipoib_info)
     } else {
         None
+    }
+}
+
+pub(crate) fn ipoib_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
+    convert_base_iface_index_to_name(iface_states);
+}
+
+fn convert_base_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
+    let mut index_to_name = HashMap::new();
+    for iface in iface_states.values() {
+        index_to_name.insert(format!("{}", iface.index), iface.name.clone());
+    }
+    for iface in iface_states.values_mut() {
+        if iface.iface_type != IfaceType::Ipoib {
+            continue;
+        }
+        if let Some(ref mut ib_info) = iface.ipoib {
+            if let Some(base_iface_name) = &ib_info
+                .base_iface
+                .as_ref()
+                .and_then(|i| index_to_name.get(i))
+            {
+                ib_info.base_iface = Some(base_iface_name.to_string());
+            }
+        }
     }
 }

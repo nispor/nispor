@@ -30,3 +30,7 @@ class NisporIpoib(NisporBaseIface):
     @property
     def umcast(self):
         return self._ipoib_info["umcast"]
+
+    @property
+    def base_iface(self):
+        return self._ipoib_info.get("base_iface")
