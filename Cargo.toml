@@ -4,3 +4,6 @@ members = [
     "src/cli",
     "src/clib",
 ]
+
+[patch.crates-io]
+netlink-packet-route = { path = "src/netlink-packet-route" }

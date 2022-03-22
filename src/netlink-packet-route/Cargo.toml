@@ -1,0 +1,41 @@
+[package]
+authors = ["Corentin Henry <corentinhenry@gmail.com>"]
+name = "netlink-packet-route"
+version = "0.11.0"
+edition = "2018"
+
+homepage = "https://github.com/little-dude/netlink"
+keywords = ["netlink", "linux"]
+license = "MIT"
+readme = "../README.md"
+repository = "https://github.com/little-dude/netlink"
+description = "netlink packet types"
+
+[features]
+rich_nlas = []
+
+[dependencies]
+anyhow = "1.0.31"
+byteorder = "1.3.2"
+libc = "0.2.66"
+netlink-packet-core = "0.4"
+netlink-packet-utils = "0.5"
+bitflags = "1.2.1"
+
+[[example]]
+name = "dump_packet_links"
+
+[dev-dependencies]
+criterion = "0.3.0"
+pcap-file = "1.1.1"
+lazy_static = "1.4.0"
+netlink-sys = "0.8"
+pretty_assertions = "0.7.2"
+
+[[bench]]
+name = "link_message"
+harness = false
+
+[[bench]]
+name = "rtnetlink_dump"
+harness = false
