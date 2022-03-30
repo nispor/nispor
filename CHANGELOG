@@ -1,4 +1,21 @@
 # Changelog
+## [1.2.5] - 2022-03-30
+
+## Break changes
+ * N/A
+
+## New features
+
+ * N/A
+
+## Bug fixes
+
+ * apply: Enable Default traits for VethConf and VlanConf. (3b3f446)
+ * ipoib: Add base_iface property. (9349ed7)
+ * clib: Update Cargo.toml with description and etc. (4494f54)
+ * npc: Update Cargo.toml for `cargo publish`. (26d8bb6)
+ * npc: Use specific version for `cargo publish`.  (4f0faa3)
+
 ## [1.2.4] - 2022-03-15
 ## Break changes
  * Mark all public struct/enum as `non_exhaustive`. (58fa534)
