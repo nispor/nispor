@@ -33,6 +33,10 @@ fixed:
   esp-tx-csum-hw-offload: false
   fcoe-mtu: false
   highdma: true
+  hsr-dup-offload: false
+  hsr-fwd-offload: false
+  hsr-tag-ins-offload: false
+  hsr-tag-rm-offload: false
   hw-tc-offload: false
   l2-fwd-offload: false
   loopback: true
@@ -78,6 +82,7 @@ fixed:
 changeable:
   rx-gro: true
   rx-gro-list: false
+  rx-udp-gro-forwarding: false
   tx-generic-segmentation: true
   tx-sctp-segmentation: true
   tx-tcp-ecn-segmentation: true
