@@ -17,7 +17,7 @@ use nispor::{
     Iface, IfaceConf, IfaceState, IfaceType, NetConf, NetState, NisporError,
     Route, RouteRule,
 };
-use serde_derive::Serialize;
+use serde::Serialize;
 use std::collections::HashMap;
 use std::fmt;
 use std::io::{stderr, stdout, Write};

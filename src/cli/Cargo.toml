@@ -16,9 +16,8 @@ name = "npc"
 path = "npc.rs"
 
 [dependencies]
-serde = "1.0"
 serde_json = "1.0"
-serde_derive = "1.0"
+serde = { version = "1.0.136", features = ["derive"] }
 clap = { version = "3.1.2", features = ["cargo"] }
 nispor = { path = "../lib", version="1.2.5" }
 serde_yaml = "0.8"
