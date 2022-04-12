@@ -68,6 +68,8 @@ install: $(CLI_EXEC_RELEASE)
 		$(DESTDIR)$(PREFIX)/bin/$(CLI_EXEC)
 	install -p -D -m755 $(CLIB_SO_DEV_RELEASE) \
 		$(DESTDIR)$(LIBDIR)/$(CLIB_SO_FULL)
+	patchelf --set-soname libnispor.so.$(CLIB_VERSION_MAJOR) \
+		$(DESTDIR)$(LIBDIR)/$(CLIB_SO_MAN)
 	ln -sfv $(CLIB_SO_FULL) $(DESTDIR)$(LIBDIR)/$(CLIB_SO_MAN)
 	ln -sfv $(CLIB_SO_FULL) $(DESTDIR)$(LIBDIR)/$(CLIB_SO_DEV)
 	if [ $(SKIP_PYTHON_INSTALL) != 1 ];then \
