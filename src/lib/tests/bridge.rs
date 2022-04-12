@@ -101,6 +101,8 @@ group_fwd_mask: 0
 neigh_suppress: false
 isolated: false
 mrp_ring_open: false
+mcast_eht_hosts_limit: 512
+mcast_eht_hosts_cnt: 0
 vlans:
   - vid: 1
     is_pvid: true
@@ -138,6 +140,8 @@ group_fwd_mask: 0
 neigh_suppress: false
 isolated: false
 mrp_ring_open: false
+mcast_eht_hosts_limit: 512
+mcast_eht_hosts_cnt: 0
 vlans:
   - vid: 1
     is_pvid: true
