@@ -12,17 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::netlink::nla::parse_as_ipv4;
-use crate::netlink::nla::parse_as_ipv6;
-use crate::Iface;
-use crate::Ipv4AddrInfo;
-use crate::Ipv4Info;
-use crate::Ipv6AddrInfo;
-use crate::Ipv6Info;
-use crate::NisporError;
-use netlink_packet_route::address::{CacheInfo, CacheInfoBuffer};
-use netlink_packet_route::rtnl::address::nlas::Nla;
-use netlink_packet_route::rtnl::AddressMessage;
+use crate::{
+    netlink::nla::{parse_as_ipv4, parse_as_ipv6},
+    Iface,
+    Ipv4AddrInfo,
+    Ipv4Info,
+    Ipv6AddrInfo,
+    Ipv6Info,
+    NisporError,
+};
+use netlink_packet_route::{
+    address::{CacheInfo, CacheInfoBuffer},
+    rtnl::{address::nlas::Nla, AddressMessage},
+};
 use netlink_packet_utils::Parseable;
 use std::collections::HashMap;
 

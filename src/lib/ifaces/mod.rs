@@ -26,42 +26,51 @@ mod vlan;
 mod vrf;
 mod vxlan;
 
-pub use crate::ifaces::bond::*;
-pub use crate::ifaces::bridge::*;
-pub use crate::ifaces::ethtool::*;
-pub use crate::ifaces::iface::*;
-pub use crate::ifaces::ipoib::{IpoibInfo, IpoibMode};
-pub use crate::ifaces::mac_vlan::*;
-pub use crate::ifaces::mac_vtap::*;
-pub use crate::ifaces::sriov::*;
-pub use crate::ifaces::tun::*;
-pub use crate::ifaces::veth::*;
-pub use crate::ifaces::vlan::*;
-pub use crate::ifaces::vrf::*;
-pub use crate::ifaces::vxlan::*;
-
-use crate::ifaces::bond::bond_iface_tidy_up;
-use crate::ifaces::bridge::bridge_iface_tidy_up;
-use crate::ifaces::ethtool::get_ethtool_infos;
-use crate::ifaces::iface::{
-    fill_bridge_vlan_info, parse_nl_msg_to_iface,
-    parse_nl_msg_to_name_and_index,
+pub use crate::ifaces::{
+    bond::*,
+    bridge::*,
+    ethtool::*,
+    iface::*,
+    ipoib::{IpoibInfo, IpoibMode},
+    mac_vlan::*,
+    mac_vtap::*,
+    sriov::*,
+    tun::*,
+    veth::*,
+    vlan::*,
+    vrf::*,
+    vxlan::*,
 };
-use crate::ifaces::ipoib::ipoib_iface_tidy_up;
-use crate::ifaces::mac_vlan::mac_vlan_iface_tidy_up;
-use crate::ifaces::veth::veth_iface_tidy_up;
-use crate::ifaces::vlan::vlan_iface_tidy_up;
-use crate::ifaces::vrf::vrf_iface_tidy_up;
-use crate::ifaces::vxlan::vxlan_iface_tidy_up;
-use crate::ip::change_ips;
-use crate::netlink::fill_ip_addr;
-use crate::NisporError;
+
+use crate::{
+    ifaces::{
+        bond::bond_iface_tidy_up,
+        bridge::bridge_iface_tidy_up,
+        ethtool::get_ethtool_infos,
+        iface::{
+            fill_bridge_vlan_info,
+            parse_nl_msg_to_iface,
+            parse_nl_msg_to_name_and_index,
+        },
+        ipoib::ipoib_iface_tidy_up,
+        mac_vlan::mac_vlan_iface_tidy_up,
+        veth::veth_iface_tidy_up,
+        vlan::vlan_iface_tidy_up,
+        vrf::vrf_iface_tidy_up,
+        vxlan::vxlan_iface_tidy_up,
+    },
+    ip::change_ips,
+    netlink::fill_ip_addr,
+    NisporError,
+};
 
 use futures::stream::TryStreamExt;
-use netlink_packet_route::rtnl::constants::AF_BRIDGE;
-use netlink_packet_route::rtnl::constants::AF_UNSPEC;
-use netlink_packet_route::rtnl::constants::RTEXT_FILTER_BRVLAN_COMPRESSED;
-use netlink_packet_route::rtnl::constants::RTEXT_FILTER_VF;
+use netlink_packet_route::rtnl::constants::{
+    AF_BRIDGE,
+    AF_UNSPEC,
+    RTEXT_FILTER_BRVLAN_COMPRESSED,
+    RTEXT_FILTER_VF,
+};
 use rtnetlink::new_connection;
 use std::collections::HashMap;
 

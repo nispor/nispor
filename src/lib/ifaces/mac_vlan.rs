@@ -12,13 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::mac::parse_as_mac;
-use crate::Iface;
-use crate::IfaceType;
-use crate::NisporError;
-use netlink_packet_route::rtnl::link::nlas;
-use netlink_packet_route::rtnl::link::nlas::InfoMacVlan;
-use netlink_packet_route::rtnl::link::nlas::InfoMacVtap;
+use crate::{mac::parse_as_mac, Iface, IfaceType, NisporError};
+use netlink_packet_route::rtnl::link::{
+    nlas,
+    nlas::{InfoMacVlan, InfoMacVtap},
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -30,7 +28,7 @@ const MACVLAN_MODE_BRIDGE: u32 = 4;
 const MACVLAN_MODE_PASSTHRU: u32 = 8;
 const MACVLAN_MODE_SOURCE: u32 = 16;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum MacVlanMode {
@@ -68,7 +66,7 @@ impl From<u32> for MacVlanMode {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct MacVlanInfo {
     pub base_iface: String,

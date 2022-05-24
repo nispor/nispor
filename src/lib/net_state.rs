@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::error::NisporError;
-use crate::ifaces::{get_ifaces, Iface};
-use crate::route::get_routes;
-use crate::route::Route;
-use crate::route_rule::get_route_rules;
-use crate::route_rule::RouteRule;
+use crate::{
+    error::NisporError,
+    ifaces::{get_ifaces, Iface},
+    route::{get_routes, Route},
+    route_rule::{get_route_rules, RouteRule},
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tokio::runtime;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[non_exhaustive]
 pub struct NetState {
     pub ifaces: HashMap<String, Iface>,

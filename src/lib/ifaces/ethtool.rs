@@ -15,8 +15,14 @@
 use std::collections::{hash_map::Entry, BTreeMap, HashMap};
 
 use ethtool::{
-    EthtoolAttr, EthtoolCoalesceAttr, EthtoolFeatureAttr, EthtoolFeatureBit,
-    EthtoolHandle, EthtoolHeader, EthtoolLinkModeAttr, EthtoolPauseAttr,
+    EthtoolAttr,
+    EthtoolCoalesceAttr,
+    EthtoolFeatureAttr,
+    EthtoolFeatureBit,
+    EthtoolHandle,
+    EthtoolHeader,
+    EthtoolLinkModeAttr,
+    EthtoolPauseAttr,
     EthtoolRingAttr,
 };
 use futures::stream::TryStreamExt;
@@ -349,8 +355,9 @@ async fn dump_feature_infos(
                             value: true,
                         } => {
                             // Dummy interface show `tx-lockless` is
-                            // changeable, but EthtoolFeatureAttr::NoChange() says
-                            // otherwise. The kernel code
+                            // changeable, but EthtoolFeatureAttr::NoChange()
+                            // says otherwise. The
+                            // kernel code
                             // `NETIF_F_NEVER_CHANGE` shows `tx-lockless`
                             // should never been changeable.
                             if let Entry::Occupied(mut e) =

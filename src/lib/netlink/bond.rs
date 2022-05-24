@@ -12,18 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::mac::parse_as_mac;
-use crate::netlink::nla::parse_as_ipv4;
-use crate::netlink::nla::parse_as_u16;
-use crate::netlink::nla::parse_as_u32;
-use crate::netlink::nla::parse_as_u8;
-use crate::BondAdInfo;
-use crate::BondInfo;
-use crate::BondMiiStatus;
-use crate::BondMode;
-use crate::BondSubordinateInfo;
-use crate::BondSubordinateState;
-use crate::NisporError;
+use crate::{
+    mac::parse_as_mac,
+    netlink::nla::{parse_as_ipv4, parse_as_u16, parse_as_u32, parse_as_u8},
+    BondAdInfo,
+    BondInfo,
+    BondMiiStatus,
+    BondMode,
+    BondSubordinateInfo,
+    BondSubordinateState,
+    NisporError,
+};
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 use std::net::Ipv4Addr;
 

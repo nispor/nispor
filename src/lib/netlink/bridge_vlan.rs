@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::BridgeVlanEntry;
-use crate::NisporError;
+use crate::{BridgeVlanEntry, NisporError};
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 
 const IFLA_BRIDGE_VLAN_INFO: u16 = 2;
@@ -61,7 +60,7 @@ pub(crate) fn parse_af_spec_bridge_info(
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 struct KernelBridgeVlanEntry {
     vid: u16,
     is_pvid: bool, // is PVID and ingress untagged

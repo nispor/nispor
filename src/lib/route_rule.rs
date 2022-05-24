@@ -12,17 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::error::ErrorKind;
-use crate::netlink::parse_as_ipv4;
-use crate::netlink::parse_as_ipv6;
-use crate::route::AddressFamily;
-use crate::route::RouteProtocol;
-use crate::NisporError;
+use crate::{
+    error::ErrorKind,
+    netlink::{parse_as_ipv4, parse_as_ipv6},
+    route::{AddressFamily, RouteProtocol},
+    NisporError,
+};
 use futures::stream::TryStreamExt;
-use netlink_packet_route::rtnl::rule::nlas::Nla;
-use netlink_packet_route::RuleMessage;
-use rtnetlink::new_connection;
-use rtnetlink::IpVersion;
+use netlink_packet_route::{rtnl::rule::nlas::Nla, RuleMessage};
+use rtnetlink::{new_connection, IpVersion};
 use serde::{Deserialize, Serialize};
 
 const FR_ACT_TO_TBL: u8 = 1;
@@ -34,7 +32,7 @@ const FR_ACT_PROHIBIT: u8 = 128;
 
 const RT_TABLE_UNSPEC: u8 = 0;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum RuleAction {
     /* Pass to fixed table or l3mdev */
@@ -73,7 +71,7 @@ impl Default for RuleAction {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct RouteRule {
     pub action: RuleAction,

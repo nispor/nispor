@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::ifaces::mac_vlan::get_mac_vlan_info;
-use crate::ifaces::mac_vlan::MacVlanInfo;
-use crate::ifaces::mac_vlan::MacVlanMode;
-use crate::NisporError;
+use crate::{
+    ifaces::mac_vlan::{get_mac_vlan_info, MacVlanInfo, MacVlanMode},
+    NisporError,
+};
 use netlink_packet_route::rtnl::link::nlas;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum MacVtapMode {
@@ -58,7 +58,7 @@ impl From<MacVlanMode> for MacVtapMode {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct MacVtapInfo {
     pub base_iface: String,

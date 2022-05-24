@@ -13,9 +13,10 @@
 // limitations under the License.
 
 use crate::NisporError;
-use std::convert::TryInto;
-use std::net::Ipv4Addr;
-use std::net::Ipv6Addr;
+use std::{
+    convert::TryInto,
+    net::{Ipv4Addr, Ipv6Addr},
+};
 
 pub(crate) fn parse_as_u8(data: &[u8]) -> Result<u8, NisporError> {
     Ok(*data.get(0).ok_or_else(|| {

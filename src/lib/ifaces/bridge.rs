@@ -20,12 +20,16 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     netlink::{
-        parse_af_spec_bridge_info, parse_bridge_info, parse_bridge_port_info,
+        parse_af_spec_bridge_info,
+        parse_bridge_info,
+        parse_bridge_port_info,
     },
-    ControllerType, Iface, NisporError,
+    ControllerType,
+    Iface,
+    NisporError,
 };
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum BridgeStpState {
@@ -51,7 +55,7 @@ impl From<u32> for BridgeStpState {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum BridgeVlanProtocol {
@@ -76,7 +80,7 @@ impl From<u16> for BridgeVlanProtocol {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct BridgeInfo {
     pub ports: Vec<String>,
@@ -170,7 +174,7 @@ pub struct BridgeInfo {
     pub multicast_mld_version: Option<u8>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum BridgePortStpState {
@@ -208,7 +212,7 @@ impl From<u8> for BridgePortStpState {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum BridgePortMulticastRouterType {
@@ -256,7 +260,7 @@ impl From<BridgePortMulticastRouterType> for u8 {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct BridgePortInfo {
     pub stp_state: BridgePortStpState,
@@ -370,7 +374,7 @@ fn convert_back_port_index_to_name(iface_states: &mut HashMap<String, Iface>) {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct BridgeVlanEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -396,7 +400,7 @@ pub(crate) fn parse_bridge_vlan_info(
     Ok(())
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct BridgeConf {}
 

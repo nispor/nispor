@@ -12,17 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::netlink::parse_as_ipv4;
-use crate::netlink::parse_as_ipv6;
-use crate::Iface;
-use crate::IfaceType;
-use crate::NisporError;
-use netlink_packet_route::rtnl::link::nlas::InfoData;
-use netlink_packet_route::rtnl::link::nlas::InfoVxlan;
+use crate::{
+    netlink::{parse_as_ipv4, parse_as_ipv6},
+    Iface,
+    IfaceType,
+    NisporError,
+};
+use netlink_packet_route::rtnl::link::nlas::{InfoData, InfoVxlan};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct VxlanInfo {
     pub remote: String,

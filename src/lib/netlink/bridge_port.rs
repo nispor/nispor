@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::netlink::nla::parse_as_u16;
-use crate::netlink::nla::parse_as_u32;
-use crate::netlink::nla::parse_as_u64;
-use crate::netlink::nla::parse_as_u8;
-use crate::BridgePortInfo;
-use crate::NisporError;
+use crate::{
+    netlink::nla::{parse_as_u16, parse_as_u32, parse_as_u64, parse_as_u8},
+    BridgePortInfo,
+    NisporError,
+};
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 
 fn parse_void_port_info(

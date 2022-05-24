@@ -12,9 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::HashMap;
-use std::net::IpAddr;
-use std::str::FromStr;
+use std::{collections::HashMap, net::IpAddr, str::FromStr};
 
 use netlink_packet_route::rtnl::{
     address::nlas::{CacheInfo, Nla, ADDRESSS_CACHE_INFO_LEN},
@@ -25,13 +23,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceConf, NisporError};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct Ipv4Info {
     pub addresses: Vec<Ipv4AddrInfo>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct Ipv4AddrInfo {
     pub address: String,
@@ -44,13 +42,13 @@ pub struct Ipv4AddrInfo {
     pub preferred_lft: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct Ipv6Info {
     pub addresses: Vec<Ipv6AddrInfo>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct Ipv6AddrInfo {
     pub address: String,
@@ -61,7 +59,7 @@ pub struct Ipv6AddrInfo {
     pub preferred_lft: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct IpConf {
     pub addresses: Vec<IpAddrConf>,

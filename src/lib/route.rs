@@ -12,17 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::collections::HashMap;
-use std::net::IpAddr;
+use std::{collections::HashMap, net::IpAddr};
 
 use futures::stream::TryStreamExt;
 use netlink_packet_route::rtnl::{
-    nlas::route::{CacheInfo, CacheInfoBuffer, Metrics, Nla},
-    nlas::{NlaBuffer, NlasIterator},
-    RouteMessage, RTA_GATEWAY, RTA_VIA, RTN_ANYCAST, RTN_BLACKHOLE,
-    RTN_BROADCAST, RTN_LOCAL, RTN_MULTICAST, RTN_NAT, RTN_PROHIBIT, RTN_THROW,
-    RTN_UNICAST, RTN_UNREACHABLE, RTN_UNSPEC, RTN_XRESOLVE, RT_SCOPE_HOST,
-    RT_SCOPE_LINK, RT_SCOPE_NOWHERE, RT_SCOPE_SITE, RT_SCOPE_UNIVERSE,
+    nlas::{
+        route::{CacheInfo, CacheInfoBuffer, Metrics, Nla},
+        NlaBuffer,
+        NlasIterator,
+    },
+    RouteMessage,
+    RTA_GATEWAY,
+    RTA_VIA,
+    RTN_ANYCAST,
+    RTN_BLACKHOLE,
+    RTN_BROADCAST,
+    RTN_LOCAL,
+    RTN_MULTICAST,
+    RTN_NAT,
+    RTN_PROHIBIT,
+    RTN_THROW,
+    RTN_UNICAST,
+    RTN_UNREACHABLE,
+    RTN_UNSPEC,
+    RTN_XRESOLVE,
+    RT_SCOPE_HOST,
+    RT_SCOPE_LINK,
+    RT_SCOPE_NOWHERE,
+    RT_SCOPE_SITE,
+    RT_SCOPE_UNIVERSE,
     RT_TABLE_MAIN,
 };
 use netlink_packet_utils::traits::Parseable;
@@ -33,15 +51,20 @@ use crate::{
     ifaces::Iface,
     ip::{parse_ip_addr_str, parse_ip_net_addr_str},
     netlink::{
-        parse_as_i32, parse_as_ipv4, parse_as_ipv6, parse_as_u16, parse_as_u32,
-        AF_INET, AF_INET6,
+        parse_as_i32,
+        parse_as_ipv4,
+        parse_as_ipv6,
+        parse_as_u16,
+        parse_as_u32,
+        AF_INET,
+        AF_INET6,
     },
     NisporError,
 };
 
 const USER_HZ: u32 = 100;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct Route {
     pub address_family: AddressFamily,
@@ -136,7 +159,7 @@ pub struct Route {
     // Missing support of RTA_NH_ID
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum AddressFamily {
     IPv4,
@@ -295,7 +318,7 @@ impl Default for RouteProtocol {
  * Intermediate values are also possible f.e. interior routes
  * could be assigned a value between UNIVERSE and LINK.
  */
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum RouteScope {
     Universe,
@@ -354,7 +377,7 @@ impl From<&str> for RouteScope {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum RouteType {
     UnSpec,
@@ -401,7 +424,7 @@ impl Default for RouteType {
 
 const SIZE_OF_RTNEXTHOP: usize = 8;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub struct MultipathRoute {
@@ -411,7 +434,7 @@ pub struct MultipathRoute {
     pub flags: Vec<MultipathRouteFlags>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum MultipathRouteFlags {
     Dead,

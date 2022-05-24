@@ -15,12 +15,18 @@
 use crate::{
     ifaces::{
         bond::{
-            get_bond_info, get_bond_subordinate_info, BondInfo,
+            get_bond_info,
+            get_bond_subordinate_info,
+            BondInfo,
             BondSubordinateInfo,
         },
         bridge::{
-            get_bridge_info, get_bridge_port_info, parse_bridge_vlan_info,
-            BridgeConf, BridgeInfo, BridgePortInfo,
+            get_bridge_info,
+            get_bridge_port_info,
+            parse_bridge_vlan_info,
+            BridgeConf,
+            BridgeInfo,
+            BridgePortInfo,
         },
         change_ifaces,
         ethtool::EthtoolInfo,
@@ -32,7 +38,10 @@ use crate::{
         veth::{VethConf, VethInfo},
         vlan::{get_vlan_info, VlanConf, VlanInfo},
         vrf::{
-            get_vrf_info, get_vrf_subordinate_info, VrfInfo, VrfSubordinateInfo,
+            get_vrf_info,
+            get_vrf_subordinate_info,
+            VrfInfo,
+            VrfSubordinateInfo,
         },
         vxlan::{get_vxlan_info, VxlanInfo},
     },
@@ -42,16 +51,32 @@ use crate::{
 };
 
 use netlink_packet_route::rtnl::{
-    link::nlas, LinkMessage, ARPHRD_ETHER, ARPHRD_LOOPBACK, IFF_ALLMULTI,
-    IFF_AUTOMEDIA, IFF_BROADCAST, IFF_DEBUG, IFF_DORMANT, IFF_LOOPBACK,
-    IFF_LOWER_UP, IFF_MASTER, IFF_MULTICAST, IFF_NOARP, IFF_POINTOPOINT,
-    IFF_PORTSEL, IFF_PROMISC, IFF_RUNNING, IFF_SLAVE, IFF_UP,
+    link::nlas,
+    LinkMessage,
+    ARPHRD_ETHER,
+    ARPHRD_LOOPBACK,
+    IFF_ALLMULTI,
+    IFF_AUTOMEDIA,
+    IFF_BROADCAST,
+    IFF_DEBUG,
+    IFF_DORMANT,
+    IFF_LOOPBACK,
+    IFF_LOWER_UP,
+    IFF_MASTER,
+    IFF_MULTICAST,
+    IFF_NOARP,
+    IFF_POINTOPOINT,
+    IFF_PORTSEL,
+    IFF_PROMISC,
+    IFF_RUNNING,
+    IFF_SLAVE,
+    IFF_UP,
 };
 use rtnetlink::packet::rtnl::link::nlas::Nla;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum IfaceType {
@@ -106,7 +131,7 @@ impl std::fmt::Display for IfaceType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum IfaceState {
@@ -143,7 +168,7 @@ impl std::fmt::Display for IfaceState {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum IfaceFlags {
@@ -173,7 +198,7 @@ impl Default for IfaceFlags {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum ControllerType {
@@ -197,7 +222,7 @@ impl From<&str> for ControllerType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct Iface {
     pub name: String,
@@ -536,7 +561,7 @@ fn _parse_iface_flags(flags: u32) -> Vec<IfaceFlags> {
     ret
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct IfaceConf {
     pub name: String,

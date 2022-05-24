@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::netlink::parse_as_u32;
-use crate::netlink::parse_as_u8;
-use crate::NisporError;
-use netlink_packet_route::rtnl::link::nlas::InfoData;
-use netlink_packet_route::rtnl::nlas::NlasIterator;
+use crate::{
+    netlink::{parse_as_u32, parse_as_u8},
+    NisporError,
+};
+use netlink_packet_route::rtnl::{link::nlas::InfoData, nlas::NlasIterator};
 use serde::{Deserialize, Serialize};
 
 const IFF_TUN: u8 = 1;
@@ -32,7 +32,7 @@ const IFLA_TUN_MULTI_QUEUE: u16 = 7;
 const IFLA_TUN_NUM_QUEUES: u16 = 8;
 const IFLA_TUN_NUM_DISABLED_QUEUES: u16 = 9;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct TunInfo {
     pub mode: TunMode,
@@ -50,7 +50,7 @@ pub struct TunInfo {
     pub num_disabled_queues: Option<u32>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum TunMode {

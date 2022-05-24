@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use std::fmt::Write;
+
 use crate::NisporError;
 
 pub(crate) fn parse_as_mac(
@@ -23,7 +25,7 @@ pub(crate) fn parse_as_mac(
     }
     let mut rt = String::new();
     for (i, &val) in data.iter().enumerate() {
-        rt.push_str(&format!("{:02x}", val));
+        write!(rt, "{:02x}", val).ok();
         if i != mac_len - 1 {
             rt.push(':');
         }

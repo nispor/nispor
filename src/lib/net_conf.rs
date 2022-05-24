@@ -12,17 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::error::NisporError;
-use crate::ifaces::{
-    change_ifaces, create_ifaces, delete_ifaces, get_iface_name2index,
-    get_ifaces, IfaceConf, IfaceState,
+use crate::{
+    error::NisporError,
+    ifaces::{
+        change_ifaces,
+        create_ifaces,
+        delete_ifaces,
+        get_iface_name2index,
+        get_ifaces,
+        IfaceConf,
+        IfaceState,
+    },
+    route::{apply_routes_conf, RouteConf},
 };
-use crate::route::{apply_routes_conf, RouteConf};
 
 use serde::{Deserialize, Serialize};
 use tokio::runtime;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct NetConf {
     pub ifaces: Option<Vec<IfaceConf>>,

@@ -12,26 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::netlink::parse_as_u32;
-use crate::ControllerType;
-use crate::Iface;
-use crate::NisporError;
-use netlink_packet_route::rtnl::link::nlas::InfoData;
-use netlink_packet_route::rtnl::link::nlas::InfoVrf;
-use netlink_packet_route::rtnl::nlas::NlaBuffer;
+use crate::{netlink::parse_as_u32, ControllerType, Iface, NisporError};
+use netlink_packet_route::rtnl::{
+    link::nlas::{InfoData, InfoVrf},
+    nlas::NlaBuffer,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 const IFLA_VRF_PORT_TABLE: u16 = 1;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct VrfInfo {
     pub table_id: u32,
     pub subordinates: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct VrfSubordinateInfo {
     pub table_id: u32,
