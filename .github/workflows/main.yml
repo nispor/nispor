@@ -15,8 +15,6 @@ jobs:
       fail-fast: true
       matrix:
         include:
-          - rust_version: "stable"
-          - rust_version: "beta"
           - rust_version: "nightly"
 
     steps:
