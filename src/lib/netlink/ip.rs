@@ -67,6 +67,7 @@ pub(crate) fn fill_ip_addr(
                     }
                     None => Ipv6Info {
                         addresses: vec![addr],
+                        ..Default::default()
                     },
                 };
                 if let Some(iface) = iface_states.get_mut(&iface_name) {

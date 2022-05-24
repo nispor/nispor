@@ -70,5 +70,9 @@ class NisporIPv6:
     def addresses(self):
         return self._address
 
+    @property
+    def addr_gen_mode(self):
+        return self._info["addr_gen_mode"]
+
     def __str__(self):
         return f"{self._info}"

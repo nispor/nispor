@@ -45,7 +45,7 @@ use crate::{
         },
         vxlan::{get_vxlan_info, VxlanInfo},
     },
-    ip::{IpConf, Ipv4Info, Ipv6Info},
+    ip::{get_ipv6_addr_gen_mode, IpConf, Ipv4Info, Ipv6Info},
     mac::{mac_str_to_raw, parse_as_mac},
     NisporError,
 };
@@ -431,8 +431,11 @@ pub(crate) fn parse_nl_msg_to_iface(
             if let Ok(info) = get_sriov_info(&iface_state.name, data, mac_len) {
                 iface_state.sriov = Some(info);
             }
-        } else {
-            // println!("{} {:?}", name, nla);
+        } else if let Nla::AfSpecInet(nlas) = nla {
+            iface_state.ipv6 = Some(Ipv6Info {
+                addr_gen_mode: get_ipv6_addr_gen_mode(&nlas),
+                ..Default::default()
+            });
         }
     }
     if let Some(ref mut vlan_info) = iface_state.vlan {

@@ -16,6 +16,7 @@ use std::{collections::HashMap, net::IpAddr, str::FromStr};
 
 use netlink_packet_route::rtnl::{
     address::nlas::{CacheInfo, Nla, ADDRESSS_CACHE_INFO_LEN},
+    link::nlas::{AfSpecInet, Inet6},
     AddressMessage,
 };
 use netlink_packet_utils::Emitable;
@@ -46,6 +47,58 @@ pub struct Ipv4AddrInfo {
 #[non_exhaustive]
 pub struct Ipv6Info {
     pub addresses: Vec<Ipv6AddrInfo>,
+    pub addr_gen_mode: Ipv6AddrGenMode,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
+#[non_exhaustive]
+#[serde(rename_all = "snake_case")]
+pub enum Ipv6AddrGenMode {
+    /// Generate address based on EUI64
+    Eui64 = 0,
+    /// Do no generate a link-local address, use EUI64 for addresses
+    /// generated from autoconf.
+    None = 1,
+    /// Generate stable privacy addresses, using the secret from
+    /// stable_secret (RFC7217)
+    StablePrivacy = 2,
+    /// Generate stable privacy addresses, using a random secret if
+    /// unset
+    Random = 3,
+    /// Unknown value
+    Unknown = 255,
+}
+
+impl Default for Ipv6AddrGenMode {
+    fn default() -> Self {
+        Self::Eui64
+    }
+}
+
+impl From<u8> for Ipv6AddrGenMode {
+    fn from(v: u8) -> Self {
+        match v {
+            i if i == Self::Eui64 as u8 => Self::Eui64,
+            i if i == Self::None as u8 => Self::None,
+            i if i == Self::StablePrivacy as u8 => Self::StablePrivacy,
+            i if i == Self::Random as u8 => Self::Random,
+            _ => Self::Unknown,
+        }
+    }
+}
+
+impl From<Ipv6AddrGenMode> for u8 {
+    fn from(v: Ipv6AddrGenMode) -> Self {
+        match v {
+            Ipv6AddrGenMode::Eui64 => Ipv6AddrGenMode::Eui64 as u8,
+            Ipv6AddrGenMode::None => Ipv6AddrGenMode::None as u8,
+            Ipv6AddrGenMode::StablePrivacy => {
+                Ipv6AddrGenMode::StablePrivacy as u8
+            }
+            Ipv6AddrGenMode::Random => Ipv6AddrGenMode::Random as u8,
+            Ipv6AddrGenMode::Unknown => Ipv6AddrGenMode::Unknown as u8,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -319,4 +372,17 @@ pub(crate) fn parse_ip_net_addr_str(
         32
     };
     Ok((parse_ip_addr_str(addr_str)?, prefix_len))
+}
+
+pub(crate) fn get_ipv6_addr_gen_mode(nlas: &[AfSpecInet]) -> Ipv6AddrGenMode {
+    for nla in nlas {
+        if let AfSpecInet::Inet6(ipv6_nlas) = nla {
+            for ipv6_nla in ipv6_nlas {
+                if let Inet6::AddrGenMode(d) = ipv6_nla {
+                    return Ipv6AddrGenMode::from(*d);
+                }
+            }
+        }
+    }
+    Ipv6AddrGenMode::default()
 }
