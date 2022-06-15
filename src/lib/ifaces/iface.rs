@@ -280,19 +280,19 @@ pub(crate) fn parse_nl_msg_to_iface(
     if name.is_empty() {
         return Ok(None);
     }
+    let link_layer_type = match nl_msg.header.link_layer_type {
+        ARPHRD_ETHER => IfaceType::Ethernet,
+        ARPHRD_LOOPBACK => IfaceType::Loopback,
+        ARPHRD_INFINIBAND => IfaceType::Infiniband,
+        _ => IfaceType::Unknown,
+    };
     let mut iface_state = Iface {
         name,
+        iface_type: link_layer_type.clone(),
         ..Default::default()
     };
-    match nl_msg.header.link_layer_type {
-        ARPHRD_ETHER => iface_state.iface_type = IfaceType::Ethernet,
-        ARPHRD_LOOPBACK => iface_state.iface_type = IfaceType::Loopback,
-        ARPHRD_INFINIBAND => iface_state.iface_type = IfaceType::Infiniband,
-        _ => (),
-    }
     iface_state.index = nl_msg.header.index;
     let mut link: Option<u32> = None;
-    let mut mac_len = None;
     for nla in &nl_msg.nlas {
         if let Nla::Mtu(mtu) = nla {
             iface_state.mtu = *mtu as i64;
@@ -303,10 +303,8 @@ pub(crate) fn parse_nl_msg_to_iface(
             iface_state.max_mtu =
                 if *mtu != 0 { Some(*mtu as i64) } else { None };
         } else if let Nla::Address(mac) = nla {
-            mac_len = Some(mac.len());
             iface_state.mac_address = parse_as_mac(mac.len(), mac)?;
         } else if let Nla::PermAddress(mac) = nla {
-            mac_len = Some(mac.len());
             iface_state.permanent_mac_address = parse_as_mac(mac.len(), mac)?;
         } else if let Nla::OperState(state) = nla {
             iface_state.state = _get_iface_state(state);
@@ -419,7 +417,9 @@ pub(crate) fn parse_nl_msg_to_iface(
                 }
             }
         } else if let Nla::VfInfoList(data) = nla {
-            if let Ok(info) = get_sriov_info(&iface_state.name, data, mac_len) {
+            if let Ok(info) =
+                get_sriov_info(&iface_state.name, data, &link_layer_type)
+            {
                 iface_state.sriov = Some(info);
             }
         } else if let Nla::NetnsId(id) = nla {
