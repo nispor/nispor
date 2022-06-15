@@ -12,12 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::mac::parse_as_mac;
+use crate::mac::{parse_as_mac, ETH_ALEN};
 use crate::BridgeInfo;
 use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas::InfoBridge;
-
-const ETH_ALEN: usize = 6;
 
 pub(crate) fn parse_bridge_info(
     infos: &[InfoBridge],
