@@ -42,10 +42,10 @@ use crate::{
 };
 
 use netlink_packet_route::rtnl::{
-    link::nlas, LinkMessage, ARPHRD_ETHER, ARPHRD_LOOPBACK, IFF_ALLMULTI,
-    IFF_AUTOMEDIA, IFF_BROADCAST, IFF_DEBUG, IFF_DORMANT, IFF_LOOPBACK,
-    IFF_LOWER_UP, IFF_MASTER, IFF_MULTICAST, IFF_NOARP, IFF_POINTOPOINT,
-    IFF_PORTSEL, IFF_PROMISC, IFF_RUNNING, IFF_SLAVE, IFF_UP,
+    link::nlas, LinkMessage, ARPHRD_ETHER, ARPHRD_INFINIBAND, ARPHRD_LOOPBACK,
+    IFF_ALLMULTI, IFF_AUTOMEDIA, IFF_BROADCAST, IFF_DEBUG, IFF_DORMANT,
+    IFF_LOOPBACK, IFF_LOWER_UP, IFF_MASTER, IFF_MULTICAST, IFF_NOARP,
+    IFF_POINTOPOINT, IFF_PORTSEL, IFF_PROMISC, IFF_RUNNING, IFF_SLAVE, IFF_UP,
 };
 use rtnetlink::packet::rtnl::link::nlas::Nla;
 use serde::{Deserialize, Serialize};
@@ -63,6 +63,7 @@ pub enum IfaceType {
     Vxlan,
     Loopback,
     Ethernet,
+    Infiniband,
     Vrf,
     Tun,
     MacVlan,
@@ -93,6 +94,7 @@ impl std::fmt::Display for IfaceType {
                 Self::Vxlan => "vxlan",
                 Self::Loopback => "loopback",
                 Self::Ethernet => "ethernet",
+                Self::Infiniband => "infiniband",
                 Self::Vrf => "vrf",
                 Self::Tun => "tun",
                 Self::MacVlan => "macvlan",
@@ -285,6 +287,7 @@ pub(crate) fn parse_nl_msg_to_iface(
     match nl_msg.header.link_layer_type {
         ARPHRD_ETHER => iface_state.iface_type = IfaceType::Ethernet,
         ARPHRD_LOOPBACK => iface_state.iface_type = IfaceType::Loopback,
+        ARPHRD_INFINIBAND => iface_state.iface_type = IfaceType::Infiniband,
         _ => (),
     }
     iface_state.index = nl_msg.header.index;
@@ -314,7 +317,7 @@ pub(crate) fn parse_nl_msg_to_iface(
         } else if let Nla::Info(infos) = nla {
             for info in infos {
                 if let nlas::Info::Kind(t) = info {
-                    iface_state.iface_type = match t {
+                    let iface_type = match t {
                         nlas::InfoKind::Bond => IfaceType::Bond,
                         nlas::InfoKind::Veth => IfaceType::Veth,
                         nlas::InfoKind::Bridge => IfaceType::Bridge,
@@ -332,6 +335,17 @@ pub(crate) fn parse_nl_msg_to_iface(
                         },
                         _ => IfaceType::Other(format!("{:?}", t)),
                     };
+                    if let IfaceType::Other(_) = iface_type {
+                        /* We did not find an explicit link type. Instead it's
+                         * just "Other(_)". If we already determined a link type
+                         * above (ethernet or infiniband), keep that one. */
+                        if iface_state.iface_type == IfaceType::Unknown {
+                            iface_state.iface_type = iface_type
+                        }
+                    } else {
+                        /* We found a better link type based on the kind. Use it. */
+                        iface_state.iface_type = iface_type
+                    }
                 }
             }
             for info in infos {
