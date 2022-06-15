@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::mac::parse_as_mac;
+use crate::mac::{parse_as_mac, ETH_ALEN, INFINIBAND_ALEN};
 use crate::netlink::parse_as_u32;
 use crate::netlink::parse_as_u64;
+use crate::IfaceType;
 use crate::NisporError;
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 use serde::{Deserialize, Serialize};
@@ -46,6 +47,8 @@ const IFLA_VF_STATS_MULTICAST: u16 = 5;
 // const IFLA_VF_STATS_PAD: u16 = 6;
 const IFLA_VF_STATS_RX_DROPPED: u16 = 7;
 const IFLA_VF_STATS_TX_DROPPED: u16 = 8;
+
+const MAX_ADDR_LEN: usize = 32;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
@@ -124,10 +127,15 @@ pub struct VfInfo {
 pub(crate) fn get_sriov_info(
     pf_iface_name: &str,
     raw: &[u8],
-    mac_len: Option<usize>,
+    iface_type: &IfaceType,
 ) -> Result<SriovInfo, NisporError> {
     let mut sriov_info = SriovInfo::default();
     let ports = NlasIterator::new(raw);
+    let mac_len = match iface_type {
+        IfaceType::Ethernet => ETH_ALEN,
+        IfaceType::Infiniband => INFINIBAND_ALEN,
+        _ => MAX_ADDR_LEN,
+    };
     for port in ports {
         let mut vf_info = VfInfo::default();
         let port = port?;
@@ -139,11 +147,11 @@ pub(crate) fn get_sriov_info(
                     vf_info.id = parse_as_u32(nla.value())?;
                     vf_info.iface_name =
                         get_vf_iface_name(pf_iface_name, &vf_info.id);
-                    vf_info.mac = parse_vf_mac(
+                    vf_info.mac = parse_as_mac(
+                        mac_len,
                         nla.value().get(4..).ok_or_else(|| {
                             NisporError::bug("invalid index into nla".into())
                         })?,
-                        mac_len,
                     )?;
                 }
                 IFLA_VF_VLAN => {
@@ -221,7 +229,7 @@ pub(crate) fn get_sriov_info(
                     // not support this, so I doubt anyone is using this.
                 }
                 IFLA_VF_BROADCAST => {
-                    vf_info.broadcast = parse_vf_mac(nla.value(), mac_len)?;
+                    vf_info.broadcast = parse_as_mac(mac_len, nla.value())?;
                 }
                 _ => {
                     log::warn!(
@@ -236,16 +244,6 @@ pub(crate) fn get_sriov_info(
         sriov_info.vfs.push(vf_info);
     }
     Ok(sriov_info)
-}
-
-fn parse_vf_mac(
-    raw: &[u8],
-    mac_len: Option<usize>,
-) -> Result<String, NisporError> {
-    match mac_len {
-        Some(mac_len) => parse_as_mac(mac_len, raw),
-        None => parse_as_mac(32, raw),
-    }
 }
 
 fn parse_vf_stats(raw: &[u8]) -> Result<VfState, NisporError> {

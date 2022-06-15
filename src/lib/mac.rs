@@ -17,6 +17,7 @@ use std::fmt::Write;
 use crate::NisporError;
 
 pub(crate) const ETH_ALEN: usize = libc::ETH_ALEN as usize;
+pub(crate) const INFINIBAND_ALEN: usize = 20;
 
 pub(crate) fn parse_as_mac(
     mac_len: usize,
