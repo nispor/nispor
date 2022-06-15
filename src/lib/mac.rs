@@ -20,12 +20,12 @@ pub(crate) fn parse_as_mac(
     mac_len: usize,
     data: &[u8],
 ) -> Result<String, NisporError> {
-    if data.len() != mac_len {
+    if data.len() < mac_len {
         return Err(NisporError::bug("wrong size at mac parsing".into()));
     }
     let mut rt = String::new();
-    for (i, &val) in data.iter().enumerate() {
-        write!(rt, "{:02x}", val).ok();
+    for (i, m) in data.iter().enumerate().take(mac_len) {
+        write!(rt, "{:02x}", m).ok();
         if i != mac_len - 1 {
             rt.push(':');
         }
