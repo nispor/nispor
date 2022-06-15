@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::mac::parse_as_mac;
+use crate::mac::{parse_as_mac, ETH_ALEN};
 use crate::Iface;
 use crate::IfaceType;
 use crate::NisporError;
@@ -21,8 +21,6 @@ use netlink_packet_route::rtnl::link::nlas::InfoMacVlan;
 use netlink_packet_route::rtnl::link::nlas::InfoMacVtap;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-const ETH_ALEN: usize = 6;
 
 const MACVLAN_MODE_PRIVATE: u32 = 1;
 const MACVLAN_MODE_VEPA: u32 = 2;
