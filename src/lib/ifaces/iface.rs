@@ -224,6 +224,8 @@ pub struct Iface {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub controller_type: Option<ControllerType>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub link_netnsid: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub ethtool: Option<EthtoolInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bond: Option<BondInfo>,
@@ -406,6 +408,8 @@ pub(crate) fn parse_nl_msg_to_iface(
             if let Ok(info) = get_sriov_info(&iface_state.name, data, mac_len) {
                 iface_state.sriov = Some(info);
             }
+        } else if let Nla::NetnsId(id) = nla {
+            iface_state.link_netnsid = Some(*id);
         } else {
             // println!("{} {:?}", name, nla);
         }

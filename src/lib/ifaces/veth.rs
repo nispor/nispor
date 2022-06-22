@@ -61,6 +61,11 @@ pub(crate) fn veth_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
         if iface.iface_type != IfaceType::Veth {
             continue;
         }
+        // If the link_netnsid is set, the veth peer is on a different netns
+        // and therefore Nispor should use the ifindex instead.
+        if iface.link_netnsid.is_some() {
+            continue;
+        }
 
         if let Some(VethInfo { peer }) = &iface.veth {
             if let Some(peer_iface_name) = index_to_name.get(peer) {
