@@ -34,7 +34,7 @@ const FR_ACT_PROHIBIT: u8 = 128;
 
 const RT_TABLE_UNSPEC: u8 = 0;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 pub enum RuleAction {
     /* Pass to fixed table or l3mdev */
@@ -73,7 +73,7 @@ impl Default for RuleAction {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct RouteRule {
     pub action: RuleAction,

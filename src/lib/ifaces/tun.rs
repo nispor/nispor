@@ -32,7 +32,7 @@ const IFLA_TUN_MULTI_QUEUE: u16 = 7;
 const IFLA_TUN_NUM_QUEUES: u16 = 8;
 const IFLA_TUN_NUM_DISABLED_QUEUES: u16 = 9;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct TunInfo {
     pub mode: TunMode,
@@ -50,7 +50,7 @@ pub struct TunInfo {
     pub num_disabled_queues: Option<u32>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum TunMode {

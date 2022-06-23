@@ -23,7 +23,7 @@ use crate::{Iface, IfaceType, NisporError};
 const ETH_P_8021Q: u16 = 0x8100;
 const ETH_P_8021AD: u16 = 0x88A8;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum VlanProtocol {
@@ -56,7 +56,7 @@ const VLAN_FLAG_LOOSE_BINDING: u32 = 0x4;
 const VLAN_FLAG_MVRP: u32 = 0x8;
 const VLAN_FLAG_BRIDGE_BINDING: u32 = 0x10;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct VlanInfo {
     pub vlan_id: u16,
@@ -127,7 +127,7 @@ fn convert_base_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct VlanConf {
     pub vlan_id: u16,

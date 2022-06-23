@@ -9,7 +9,7 @@ use crate::{Iface, IfaceType};
 const IPOIB_MODE_DATAGRAM: u16 = 0;
 const IPOIB_MODE_CONNECTED: u16 = 1;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum IpoibMode {
@@ -37,7 +37,7 @@ impl From<u16> for IpoibMode {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct IpoibInfo {
     pub pkey: u16,

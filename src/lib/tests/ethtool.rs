@@ -14,7 +14,7 @@
 
 use nispor::NetState;
 use pretty_assertions::assert_eq;
-use serde_yaml;
+
 use std::panic;
 
 mod utils;
@@ -158,9 +158,9 @@ fn test_get_ethtool_feature_yaml_of_loopback() {
 
 // TODO: There is no way to test the ethtool ring.
 
-fn with_netdevsim_iface<T>(test: T) -> ()
+fn with_netdevsim_iface<T>(test: T)
 where
-    T: FnOnce() -> () + panic::UnwindSafe,
+    T: FnOnce() + panic::UnwindSafe,
 {
     utils::set_network_environment("sim");
 
@@ -209,9 +209,9 @@ fn test_get_ethtool_link_mode_yaml() {
     });
 }
 
-fn with_tun_iface<T>(test: T) -> ()
+fn with_tun_iface<T>(test: T)
 where
-    T: FnOnce() -> () + panic::UnwindSafe,
+    T: FnOnce() + panic::UnwindSafe,
 {
     utils::set_network_environment("tun");
 

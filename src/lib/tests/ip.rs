@@ -14,16 +14,16 @@
 
 use nispor::{NetConf, NetState};
 use pretty_assertions::assert_eq;
-use serde_yaml;
+
 use std::panic;
 
 mod utils;
 
 const IFACE_NAME: &str = "veth1";
 
-fn with_veth_iface<T>(test: T) -> ()
+fn with_veth_iface<T>(test: T)
 where
-    T: FnOnce() -> () + panic::UnwindSafe,
+    T: FnOnce() + panic::UnwindSafe,
 {
     utils::set_network_environment("veth");
 

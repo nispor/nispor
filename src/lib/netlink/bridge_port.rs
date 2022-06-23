@@ -392,7 +392,7 @@ fn parse_as_bridge_id(data: &[u8]) -> Result<String, NisporError> {
     let err_msg = "wrong index at bridge_id parsing";
     Ok(format!(
         "{:02x}{:02x}.{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
-        data.get(0)
+        data.first()
             .ok_or_else(|| NisporError::bug(err_msg.into()))?,
         data.get(1)
             .ok_or_else(|| NisporError::bug(err_msg.into()))?,
