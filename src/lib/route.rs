@@ -41,7 +41,7 @@ use crate::{
 
 const USER_HZ: u32 = 100;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct Route {
     pub address_family: AddressFamily,
@@ -136,7 +136,7 @@ pub struct Route {
     // Missing support of RTA_NH_ID
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum AddressFamily {
     IPv4,
@@ -295,7 +295,7 @@ impl Default for RouteProtocol {
  * Intermediate values are also possible f.e. interior routes
  * could be assigned a value between UNIVERSE and LINK.
  */
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum RouteScope {
     Universe,
@@ -354,7 +354,7 @@ impl From<&str> for RouteScope {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum RouteType {
     UnSpec,
@@ -401,7 +401,7 @@ impl Default for RouteType {
 
 const SIZE_OF_RTNEXTHOP: usize = 8;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub struct MultipathRoute {
@@ -411,7 +411,7 @@ pub struct MultipathRoute {
     pub flags: Vec<MultipathRouteFlags>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum MultipathRouteFlags {
     Dead,

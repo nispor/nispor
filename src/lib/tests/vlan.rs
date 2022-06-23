@@ -14,7 +14,7 @@
 
 use nispor::{NetConf, NetState};
 use pretty_assertions::assert_eq;
-use serde_yaml;
+
 use std::panic;
 
 mod utils;
@@ -44,9 +44,9 @@ fn test_get_vlan_iface_yaml() {
     });
 }
 
-fn with_vlan_iface<T>(test: T) -> ()
+fn with_vlan_iface<T>(test: T)
 where
-    T: FnOnce() -> () + panic::UnwindSafe,
+    T: FnOnce() + panic::UnwindSafe,
 {
     utils::set_network_environment("vlan");
 

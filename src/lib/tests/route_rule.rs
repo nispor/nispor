@@ -14,7 +14,7 @@
 
 use nispor::NetState;
 use pretty_assertions::assert_eq;
-use serde_yaml;
+
 use std::panic;
 
 mod utils;
@@ -62,9 +62,9 @@ fn test_get_route_rule_yaml() {
     });
 }
 
-fn with_route_rule_test_iface<T>(test: T) -> ()
+fn with_route_rule_test_iface<T>(test: T)
 where
-    T: FnOnce() -> () + panic::UnwindSafe,
+    T: FnOnce() + panic::UnwindSafe,
 {
     utils::set_network_environment("rule");
 

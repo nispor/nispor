@@ -22,7 +22,7 @@ use crate::route::{apply_routes_conf, RouteConf};
 use serde::{Deserialize, Serialize};
 use tokio::runtime;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct NetConf {
     pub ifaces: Option<Vec<IfaceConf>>,

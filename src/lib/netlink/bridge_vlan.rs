@@ -46,7 +46,7 @@ pub(crate) fn parse_af_spec_bridge_info(
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
 struct KernelBridgeVlanEntry {
     vid: u16,
     is_pvid: bool, // is PVID and ingress untagged

@@ -25,13 +25,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceConf, NisporError};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct Ipv4Info {
     pub addresses: Vec<Ipv4AddrInfo>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct Ipv4AddrInfo {
     pub address: String,
@@ -44,13 +44,13 @@ pub struct Ipv4AddrInfo {
     pub preferred_lft: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct Ipv6Info {
     pub addresses: Vec<Ipv6AddrInfo>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct Ipv6AddrInfo {
     pub address: String,
@@ -61,7 +61,7 @@ pub struct Ipv6AddrInfo {
     pub preferred_lft: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct IpConf {
     pub addresses: Vec<IpAddrConf>,

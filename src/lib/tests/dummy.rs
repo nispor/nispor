@@ -30,9 +30,9 @@ fn test_get_iface_dummy_yaml() {
     });
 }
 
-fn with_dummy_iface<T>(test: T) -> ()
+fn with_dummy_iface<T>(test: T)
 where
-    T: FnOnce() -> () + panic::UnwindSafe,
+    T: FnOnce() + panic::UnwindSafe,
 {
     utils::set_network_environment("dummy");
 

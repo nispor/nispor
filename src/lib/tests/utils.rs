@@ -29,5 +29,5 @@ pub fn cmd_exec(command: &str, args: Vec<&str>) -> bool {
     }
     let status = proc.status().expect("failed to execute the command");
 
-    return status.success();
+    status.success()
 }

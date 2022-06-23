@@ -30,7 +30,7 @@ const MACVLAN_MODE_BRIDGE: u32 = 4;
 const MACVLAN_MODE_PASSTHRU: u32 = 8;
 const MACVLAN_MODE_SOURCE: u32 = 16;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum MacVlanMode {
@@ -68,7 +68,7 @@ impl From<u32> for MacVlanMode {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct MacVlanInfo {
     pub base_iface: String,

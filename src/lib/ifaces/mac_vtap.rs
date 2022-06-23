@@ -19,7 +19,7 @@ use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum MacVtapMode {
@@ -58,7 +58,7 @@ impl From<MacVlanMode> for MacVtapMode {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct MacVtapInfo {
     pub base_iface: String,

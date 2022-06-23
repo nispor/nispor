@@ -32,7 +32,7 @@ const BOND_MODE_8023AD: u8 = 4;
 const BOND_MODE_TLB: u8 = 5;
 const BOND_MODE_ALB: u8 = 6;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum BondMode {
@@ -91,7 +91,7 @@ impl std::fmt::Display for BondMode {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondModeArpAllTargets {
@@ -122,7 +122,7 @@ const BOND_ARP_FILTER: u32 = BOND_ARP_VALIDATE_ALL + 1;
 const BOND_ARP_FILTER_ACTIVE: u32 = BOND_ARP_VALIDATE_ACTIVE | BOND_ARP_FILTER;
 const BOND_ARP_FILTER_BACKUP: u32 = BOND_ARP_VALIDATE_BACKUP | BOND_ARP_FILTER;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondArpValidate {
@@ -157,7 +157,7 @@ const BOND_PRI_RESELECT_ALWAYS: u8 = 0;
 const BOND_PRI_RESELECT_BETTER: u8 = 1;
 const BOND_PRI_RESELECT_FAILURE: u8 = 2;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondPrimaryReselect {
@@ -182,7 +182,7 @@ const BOND_FOM_NONE: u8 = 0;
 const BOND_FOM_ACTIVE: u8 = 1;
 const BOND_FOM_FOLLOW: u8 = 2;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondFailOverMac {
@@ -210,7 +210,7 @@ const BOND_XMIT_POLICY_ENCAP23: u8 = 3;
 const BOND_XMIT_POLICY_ENCAP34: u8 = 4;
 const BOND_XMIT_POLICY_VLAN_SRCMAC: u8 = 5;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondXmitHashPolicy {
@@ -246,7 +246,7 @@ impl From<u8> for BondXmitHashPolicy {
 const BOND_ALL_SUBORDINATES_ACTIVE_DROPPED: u8 = 0;
 const BOND_ALL_SUBORDINATES_ACTIVE_DELIEVERD: u8 = 1;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondAllSubordinatesActive {
@@ -268,7 +268,7 @@ impl From<u8> for BondAllSubordinatesActive {
 const AD_LACP_SLOW: u8 = 0;
 const AD_LACP_FAST: u8 = 1;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondLacpRate {
@@ -291,7 +291,7 @@ const BOND_AD_STABLE: u8 = 0;
 const BOND_AD_BANDWIDTH: u8 = 1;
 const BOND_AD_COUNT: u8 = 2;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondAdSelect {
@@ -322,7 +322,7 @@ pub struct BondAdInfo {
     pub partner_mac: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct BondInfo {
     pub subordinates: Vec<String>,
@@ -383,7 +383,7 @@ pub struct BondInfo {
     pub ad_info: Option<BondAdInfo>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum BondSubordinateState {
@@ -406,7 +406,7 @@ impl From<u8> for BondSubordinateState {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum BondMiiStatus {
@@ -435,7 +435,7 @@ impl From<u8> for BondMiiStatus {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[non_exhaustive]
 pub struct BondSubordinateInfo {
     pub subordinate_state: BondSubordinateState,
@@ -525,7 +525,7 @@ fn primary_index_to_iface_name(iface_states: &mut HashMap<String, Iface>) {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct BondConf {}
 

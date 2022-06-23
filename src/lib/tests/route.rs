@@ -14,7 +14,6 @@
 
 use nispor::{NetConf, NetState, RouteProtocol};
 use pretty_assertions::assert_eq;
-use serde_yaml;
 
 mod utils;
 
@@ -251,9 +250,9 @@ ifaces:
     type: veth
     state: absent"#;
 
-fn with_veth_static_ip<T>(test: T) -> ()
+fn with_veth_static_ip<T>(test: T)
 where
-    T: FnOnce() -> () + std::panic::UnwindSafe,
+    T: FnOnce() + std::panic::UnwindSafe,
 {
     let net_conf: NetConf = serde_yaml::from_str(VETH_STATIC_IP_CONF).unwrap();
     net_conf.apply().unwrap();
@@ -271,9 +270,9 @@ fn test_get_route_yaml() {
         let state = NetState::retrieve().unwrap();
         let mut expected_routes = Vec::new();
         for route in state.routes {
-            if Some(TEST_ROUTE_DST_V4.into()) == route.dst {
-                expected_routes.push(route)
-            } else if Some(TEST_ROUTE_DST_V6.into()) == route.dst {
+            if Some(TEST_ROUTE_DST_V4.into()) == route.dst
+                || Some(TEST_ROUTE_DST_V6.into()) == route.dst
+            {
                 expected_routes.push(route)
             }
         }
@@ -284,9 +283,9 @@ fn test_get_route_yaml() {
     });
 }
 
-fn with_route_test_iface<T>(test: T) -> ()
+fn with_route_test_iface<T>(test: T)
 where
-    T: FnOnce() -> () + std::panic::UnwindSafe,
+    T: FnOnce() + std::panic::UnwindSafe,
 {
     utils::set_network_environment("route");
 

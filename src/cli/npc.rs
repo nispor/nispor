@@ -20,6 +20,7 @@ use nispor::{
 use serde::Serialize;
 use std::collections::HashMap;
 use std::fmt;
+use std::fmt::Write as _FmtWrite;
 use std::io::{stderr, stdout, Write};
 use std::process;
 
@@ -65,20 +66,24 @@ impl CliIfaceBrief {
                 format!("{}link {}", INDENT, brief.iface_type);
 
             if !brief.link_info.is_empty() {
-                link_string += &format!(" {}", brief.link_info.as_str());
+                write!(link_string, " {}", brief.link_info.as_str()).ok();
             }
             if let Some(ctrl) = brief.controller.as_ref() {
-                link_string += &format!(" controller {}", ctrl);
+                write!(link_string, " controller {}", ctrl).ok();
             }
 
             ret.push(link_string);
 
             let mut mac_string = String::new();
             if !&brief.mac.is_empty() {
-                mac_string += &format!("{}mac {}", INDENT, brief.mac);
+                write!(mac_string, "{}mac {}", INDENT, brief.mac).ok();
                 if !&brief.permanent_mac.is_empty() {
-                    mac_string +=
-                        &format!(" permanent_mac {}", brief.permanent_mac);
+                    write!(
+                        mac_string,
+                        " permanent_mac {}",
+                        brief.permanent_mac
+                    )
+                    .ok();
                 }
             }
 
@@ -222,7 +227,7 @@ enum CliResult {
     NisporError(NisporError),
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Eq)]
 enum CliOutputType {
     Json,
     Yaml,
@@ -570,7 +575,7 @@ fn get_link_info(iface: &Iface) -> String {
             bond.subordinates.join(LIST_SPLITER)
         );
         if let Some(p) = bond.primary.as_deref() {
-            bond_line += &format!(" primary {}", p);
+            write!(bond_line, " primary {}", p).ok();
         }
         bond_line
     } else if let Some(bridge) = iface.bridge.as_ref() {
