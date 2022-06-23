@@ -463,8 +463,8 @@ pub(crate) fn fill_bridge_vlan_info(
     }
     if let Some(iface_state) = iface_states.get_mut(&name) {
         for nla in &nl_msg.nlas {
-            if let Nla::AfSpecBridge(data) = nla {
-                parse_bridge_vlan_info(iface_state, data)?;
+            if let Nla::AfSpecBridge(nlas) = nla {
+                parse_bridge_vlan_info(iface_state, nlas)?;
             }
         }
     }

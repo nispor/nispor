@@ -383,10 +383,10 @@ pub struct BridgeVlanEntry {
 
 pub(crate) fn parse_bridge_vlan_info(
     iface_state: &mut Iface,
-    data: &[u8],
+    nlas: &[nlas::AfSpecBridge],
 ) -> Result<(), NisporError> {
     if let Some(ref mut port_info) = iface_state.bridge_port {
-        if let Some(cur_vlans) = parse_af_spec_bridge_info(data)? {
+        if let Some(cur_vlans) = parse_af_spec_bridge_info(nlas)? {
             match port_info.vlans.as_mut() {
                 Some(vlans) => vlans.extend(cur_vlans),
                 None => port_info.vlans = Some(cur_vlans),
