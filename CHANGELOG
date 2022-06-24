@@ -1,4 +1,18 @@
 # Changelog
+## [1.2.6] - 2022-06-24
+
+## Break changes
+ * clib: Change SONAME from libnispor.1.2 to libnispor.so.1
+
+## New features
+
+ * N/A
+
+## Bug fixes
+
+ * drop the need of serde_derive. (4857775)
+ * Use latest rust-netlink crates. (45ba94a)
+
 ## [1.2.5] - 2022-03-30
 
 ## Break changes
