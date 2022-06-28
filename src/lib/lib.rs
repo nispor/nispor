@@ -16,6 +16,7 @@ mod error;
 mod ifaces;
 mod ip;
 mod mac;
+mod mptcp;
 mod net_conf;
 mod net_state;
 mod netlink;
@@ -41,6 +42,7 @@ pub use crate::ip::{
     IpAddrConf, IpConf, IpFamily, Ipv4AddrInfo, Ipv4Info, Ipv6AddrInfo,
     Ipv6Info,
 };
+pub use crate::mptcp::{Mptcp, MptcpAddress};
 pub use crate::net_conf::NetConf;
 pub use crate::net_state::NetState;
 pub use crate::route::{

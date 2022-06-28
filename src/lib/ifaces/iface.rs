@@ -38,6 +38,7 @@ use crate::{
     },
     ip::{IpConf, Ipv4Info, Ipv6Info},
     mac::{mac_str_to_raw, parse_as_mac},
+    mptcp::MptcpAddress,
     NisporError,
 };
 
@@ -257,6 +258,8 @@ pub struct Iface {
     pub sriov: Option<SriovInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ipoib: Option<IpoibInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mptcp: Option<Vec<MptcpAddress>>,
 }
 
 // TODO: impl From Iface to IfaceConf
