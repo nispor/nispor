@@ -150,3 +150,12 @@ impl std::convert::From<std::net::AddrParseError> for NisporError {
         }
     }
 }
+
+impl std::convert::From<mptcp_pm::MptcpPathManagerError> for NisporError {
+    fn from(e: mptcp_pm::MptcpPathManagerError) -> Self {
+        NisporError {
+            kind: ErrorKind::NetlinkError,
+            msg: e.to_string(),
+        }
+    }
+}

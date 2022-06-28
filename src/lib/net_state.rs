@@ -12,15 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::error::NisporError;
-use crate::ifaces::{get_ifaces, Iface};
-use crate::route::get_routes;
-use crate::route::Route;
-use crate::route_rule::get_route_rules;
-use crate::route_rule::RouteRule;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
 use tokio::runtime;
+
+use crate::{
+    error::NisporError,
+    ifaces::{get_ifaces, Iface},
+    mptcp::{get_mptcp, merge_mptcp_info, Mptcp},
+    route::{get_routes, Route},
+    route_rule::{get_route_rules, RouteRule},
+};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[non_exhaustive]
@@ -28,18 +31,23 @@ pub struct NetState {
     pub ifaces: HashMap<String, Iface>,
     pub routes: Vec<Route>,
     pub rules: Vec<RouteRule>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mptcp: Option<Mptcp>,
 }
 
 impl NetState {
     pub fn retrieve() -> Result<NetState, NisporError> {
         let rt = runtime::Builder::new_current_thread().enable_io().build()?;
-        let ifaces = rt.block_on(get_ifaces())?;
+        let mut ifaces = rt.block_on(get_ifaces())?;
         let routes = rt.block_on(get_routes(&ifaces))?;
         let rules = rt.block_on(get_route_rules())?;
+        let mut mptcp = rt.block_on(get_mptcp())?;
+        merge_mptcp_info(&mut ifaces, &mut mptcp);
         Ok(NetState {
             ifaces,
             routes,
             rules,
+            mptcp: Some(mptcp),
         })
     }
 

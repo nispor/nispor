@@ -14,8 +14,8 @@
 
 use clap::{crate_authors, crate_version};
 use nispor::{
-    Iface, IfaceConf, IfaceState, IfaceType, NetConf, NetState, NisporError,
-    Route, RouteRule,
+    Iface, IfaceConf, IfaceState, IfaceType, Mptcp, NetConf, NetState,
+    NisporError, Route, RouteRule,
 };
 use serde::Serialize;
 use std::collections::HashMap;
@@ -223,6 +223,7 @@ enum CliResult {
     Ifaces(Vec<Iface>),
     Routes(Vec<Route>),
     RouteRules(Vec<RouteRule>),
+    Mptcp(Mptcp),
     CliError(CliError),
     NisporError(NisporError),
 }
@@ -255,6 +256,10 @@ macro_rules! npc_print {
             }
             CliResult::RouteRules(rules) => {
                 writeln!(stdout(), "{}", $display_func(&rules).unwrap()).ok();
+                process::exit(0);
+            }
+            CliResult::Mptcp(mptcp) => {
+                writeln!(stdout(), "{}", $display_func(&mptcp).unwrap()).ok();
                 process::exit(0);
             }
             CliResult::NisporError(e) => {
@@ -394,6 +399,7 @@ fn main() {
                 ),
         )
         .subcommand(clap::Command::new("rule").about("Show route route"))
+        .subcommand(clap::Command::new("mptcp").about("Show mptcp state"))
         .subcommand(
             clap::Command::new("set")
                 .about("Set network state from file")
@@ -462,6 +468,9 @@ fn main() {
                 } else if let Some(m) = matches.subcommand_matches("rule") {
                     output_format = parse_arg_output_format(m);
                     CliResult::RouteRules(state.rules)
+                } else if let Some(m) = matches.subcommand_matches("mptcp") {
+                    output_format = parse_arg_output_format(m);
+                    CliResult::Mptcp(state.mptcp.unwrap_or_default())
                 } else if let Some(iface_name) = matches.value_of("iface_name")
                 {
                     if state.ifaces.get(iface_name).is_some() {

@@ -20,6 +20,7 @@ from .bridge import NisporBridgePort
 from .clib_wrapper import NisporError
 from .clib_wrapper import retrieve_net_state_json
 from .iface import NisporIfaceState
+from .mptcp import NisporMptcpState
 from .route import NisporMultipathRoute
 from .route import NisporRoute
 from .route import NisporRouteState
@@ -30,6 +31,5 @@ from .tun import NisporTun
 from .veth import NisporVeth
 from .vlan import NisporVlan
 from .vxlan import NisporVxlan
-
 
 __all__ = []

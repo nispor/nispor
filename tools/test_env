@@ -14,7 +14,7 @@ sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 1>/dev/null
 
 if [ "CHK$1" == "CHK" ];then
     echo 'Need argument: bond, br, brv, vlan, dummy, vxlan, veth, vrf, sriov,'
-    echo 'rm, route, rule, sim'
+    echo 'rm, route, rule, sim, mptcp'
     exit 1
 fi
 
@@ -37,6 +37,7 @@ function clean_up {
     sudo ip rule del priority 999
     sudo ip -6 rule del priority 999
     sudo modprobe -r netdevsim
+    sudo ip mptcp endpoint flush
 }
 
 function create_nics {
@@ -194,6 +195,14 @@ elif [ "CHK$1" == "CHKsim" ];then
     sudo ethtool -A sim0 rx on
     sudo ethtool -A sim1 tx on
     sudo ethtool -A sim1 rx on
+elif [ "CHK$1" == "CHKmptcp" ];then
+    create_nics
+    sudo ip link set eth1 up
+    sudo ip addr add 192.0.2.2/24 dev eth1
+    sudo ip -6 addr add 2001:db8:f::1/64 dev eth1
+    sudo ip mptcp limits set subflow 1 add_addr_accepted 1
+    sudo ip mptcp endpoint add 192.0.2.2 dev eth2 signal
+    sudo ip mptcp endpoint add 2001:db8:f::1 dev eth2 backup
 elif [ "CHK$1" == "CHKrm" ];then
     clean_up 2>/dev/null
 fi
