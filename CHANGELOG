@@ -1,4 +1,18 @@
 # Changelog
+## [1.2.7] - 2022-06-29
+
+## Break changes
+ * N/A
+
+## New features
+
+ * Add support of MPTCP path management. (a5e0108)
+
+## Bug fixes
+
+ * Fix SR-IOV VF MAC address parsing. (723c090, e2c19da, 91076ed, 06ca1f7)
+ * Fix veth created by iproute with `netns` argument. (5e8eb7d)
+
 ## [1.2.6] - 2022-06-24
 
 ## Break changes
