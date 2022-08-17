@@ -44,7 +44,7 @@ impl NetConf {
                         del_ifaces
                             .push((iface.name.as_str(), *cur_iface_index));
                     }
-                } else if cur_iface_index == None {
+                } else if cur_iface_index.is_none() {
                     new_ifaces.push(iface);
                     chg_ifaces.push(iface);
                 } else {
