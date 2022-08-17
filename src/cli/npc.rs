@@ -155,7 +155,8 @@ impl CliIfaceBrief {
                 controller: iface.controller.clone(),
                 link_info: get_link_info(iface),
                 name: iface.name.clone(),
-                flags: (&iface.flags)
+                flags: iface
+                    .flags
                     .iter()
                     .map(|flag| format!("{:?}", flag).to_uppercase())
                     .collect(),
@@ -324,17 +325,11 @@ fn get_routes(state: &NetState, matches: &clap::ArgMatches) -> CliResult {
     let mut routes = state.routes.clone();
 
     if let Some(iface_name) = matches.value_of("dev") {
-        routes = routes
-            .into_iter()
-            .filter(|route| _is_route_to_specified_dev(route, iface_name))
-            .collect();
+        routes.retain(|route| _is_route_to_specified_dev(route, iface_name));
     }
     if let Some(scope) = matches.value_of("scope") {
         if scope != "a" && scope != "all" {
-            routes = routes
-                .into_iter()
-                .filter(|route| route.scope == scope.into())
-                .collect();
+            routes.retain(|route| route.scope == scope.into());
         }
     }
 
