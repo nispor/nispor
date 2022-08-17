@@ -42,7 +42,7 @@ pub use crate::ip::{
     IpAddrConf, IpConf, IpFamily, Ipv4AddrInfo, Ipv4Info, Ipv6AddrInfo,
     Ipv6Info,
 };
-pub use crate::mptcp::{Mptcp, MptcpAddress};
+pub use crate::mptcp::{Mptcp, MptcpAddress, MptcpAddressFlag};
 pub use crate::net_conf::NetConf;
 pub use crate::net_state::NetState;
 pub use crate::route::{
