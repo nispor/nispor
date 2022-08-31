@@ -67,4 +67,8 @@ sed -i -e 's/1.2.7/1.2.8/' \
 git log --oneline v1.2.7..HEAD
 ```
 
+```bash
+cargo vendor-filterer --platform x86_64-unknown-linux-gnu
+```
+
 [rust-vim]: https://github.com/rust-lang/rust.vim
