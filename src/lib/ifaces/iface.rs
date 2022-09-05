@@ -39,7 +39,7 @@ use crate::{
     ip::{IpConf, Ipv4Info, Ipv6Info},
     mac::{mac_str_to_raw, parse_as_mac},
     mptcp::MptcpAddress,
-    NisporError,
+    NisporError, VfInfo,
 };
 
 use netlink_packet_route::rtnl::{
@@ -256,6 +256,8 @@ pub struct Iface {
     pub mac_vtap: Option<MacVtapInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sriov: Option<SriovInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub sriov_vf: Option<VfInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ipoib: Option<IpoibInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]

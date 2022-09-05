@@ -12,13 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use crate::mac::{parse_as_mac, ETH_ALEN, INFINIBAND_ALEN};
-use crate::netlink::parse_as_u32;
-use crate::netlink::parse_as_u64;
-use crate::IfaceType;
-use crate::NisporError;
+use std::collections::HashMap;
+
 use netlink_packet_route::rtnl::nlas::NlasIterator;
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    mac::{parse_as_mac, ETH_ALEN, INFINIBAND_ALEN},
+    netlink::parse_as_u32,
+    netlink::parse_as_u64,
+    Iface, IfaceType, NisporError,
+};
 
 const IFLA_VF_MAC: u16 = 1;
 const IFLA_VF_VLAN: u16 = 2;
@@ -101,6 +105,8 @@ pub struct SriovInfo {
 pub struct VfInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub iface_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pf_name: Option<String>,
     pub id: u32,
     pub mac: String,
     pub broadcast: String,
@@ -147,6 +153,7 @@ pub(crate) fn get_sriov_info(
                     vf_info.id = parse_as_u32(nla.value())?;
                     vf_info.iface_name =
                         get_vf_iface_name(pf_iface_name, &vf_info.id);
+                    vf_info.pf_name = Some(pf_iface_name.to_string());
                     vf_info.mac = parse_as_mac(
                         mac_len,
                         nla.value().get(4..).ok_or_else(|| {
@@ -320,4 +327,26 @@ fn read_folder(folder_path: &str) -> Vec<String> {
         }
     }
     folder_contents
+}
+
+// Fill the VfInfo base PF state
+pub(crate) fn sriov_vf_iface_tidy_up(
+    iface_states: &mut HashMap<String, Iface>,
+) {
+    let mut vf_info_dict: HashMap<String, VfInfo> = HashMap::new();
+
+    for iface in iface_states.values() {
+        if let Some(sriov_conf) = iface.sriov.as_ref() {
+            for vf_info in sriov_conf.vfs.as_slice() {
+                if let Some(vf_name) = vf_info.iface_name.as_ref() {
+                    vf_info_dict.insert(vf_name.to_string(), vf_info.clone());
+                }
+            }
+        }
+    }
+    for (vf_name, vf_info) in vf_info_dict.drain() {
+        if let Some(vf_iface) = iface_states.get_mut(vf_name.as_str()) {
+            vf_iface.sriov_vf = Some(vf_info);
+        }
+    }
 }
