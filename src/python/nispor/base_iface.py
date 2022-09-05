@@ -15,6 +15,7 @@
 from .ip import NisporIPv4
 from .ip import NisporIPv6
 from .sr_iov import NisporSriov
+from .sr_iov import NisporSriovVf
 from .ethtool import NisporEthtool
 
 
@@ -28,6 +29,8 @@ class NisporBaseIface:
             self._sr_iov = NisporSriov(self._info["sriov"])
         if "ethtool" in self._info:
             self._ethtool = NisporEthtool(self._info["ethtool"])
+        if "sriov_vf" in self._info:
+            self._sr_iov_vf = NisporSriovVf(self._info["sriov_vf"])
 
     def __str__(self):
         return f"{self._info}"
@@ -93,6 +96,10 @@ class NisporBaseIface:
     @property
     def sr_iov(self):
         return self._sr_iov
+
+    @property
+    def sr_iov_vf(self):
+        return self._sr_iov_vf
 
     @property
     def ethtool(self):

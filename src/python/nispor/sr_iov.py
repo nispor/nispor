@@ -31,6 +31,10 @@ class NisporSriovVf:
         return self._info.get("iface_name")
 
     @property
+    def pf_name(self):
+        return self._info.get("pf_name")
+
+    @property
     def vf_id(self):
         return self._info["id"]
 
