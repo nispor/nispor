@@ -14,6 +14,7 @@
 
 from .base_iface import NisporBaseIface
 
+
 class NisporIpoib(NisporBaseIface):
     def __init__(self, info):
         super().__init__(info)
