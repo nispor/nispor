@@ -60,6 +60,7 @@ class NisporEthtool:
     def link_mode(self):
         return self._link_mode
 
+
 class NisporEthtoolPause:
     def __init__(self, info):
         self._info = info

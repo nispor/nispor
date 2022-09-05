@@ -16,8 +16,7 @@
 class NisporMptcpState:
     def __init__(self, info):
         self._addrs = [
-            NisporMptcpAddress(addr_info)
-            for addr_info in info.get("addresses", [])
+            NisporMptcpAddress(addr_info) for addr_info in info.get("addresses", [])
         ]
 
     @property

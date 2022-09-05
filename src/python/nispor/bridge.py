@@ -33,17 +33,13 @@ class NisporBridge(NisporBaseIface):
     def options(self):
         if self._br_info:
             return {
-                key: value
-                for key, value in self._br_info.items()
-                if key != "ports"
+                key: value for key, value in self._br_info.items() if key != "ports"
             }
         return None
 
 
 class NisporBridgePortVlan:
-    def __init__(
-        self, vid=None, vid_range=None, is_pvid=None, is_egress_untagged=None
-    ):
+    def __init__(self, vid=None, vid_range=None, is_pvid=None, is_egress_untagged=None):
         self.vid = vid
         self.vid_range = vid_range
         self.is_pvid = is_pvid
