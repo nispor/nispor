@@ -14,6 +14,7 @@
 
 use std::collections::HashMap;
 use std::net::IpAddr;
+use std::os::unix::io::AsRawFd;
 
 use futures::stream::TryStreamExt;
 use netlink_packet_route::rtnl::{
@@ -30,13 +31,16 @@ use rtnetlink::{new_connection, IpVersion};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    ifaces::Iface,
     ip::{parse_ip_addr_str, parse_ip_net_addr_str},
     netlink::{
         parse_as_i32, parse_as_ipv4, parse_as_ipv6, parse_as_u16, parse_as_u32,
         AF_INET, AF_INET6,
     },
-    NisporError,
+    route_filter::{
+        apply_kernel_route_filter, enable_kernel_route_filter,
+        should_drop_by_filter,
+    },
+    NetStateRouteFilter, NisporError,
 };
 
 const USER_HZ: u32 = 100;
@@ -161,7 +165,7 @@ impl Default for AddressFamily {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum RouteProtocol {
     UnSpec,
@@ -280,6 +284,35 @@ impl From<u8> for RouteProtocol {
     }
 }
 
+impl From<&str> for RouteProtocol {
+    fn from(v: &str) -> Self {
+        match v {
+            "icmp_redirect" => RouteProtocol::IcmpRedirect,
+            "kernel" => RouteProtocol::Kernel,
+            "boot" => RouteProtocol::Boot,
+            "static" => RouteProtocol::Static,
+            "gated" => RouteProtocol::Gated,
+            "ra" => RouteProtocol::Ra,
+            "merit_mrt" => RouteProtocol::Mrt,
+            "zebra" => RouteProtocol::Zebra,
+            "bird" => RouteProtocol::Bird,
+            "decnet_routing_daemon" => RouteProtocol::DnRouted,
+            "xorp" => RouteProtocol::Xorp,
+            "netsukuku" => RouteProtocol::Ntk,
+            "Dhcp" => RouteProtocol::Dhcp,
+            "multicast_daemon" => RouteProtocol::Mrouted,
+            "keepalived_daemon" => RouteProtocol::KeepAlived,
+            "babel" => RouteProtocol::Babel,
+            "bgp" => RouteProtocol::Bgp,
+            "isis" => RouteProtocol::Isis,
+            "ospf" => RouteProtocol::Ospf,
+            "rip" => RouteProtocol::Rip,
+            "eigrp" => RouteProtocol::Eigrp,
+            _ => RouteProtocol::Unknown,
+        }
+    }
+}
+
 impl Default for RouteProtocol {
     fn default() -> Self {
         Self::Unknown
@@ -295,7 +328,7 @@ impl Default for RouteProtocol {
  * Intermediate values are also possible f.e. interior routes
  * could be assigned a value between UNIVERSE and LINK.
  */
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum RouteScope {
     Universe,
@@ -306,6 +339,20 @@ pub enum RouteScope {
     NoWhere,
     Unknown,
     Other(u8),
+}
+
+impl From<&RouteScope> for u8 {
+    fn from(v: &RouteScope) -> Self {
+        match v {
+            RouteScope::Universe => RT_SCOPE_UNIVERSE,
+            RouteScope::Site => RT_SCOPE_SITE,
+            RouteScope::Link => RT_SCOPE_LINK,
+            RouteScope::Host => RT_SCOPE_HOST,
+            RouteScope::NoWhere => RT_SCOPE_NOWHERE,
+            RouteScope::Unknown => u8::MAX,
+            RouteScope::Other(s) => *s,
+        }
+    }
 }
 
 impl From<u8> for RouteScope {
@@ -433,24 +480,44 @@ const RTNH_F_LINKDOWN: u8 = 16; /* carrier-down on nexthop */
 const RTNH_F_UNRESOLVED: u8 = 32; /* The entry is unresolved (ipmr) */
 
 pub(crate) async fn get_routes(
-    ifaces: &HashMap<String, Iface>,
+    iface_name2index: &HashMap<String, u32>,
+    filter: Option<&NetStateRouteFilter>,
 ) -> Result<Vec<Route>, NisporError> {
     let mut routes = Vec::new();
+    let (mut connection, handle, _) = new_connection()?;
+
     let mut ifindex_to_name = HashMap::new();
-    let (connection, handle, _) = new_connection()?;
+    for (name, index) in iface_name2index.iter() {
+        ifindex_to_name.insert(format!("{}", index), name.to_string());
+    }
+
+    if filter.is_some() {
+        enable_kernel_route_filter(connection.socket_mut().as_raw_fd())?;
+    }
+
     tokio::spawn(connection);
 
-    for iface in ifaces.values() {
-        ifindex_to_name.insert(format!("{}", iface.index), iface.name.clone());
-    }
+    for ip_family in [IpVersion::V6, IpVersion::V4] {
+        let mut rt_handle = handle.route().get(ip_family);
+        if let Some(filter) = filter {
+            apply_kernel_route_filter(
+                &mut rt_handle,
+                filter,
+                iface_name2index,
+            )?;
+        }
 
-    let mut links = handle.route().get(IpVersion::V6).execute();
-    while let Some(rt_msg) = links.try_next().await? {
-        routes.push(get_route(rt_msg, &ifindex_to_name)?);
-    }
-    let mut links = handle.route().get(IpVersion::V4).execute();
-    while let Some(rt_msg) = links.try_next().await? {
-        routes.push(get_route(rt_msg, &ifindex_to_name)?);
+        let mut links = rt_handle.execute();
+        while let Some(rt_msg) = links.try_next().await? {
+            let route = get_route(rt_msg, &ifindex_to_name)?;
+            // User space filter is required for RT_SCOPE_UNIVERSE and etc
+            if let Some(filter) = filter {
+                if should_drop_by_filter(&route, filter) {
+                    continue;
+                }
+            }
+            routes.push(route);
+        }
     }
     Ok(routes)
 }

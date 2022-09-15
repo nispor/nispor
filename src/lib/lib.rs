@@ -21,6 +21,7 @@ mod net_conf;
 mod net_state;
 mod netlink;
 mod route;
+mod route_filter;
 mod route_rule;
 
 pub use crate::error::NisporError;
@@ -44,9 +45,10 @@ pub use crate::ip::{
 };
 pub use crate::mptcp::{Mptcp, MptcpAddress, MptcpAddressFlag};
 pub use crate::net_conf::NetConf;
-pub use crate::net_state::NetState;
+pub use crate::net_state::{retrieve_routes_with_filter, NetState};
 pub use crate::route::{
     AddressFamily, MultipathRoute, MultipathRouteFlags, Route, RouteConf,
     RouteProtocol, RouteScope, RouteType,
 };
+pub use crate::route_filter::NetStateRouteFilter;
 pub use crate::route_rule::{RouteRule, RuleAction};

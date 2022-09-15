@@ -1,0 +1,91 @@
+// SPDX-License-Identifier: Apache-2.0
+
+use std::collections::HashMap;
+use std::os::unix::io::RawFd;
+
+use netlink_packet_route::rtnl::route::nlas::Nla;
+use rtnetlink::RouteGetRequest;
+
+use crate::{NisporError, Route, RouteProtocol, RouteScope};
+
+#[derive(Debug, PartialEq, Eq, Clone, Default)]
+#[non_exhaustive]
+pub struct NetStateRouteFilter {
+    /// Returned routes will only contain routes from specified protocol.
+    pub protocol: Option<RouteProtocol>,
+    /// Returned routes will only contain routes from specified scope.
+    pub scope: Option<RouteScope>,
+    /// Returned routes will only contain routes next hop to specified
+    /// interface.
+    pub oif: Option<String>,
+    /// Returned routes will only contain routes in specified route table.
+    pub table: Option<u8>,
+}
+
+const NETLINK_GET_STRICT_CHK: i32 = 12;
+
+pub(crate) fn enable_kernel_route_filter(fd: RawFd) -> Result<(), NisporError> {
+    if unsafe {
+        libc::setsockopt(
+            fd,
+            libc::SOL_NETLINK,
+            NETLINK_GET_STRICT_CHK,
+            1u32.to_ne_bytes().as_ptr() as *const _,
+            4,
+        )
+    } != 0
+    {
+        let e = NisporError::bug(format!(
+            "Failed to set socket option NETLINK_GET_STRICT_CHK: error {}",
+            std::io::Error::last_os_error()
+        ));
+        log::error!("{}", e);
+        return Err(e);
+    }
+    Ok(())
+}
+
+pub(crate) fn apply_kernel_route_filter(
+    handle: &mut RouteGetRequest,
+    filter: &NetStateRouteFilter,
+    iface_name2index: &HashMap<String, u32>,
+) -> Result<(), NisporError> {
+    let mut rt_nlmsg = handle.message_mut();
+
+    if let Some(protocol) = filter.protocol.as_ref() {
+        rt_nlmsg.header.protocol = protocol.into();
+    }
+    if let Some(scope) = filter.scope.as_ref() {
+        rt_nlmsg.header.scope = scope.into();
+    }
+    if let Some(oif) = filter.oif.as_ref() {
+        match iface_name2index.get(oif) {
+            Some(index) => rt_nlmsg.nlas.push(Nla::Oif(*index)),
+            None => {
+                let e = NisporError::invalid_argument(format!(
+                    "Interface {} not found",
+                    oif
+                ));
+                log::error!("{}", e);
+                return Err(e);
+            }
+        }
+    }
+    if let Some(table) = filter.table {
+        rt_nlmsg.nlas.push(Nla::Table(table.into()));
+    }
+    Ok(())
+}
+
+pub(crate) fn should_drop_by_filter(
+    route: &Route,
+    filter: &NetStateRouteFilter,
+) -> bool {
+    // The RT_SCOPE_UNIVERSE is 0 which means wildcard in kernel, we need to
+    // do filter at userspace.
+    if Some(&RouteScope::Universe) == filter.scope.as_ref() {
+        route.scope != RouteScope::Universe
+    } else {
+        false
+    }
+}

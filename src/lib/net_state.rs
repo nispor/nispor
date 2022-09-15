@@ -19,10 +19,11 @@ use tokio::runtime;
 
 use crate::{
     error::NisporError,
-    ifaces::{get_ifaces, Iface},
+    ifaces::{get_iface_name2index, get_ifaces, Iface},
     mptcp::{get_mptcp, merge_mptcp_info, Mptcp},
     route::{get_routes, Route},
     route_rule::{get_route_rules, RouteRule},
+    NetStateRouteFilter,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -39,7 +40,12 @@ impl NetState {
     pub fn retrieve() -> Result<NetState, NisporError> {
         let rt = runtime::Builder::new_current_thread().enable_io().build()?;
         let mut ifaces = rt.block_on(get_ifaces())?;
-        let routes = rt.block_on(get_routes(&ifaces))?;
+        let mut ifname_to_index = HashMap::new();
+        for iface in ifaces.values() {
+            ifname_to_index.insert(iface.name.clone(), iface.index);
+        }
+        let routes = rt.block_on(get_routes(&ifname_to_index, None))?;
+
         let rules = rt.block_on(get_route_rules())?;
         let mut mptcp = rt.block_on(get_mptcp())?;
         merge_mptcp_info(&mut ifaces, &mut mptcp);
@@ -52,4 +58,12 @@ impl NetState {
     }
 
     // TODO: autoconvert NetState to NetConf and provide apply() here
+}
+
+pub fn retrieve_routes_with_filter(
+    filter: &NetStateRouteFilter,
+) -> Result<Vec<Route>, NisporError> {
+    let rt = runtime::Builder::new_current_thread().enable_io().build()?;
+    let iface_name2index = rt.block_on(get_iface_name2index())?;
+    rt.block_on(get_routes(&iface_name2index, Some(filter)))
 }

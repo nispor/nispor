@@ -9,12 +9,13 @@ TEST_MAC4="00:23:45:67:89:1d"
 TEST_MAC5="00:23:45:67:89:1f"
 TEST_MAC_SIM0="00:23:45:67:89:20"
 TEST_MAC_SIM1="00:23:45:67:89:21"
+TEST_ROUTE_TABLE_ID=100
 
 sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 1>/dev/null
 
 if [ "CHK$1" == "CHK" ];then
     echo 'Need argument: bond, br, brv, vlan, dummy, vxlan, veth, vrf, sriov,'
-    echo 'rm, route, rule, sim, mptcp'
+    echo 'rm, route, rule, sim, mptcp, bgp'
     exit 1
 fi
 
@@ -38,6 +39,7 @@ function clean_up {
     sudo ip -6 rule del priority 999
     sudo modprobe -r netdevsim
     sudo ip mptcp endpoint flush
+    sudo ip route flush table $TEST_ROUTE_TABLE_ID
 }
 
 function create_nics {
@@ -204,6 +206,17 @@ elif [ "CHK$1" == "CHKmptcp" ];then
     sudo ip mptcp limits set subflow 1 add_addr_accepted 1
     sudo ip mptcp endpoint add 192.0.2.2 dev eth2 signal
     sudo ip mptcp endpoint add 2001:db8:f::1 dev eth2 backup
+elif [ "CHK$1" == "CHKbgp" ];then
+    create_nics
+    sudo ip link set eth1 up
+    sudo ip addr add 192.0.2.2/24 dev eth1
+    sudo ip -6 addr add 2001:db8:f::1/64 dev eth1
+    for x in $(seq 2 254); do
+        for y in $(seq 2 254); do
+            echo -n "route add 192.0.${x}.${y}/32 dev eth1 proto "
+            echo "186 table $TEST_ROUTE_TABLE_ID"
+        done
+    done | sudo ip -b -
 elif [ "CHK$1" == "CHKrm" ];then
     clean_up 2>/dev/null
 fi
