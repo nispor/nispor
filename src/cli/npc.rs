@@ -15,7 +15,7 @@
 use clap::{crate_authors, crate_version};
 use nispor::{
     Iface, IfaceConf, IfaceState, IfaceType, Mptcp, NetConf, NetState,
-    NisporError, Route, RouteRule,
+    NisporError, Route, RouteProtocol, RouteRule, RouteScope,
 };
 use serde::Serialize;
 use std::collections::HashMap;
@@ -26,10 +26,26 @@ use std::process;
 
 const INDENT: &str = "    ";
 const LIST_SPLITER: &str = ",";
+const RT_TABLE_MAIN: u8 = 254;
+const RT_TABLE_LOCAL: u8 = 255;
 
 #[derive(Serialize, Debug)]
 pub struct CliError {
-    pub msg: String,
+    pub error: String,
+}
+
+impl From<String> for CliError {
+    fn from(error: String) -> Self {
+        Self { error }
+    }
+}
+
+impl From<NisporError> for CliError {
+    fn from(e: NisporError) -> Self {
+        Self {
+            error: format!("{}", e),
+        }
+    }
 }
 
 #[derive(Serialize, Default)]
@@ -213,11 +229,11 @@ impl CliIfaceBrief {
 
 impl fmt::Display for CliError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.msg)
+        write!(f, "{}", self.error)
     }
 }
 
-enum CliResult {
+enum CliReply {
     Pass,
     Brief(Vec<CliIfaceBrief>),
     Full(NetState),
@@ -225,8 +241,6 @@ enum CliResult {
     Routes(Vec<Route>),
     RouteRules(Vec<RouteRule>),
     Mptcp(Mptcp),
-    CliError(CliError),
-    NisporError(NisporError),
 }
 
 #[derive(PartialEq, Eq)]
@@ -238,61 +252,75 @@ enum CliOutputType {
 macro_rules! npc_print {
     ($display_func:expr, $data: expr) => {
         match $data {
-            CliResult::Pass => {
+            CliReply::Pass => {
                 process::exit(0);
             }
-            CliResult::Brief(_) => unreachable!(),
-            CliResult::Full(netstate) => {
+            CliReply::Brief(_) => unreachable!(),
+            CliReply::Full(netstate) => {
                 writeln!(stdout(), "{}", $display_func(&netstate).unwrap())
                     .ok();
                 process::exit(0);
             }
-            CliResult::Ifaces(ifaces) => {
+            CliReply::Ifaces(ifaces) => {
                 writeln!(stdout(), "{}", $display_func(&ifaces).unwrap()).ok();
                 process::exit(0);
             }
-            CliResult::Routes(routes) => {
+            CliReply::Routes(routes) => {
                 writeln!(stdout(), "{}", $display_func(&routes).unwrap()).ok();
                 process::exit(0);
             }
-            CliResult::RouteRules(rules) => {
+            CliReply::RouteRules(rules) => {
                 writeln!(stdout(), "{}", $display_func(&rules).unwrap()).ok();
                 process::exit(0);
             }
-            CliResult::Mptcp(mptcp) => {
+            CliReply::Mptcp(mptcp) => {
                 writeln!(stdout(), "{}", $display_func(&mptcp).unwrap()).ok();
                 process::exit(0);
-            }
-            CliResult::NisporError(e) => {
-                writeln!(stderr(), "{}", $display_func(&e).unwrap()).ok();
-                process::exit(1);
-            }
-            CliResult::CliError(e) => {
-                writeln!(stderr(), "{}", $display_func(&e).unwrap()).ok();
-                process::exit(1);
             }
         }
     };
 }
 
-fn print_result(result: &CliResult, output_type: CliOutputType) {
-    if let CliResult::Brief(briefs) = result {
-        if output_type == CliOutputType::Json {
+fn print_result(
+    result: Result<CliReply, CliError>,
+    output_type: CliOutputType,
+) {
+    match result {
+        Ok(result) => {
+            if let CliReply::Brief(briefs) = result {
+                if output_type == CliOutputType::Json {
+                    writeln!(
+                        stdout(),
+                        "{}",
+                        serde_json::to_string_pretty(&briefs).unwrap()
+                    )
+                    .ok();
+                } else {
+                    writeln!(stdout(), "{}", CliIfaceBrief::list_show(&briefs))
+                        .ok();
+                }
+            } else {
+                match output_type {
+                    CliOutputType::Json => {
+                        npc_print!(serde_json::to_string_pretty, result)
+                    }
+                    CliOutputType::Yaml => {
+                        npc_print!(serde_yaml::to_string, result)
+                    }
+                }
+            }
+        }
+        Err(e) => {
             writeln!(
-                stdout(),
+                stderr(),
                 "{}",
-                serde_json::to_string_pretty(&briefs).unwrap()
+                match output_type {
+                    CliOutputType::Json =>
+                        serde_json::to_string_pretty(&e).unwrap(),
+                    CliOutputType::Yaml => serde_yaml::to_string(&e).unwrap(),
+                }
             )
             .ok();
-        } else {
-            writeln!(stdout(), "{}", CliIfaceBrief::list_show(briefs)).ok();
-        }
-    } else {
-        match output_type {
-            CliOutputType::Json => {
-                npc_print!(serde_json::to_string_pretty, result)
-            }
-            CliOutputType::Yaml => npc_print!(serde_yaml::to_string, result),
         }
     }
 }
@@ -321,21 +349,6 @@ fn _is_route_to_specified_dev(route: &Route, iface_name: &str) -> bool {
     false
 }
 
-fn get_routes(state: &NetState, matches: &clap::ArgMatches) -> CliResult {
-    let mut routes = state.routes.clone();
-
-    if let Some(iface_name) = matches.value_of("dev") {
-        routes.retain(|route| _is_route_to_specified_dev(route, iface_name));
-    }
-    if let Some(scope) = matches.value_of("scope") {
-        if scope != "a" && scope != "all" {
-            routes.retain(|route| route.scope == scope.into());
-        }
-    }
-
-    CliResult::Routes(routes)
-}
-
 fn main() {
     let matches = clap::Command::new("npc")
         .version(crate_version!())
@@ -359,6 +372,7 @@ fn main() {
                 .index(1)
                 .help("Show specific interface only"),
         )
+        .subcommand(clap::Command::new("full").about("Full network state"))
         .subcommand(
             clap::Command::new("iface")
                 .about("Show interface")
@@ -376,10 +390,26 @@ fn main() {
         .subcommand(
             clap::Command::new("route")
                 .about("Show route")
-                .arg(clap::Arg::new("dev").short('d').takes_value(true).help(
-                    "Show only route entries output \
-                    to the specified interface",
-                ))
+                .arg(
+                    clap::Arg::new("dev")
+                        .short('d')
+                        .long("dev")
+                        .takes_value(true)
+                        .help(
+                            "Show only route entries output to \
+                            the specified interface",
+                        ),
+                )
+                .arg(
+                    clap::Arg::new("table")
+                        .short('t')
+                        .long("table")
+                        .takes_value(true)
+                        .help(
+                            "Show only route entries output in \
+                            the specified route table",
+                        ),
+                )
                 .arg(
                     clap::Arg::new("scope")
                         .short('s')
@@ -390,6 +420,36 @@ fn main() {
                             "a", "all", "u", "universe", "g", "global", "s",
                             "site", "l", "link", "h", "host", "n", "nowhere",
                             "no_where",
+                        ]),
+                )
+                .arg(
+                    clap::Arg::new("protocol")
+                        .short('p')
+                        .long("protocol")
+                        .takes_value(true)
+                        .help("Show only route with specified protocol")
+                        .possible_values([
+                            "icmp_redirect",
+                            "kernel",
+                            "boot",
+                            "static",
+                            "gated",
+                            "ra",
+                            "merit_mrt",
+                            "zebra",
+                            "bird",
+                            "decnet_routing_daemon",
+                            "xorp",
+                            "netsukuku",
+                            "Dhcp",
+                            "multicast_daemon",
+                            "keepalived_daemon",
+                            "babel",
+                            "bgp",
+                            "isis",
+                            "ospf",
+                            "rip",
+                            "eigrp",
                         ]),
                 ),
         )
@@ -423,125 +483,61 @@ fn main() {
 
     if let Some(m) = matches.subcommand_matches("set") {
         if let Some(file_path) = m.value_of("file_path") {
-            print_result(&apply_conf(file_path), output_format);
+            print_result(apply_conf(file_path), output_format);
             process::exit(0);
         } else {
             log::warn!("file path undefined");
             process::exit(1);
         }
+    } else if let Some(m) = matches.subcommand_matches("full") {
+        output_format = parse_arg_output_format(m);
+        print_result(get_full(), output_format);
+    } else if let Some(m) = matches.subcommand_matches("iface") {
+        output_format = parse_arg_output_format(m);
+        print_result(get_ifaces(m), output_format);
+    } else if let Some(m) = matches.subcommand_matches("route") {
+        output_format = parse_arg_output_format(m);
+        print_result(get_routes(m), output_format);
+    } else if let Some(m) = matches.subcommand_matches("rule") {
+        output_format = parse_arg_output_format(m);
+        print_result(get_rules(), output_format);
+    } else if let Some(m) = matches.subcommand_matches("mptcp") {
+        output_format = parse_arg_output_format(m);
+        print_result(get_mptcp(), output_format);
     } else {
-        let result = match NetState::retrieve() {
-            Ok(mut state) => {
-                if let Some(m) = matches.subcommand_matches("iface") {
-                    output_format = parse_arg_output_format(m);
-                    if let Some(iface_name) = m.value_of("iface_name") {
-                        if let Some(iface) = state.ifaces.remove(iface_name) {
-                            if m.is_present("delete") {
-                                delete_iface(&iface.name)
-                            } else {
-                                CliResult::Ifaces(vec![iface])
-                            }
-                        } else {
-                            CliResult::CliError(CliError {
-                                msg: format!(
-                                    "Interface '{}' not found",
-                                    iface_name
-                                ),
-                            })
-                        }
-                    } else if m.is_present("delete") {
-                        CliResult::CliError(CliError {
-                            msg: "Need to specific a interface to delete"
-                                .to_string(),
-                        })
-                    } else {
-                        CliResult::Full(state)
-                    }
-                } else if let Some(m) = matches.subcommand_matches("route") {
-                    output_format = parse_arg_output_format(m);
-                    get_routes(&state, m)
-                } else if let Some(m) = matches.subcommand_matches("rule") {
-                    output_format = parse_arg_output_format(m);
-                    CliResult::RouteRules(state.rules)
-                } else if let Some(m) = matches.subcommand_matches("mptcp") {
-                    output_format = parse_arg_output_format(m);
-                    CliResult::Mptcp(state.mptcp.unwrap_or_default())
-                } else if let Some(iface_name) = matches.value_of("iface_name")
-                {
-                    if state.ifaces.get(iface_name).is_some() {
-                        let mut iface_briefs = Vec::new();
-                        for iface_brief in CliIfaceBrief::from_net_state(&state)
-                        {
-                            if iface_brief.name == iface_name {
-                                iface_briefs.push(iface_brief);
-                                break;
-                            }
-                        }
-                        if iface_briefs.is_empty() {
-                            CliResult::CliError(CliError {
-                            msg: format!(
-                                "BUG: Interface '{}' not found in CliIfaceBrief",
-                                iface_name
-                            ),
-                        })
-                        } else {
-                            CliResult::Brief(iface_briefs)
-                        }
-                    } else {
-                        CliResult::CliError(CliError {
-                            msg: format!(
-                                "Interface '{}' not found",
-                                iface_name
-                            ),
-                        })
-                    }
-                } else {
-                    /* Show everything if no cmdline arg has been supplied */
-                    CliResult::Brief(CliIfaceBrief::from_net_state(&state))
-                }
-            }
-            Err(e) => CliResult::NisporError(e),
-        };
-        print_result(&result, output_format);
+        print_result(get_brief(&matches), output_format);
     }
 }
 
-fn apply_conf(file_path: &str) -> CliResult {
+fn apply_conf(file_path: &str) -> Result<CliReply, CliError> {
     let fd = match std::fs::File::open(file_path) {
         Ok(fd) => fd,
         Err(e) => {
-            return CliResult::CliError(CliError {
-                msg: format!("Filed to open file {}: {}", file_path, e),
-            })
+            return Err(
+                format!("Filed to open file {}: {}", file_path, e).into()
+            );
         }
     };
     let net_conf: NetConf = match serde_yaml::from_reader(fd) {
         Ok(c) => c,
         Err(e) => {
-            return CliResult::CliError(CliError {
-                msg: format!("Invalid YAML file {}: {}", file_path, e,),
-            })
+            return Err(
+                format!("Invalid YAML file {}: {}", file_path, e,).into()
+            );
         }
     };
-    if let Err(e) = net_conf.apply() {
-        return CliResult::NisporError(e);
-    }
+    net_conf.apply()?;
     if let Some(desire_ifaces) = net_conf.ifaces {
-        match NetState::retrieve() {
-            Ok(cur_state) => {
-                let mut desired_iface_names = Vec::new();
-                for iface_conf in &desire_ifaces {
-                    desired_iface_names.push(iface_conf.name.clone());
-                }
-                CliResult::Ifaces(filter_iface_state(
-                    cur_state,
-                    desired_iface_names,
-                ))
-            }
-            Err(e) => CliResult::NisporError(e),
+        let mut desired_iface_names = Vec::new();
+        for iface_conf in &desire_ifaces {
+            desired_iface_names.push(iface_conf.name.clone());
         }
+        Ok(CliReply::Ifaces(filter_iface_state(
+            NetState::retrieve()?,
+            desired_iface_names,
+        )))
     } else {
-        CliResult::Pass
+        Ok(CliReply::Pass)
     }
 }
 
@@ -558,17 +554,14 @@ fn filter_iface_state(
     new_ifaces
 }
 
-fn delete_iface(iface_name: &str) -> CliResult {
+fn delete_iface(iface_name: &str) -> Result<CliReply, CliError> {
     let mut conf = NetConf::default();
     let mut iface_conf = IfaceConf::default();
     iface_conf.name = iface_name.to_string();
     iface_conf.state = IfaceState::Absent;
     conf.ifaces = Some(vec![iface_conf]);
-    if let Err(e) = conf.apply() {
-        CliResult::NisporError(e)
-    } else {
-        CliResult::Pass
-    }
+    conf.apply()?;
+    Ok(CliReply::Pass)
 }
 
 fn get_link_info(iface: &Iface) -> String {
@@ -606,4 +599,101 @@ fn get_link_info(iface: &Iface) -> String {
     } else {
         "".into()
     }
+}
+
+fn get_ifaces(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
+    let state = NetState::retrieve()?;
+    if let Some(iface_name) = matches.value_of("iface_name") {
+        if let Some(iface) = state.ifaces.get(iface_name) {
+            if matches.is_present("delete") {
+                delete_iface(&iface.name)
+            } else {
+                Ok(CliReply::Ifaces(vec![iface.clone()]))
+            }
+        } else {
+            Err(format!("Interface '{}' not found", iface_name).into())
+        }
+    } else if matches.is_present("delete") {
+        Err("Need to specific a interface to delete".to_string().into())
+    } else {
+        Ok(CliReply::Ifaces(state.ifaces.values().cloned().collect()))
+    }
+}
+
+fn get_routes(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
+    let mut route_filter = nispor::NetStateRouteFilter::default();
+
+    if let Some(scope) = matches.value_of("scope") {
+        if scope != "a" && scope != "all" {
+            let rt_scope = RouteScope::from(scope);
+            if rt_scope == RouteScope::Unknown {
+                return Err(format!("Invalid scope {}", scope).into());
+            }
+            route_filter.scope = Some(rt_scope);
+        }
+    }
+
+    if let Some(protocol) = matches.value_of("protocol") {
+        let rt_protocol = RouteProtocol::from(protocol);
+        if rt_protocol == RouteProtocol::Unknown {
+            return Err(format!("Invalid protocol {}", protocol).into());
+        }
+        route_filter.protocol = Some(rt_protocol);
+    }
+
+    if let Some(table) = matches.value_of("table") {
+        route_filter.table = Some(match table {
+            "main" => RT_TABLE_MAIN,
+            "local" => RT_TABLE_LOCAL,
+            _ => table.parse::<u8>().map_err(|e| CliError {
+                error: format!("{}", e),
+            })?,
+        });
+    }
+
+    if let Some(iface_name) = matches.value_of("dev") {
+        route_filter.oif = Some(iface_name.to_string());
+    }
+
+    Ok(CliReply::Routes(nispor::retrieve_routes_with_filter(
+        &route_filter,
+    )?))
+}
+
+fn get_rules() -> Result<CliReply, CliError> {
+    let state = NetState::retrieve()?;
+    Ok(CliReply::RouteRules(state.rules))
+}
+
+fn get_mptcp() -> Result<CliReply, CliError> {
+    let state = NetState::retrieve()?;
+    Ok(CliReply::Mptcp(state.mptcp.unwrap_or_default()))
+}
+
+fn get_brief(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
+    let state = NetState::retrieve()?;
+
+    if let Some(iface_name) = matches.value_of("iface_name") {
+        if state.ifaces.get(iface_name).is_some() {
+            for iface_brief in CliIfaceBrief::from_net_state(&state) {
+                if iface_brief.name == iface_name {
+                    return Ok(CliReply::Brief(vec![iface_brief]));
+                }
+            }
+            Err(format!(
+                "BUG: Interface '{}' not found in CliIfaceBrief",
+                iface_name
+            )
+            .into())
+        } else {
+            Err(format!("Interface '{}' not found", iface_name).into())
+        }
+    } else {
+        /* Show everything if no cmdline arg has been supplied */
+        Ok(CliReply::Brief(CliIfaceBrief::from_net_state(&state)))
+    }
+}
+
+fn get_full() -> Result<CliReply, CliError> {
+    Ok(CliReply::Full(NetState::retrieve()?))
 }
