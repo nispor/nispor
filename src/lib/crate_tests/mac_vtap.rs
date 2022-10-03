@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use nispor::NetState;
+use crate::NetState;
 use pretty_assertions::assert_eq;
 
 use std::panic;
-
-mod utils;
 
 const IFACE_NAME: &str = "macvtap0";
 
@@ -22,7 +20,7 @@ fn test_get_macvtap_iface_yaml() {
     with_macvtap_iface(|| {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
-        assert_eq!(iface.iface_type, nispor::IfaceType::MacVtap);
+        assert_eq!(iface.iface_type, crate::IfaceType::MacVtap);
         assert_eq!(
             serde_yaml::to_string(&iface.mac_vtap).unwrap().trim(),
             EXPECTED_MAC_VTAP_INFO
@@ -34,12 +32,12 @@ fn with_macvtap_iface<T>(test: T)
 where
     T: FnOnce() + panic::UnwindSafe,
 {
-    utils::set_network_environment("macvtap");
+    super::utils::set_network_environment("macvtap");
 
     let result = panic::catch_unwind(|| {
         test();
     });
 
-    utils::clear_network_environment();
+    super::utils::clear_network_environment();
     assert!(result.is_ok())
 }

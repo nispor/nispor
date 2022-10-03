@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use nispor::NetState;
+use crate::NetState;
 use pretty_assertions::assert_eq;
 
 use std::panic;
-
-mod utils;
 
 const IFACE_NAME: &str = "br0";
 const PORT1_NAME: &str = "eth1";
@@ -135,12 +133,12 @@ fn with_br_with_vlan_filter_iface<T>(test: T)
 where
     T: FnOnce() + panic::UnwindSafe,
 {
-    utils::set_network_environment("brv");
+    super::utils::set_network_environment("brv");
 
     let result = panic::catch_unwind(|| {
         test();
     });
 
-    utils::clear_network_environment();
+    super::utils::clear_network_environment();
     assert!(result.is_ok())
 }

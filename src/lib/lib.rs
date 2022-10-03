@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(test)]
+mod crate_tests;
 mod error;
 mod filter;
 mod iface_filter;

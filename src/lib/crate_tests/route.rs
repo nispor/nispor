@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use nispor::{NetConf, NetState, RouteProtocol};
+use crate::{NetConf, NetState, RouteProtocol};
 use pretty_assertions::assert_eq;
-
-mod utils;
 
 const TEST_ROUTE_DST_V4: &str = "198.51.100.0/24";
 const TEST_ROUTE_DST_V6: &str = "2001:db8:e::/64";
@@ -183,7 +181,7 @@ fn test_add_remove_route_yaml() {
     with_veth_static_ip(|| {
         let net_conf: NetConf = serde_yaml::from_str(ADD_ROUTE_YML).unwrap();
         net_conf.apply().unwrap();
-        // Apply twice to test whether nispor ignore duplicate error.
+        // Apply twice to test whether crate ignore duplicate error.
         net_conf.apply().unwrap();
         let state = NetState::retrieve().unwrap();
         let mut expected_routes = Vec::new();
@@ -202,7 +200,7 @@ fn test_add_remove_route_yaml() {
 
         let net_conf: NetConf = serde_yaml::from_str(REMOVE_ROUTE_YML).unwrap();
         net_conf.apply().unwrap();
-        // Apply twice to test whether nispor ignore the not found error.
+        // Apply twice to test whether crate ignore the not found error.
         net_conf.apply().unwrap();
         let state = NetState::retrieve().unwrap();
         let mut expected_routes = Vec::new();
@@ -275,12 +273,12 @@ fn with_route_test_iface<T>(test: T)
 where
     T: FnOnce() + std::panic::UnwindSafe,
 {
-    utils::set_network_environment("route");
+    super::utils::set_network_environment("route");
 
     let result = std::panic::catch_unwind(|| {
         test();
     });
 
-    utils::clear_network_environment();
+    super::utils::clear_network_environment();
     assert!(result.is_ok())
 }

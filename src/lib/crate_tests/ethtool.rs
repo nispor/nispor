@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use nispor::NetState;
+use crate::NetState;
 use pretty_assertions::assert_eq;
 
 use std::panic;
-
-mod utils;
 
 const IFACE_NAME0: &str = "sim0";
 const IFACE_NAME1: &str = "sim1";
@@ -85,8 +83,8 @@ fn test_get_ethtool_pause_yaml() {
         let state = NetState::retrieve().unwrap();
         let iface0 = &state.ifaces[IFACE_NAME0];
         let iface1 = &state.ifaces[IFACE_NAME1];
-        assert_eq!(&iface0.iface_type, &nispor::IfaceType::Ethernet);
-        assert_eq!(&iface1.iface_type, &nispor::IfaceType::Ethernet);
+        assert_eq!(&iface0.iface_type, &crate::IfaceType::Ethernet);
+        assert_eq!(&iface1.iface_type, &crate::IfaceType::Ethernet);
         assert_eq!(
             serde_yaml::to_string(&iface0.ethtool.as_ref().unwrap().pause)
                 .unwrap()
@@ -135,7 +133,7 @@ fn test_get_ethtool_feature_yaml_of_loopback() {
         .features
         .as_mut()
         .map(|features| features.changeable.remove("tx-udp-segmentation"));
-    assert_eq!(&iface.iface_type, &nispor::IfaceType::Loopback);
+    assert_eq!(&iface.iface_type, &crate::IfaceType::Loopback);
     assert_eq!(
         serde_yaml::to_string(&iface.ethtool.as_ref().unwrap().features)
             .unwrap()
@@ -150,13 +148,13 @@ fn with_netdevsim_iface<T>(test: T)
 where
     T: FnOnce() + panic::UnwindSafe,
 {
-    utils::set_network_environment("sim");
+    super::utils::set_network_environment("sim");
 
     let result = panic::catch_unwind(|| {
         test();
     });
 
-    utils::clear_network_environment();
+    super::utils::clear_network_environment();
     assert!(result.is_ok())
 }
 
@@ -201,12 +199,12 @@ fn with_tun_iface<T>(test: T)
 where
     T: FnOnce() + panic::UnwindSafe,
 {
-    utils::set_network_environment("tun");
+    super::utils::set_network_environment("tun");
 
     let result = panic::catch_unwind(|| {
         test();
     });
 
-    utils::clear_network_environment();
+    super::utils::clear_network_environment();
     assert!(result.is_ok())
 }
