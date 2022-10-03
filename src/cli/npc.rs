@@ -316,7 +316,7 @@ fn print_result(
 }
 
 fn parse_arg_output_format(matches: &clap::ArgMatches) -> CliOutputType {
-    match matches.is_present("json") {
+    match matches.contains_id("json") {
         true => CliOutputType::Json,
         false => CliOutputType::Yaml,
     }
@@ -347,13 +347,13 @@ fn main() {
         .arg(
             clap::Arg::new("verbose")
                 .short('v')
-                .multiple_occurrences(true)
+                .action(clap::ArgAction::Count)
                 .help("Set verbose level"),
         )
         .arg(
             clap::Arg::new("json")
                 .short('j')
-                .takes_value(false)
+                .action(clap::ArgAction::Append)
                 .global(true)
                 .help("Show in json format"),
         )
@@ -384,7 +384,7 @@ fn main() {
                     clap::Arg::new("dev")
                         .short('d')
                         .long("dev")
-                        .takes_value(true)
+                        .action(clap::ArgAction::Append)
                         .help(
                             "Show only route entries output to \
                             the specified interface",
@@ -394,7 +394,7 @@ fn main() {
                     clap::Arg::new("table")
                         .short('t')
                         .long("table")
-                        .takes_value(true)
+                        .action(clap::ArgAction::Append)
                         .help(
                             "Show only route entries output in \
                             the specified route table",
@@ -404,9 +404,9 @@ fn main() {
                     clap::Arg::new("scope")
                         .short('s')
                         .long("scope")
-                        .takes_value(true)
+                        .action(clap::ArgAction::Append)
                         .help("Show only route entries with specified scope")
-                        .possible_values([
+                        .value_parser([
                             "a", "all", "u", "universe", "g", "global", "s",
                             "site", "l", "link", "h", "host", "n", "nowhere",
                             "no_where",
@@ -416,9 +416,9 @@ fn main() {
                     clap::Arg::new("protocol")
                         .short('p')
                         .long("protocol")
-                        .takes_value(true)
+                        .action(clap::ArgAction::Append)
                         .help("Show only route with specified protocol")
-                        .possible_values([
+                        .value_parser([
                             "icmp_redirect",
                             "kernel",
                             "boot",
@@ -457,8 +457,7 @@ fn main() {
         )
         .get_matches();
 
-    let (log_module_filter, log_level) = match matches.occurrences_of("verbose")
-    {
+    let (log_module_filter, log_level) = match matches.get_count("verbose") {
         0 => (Some("nispor"), log::LevelFilter::Warn),
         1 => (Some("nispor"), log::LevelFilter::Info),
         2 => (Some("nispor"), log::LevelFilter::Debug),
@@ -472,7 +471,7 @@ fn main() {
     let mut output_format = parse_arg_output_format(&matches);
 
     if let Some(m) = matches.subcommand_matches("set") {
-        if let Some(file_path) = m.value_of("file_path") {
+        if let Some(file_path) = m.get_one::<String>("file_path") {
             print_result(apply_conf(file_path), output_format);
             process::exit(0);
         } else {
@@ -592,7 +591,7 @@ fn get_link_info(iface: &Iface) -> String {
 }
 
 fn get_ifaces(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
-    if let Some(iface_name) = matches.value_of("iface_name") {
+    if let Some(iface_name) = matches.get_one::<String>("iface_name") {
         let mut filter = NetStateFilter::minimum();
         let mut iface_filter = NetStateIfaceFilter::default();
         iface_filter.iface_name = Some(iface_name.to_string());
@@ -606,7 +605,7 @@ fn get_ifaces(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
         let state = NetState::retrieve_with_filter(&filter)?;
 
         if let Some(iface) = state.ifaces.get(iface_name) {
-            if matches.is_present("delete") {
+            if matches.contains_id("delete") {
                 delete_iface(&iface.name)
             } else {
                 Ok(CliReply::Ifaces(vec![iface.clone()]))
@@ -614,7 +613,7 @@ fn get_ifaces(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
         } else {
             Err(format!("Interface '{}' not found", iface_name).into())
         }
-    } else if matches.is_present("delete") {
+    } else if matches.contains_id("delete") {
         Err("Need to specific a interface to delete".to_string().into())
     } else {
         let state = NetState::retrieve()?;
@@ -625,9 +624,9 @@ fn get_ifaces(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
 fn get_routes(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
     let mut route_filter = NetStateRouteFilter::default();
 
-    if let Some(scope) = matches.value_of("scope") {
+    if let Some(scope) = matches.get_one::<String>("scope") {
         if scope != "a" && scope != "all" {
-            let rt_scope = RouteScope::from(scope);
+            let rt_scope = RouteScope::from(scope.as_str());
             if rt_scope == RouteScope::Unknown {
                 return Err(format!("Invalid scope {}", scope).into());
             }
@@ -635,16 +634,16 @@ fn get_routes(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
         }
     }
 
-    if let Some(protocol) = matches.value_of("protocol") {
-        let rt_protocol = RouteProtocol::from(protocol);
+    if let Some(protocol) = matches.get_one::<String>("protocol") {
+        let rt_protocol = RouteProtocol::from(protocol.as_str());
         if rt_protocol == RouteProtocol::Unknown {
             return Err(format!("Invalid protocol {}", protocol).into());
         }
         route_filter.protocol = Some(rt_protocol);
     }
 
-    if let Some(table) = matches.value_of("table") {
-        route_filter.table = Some(match table {
+    if let Some(table) = matches.get_one::<String>("table") {
+        route_filter.table = Some(match table.as_str() {
             "main" => RT_TABLE_MAIN,
             "local" => RT_TABLE_LOCAL,
             _ => table.parse::<u8>().map_err(|e| CliError {
@@ -653,7 +652,7 @@ fn get_routes(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
         });
     }
 
-    if let Some(iface_name) = matches.value_of("dev") {
+    if let Some(iface_name) = matches.get_one::<String>("dev") {
         route_filter.oif = Some(iface_name.to_string());
     }
 
@@ -684,24 +683,24 @@ fn get_mptcp() -> Result<CliReply, CliError> {
 fn get_brief(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
     let mut filter = NetStateFilter::minimum();
     let mut iface_filter = NetStateIfaceFilter::minimum();
-    if let Some(iface_name) = matches.value_of("iface_name") {
+    if let Some(iface_name) = matches.get_one::<String>("iface_name") {
         iface_filter.iface_name = Some(iface_name.to_string());
     }
     iface_filter.include_ip_address = true;
     filter.iface = Some(iface_filter);
     let mut route_filter = NetStateRouteFilter::default();
     route_filter.table = Some(RT_TABLE_MAIN);
-    if let Some(iface_name) = matches.value_of("iface_name") {
+    if let Some(iface_name) = matches.get_one::<String>("iface_name") {
         route_filter.oif = Some(iface_name.to_string());
     }
     filter.route = Some(route_filter);
     filter.route_rule = None;
     let state = NetState::retrieve_with_filter(&filter)?;
 
-    if let Some(iface_name) = matches.value_of("iface_name") {
+    if let Some(iface_name) = matches.get_one::<String>("iface_name") {
         if state.ifaces.get(iface_name).is_some() {
             for iface_brief in CliIfaceBrief::from_net_state(&state) {
-                if iface_brief.name == iface_name {
+                if &iface_brief.name == iface_name {
                     return Ok(CliReply::Brief(vec![iface_brief]));
                 }
             }
