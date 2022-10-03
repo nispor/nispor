@@ -175,14 +175,8 @@ fn test_get_br_iface_yaml() {
         assert_eq!(iface.iface_type, crate::IfaceType::Bridge);
 
         assert_value_match(EXPECTED_BRIDGE_INFO, iface);
-        assert_eq!(
-            serde_yaml::to_string(&port1.bridge_port).unwrap().trim(),
-            EXPECTED_PORT1_BRIDGE_INFO,
-        );
-        assert_eq!(
-            serde_yaml::to_string(&port2.bridge_port).unwrap().trim(),
-            EXPECTED_PORT2_BRIDGE_INFO,
-        );
+        assert_value_match(EXPECTED_PORT1_BRIDGE_INFO, &port1.bridge_port);
+        assert_value_match(EXPECTED_PORT2_BRIDGE_INFO, &port2.bridge_port);
     });
 }
 

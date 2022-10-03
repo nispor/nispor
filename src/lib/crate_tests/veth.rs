@@ -5,6 +5,8 @@ use pretty_assertions::assert_eq;
 
 use std::panic;
 
+use super::utils::assert_value_match;
+
 const IFACE_NAME: &str = "veth1";
 
 const EXPECTED_VETH_INFO: &str = r#"---
@@ -17,10 +19,7 @@ fn test_get_veth_iface_yaml() {
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
         assert_eq!(iface_type, &crate::IfaceType::Veth);
-        assert_eq!(
-            serde_yaml::to_string(&iface.veth).unwrap().trim(),
-            EXPECTED_VETH_INFO
-        );
+        assert_value_match(EXPECTED_VETH_INFO, &iface.veth);
     });
 }
 

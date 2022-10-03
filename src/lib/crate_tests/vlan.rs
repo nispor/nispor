@@ -5,6 +5,8 @@ use pretty_assertions::assert_eq;
 
 use std::panic;
 
+use super::utils::assert_value_match;
+
 const IFACE_NAME: &str = "eth1.101";
 
 const EXPECTED_VLAN_INFO: &str = r#"---
@@ -23,10 +25,7 @@ fn test_get_vlan_iface_yaml() {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         assert_eq!(iface.iface_type, crate::IfaceType::Vlan);
-        assert_eq!(
-            serde_yaml::to_string(&iface.vlan).unwrap().trim(),
-            EXPECTED_VLAN_INFO
-        );
+        assert_value_match(EXPECTED_VLAN_INFO, &iface.vlan);
     });
 }
 

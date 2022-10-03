@@ -64,18 +64,8 @@ fn test_get_iface_bond_yaml() {
 
         assert_value_match(EXPECTED_BOND_IFACE, &iface);
 
-        assert_eq!(
-            serde_yaml::to_string(&port1.bond_subordinate)
-                .unwrap()
-                .trim(),
-            EXPECTED_PORT1_INFO
-        );
-        assert_eq!(
-            serde_yaml::to_string(&port2.bond_subordinate)
-                .unwrap()
-                .trim(),
-            EXPECTED_PORT2_INFO
-        );
+        assert_value_match(EXPECTED_PORT1_INFO, &port1.bond_subordinate);
+        assert_value_match(EXPECTED_PORT2_INFO, &port2.bond_subordinate);
         assert_eq!(port1.controller, Some("bond99".to_string()));
         assert_eq!(port2.controller, Some("bond99".to_string()));
         assert_eq!(port1.controller_type, Some(crate::ControllerType::Bond));

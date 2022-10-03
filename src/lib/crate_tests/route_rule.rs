@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::NetState;
-use pretty_assertions::assert_eq;
 
 use std::panic;
+
+use super::utils::assert_value_match;
 
 const TEST_TABLE_ID: u32 = 100;
 
@@ -41,10 +42,7 @@ fn test_get_route_rule_yaml() {
                 expected_rules.push(rule)
             }
         }
-        assert_eq!(
-            serde_yaml::to_string(&expected_rules).unwrap().trim(),
-            EXPECTED_YAML_OUTPUT
-        );
+        assert_value_match(EXPECTED_YAML_OUTPUT, &expected_rules);
     });
 }
 

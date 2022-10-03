@@ -5,6 +5,8 @@ use pretty_assertions::assert_eq;
 
 use std::panic;
 
+use super::utils::assert_value_match;
+
 const IFACE_NAME: &str = "mac0";
 
 const EXPECTED_MAC_VLAN_STATE: &str = r#"---
@@ -21,10 +23,7 @@ fn test_get_macvlan_iface_yaml() {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         assert_eq!(iface.iface_type, crate::IfaceType::MacVlan);
-        assert_eq!(
-            serde_yaml::to_string(&iface.mac_vlan).unwrap().trim(),
-            EXPECTED_MAC_VLAN_STATE
-        );
+        assert_value_match(EXPECTED_MAC_VLAN_STATE, &iface.mac_vlan);
     });
 }
 

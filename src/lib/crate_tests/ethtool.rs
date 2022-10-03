@@ -5,6 +5,8 @@ use pretty_assertions::assert_eq;
 
 use std::panic;
 
+use super::utils::assert_value_match;
+
 const IFACE_NAME0: &str = "sim0";
 const IFACE_NAME1: &str = "sim1";
 
@@ -85,17 +87,13 @@ fn test_get_ethtool_pause_yaml() {
         let iface1 = &state.ifaces[IFACE_NAME1];
         assert_eq!(&iface0.iface_type, &crate::IfaceType::Ethernet);
         assert_eq!(&iface1.iface_type, &crate::IfaceType::Ethernet);
-        assert_eq!(
-            serde_yaml::to_string(&iface0.ethtool.as_ref().unwrap().pause)
-                .unwrap()
-                .trim(),
-            EXPECTED_PAUSE_INFO
+        assert_value_match(
+            EXPECTED_PAUSE_INFO,
+            &iface0.ethtool.as_ref().unwrap().pause,
         );
-        assert_eq!(
-            serde_yaml::to_string(&iface1.ethtool.as_ref().unwrap().pause)
-                .unwrap()
-                .trim(),
-            EXPECTED_PAUSE_INFO
+        assert_value_match(
+            EXPECTED_PAUSE_INFO,
+            &iface1.ethtool.as_ref().unwrap().pause,
         );
     });
 }
@@ -134,11 +132,9 @@ fn test_get_ethtool_feature_yaml_of_loopback() {
         .as_mut()
         .map(|features| features.changeable.remove("tx-udp-segmentation"));
     assert_eq!(&iface.iface_type, &crate::IfaceType::Loopback);
-    assert_eq!(
-        serde_yaml::to_string(&iface.ethtool.as_ref().unwrap().features)
-            .unwrap()
-            .trim(),
-        EXPECTED_FEATURE_INFO
+    assert_value_match(
+        EXPECTED_FEATURE_INFO,
+        &iface.ethtool.as_ref().unwrap().features,
     );
 }
 
@@ -172,11 +168,9 @@ fn test_get_ethtool_coalesce_yaml() {
     with_tun_iface(|| {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_TUN_NAME];
-        assert_eq!(
-            serde_yaml::to_string(&iface.ethtool.as_ref().unwrap().coalesce)
-                .unwrap()
-                .trim(),
-            EXPECTED_ETHTOOL_COALESCE
+        assert_value_match(
+            EXPECTED_ETHTOOL_COALESCE,
+            &iface.ethtool.as_ref().unwrap().coalesce,
         );
     });
 }
@@ -186,11 +180,9 @@ fn test_get_ethtool_link_mode_yaml() {
     with_tun_iface(|| {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_TUN_NAME];
-        assert_eq!(
-            serde_yaml::to_string(&iface.ethtool.as_ref().unwrap().link_mode)
-                .unwrap()
-                .trim(),
-            EXPECTED_ETHTOOL_LINK_MODE
+        assert_value_match(
+            EXPECTED_ETHTOOL_LINK_MODE,
+            &iface.ethtool.as_ref().unwrap().link_mode,
         );
     });
 }
