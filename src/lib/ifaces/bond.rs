@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::HashMap;
+use std::net::Ipv4Addr;
 
-use netlink_packet_route::rtnl::link::nlas;
+use netlink_packet_route::rtnl::link::nlas::{
+    self, Info, InfoBond, InfoData, InfoKind,
+};
 use rtnetlink::{packet::rtnl::link::nlas::Nla, Handle};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    ifaces::Iface,
-    netlink::{parse_bond_info, parse_bond_subordinate_info},
+    ifaces::Iface, mac::parse_as_mac, netlink::parse_bond_subordinate_info,
     ControllerType, IfaceType, NisporError,
 };
 
@@ -310,6 +312,32 @@ pub struct BondAdInfo {
     pub partner_mac: String,
 }
 
+impl From<&[nlas::BondAdInfo]> for BondAdInfo {
+    fn from(nlas: &[nlas::BondAdInfo]) -> Self {
+        let mut ret = Self::default();
+        for nla in nlas {
+            match nla {
+                nlas::BondAdInfo::Aggregator(v) => ret.aggregator = *v,
+                nlas::BondAdInfo::NumPorts(v) => ret.num_ports = *v,
+                nlas::BondAdInfo::ActorKey(v) => ret.actor_key = *v,
+                nlas::BondAdInfo::PartnerKey(v) => ret.partner_key = *v,
+                nlas::BondAdInfo::PartnerMac(v) => {
+                    match parse_as_mac(v.len(), v) {
+                        Ok(m) => ret.partner_mac = m,
+                        Err(e) => {
+                            log::warn!(
+                                "Failed to parse BondAdInfo.parse_as_mac: {}",
+                                e
+                            );
+                        }
+                    }
+                }
+            }
+        }
+        ret
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct BondInfo {
@@ -369,6 +397,71 @@ pub struct BondInfo {
     pub peer_notif_delay: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ad_info: Option<BondAdInfo>,
+}
+
+impl From<&[InfoBond]> for BondInfo {
+    fn from(nlas: &[InfoBond]) -> Self {
+        let mut ret = Self::default();
+        for nla in nlas {
+            match nla {
+                InfoBond::Mode(v) => ret.mode = (*v).into(),
+                InfoBond::MiiMon(v) => ret.miimon = Some(*v),
+                InfoBond::UpDelay(v) => ret.updelay = Some(*v),
+                InfoBond::DownDelay(v) => ret.downdelay = Some(*v),
+                InfoBond::UseCarrier(v) => ret.use_carrier = Some(*v > 0),
+                InfoBond::ArpInterval(v) => ret.arp_interval = Some(*v),
+                InfoBond::ArpIpTarget(v) => {
+                    ret.arp_ip_target = ipv4_addr_array_to_string(v).ok()
+                }
+                InfoBond::ArpValidate(v) => {
+                    ret.arp_validate = Some((*v).into())
+                }
+                InfoBond::ArpAllTargets(v) => {
+                    ret.arp_all_targets = Some((*v).into())
+                }
+                InfoBond::Primary(v) => ret.primary = Some(format!("{}", v)),
+                InfoBond::PrimaryReselect(v) => {
+                    ret.primary_reselect = Some((*v).into())
+                }
+                InfoBond::FailOverMac(v) => {
+                    ret.fail_over_mac = Some((*v).into())
+                }
+                InfoBond::XmitHashPolicy(v) => {
+                    ret.xmit_hash_policy = Some((*v).into())
+                }
+                InfoBond::ResendIgmp(v) => ret.resend_igmp = Some(*v),
+                InfoBond::NumPeerNotif(v) => {
+                    ret.num_unsol_na = Some(*v);
+                    ret.num_unsol_na = Some(*v);
+                }
+                InfoBond::AllSlavesActive(v) => {
+                    ret.all_subordinates_active = Some((*v).into())
+                }
+                InfoBond::MinLinks(v) => ret.min_links = Some(*v),
+                InfoBond::LpInterval(v) => ret.lp_interval = Some(*v),
+                InfoBond::PacketsPerSlave(v) => {
+                    ret.packets_per_subordinate = Some(*v)
+                }
+                InfoBond::AdLacpRate(v) => ret.lacp_rate = Some((*v).into()),
+                InfoBond::AdSelect(v) => ret.ad_select = Some((*v).into()),
+                InfoBond::AdInfo(v) => ret.ad_info = Some(v.as_slice().into()),
+                InfoBond::AdActorSysPrio(v) => ret.ad_actor_sys_prio = Some(*v),
+                InfoBond::AdUserPortKey(v) => ret.ad_user_port_key = Some(*v),
+                InfoBond::AdActorSystem(v) => {
+                    ret.ad_actor_system = parse_as_mac(v.len(), v).ok()
+                }
+                InfoBond::TlbDynamicLb(v) => ret.tlb_dynamic_lb = Some(*v > 0),
+                InfoBond::PeerNotifDelay(v) => ret.peer_notif_delay = Some(*v),
+                //InfoBond::AdLacpActive(v) => ret.ad_lacp_active = Some(*v),
+                //InfoBond::MissedMax(v) => ret.missed_max = Some(*v),
+                //InfoBond::NsIp6Target(v) => ret.ns_ip6_target = Some(*v),
+                _ => {
+                    log::warn!("Unsupported InfoBond: {:?}", nla);
+                }
+            }
+        }
+        ret
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -443,10 +536,10 @@ pub struct BondSubordinateInfo {
 }
 
 pub(crate) fn get_bond_info(
-    data: &nlas::InfoData,
+    data: &InfoData,
 ) -> Result<Option<BondInfo>, NisporError> {
-    if let nlas::InfoData::Bond(raw) = data {
-        Ok(Some(parse_bond_info(raw)?))
+    if let InfoData::Bond(nlas) = data {
+        Ok(Some(nlas.as_slice().into()))
     } else {
         Ok(None)
     }
@@ -526,7 +619,7 @@ impl BondConf {
         // box.
         let mut req = handle.link().add();
         let mutator = req.message_mut();
-        let info = Nla::Info(vec![nlas::Info::Kind(nlas::InfoKind::Bond)]);
+        let info = Nla::Info(vec![Info::Kind(InfoKind::Bond)]);
         mutator.nlas.push(info);
         mutator.nlas.push(Nla::IfName(name.to_string()));
         match req.execute().await {
@@ -537,4 +630,21 @@ impl BondConf {
             ))),
         }
     }
+}
+
+fn ipv4_addr_array_to_string(
+    addrs: &[Ipv4Addr],
+) -> Result<String, NisporError> {
+    let mut rt = String::new();
+    for i in 0..(addrs.len()) {
+        let addr = &addrs.get(i).ok_or_else(|| {
+            NisporError::bug("wrong index at parsing ipv4 as string".into())
+        })?;
+        rt.push_str(&addr.to_string());
+        if i != addrs.len() - 1 {
+            // This is how kernel sysfs is showing
+            rt.push(',');
+        }
+    }
+    Ok(rt)
 }
