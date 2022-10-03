@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use nispor::{NetConf, NetState};
+use crate::{NetConf, NetState};
 use pretty_assertions::assert_eq;
 
 use std::panic;
-
-mod utils;
 
 const IFACE_NAME: &str = "eth1.101";
 
@@ -24,7 +22,7 @@ fn test_get_vlan_iface_yaml() {
     with_vlan_iface(|| {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
-        assert_eq!(iface.iface_type, nispor::IfaceType::Vlan);
+        assert_eq!(iface.iface_type, crate::IfaceType::Vlan);
         assert_eq!(
             serde_yaml::to_string(&iface.vlan).unwrap().trim(),
             EXPECTED_VLAN_INFO
@@ -36,13 +34,13 @@ fn with_vlan_iface<T>(test: T)
 where
     T: FnOnce() + panic::UnwindSafe,
 {
-    utils::set_network_environment("vlan");
+    super::utils::set_network_environment("vlan");
 
     let result = panic::catch_unwind(|| {
         test();
     });
 
-    utils::clear_network_environment();
+    super::utils::clear_network_environment();
     assert!(result.is_ok())
 }
 
@@ -84,7 +82,7 @@ fn test_create_delete_vlan() {
     net_conf.apply().unwrap();
     let state = NetState::retrieve().unwrap();
     let iface = &state.ifaces["veth1.99"];
-    assert_eq!(&iface.iface_type, &nispor::IfaceType::Vlan);
+    assert_eq!(&iface.iface_type, &crate::IfaceType::Vlan);
     assert_eq!(iface.vlan.as_ref().unwrap().vlan_id, 99);
     assert_eq!(iface.vlan.as_ref().unwrap().base_iface.as_str(), "veth1");
 

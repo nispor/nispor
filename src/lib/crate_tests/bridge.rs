@@ -1,61 +1,70 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use nispor::{NetConf, NetState};
-use pretty_assertions::assert_eq;
-
 use std::panic;
 
-mod utils;
+use pretty_assertions::assert_eq;
+
+use crate::{NetConf, NetState};
+
+use super::utils::assert_value_match;
 
 const IFACE_NAME: &str = "br0";
 const PORT1_NAME: &str = "eth1";
 const PORT2_NAME: &str = "eth2";
 
+// On Archlinux where HZ == 300, these properties will be rounded up by
+// `jiffies_to_clock_t()` of kernel:
+//  * ageing_time
+//  * hello_time
+//  * forward_delay
+//  * max_age
+//  * multicast_last_member_interval
+//  * multicast_membership_interval
+//  * multicast_querier_interval
+//  * multicast_query_interval
+//  * multicast_query_response_interval
+//  Hence we skip those from testing
+//  Ubuntu is 250 HZ, which hold a subset of above list.
+
 const EXPECTED_BRIDGE_INFO: &str = r#"---
-ports:
-  - eth1
-  - eth2
-ageing_time: 30000
-bridge_id: 8000.00234567891c
-group_fwd_mask: 0
-root_id: 8000.00234567891c
-root_port: 0
-root_path_cost: 0
-topology_change: false
-topology_change_detected: false
-tcn_timer: 0
-topology_change_timer: 0
-group_addr: "01:80:c2:00:00:00"
-nf_call_iptables: false
-nf_call_ip6tables: false
-nf_call_arptables: false
-vlan_filtering: false
-vlan_protocol: 802.1q
-default_pvid: 1
-vlan_stats_enabled: false
-vlan_stats_per_host: false
-stp_state: disabled
-hello_time: 200
-hello_timer: 0
-forward_delay: 1500
-max_age: 2000
-priority: 32768
-multicast_router: temp_query
-multicast_snooping: true
-multicast_query_use_ifaddr: false
-multicast_querier: false
-multicast_stats_enabled: false
-multicast_hash_elasticity: 16
-multicast_hash_max: 4096
-multicast_last_member_count: 2
-multicast_last_member_interval: 100
-multicast_startup_query_count: 2
-multicast_membership_interval: 26000
-multicast_querier_interval: 25500
-multicast_query_interval: 12500
-multicast_query_response_interval: 1000
-multicast_igmp_version: 2
-multicast_mld_version: 1"#;
+name: br0
+iface_type: bridge
+bridge:
+  ports:
+    - eth1
+    - eth2
+  bridge_id: 8000.00234567891c
+  group_fwd_mask: 0
+  root_id: 8000.00234567891c
+  root_port: 0
+  root_path_cost: 0
+  topology_change: false
+  topology_change_detected: false
+  tcn_timer: 0
+  topology_change_timer: 0
+  group_addr: "01:80:c2:00:00:00"
+  nf_call_iptables: false
+  nf_call_ip6tables: false
+  nf_call_arptables: false
+  vlan_filtering: false
+  vlan_protocol: 802.1q
+  default_pvid: 1
+  vlan_stats_enabled: false
+  vlan_stats_per_host: false
+  stp_state: disabled
+  hello_timer: 0
+  priority: 32768
+  multicast_router: temp_query
+  multicast_snooping: true
+  multicast_query_use_ifaddr: false
+  multicast_querier: false
+  multicast_stats_enabled: false
+  multicast_hash_elasticity: 16
+  multicast_hash_max: 4096
+  multicast_last_member_count: 2
+  multicast_startup_query_count: 2
+  multicast_igmp_version: 2
+  multicast_mld_version: 1"#;
 
 const EXPECTED_PORT1_BRIDGE_INFO: &str = r#"---
 stp_state: forwarding
@@ -163,11 +172,9 @@ fn test_get_br_iface_yaml() {
         let iface = &state.ifaces[IFACE_NAME];
         let port1 = &state.ifaces[PORT1_NAME];
         let port2 = &state.ifaces[PORT2_NAME];
-        assert_eq!(iface.iface_type, nispor::IfaceType::Bridge);
-        assert_eq!(
-            serde_yaml::to_string(&iface.bridge).unwrap().trim(),
-            EXPECTED_BRIDGE_INFO,
-        );
+        assert_eq!(iface.iface_type, crate::IfaceType::Bridge);
+
+        assert_value_match(EXPECTED_BRIDGE_INFO, iface);
         assert_eq!(
             serde_yaml::to_string(&port1.bridge_port).unwrap().trim(),
             EXPECTED_PORT1_BRIDGE_INFO,
@@ -183,13 +190,13 @@ fn with_br_iface<T>(test: T)
 where
     T: FnOnce() + panic::UnwindSafe,
 {
-    utils::set_network_environment("br");
+    super::utils::set_network_environment("br");
 
     let result = panic::catch_unwind(|| {
         test();
     });
 
-    utils::clear_network_environment();
+    super::utils::clear_network_environment();
     assert!(result.is_ok())
 }
 
@@ -210,7 +217,7 @@ fn test_create_delete_bridge() {
     net_conf.apply().unwrap();
     let state = NetState::retrieve().unwrap();
     let iface = &state.ifaces[IFACE_NAME];
-    assert_eq!(&iface.iface_type, &nispor::IfaceType::Bridge);
+    assert_eq!(&iface.iface_type, &crate::IfaceType::Bridge);
 
     let net_conf: NetConf = serde_yaml::from_str(BRIDGE_DELETE_YML).unwrap();
     net_conf.apply().unwrap();

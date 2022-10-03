@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use nispor::{IfaceState, NetConf, NetState};
+use crate::{IfaceState, NetConf, NetState};
 use pretty_assertions::assert_eq;
 
 use std::panic;
-
-mod utils;
 
 const IFACE_NAME: &str = "veth1";
 
@@ -18,7 +16,7 @@ fn test_get_veth_iface_yaml() {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
-        assert_eq!(iface_type, &nispor::IfaceType::Veth);
+        assert_eq!(iface_type, &crate::IfaceType::Veth);
         assert_eq!(
             serde_yaml::to_string(&iface.veth).unwrap().trim(),
             EXPECTED_VETH_INFO
@@ -30,13 +28,13 @@ fn with_veth_iface<T>(test: T)
 where
     T: FnOnce() + panic::UnwindSafe,
 {
-    utils::set_network_environment("veth");
+    super::utils::set_network_environment("veth");
 
     let result = panic::catch_unwind(|| {
         test();
     });
 
-    utils::clear_network_environment();
+    super::utils::clear_network_environment();
     assert!(result.is_ok())
 }
 
@@ -74,7 +72,7 @@ fn test_create_down_delete_veth() {
     net_conf.apply().unwrap();
     let state = NetState::retrieve().unwrap();
     let iface = &state.ifaces[IFACE_NAME];
-    assert_eq!(&iface.iface_type, &nispor::IfaceType::Veth);
+    assert_eq!(&iface.iface_type, &crate::IfaceType::Veth);
     assert_eq!(iface.veth.as_ref().unwrap().peer, "veth1.ep");
     assert_eq!(iface.state, IfaceState::Up);
     assert_eq!(iface.mac_address, "00:23:45:67:89:1a".to_string());

@@ -1,32 +1,44 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use nispor::{NetConf, NetState};
+use crate::{NetConf, NetState};
 use pretty_assertions::assert_eq;
 
 use std::panic;
 
-mod utils;
+use super::utils::assert_value_match;
 
 const IFACE_NAME: &str = "bond99";
 const PORT1_NAME: &str = "eth1";
 const PORT2_NAME: &str = "eth2";
 
-const EXPECTED_BOND_INFO: &str = r#"---
-subordinates:
+const EXPECTED_BOND_IFACE: &str = r#"---
+name: bond99
+iface_type: bond
+bond:
+  subordinates:
   - eth1
   - eth2
-mode: balance-rr
-miimon: 0
-updelay: 0
-downdelay: 0
-use_carrier: true
-arp_interval: 0
-arp_all_targets: any
-arp_validate: none
-resend_igmp: 1
-all_subordinates_active: dropped
-packets_per_subordinate: 1
-peer_notif_delay: 0"#;
+  mode: balance-rr
+  miimon: 0
+  updelay: 0
+  downdelay: 0
+  use_carrier: true
+  arp_interval: 0
+  arp_all_targets: any
+  arp_validate: none
+  primary_reselect: always
+  fail_over_mac: none
+  xmit_hash_policy: layer2
+  resend_igmp: 1
+  num_unsol_na: 1
+  all_subordinates_active: dropped
+  min_links: 0
+  lp_interval: 1
+  packets_per_subordinate: 1
+  lacp_rate: slow
+  ad_select: stable
+  tlb_dynamic_lb: true
+  peer_notif_delay: 0"#;
 
 const EXPECTED_PORT1_INFO: &str = r#"---
 subordinate_state: active
@@ -49,11 +61,9 @@ fn test_get_iface_bond_yaml() {
         let iface = &state.ifaces[IFACE_NAME];
         let port1 = &state.ifaces[PORT1_NAME];
         let port2 = &state.ifaces[PORT2_NAME];
-        assert_eq!(&iface.iface_type, &nispor::IfaceType::Bond);
-        assert_eq!(
-            serde_yaml::to_string(&iface.bond).unwrap().trim(),
-            EXPECTED_BOND_INFO
-        );
+
+        assert_value_match(EXPECTED_BOND_IFACE, &iface);
+
         assert_eq!(
             serde_yaml::to_string(&port1.bond_subordinate)
                 .unwrap()
@@ -68,8 +78,8 @@ fn test_get_iface_bond_yaml() {
         );
         assert_eq!(port1.controller, Some("bond99".to_string()));
         assert_eq!(port2.controller, Some("bond99".to_string()));
-        assert_eq!(port1.controller_type, Some(nispor::ControllerType::Bond));
-        assert_eq!(port2.controller_type, Some(nispor::ControllerType::Bond));
+        assert_eq!(port1.controller_type, Some(crate::ControllerType::Bond));
+        assert_eq!(port2.controller_type, Some(crate::ControllerType::Bond));
     });
 }
 
@@ -77,13 +87,13 @@ fn with_bond_iface<T>(test: T)
 where
     T: FnOnce() + panic::UnwindSafe,
 {
-    utils::set_network_environment("bond");
+    super::utils::set_network_environment("bond");
 
     let result = panic::catch_unwind(|| {
         test();
     });
 
-    utils::clear_network_environment();
+    super::utils::clear_network_environment();
     assert!(result.is_ok())
 }
 
@@ -120,7 +130,7 @@ fn test_create_delete_bond() {
     net_conf.apply().unwrap();
     let state = NetState::retrieve().unwrap();
     let iface = &state.ifaces[IFACE_NAME];
-    assert_eq!(&iface.iface_type, &nispor::IfaceType::Bond);
+    assert_eq!(&iface.iface_type, &crate::IfaceType::Bond);
     assert_eq!(
         &iface.bond.as_ref().unwrap().subordinates,
         &vec!["veth1".to_string()]
@@ -130,7 +140,7 @@ fn test_create_delete_bond() {
     net_conf.apply().unwrap();
     let state = NetState::retrieve().unwrap();
     let iface = &state.ifaces[IFACE_NAME];
-    assert_eq!(&iface.iface_type, &nispor::IfaceType::Bond);
+    assert_eq!(&iface.iface_type, &crate::IfaceType::Bond);
     let empty_vec: Vec<String> = Vec::new();
     assert_eq!(&iface.bond.as_ref().unwrap().subordinates, &empty_vec);
 

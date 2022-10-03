@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use nispor::NetState;
+use crate::NetState;
 use pretty_assertions::assert_eq;
 
 use std::panic;
-
-mod utils;
 
 const TEST_TABLE_ID: u32 = 100;
 
@@ -54,12 +52,12 @@ fn with_route_rule_test_iface<T>(test: T)
 where
     T: FnOnce() + panic::UnwindSafe,
 {
-    utils::set_network_environment("rule");
+    super::utils::set_network_environment("rule");
 
     let result = panic::catch_unwind(|| {
         test();
     });
 
-    utils::clear_network_environment();
+    super::utils::clear_network_environment();
     assert!(result.is_ok())
 }

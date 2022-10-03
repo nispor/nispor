@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use nispor::{NetConf, NetState};
+use crate::{NetConf, NetState};
 use pretty_assertions::assert_eq;
 
 use std::panic;
-
-mod utils;
 
 const IFACE_NAME: &str = "veth1";
 
@@ -13,13 +11,13 @@ fn with_veth_iface<T>(test: T)
 where
     T: FnOnce() + panic::UnwindSafe,
 {
-    utils::set_network_environment("veth");
+    super::utils::set_network_environment("veth");
 
     let result = panic::catch_unwind(|| {
         test();
     });
 
-    utils::clear_network_environment();
+    super::utils::clear_network_environment();
     assert!(result.is_ok())
 }
 
@@ -116,7 +114,7 @@ fn test_add_and_remove_ip() {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
-        assert_eq!(iface_type, &nispor::IfaceType::Veth);
+        assert_eq!(iface_type, &crate::IfaceType::Veth);
         assert_eq!(
             serde_yaml::to_string(&iface.ipv4).unwrap().trim(),
             EXPECTED_IPV4_INFO
@@ -130,7 +128,7 @@ fn test_add_and_remove_ip() {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
-        assert_eq!(iface_type, &nispor::IfaceType::Veth);
+        assert_eq!(iface_type, &crate::IfaceType::Veth);
         assert_eq!(iface.ipv4, None);
         assert_eq!(
             serde_yaml::to_string(&iface.ipv6).unwrap().trim(),
@@ -147,7 +145,7 @@ fn test_add_and_remove_dynamic_ip() {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
-        assert_eq!(iface_type, &nispor::IfaceType::Veth);
+        assert_eq!(iface_type, &crate::IfaceType::Veth);
         assert_eq!(
             serde_yaml::to_string(&iface.ipv4).unwrap().trim(),
             EXPECTED_IPV4_DYNAMIC_INFO
@@ -161,7 +159,7 @@ fn test_add_and_remove_dynamic_ip() {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
-        assert_eq!(iface_type, &nispor::IfaceType::Veth);
+        assert_eq!(iface_type, &crate::IfaceType::Veth);
         assert_eq!(iface.ipv4, None);
         assert_eq!(
             serde_yaml::to_string(&iface.ipv6).unwrap().trim(),
@@ -181,7 +179,7 @@ fn test_add_dynamic_ip_repeat() {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
-        assert_eq!(iface_type, &nispor::IfaceType::Veth);
+        assert_eq!(iface_type, &crate::IfaceType::Veth);
         assert_eq!(
             serde_yaml::to_string(&iface.ipv4).unwrap().trim(),
             EXPECTED_IPV4_DYNAMIC_INFO
