@@ -1,34 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    ifaces::{
-        bond::{
-            get_bond_info, get_bond_subordinate_info, BondInfo,
-            BondSubordinateInfo,
-        },
-        bridge::{
-            get_bridge_info, get_bridge_port_info, parse_bridge_vlan_info,
-            BridgeConf, BridgeInfo, BridgePortInfo,
-        },
-        change_ifaces,
-        ethtool::EthtoolInfo,
-        ipoib::{get_ipoib_info, IpoibInfo},
-        mac_vlan::{get_mac_vlan_info, MacVlanInfo},
-        mac_vtap::{get_mac_vtap_info, MacVtapInfo},
-        sriov::{get_sriov_info, SriovInfo},
-        tun::{get_tun_info, TunInfo},
-        veth::{VethConf, VethInfo},
-        vlan::{get_vlan_info, VlanConf, VlanInfo},
-        vrf::{
-            get_vrf_info, get_vrf_subordinate_info, VrfInfo, VrfSubordinateInfo,
-        },
-        vxlan::{get_vxlan_info, VxlanInfo},
-    },
-    ip::{IpConf, Ipv4Info, Ipv6Info},
-    mac::{mac_str_to_raw, parse_as_mac},
-    mptcp::MptcpAddress,
-    NisporError, VfInfo,
-};
+use std::collections::HashMap;
 
 use netlink_packet_route::rtnl::{
     link::nlas, LinkMessage, ARPHRD_ETHER, ARPHRD_INFINIBAND, ARPHRD_LOOPBACK,
@@ -38,7 +10,36 @@ use netlink_packet_route::rtnl::{
 };
 use rtnetlink::packet::rtnl::link::nlas::Nla;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+
+use crate::{
+    ip::{IpConf, Ipv4Info, Ipv6Info},
+    mac::{mac_str_to_raw, parse_as_mac},
+    mptcp::MptcpAddress,
+    NisporError, VfInfo,
+};
+
+use super::{
+    bond::{
+        get_bond_info, get_bond_subordinate_info, BondInfo, BondSubordinateInfo,
+    },
+    bridge::{
+        get_bridge_info, get_bridge_port_info, parse_bridge_vlan_info,
+        BridgeConf, BridgeInfo, BridgePortInfo,
+    },
+    ethtool::EthtoolInfo,
+    inter_ifaces::change_ifaces,
+    ipoib::{get_ipoib_info, IpoibInfo},
+    mac_vlan::{get_mac_vlan_info, MacVlanInfo},
+    mac_vtap::{get_mac_vtap_info, MacVtapInfo},
+    sriov::{get_sriov_info, SriovInfo},
+    tun::{get_tun_info, TunInfo},
+    veth::{VethConf, VethInfo},
+    vlan::{get_vlan_info, VlanConf, VlanInfo},
+    vrf::{
+        get_vrf_info, get_vrf_subordinate_info, VrfInfo, VrfSubordinateInfo,
+    },
+    vxlan::{get_vxlan_info, VxlanInfo},
+};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
