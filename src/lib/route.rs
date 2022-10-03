@@ -19,15 +19,13 @@ use rtnetlink::{new_connection, IpVersion};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    filter::enable_kernel_strict_check,
     ip::{parse_ip_addr_str, parse_ip_net_addr_str},
     netlink::{
         parse_as_i32, parse_as_ipv4, parse_as_ipv6, parse_as_u16, parse_as_u32,
         AF_INET, AF_INET6,
     },
-    route_filter::{
-        apply_kernel_route_filter, enable_kernel_route_filter,
-        should_drop_by_filter,
-    },
+    route_filter::{apply_kernel_route_filter, should_drop_by_filter},
     NetStateRouteFilter, NisporError,
 };
 
@@ -480,7 +478,7 @@ pub(crate) async fn get_routes(
     }
 
     if filter.is_some() {
-        enable_kernel_route_filter(connection.socket_mut().as_raw_fd())?;
+        enable_kernel_strict_check(connection.socket_mut().as_raw_fd())?;
     }
 
     tokio::spawn(connection);

@@ -3,7 +3,9 @@
 use clap::{crate_authors, crate_version};
 use nispor::{
     Iface, IfaceConf, IfaceState, IfaceType, Mptcp, NetConf, NetState,
-    NisporError, Route, RouteProtocol, RouteRule, RouteScope,
+    NetStateFilter, NetStateIfaceFilter, NetStateRouteFilter,
+    NetStateRouteRuleFilter, NisporError, Route, RouteProtocol, RouteRule,
+    RouteScope,
 };
 use serde::Serialize;
 use std::collections::HashMap;
@@ -590,8 +592,19 @@ fn get_link_info(iface: &Iface) -> String {
 }
 
 fn get_ifaces(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
-    let state = NetState::retrieve()?;
     if let Some(iface_name) = matches.value_of("iface_name") {
+        let mut filter = NetStateFilter::minimum();
+        let mut iface_filter = NetStateIfaceFilter::default();
+        iface_filter.iface_name = Some(iface_name.to_string());
+        iface_filter.include_ip_address = true;
+        iface_filter.include_sriov_vf_info = true;
+        iface_filter.include_bridge_vlan = true;
+        iface_filter.include_ethtool = true;
+        iface_filter.include_mptcp = true;
+        filter.iface = Some(iface_filter);
+
+        let state = NetState::retrieve_with_filter(&filter)?;
+
         if let Some(iface) = state.ifaces.get(iface_name) {
             if matches.is_present("delete") {
                 delete_iface(&iface.name)
@@ -604,12 +617,13 @@ fn get_ifaces(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
     } else if matches.is_present("delete") {
         Err("Need to specific a interface to delete".to_string().into())
     } else {
+        let state = NetState::retrieve()?;
         Ok(CliReply::Ifaces(state.ifaces.values().cloned().collect()))
     }
 }
 
 fn get_routes(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
-    let mut route_filter = nispor::NetStateRouteFilter::default();
+    let mut route_filter = NetStateRouteFilter::default();
 
     if let Some(scope) = matches.value_of("scope") {
         if scope != "a" && scope != "all" {
@@ -643,23 +657,46 @@ fn get_routes(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
         route_filter.oif = Some(iface_name.to_string());
     }
 
-    Ok(CliReply::Routes(nispor::retrieve_routes_with_filter(
-        &route_filter,
-    )?))
+    let mut filter = NetStateFilter::minimum();
+    filter.route = Some(route_filter);
+
+    let state = NetState::retrieve_with_filter(&filter)?;
+
+    Ok(CliReply::Routes(state.routes))
 }
 
 fn get_rules() -> Result<CliReply, CliError> {
-    let state = NetState::retrieve()?;
+    let mut filter = NetStateFilter::minimum();
+    filter.route_rule = Some(NetStateRouteRuleFilter::default());
+    let state = NetState::retrieve_with_filter(&filter)?;
     Ok(CliReply::RouteRules(state.rules))
 }
 
 fn get_mptcp() -> Result<CliReply, CliError> {
-    let state = NetState::retrieve()?;
+    let mut iface_filter = NetStateIfaceFilter::minimum();
+    iface_filter.include_mptcp = true;
+    let mut filter = NetStateFilter::minimum();
+    filter.iface = Some(iface_filter);
+    let state = NetState::retrieve_with_filter(&filter)?;
     Ok(CliReply::Mptcp(state.mptcp.unwrap_or_default()))
 }
 
 fn get_brief(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
-    let state = NetState::retrieve()?;
+    let mut filter = NetStateFilter::minimum();
+    let mut iface_filter = NetStateIfaceFilter::minimum();
+    if let Some(iface_name) = matches.value_of("iface_name") {
+        iface_filter.iface_name = Some(iface_name.to_string());
+    }
+    iface_filter.include_ip_address = true;
+    filter.iface = Some(iface_filter);
+    let mut route_filter = NetStateRouteFilter::default();
+    route_filter.table = Some(RT_TABLE_MAIN);
+    if let Some(iface_name) = matches.value_of("iface_name") {
+        route_filter.oif = Some(iface_name.to_string());
+    }
+    filter.route = Some(route_filter);
+    filter.route_rule = None;
+    let state = NetState::retrieve_with_filter(&filter)?;
 
     if let Some(iface_name) = matches.value_of("iface_name") {
         if state.ifaces.get(iface_name).is_some() {

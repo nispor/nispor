@@ -1,16 +1,4 @@
-// Copyright 2021 Red Hat, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// SPDX-License-Identifier: Apache-2.0
 
 use std::collections::HashMap;
 
@@ -19,11 +7,11 @@ use tokio::runtime;
 
 use crate::{
     error::NisporError,
-    ifaces::{get_iface_name2index, get_ifaces, Iface},
+    ifaces::{get_ifaces, Iface},
     mptcp::{get_mptcp, merge_mptcp_info, Mptcp},
     route::{get_routes, Route},
     route_rule::{get_route_rules, RouteRule},
-    NetStateRouteFilter,
+    NetStateFilter, NetStateIfaceFilter,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -38,32 +26,60 @@ pub struct NetState {
 
 impl NetState {
     pub fn retrieve() -> Result<NetState, NisporError> {
+        Self::retrieve_with_filter(&NetStateFilter::default())
+    }
+
+    // TODO: autoconvert NetState to NetConf and provide apply() here
+
+    pub fn retrieve_with_filter(
+        filter: &NetStateFilter,
+    ) -> Result<NetState, NisporError> {
         let rt = runtime::Builder::new_current_thread().enable_io().build()?;
-        let mut ifaces = rt.block_on(get_ifaces())?;
+        rt.block_on(Self::_retrieve_with_filter(filter))
+    }
+
+    async fn _retrieve_with_filter(
+        filter: &NetStateFilter,
+    ) -> Result<NetState, NisporError> {
+        let mut ifaces = if filter.iface.is_none() {
+            get_ifaces(Some(&NetStateIfaceFilter::minimum())).await?
+        } else {
+            get_ifaces(filter.iface.as_ref()).await?
+        };
+
         let mut ifname_to_index = HashMap::new();
         for iface in ifaces.values() {
             ifname_to_index.insert(iface.name.clone(), iface.index);
         }
-        let routes = rt.block_on(get_routes(&ifname_to_index, None))?;
 
-        let rules = rt.block_on(get_route_rules())?;
-        let mut mptcp = rt.block_on(get_mptcp())?;
-        merge_mptcp_info(&mut ifaces, &mut mptcp);
+        let routes = if filter.route.is_some() {
+            get_routes(&ifname_to_index, filter.route.as_ref()).await?
+        } else {
+            Vec::new()
+        };
+
+        let rules = if filter.route_rule.is_some() {
+            get_route_rules().await?
+        } else {
+            Vec::new()
+        };
+
+        let mptcp =
+            if filter.iface.as_ref().map(|f| f.include_mptcp) == Some(true) {
+                let mut mptcp = get_mptcp().await?;
+                merge_mptcp_info(&mut ifaces, &mut mptcp);
+                Some(mptcp)
+            } else {
+                None
+            };
+        if filter.iface.is_none() {
+            ifaces = HashMap::new();
+        }
         Ok(NetState {
             ifaces,
             routes,
             rules,
-            mptcp: Some(mptcp),
+            mptcp,
         })
     }
-
-    // TODO: autoconvert NetState to NetConf and provide apply() here
-}
-
-pub fn retrieve_routes_with_filter(
-    filter: &NetStateRouteFilter,
-) -> Result<Vec<Route>, NisporError> {
-    let rt = runtime::Builder::new_current_thread().enable_io().build()?;
-    let iface_name2index = rt.block_on(get_iface_name2index())?;
-    rt.block_on(get_routes(&iface_name2index, Some(filter)))
 }

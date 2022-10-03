@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::error::NisporError;
-use crate::ifaces::{
-    change_ifaces, create_ifaces, delete_ifaces, get_iface_name2index,
-    get_ifaces, IfaceConf, IfaceState,
+use crate::{
+    ifaces::{
+        change_ifaces, create_ifaces, delete_ifaces, get_iface_name2index,
+        get_ifaces,
+    },
+    route::apply_routes_conf,
+    IfaceConf, IfaceState, NisporError, RouteConf,
 };
-use crate::route::{apply_routes_conf, RouteConf};
 
 use serde::{Deserialize, Serialize};
 use tokio::runtime;
@@ -42,7 +44,7 @@ impl NetConf {
             rt.block_on(delete_ifaces(&del_ifaces))?;
             rt.block_on(create_ifaces(&new_ifaces, &cur_iface_name_2_index))?;
 
-            let cur_ifaces = rt.block_on(get_ifaces())?;
+            let cur_ifaces = rt.block_on(get_ifaces(None))?;
             rt.block_on(change_ifaces(&chg_ifaces, &cur_ifaces))?;
         }
 
