@@ -30,5 +30,5 @@ log = "0.4.17"
 mptcp-pm = "0.1.0"
 
 [dev-dependencies]
-serde_yaml = "0.8.24"
+serde_yaml = "0.9"
 pretty_assertions = "1.2.1"

@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::NetState;
+use std::panic;
+
 use pretty_assertions::assert_eq;
 
-use std::panic;
+use crate::NetState;
+
+use super::utils::assert_value_match;
 
 const IFACE_NAME: &str = "br0";
 const PORT1_NAME: &str = "eth1";
@@ -118,14 +121,8 @@ fn test_get_br_vlan_filter_iface_yaml() {
 
         let port1 = &state.ifaces[PORT1_NAME];
         let port2 = &state.ifaces[PORT2_NAME];
-        assert_eq!(
-            serde_yaml::to_string(&port1.bridge_port).unwrap().trim(),
-            EXPECTED_PORT1_BRIDGE_INFO,
-        );
-        assert_eq!(
-            serde_yaml::to_string(&port2.bridge_port).unwrap().trim(),
-            EXPECTED_PORT2_BRIDGE_INFO,
-        );
+        assert_value_match(EXPECTED_PORT1_BRIDGE_INFO, &port1.bridge_port);
+        assert_value_match(EXPECTED_PORT2_BRIDGE_INFO, &port2.bridge_port);
     });
 }
 

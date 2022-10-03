@@ -5,6 +5,8 @@ use pretty_assertions::assert_eq;
 
 use std::panic;
 
+use super::utils::assert_value_match;
+
 const IFACE_NAME: &str = "veth1";
 
 fn with_veth_iface<T>(test: T)
@@ -115,14 +117,8 @@ fn test_add_and_remove_ip() {
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
         assert_eq!(iface_type, &crate::IfaceType::Veth);
-        assert_eq!(
-            serde_yaml::to_string(&iface.ipv4).unwrap().trim(),
-            EXPECTED_IPV4_INFO
-        );
-        assert_eq!(
-            serde_yaml::to_string(&iface.ipv6).unwrap().trim(),
-            EXPECTED_IPV6_INFO
-        );
+        assert_value_match(EXPECTED_IPV4_INFO, &iface.ipv4);
+        assert_value_match(EXPECTED_IPV6_INFO, &iface.ipv6);
         let conf: NetConf = serde_yaml::from_str(DEL_IP_CONF).unwrap();
         conf.apply().unwrap();
         let state = NetState::retrieve().unwrap();
@@ -130,10 +126,7 @@ fn test_add_and_remove_ip() {
         let iface_type = &iface.iface_type;
         assert_eq!(iface_type, &crate::IfaceType::Veth);
         assert_eq!(iface.ipv4, None);
-        assert_eq!(
-            serde_yaml::to_string(&iface.ipv6).unwrap().trim(),
-            EXPECTED_EMPTY_IPV6_INFO
-        );
+        assert_value_match(EXPECTED_EMPTY_IPV6_INFO, &iface.ipv6);
     });
 }
 
@@ -146,14 +139,8 @@ fn test_add_and_remove_dynamic_ip() {
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
         assert_eq!(iface_type, &crate::IfaceType::Veth);
-        assert_eq!(
-            serde_yaml::to_string(&iface.ipv4).unwrap().trim(),
-            EXPECTED_IPV4_DYNAMIC_INFO
-        );
-        assert_eq!(
-            serde_yaml::to_string(&iface.ipv6).unwrap().trim(),
-            EXPECTED_IPV6_DYNAMIC_INFO
-        );
+        assert_value_match(EXPECTED_IPV4_DYNAMIC_INFO, &iface.ipv4);
+        assert_value_match(EXPECTED_IPV6_DYNAMIC_INFO, &iface.ipv6);
         let conf: NetConf = serde_yaml::from_str(DEL_IP_CONF).unwrap();
         conf.apply().unwrap();
         let state = NetState::retrieve().unwrap();
@@ -161,10 +148,7 @@ fn test_add_and_remove_dynamic_ip() {
         let iface_type = &iface.iface_type;
         assert_eq!(iface_type, &crate::IfaceType::Veth);
         assert_eq!(iface.ipv4, None);
-        assert_eq!(
-            serde_yaml::to_string(&iface.ipv6).unwrap().trim(),
-            EXPECTED_EMPTY_IPV6_INFO
-        );
+        assert_value_match(EXPECTED_EMPTY_IPV6_INFO, &iface.ipv6);
     });
 }
 
@@ -180,13 +164,7 @@ fn test_add_dynamic_ip_repeat() {
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
         assert_eq!(iface_type, &crate::IfaceType::Veth);
-        assert_eq!(
-            serde_yaml::to_string(&iface.ipv4).unwrap().trim(),
-            EXPECTED_IPV4_DYNAMIC_INFO
-        );
-        assert_eq!(
-            serde_yaml::to_string(&iface.ipv6).unwrap().trim(),
-            EXPECTED_IPV6_DYNAMIC_INFO
-        );
+        assert_value_match(EXPECTED_IPV4_DYNAMIC_INFO, &iface.ipv4);
+        assert_value_match(EXPECTED_IPV6_DYNAMIC_INFO, &iface.ipv6);
     });
 }

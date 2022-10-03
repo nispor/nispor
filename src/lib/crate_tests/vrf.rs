@@ -5,6 +5,8 @@ use pretty_assertions::assert_eq;
 
 use std::panic;
 
+use super::utils::assert_value_match;
+
 const IFACE_NAME: &str = "vrf0";
 
 const EXPECTED_VRF_INFO: &str = r#"---
@@ -20,10 +22,7 @@ fn test_get_vrf_iface_yaml() {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         assert_eq!(iface.iface_type, crate::IfaceType::Vrf);
-        assert_eq!(
-            serde_yaml::to_string(&iface.vrf).unwrap().trim(),
-            EXPECTED_VRF_INFO
-        );
+        assert_value_match(EXPECTED_VRF_INFO, &iface.vrf);
     });
 }
 

@@ -5,6 +5,8 @@ use pretty_assertions::assert_eq;
 
 use std::panic;
 
+use super::utils::assert_value_match;
+
 const IFACE_NAME: &str = "vxlan0";
 
 const EXPECTED_VXLAN_INFO: &str = r#"---
@@ -43,10 +45,7 @@ fn test_get_vxlan_iface_yaml() {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         assert_eq!(iface.iface_type, crate::IfaceType::Vxlan);
-        assert_eq!(
-            serde_yaml::to_string(&iface.vxlan).unwrap().trim(),
-            EXPECTED_VXLAN_INFO
-        );
+        assert_value_match(EXPECTED_VXLAN_INFO, &iface.vxlan);
     });
 }
 
