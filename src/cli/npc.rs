@@ -594,7 +594,8 @@ fn get_ifaces(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
     if let Some(iface_name) = matches.get_one::<String>("iface_name") {
         let mut filter = NetStateFilter::minimum();
         let mut iface_filter = NetStateIfaceFilter::default();
-        iface_filter.iface_name = Some(iface_name.to_string());
+        // In order to get controller/port relation ship,
+        // We do not request filter on interface name.
         iface_filter.include_ip_address = true;
         iface_filter.include_sriov_vf_info = true;
         iface_filter.include_bridge_vlan = true;
@@ -683,9 +684,8 @@ fn get_mptcp() -> Result<CliReply, CliError> {
 fn get_brief(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
     let mut filter = NetStateFilter::minimum();
     let mut iface_filter = NetStateIfaceFilter::minimum();
-    if let Some(iface_name) = matches.get_one::<String>("iface_name") {
-        iface_filter.iface_name = Some(iface_name.to_string());
-    }
+    // In order to get controller/port relation ship,
+    // We do not request filter on interface name.
     iface_filter.include_ip_address = true;
     filter.iface = Some(iface_filter);
     let mut route_filter = NetStateRouteFilter::default();
