@@ -10,7 +10,7 @@ on:
 jobs:
   lint:
     name: lint
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: true
       matrix:
@@ -37,7 +37,7 @@ jobs:
 
   integ:
     name: integ
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:

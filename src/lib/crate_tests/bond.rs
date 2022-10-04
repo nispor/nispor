@@ -38,7 +38,9 @@ bond:
   lacp_rate: slow
   ad_select: stable
   tlb_dynamic_lb: true
-  peer_notif_delay: 0"#;
+  peer_notif_delay: 0
+  lacp_active: true
+  "#;
 
 const EXPECTED_PORT1_INFO: &str = r#"---
 subordinate_state: active

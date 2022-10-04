@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::HashMap;
-use std::net::Ipv4Addr;
+use std::net::{Ipv4Addr, Ipv6Addr};
 
 use netlink_packet_route::rtnl::link::nlas::{
     self, Info, InfoBond, InfoData, InfoKind,
@@ -397,6 +397,12 @@ pub struct BondInfo {
     pub peer_notif_delay: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ad_info: Option<BondAdInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lacp_active: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub missed_max: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ns_ip6_target: Option<Vec<Ipv6Addr>>,
 }
 
 impl From<&[InfoBond]> for BondInfo {
@@ -452,9 +458,9 @@ impl From<&[InfoBond]> for BondInfo {
                 }
                 InfoBond::TlbDynamicLb(v) => ret.tlb_dynamic_lb = Some(*v > 0),
                 InfoBond::PeerNotifDelay(v) => ret.peer_notif_delay = Some(*v),
-                //InfoBond::AdLacpActive(v) => ret.ad_lacp_active = Some(*v),
-                //InfoBond::MissedMax(v) => ret.missed_max = Some(*v),
-                //InfoBond::NsIp6Target(v) => ret.ns_ip6_target = Some(*v),
+                InfoBond::AdLacpActive(v) => ret.lacp_active = Some(*v > 0),
+                InfoBond::MissedMax(v) => ret.missed_max = Some(*v),
+                InfoBond::NsIp6Target(v) => ret.ns_ip6_target = Some(v.clone()),
                 _ => {
                     log::warn!("Unsupported InfoBond: {:?}", nla);
                 }
