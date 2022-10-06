@@ -136,169 +136,177 @@ fn parse_brport_designated_port(
 
 fn parse_brport_designated_cost(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.designated_cost = parse_as_u16(data)?;
+    port_info.designated_cost = parse_as_u16(data)?;
     Ok(())
 }
 
 fn parse_brport_id(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.port_id = format!("0x{:04x}", parse_as_u16(data)?);
+    port_info.port_id = format!("0x{:04x}", parse_as_u16(data)?);
     Ok(())
 }
 
 fn parse_brport_no(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.port_no = format!("0x{:x}", parse_as_u16(data)?);
+    port_info.port_no = format!("0x{:x}", parse_as_u16(data)?);
     Ok(())
 }
 
 fn parse_brport_topology_change_ack(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.change_ack = parse_as_u8(data)? > 0;
+    port_info.change_ack = parse_as_u8(data)? > 0;
     Ok(())
 }
 
 fn parse_brport_config_pending(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.config_pending = parse_as_u8(data)? > 0;
+    port_info.config_pending = parse_as_u8(data)? > 0;
     Ok(())
 }
 
 fn parse_brport_message_age_timer(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.message_age_timer = parse_as_u64(data)?;
+    port_info.message_age_timer = parse_as_u64(data)?;
     Ok(())
 }
 
 fn parse_brport_forward_delay_timer(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.forward_delay_timer = parse_as_u64(data)?;
+    port_info.forward_delay_timer = parse_as_u64(data)?;
     Ok(())
 }
 
 fn parse_brport_hold_timer(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.hold_timer = parse_as_u64(data)?;
+    port_info.hold_timer = parse_as_u64(data)?;
     Ok(())
 }
 
 fn parse_brport_multicast_router(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.multicast_router = parse_as_u8(data)?.into();
+    port_info.multicast_router = parse_as_u8(data)?.into();
     Ok(())
 }
 
 fn parse_brport_mcast_flood(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.multicast_flood = parse_as_u8(data)? > 0;
+    port_info.multicast_flood = parse_as_u8(data)? > 0;
     Ok(())
 }
 
 fn parse_brport_mcast_to_ucast(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.multicast_to_unicast = parse_as_u8(data)? > 0;
+    port_info.multicast_to_unicast = parse_as_u8(data)? > 0;
     Ok(())
 }
 
 fn parse_brport_vlan_tunnel(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.vlan_tunnel = parse_as_u8(data)? > 0;
+    port_info.vlan_tunnel = parse_as_u8(data)? > 0;
     Ok(())
 }
 
 fn parse_brport_bast_flood(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.broadcast_flood = parse_as_u8(data)? > 0;
+    port_info.broadcast_flood = parse_as_u8(data)? > 0;
     Ok(())
 }
 
 fn parse_brport_group_fwd_mask(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.group_fwd_mask = parse_as_u16(data)?;
+    port_info.group_fwd_mask = parse_as_u16(data)?;
     Ok(())
 }
 
 fn parse_brport_neigh_suppress(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.neigh_suppress = parse_as_u8(data)? > 0;
+    port_info.neigh_suppress = parse_as_u8(data)? > 0;
     Ok(())
 }
 
 fn parse_brport_isolated(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.isolated = parse_as_u8(data)? > 0;
+    port_info.isolated = parse_as_u8(data)? > 0;
     Ok(())
 }
 
 fn parse_brport_backup_port(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.backup_port = format!("{}", parse_as_u32(data)?);
+    port_info.backup_port = format!("{}", parse_as_u32(data)?);
     Ok(())
 }
 
 fn parse_brport_mrp_ring_open(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.mrp_ring_open = Some(parse_as_u8(data)? > 0);
+    port_info.mrp_ring_open = Some(parse_as_u8(data)? > 0);
     Ok(())
 }
 
 fn parse_brport_mrp_in_open(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.mrp_in_open = Some(parse_as_u8(data)? > 0);
+    port_info.mrp_in_open = Some(parse_as_u8(data)? > 0);
     Ok(())
 }
 
 fn parse_brport_mcast_eht_hosts_limit(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.mcast_eht_hosts_limit = Some(parse_as_u32(data)?);
+    port_info.mcast_eht_hosts_limit = Some(parse_as_u32(data)?);
     Ok(())
 }
 
 fn parse_brport_mcast_eht_hosts_cnt(
     data: &[u8],
-    cost_info: &mut BridgePortInfo,
+    port_info: &mut BridgePortInfo,
 ) -> Result<(), NisporError> {
-    cost_info.mcast_eht_hosts_cnt = Some(parse_as_u32(data)?);
+    port_info.mcast_eht_hosts_cnt = Some(parse_as_u32(data)?);
+    Ok(())
+}
+
+fn parse_brport_locked(
+    data: &[u8],
+    port_info: &mut BridgePortInfo,
+) -> Result<(), NisporError> {
+    port_info.locked = Some(parse_as_u8(data)? > 0);
     Ok(())
 }
 
@@ -345,6 +353,7 @@ const NLA_PORT_PARSE_FUNS: &[BridgePortParseFunc] = &[
     parse_brport_mrp_in_open,
     parse_brport_mcast_eht_hosts_limit,
     parse_brport_mcast_eht_hosts_cnt,
+    parse_brport_locked,
 ];
 
 pub(crate) fn parse_bridge_port_info(
@@ -362,7 +371,7 @@ pub(crate) fn parse_bridge_port_info(
                     func(nla.value(), &mut port_info)?;
                 } else {
                     log::warn!(
-                        "Unhandled BRIDGE_PORT_INFO {} {:?}",
+                        "Unhandled IFLA_BRPORT_XXX {} {:?}",
                         nla.kind(),
                         nla.value()
                     );
