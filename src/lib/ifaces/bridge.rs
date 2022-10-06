@@ -289,6 +289,8 @@ pub struct BridgePortInfo {
     pub mcast_eht_hosts_cnt: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vlans: Option<Vec<BridgeVlanEntry>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub locked: Option<bool>,
 }
 
 pub(crate) fn get_bridge_info(
