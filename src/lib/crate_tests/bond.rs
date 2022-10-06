@@ -27,19 +27,12 @@ bond:
   arp_all_targets: any
   arp_validate: none
   primary_reselect: always
-  fail_over_mac: none
-  xmit_hash_policy: layer2
   resend_igmp: 1
-  num_unsol_na: 1
   all_subordinates_active: dropped
   min_links: 0
   lp_interval: 1
   packets_per_subordinate: 1
-  lacp_rate: slow
-  ad_select: stable
-  tlb_dynamic_lb: true
   peer_notif_delay: 0
-  lacp_active: true
   "#;
 
 const EXPECTED_PORT1_INFO: &str = r#"---
