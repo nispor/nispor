@@ -1,4 +1,23 @@
 # Changelog
+## [1.2.8] - 2022-10-06
+
+## Break changes
+
+ * N/A
+
+## New features
+
+ * Add support of filtering via `NetStateFilter`. (f128da4, c130bb6)
+ * SR-IOV: Include SRIOV VF information per VF interface. (fd3c489)
+ * New bond options: (77ede43)
+   * `BondInfo.lacp_active`
+   * `BondInfo.missed_max`
+   * `BondInfo.ns_ip6_target`
+
+## Bug fixes
+
+ * Expose `MptcpAddressFlag`. (dd2a427)
+
 ## [1.2.7] - 2022-06-29
 
 ## Break changes
