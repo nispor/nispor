@@ -400,7 +400,7 @@ pub struct BondInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lacp_active: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub missed_max: Option<u8>,
+    pub arp_missed_max: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ns_ip6_target: Option<Vec<Ipv6Addr>>,
 }
@@ -408,9 +408,18 @@ pub struct BondInfo {
 impl From<&[InfoBond]> for BondInfo {
     fn from(nlas: &[InfoBond]) -> Self {
         let mut ret = Self::default();
+        if let Some(mode) = nlas.iter().find_map(|nla| {
+            if let InfoBond::Mode(v) = nla {
+                Some(v)
+            } else {
+                None
+            }
+        }) {
+            ret.mode = (*mode).into();
+        }
         for nla in nlas {
             match nla {
-                InfoBond::Mode(v) => ret.mode = (*v).into(),
+                InfoBond::Mode(_) => (),
                 InfoBond::MiiMon(v) => ret.miimon = Some(*v),
                 InfoBond::UpDelay(v) => ret.updelay = Some(*v),
                 InfoBond::DownDelay(v) => ret.downdelay = Some(*v),
@@ -425,41 +434,122 @@ impl From<&[InfoBond]> for BondInfo {
                 InfoBond::ArpAllTargets(v) => {
                     ret.arp_all_targets = Some((*v).into())
                 }
-                InfoBond::Primary(v) => ret.primary = Some(format!("{}", v)),
+                // For all the bond option limitation , please refer to
+                // `bond_opts[BOND_OPT_LAST]` in linux kernel code:
+                // `drivers/net/bonding/bond_options.c`
+                InfoBond::Primary(v) => {
+                    if [
+                        BondMode::ActiveBackup,
+                        BondMode::BalanceAlb,
+                        BondMode::BalanceTlb,
+                    ]
+                    .contains(&ret.mode)
+                    {
+                        ret.primary = Some(format!("{}", v));
+                    }
+                }
                 InfoBond::PrimaryReselect(v) => {
                     ret.primary_reselect = Some((*v).into())
                 }
                 InfoBond::FailOverMac(v) => {
-                    ret.fail_over_mac = Some((*v).into())
+                    if ret.mode == BondMode::ActiveBackup {
+                        ret.fail_over_mac = Some((*v).into());
+                    }
                 }
                 InfoBond::XmitHashPolicy(v) => {
-                    ret.xmit_hash_policy = Some((*v).into())
+                    if [
+                        BondMode::BalanceXor,
+                        BondMode::Ieee8021AD,
+                        BondMode::BalanceTlb,
+                    ]
+                    .contains(&ret.mode)
+                    {
+                        ret.xmit_hash_policy = Some((*v).into());
+                    }
                 }
-                InfoBond::ResendIgmp(v) => ret.resend_igmp = Some(*v),
+                InfoBond::ResendIgmp(v) => {
+                    if [
+                        BondMode::BalanceRoundRobin,
+                        BondMode::ActiveBackup,
+                        BondMode::BalanceTlb,
+                        BondMode::BalanceAlb,
+                    ]
+                    .contains(&ret.mode)
+                    {
+                        ret.resend_igmp = Some(*v);
+                    }
+                }
                 InfoBond::NumPeerNotif(v) => {
-                    ret.num_unsol_na = Some(*v);
-                    ret.num_unsol_na = Some(*v);
+                    if ret.mode == BondMode::ActiveBackup {
+                        ret.num_unsol_na = Some(*v);
+                        ret.num_grat_arp = Some(*v);
+                    }
                 }
                 InfoBond::AllSlavesActive(v) => {
                     ret.all_subordinates_active = Some((*v).into())
                 }
+                // Kernel code has no limit on this, but document require
+                // 802.3ad mode. Let's follow the kernel code here.
                 InfoBond::MinLinks(v) => ret.min_links = Some(*v),
+                // Kernel code has no limit on this, but document require
+                // balance-tlb and balance-alb modes. Let's follow the kernel
+                // code here.
                 InfoBond::LpInterval(v) => ret.lp_interval = Some(*v),
                 InfoBond::PacketsPerSlave(v) => {
-                    ret.packets_per_subordinate = Some(*v)
+                    if ret.mode == BondMode::BalanceRoundRobin {
+                        ret.packets_per_subordinate = Some(*v);
+                    }
                 }
-                InfoBond::AdLacpRate(v) => ret.lacp_rate = Some((*v).into()),
-                InfoBond::AdSelect(v) => ret.ad_select = Some((*v).into()),
+                InfoBond::AdLacpRate(v) => {
+                    if ret.mode == BondMode::Ieee8021AD {
+                        ret.lacp_rate = Some((*v).into())
+                    }
+                }
+                InfoBond::AdSelect(v) => {
+                    if ret.mode == BondMode::Ieee8021AD {
+                        ret.ad_select = Some((*v).into());
+                    }
+                }
                 InfoBond::AdInfo(v) => ret.ad_info = Some(v.as_slice().into()),
-                InfoBond::AdActorSysPrio(v) => ret.ad_actor_sys_prio = Some(*v),
-                InfoBond::AdUserPortKey(v) => ret.ad_user_port_key = Some(*v),
-                InfoBond::AdActorSystem(v) => {
-                    ret.ad_actor_system = parse_as_mac(v.len(), v).ok()
+                InfoBond::AdActorSysPrio(v) => {
+                    if ret.mode == BondMode::Ieee8021AD {
+                        ret.ad_actor_sys_prio = Some(*v);
+                    }
                 }
-                InfoBond::TlbDynamicLb(v) => ret.tlb_dynamic_lb = Some(*v > 0),
+                InfoBond::AdUserPortKey(v) => {
+                    if ret.mode == BondMode::Ieee8021AD {
+                        ret.ad_user_port_key = Some(*v);
+                    }
+                }
+                InfoBond::AdActorSystem(v) => {
+                    if ret.mode == BondMode::Ieee8021AD {
+                        ret.ad_actor_system = parse_as_mac(v.len(), v).ok();
+                    }
+                }
+                InfoBond::TlbDynamicLb(v) => {
+                    if [BondMode::BalanceTlb, BondMode::BalanceAlb]
+                        .contains(&ret.mode)
+                    {
+                        ret.tlb_dynamic_lb = Some(*v > 0);
+                    }
+                }
                 InfoBond::PeerNotifDelay(v) => ret.peer_notif_delay = Some(*v),
-                InfoBond::AdLacpActive(v) => ret.lacp_active = Some(*v > 0),
-                InfoBond::MissedMax(v) => ret.missed_max = Some(*v),
+                InfoBond::AdLacpActive(v) => {
+                    if ret.mode == BondMode::Ieee8021AD {
+                        ret.lacp_active = Some(*v > 0);
+                    }
+                }
+                InfoBond::MissedMax(v) => {
+                    if ![
+                        BondMode::Ieee8021AD,
+                        BondMode::BalanceTlb,
+                        BondMode::BalanceAlb,
+                    ]
+                    .contains(&ret.mode)
+                    {
+                        ret.arp_missed_max = Some(*v);
+                    }
+                }
                 InfoBond::NsIp6Target(v) => ret.ns_ip6_target = Some(v.clone()),
                 _ => {
                     log::warn!("Unsupported InfoBond: {:?}", nla);
