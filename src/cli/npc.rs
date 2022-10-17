@@ -316,7 +316,7 @@ fn print_result(
 }
 
 fn parse_arg_output_format(matches: &clap::ArgMatches) -> CliOutputType {
-    match matches.contains_id("json") {
+    match matches.is_present("json") {
         true => CliOutputType::Json,
         false => CliOutputType::Yaml,
     }
@@ -347,13 +347,13 @@ fn main() {
         .arg(
             clap::Arg::new("verbose")
                 .short('v')
-                .action(clap::ArgAction::Count)
+                .multiple_occurrences(true)
                 .help("Set verbose level"),
         )
         .arg(
             clap::Arg::new("json")
                 .short('j')
-                .action(clap::ArgAction::Append)
+                .takes_value(false)
                 .global(true)
                 .help("Show in json format"),
         )
@@ -384,7 +384,7 @@ fn main() {
                     clap::Arg::new("dev")
                         .short('d')
                         .long("dev")
-                        .action(clap::ArgAction::Append)
+                        .takes_value(true)
                         .help(
                             "Show only route entries output to \
                             the specified interface",
@@ -394,7 +394,7 @@ fn main() {
                     clap::Arg::new("table")
                         .short('t')
                         .long("table")
-                        .action(clap::ArgAction::Append)
+                        .takes_value(true)
                         .help(
                             "Show only route entries output in \
                             the specified route table",
@@ -404,9 +404,9 @@ fn main() {
                     clap::Arg::new("scope")
                         .short('s')
                         .long("scope")
-                        .action(clap::ArgAction::Append)
+                        .takes_value(true)
                         .help("Show only route entries with specified scope")
-                        .value_parser([
+                        .possible_values([
                             "a", "all", "u", "universe", "g", "global", "s",
                             "site", "l", "link", "h", "host", "n", "nowhere",
                             "no_where",
@@ -416,9 +416,9 @@ fn main() {
                     clap::Arg::new("protocol")
                         .short('p')
                         .long("protocol")
-                        .action(clap::ArgAction::Append)
+                        .takes_value(true)
                         .help("Show only route with specified protocol")
-                        .value_parser([
+                        .possible_values([
                             "icmp_redirect",
                             "kernel",
                             "boot",
@@ -457,7 +457,8 @@ fn main() {
         )
         .get_matches();
 
-    let (log_module_filter, log_level) = match matches.get_count("verbose") {
+    let (log_module_filter, log_level) = match matches.occurrences_of("verbose")
+    {
         0 => (Some("nispor"), log::LevelFilter::Warn),
         1 => (Some("nispor"), log::LevelFilter::Info),
         2 => (Some("nispor"), log::LevelFilter::Debug),
@@ -471,7 +472,7 @@ fn main() {
     let mut output_format = parse_arg_output_format(&matches);
 
     if let Some(m) = matches.subcommand_matches("set") {
-        if let Some(file_path) = m.get_one::<String>("file_path") {
+        if let Some(file_path) = m.value_of("file_path") {
             print_result(apply_conf(file_path), output_format);
             process::exit(0);
         } else {
@@ -591,7 +592,7 @@ fn get_link_info(iface: &Iface) -> String {
 }
 
 fn get_ifaces(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
-    if let Some(iface_name) = matches.get_one::<String>("iface_name") {
+    if let Some(iface_name) = matches.value_of("iface_name") {
         let mut filter = NetStateFilter::minimum();
         let mut iface_filter = NetStateIfaceFilter::default();
         // In order to get controller/port relation ship,
@@ -606,7 +607,7 @@ fn get_ifaces(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
         let state = NetState::retrieve_with_filter(&filter)?;
 
         if let Some(iface) = state.ifaces.get(iface_name) {
-            if matches.contains_id("delete") {
+            if matches.is_present("delete") {
                 delete_iface(&iface.name)
             } else {
                 Ok(CliReply::Ifaces(vec![iface.clone()]))
@@ -614,7 +615,7 @@ fn get_ifaces(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
         } else {
             Err(format!("Interface '{}' not found", iface_name).into())
         }
-    } else if matches.contains_id("delete") {
+    } else if matches.is_present("delete") {
         Err("Need to specific a interface to delete".to_string().into())
     } else {
         let state = NetState::retrieve()?;
@@ -625,9 +626,9 @@ fn get_ifaces(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
 fn get_routes(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
     let mut route_filter = NetStateRouteFilter::default();
 
-    if let Some(scope) = matches.get_one::<String>("scope") {
+    if let Some(scope) = matches.value_of("scope") {
         if scope != "a" && scope != "all" {
-            let rt_scope = RouteScope::from(scope.as_str());
+            let rt_scope = RouteScope::from(scope);
             if rt_scope == RouteScope::Unknown {
                 return Err(format!("Invalid scope {}", scope).into());
             }
@@ -635,16 +636,16 @@ fn get_routes(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
         }
     }
 
-    if let Some(protocol) = matches.get_one::<String>("protocol") {
-        let rt_protocol = RouteProtocol::from(protocol.as_str());
+    if let Some(protocol) = matches.value_of("protocol") {
+        let rt_protocol = RouteProtocol::from(protocol);
         if rt_protocol == RouteProtocol::Unknown {
             return Err(format!("Invalid protocol {}", protocol).into());
         }
         route_filter.protocol = Some(rt_protocol);
     }
 
-    if let Some(table) = matches.get_one::<String>("table") {
-        route_filter.table = Some(match table.as_str() {
+    if let Some(table) = matches.value_of("table") {
+        route_filter.table = Some(match table {
             "main" => RT_TABLE_MAIN,
             "local" => RT_TABLE_LOCAL,
             _ => table.parse::<u8>().map_err(|e| CliError {
@@ -653,7 +654,7 @@ fn get_routes(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
         });
     }
 
-    if let Some(iface_name) = matches.get_one::<String>("dev") {
+    if let Some(iface_name) = matches.value_of("dev") {
         route_filter.oif = Some(iface_name.to_string());
     }
 
@@ -690,17 +691,17 @@ fn get_brief(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
     filter.iface = Some(iface_filter);
     let mut route_filter = NetStateRouteFilter::default();
     route_filter.table = Some(RT_TABLE_MAIN);
-    if let Some(iface_name) = matches.get_one::<String>("iface_name") {
+    if let Some(iface_name) = matches.value_of("iface_name") {
         route_filter.oif = Some(iface_name.to_string());
     }
     filter.route = Some(route_filter);
     filter.route_rule = None;
     let state = NetState::retrieve_with_filter(&filter)?;
 
-    if let Some(iface_name) = matches.get_one::<String>("iface_name") {
+    if let Some(iface_name) = matches.value_of("iface_name") {
         if state.ifaces.get(iface_name).is_some() {
             for iface_brief in CliIfaceBrief::from_net_state(&state) {
-                if &iface_brief.name == iface_name {
+                if iface_brief.name == iface_name {
                     return Ok(CliReply::Brief(vec![iface_brief]));
                 }
             }
