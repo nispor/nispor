@@ -810,11 +810,11 @@ async fn apply_route_conf(
     nl_msg.header.destination_prefix_length = dst_prefix;
     match dst_addr {
         IpAddr::V4(addr) => {
-            nl_msg.header.address_family = AF_INET as u8;
+            nl_msg.header.address_family = AF_INET;
             nl_msg.nlas.push(Nla::Destination(addr.octets().to_vec()));
         }
         IpAddr::V6(addr) => {
-            nl_msg.header.address_family = AF_INET6 as u8;
+            nl_msg.header.address_family = AF_INET6;
             nl_msg.nlas.push(Nla::Destination(addr.octets().to_vec()));
         }
     };
