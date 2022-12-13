@@ -4,7 +4,7 @@ import setuptools
 
 setuptools.setup(
     name="nispor",
-    version="1.2.8",
+    version="1.2.9",
     author="Gris Ge",
     author_email="fge@redhat.com",
     description="Python binding of Nispor",
