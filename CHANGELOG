@@ -1,4 +1,18 @@
 # Changelog
+## [1.2.9] - 2022-12-13
+
+## Break changes
+
+ * N/A
+
+## New features
+
+ * N/A
+
+## Bug fixes
+
+ * Fix route rule action. (1c98d7f)
+
 ## [1.2.8] - 2022-10-06
 
 ## Break changes
