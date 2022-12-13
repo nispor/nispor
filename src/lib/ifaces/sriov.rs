@@ -286,7 +286,7 @@ fn parse_vf_stats(raw: &[u8]) -> Result<VfState, NisporError> {
 // We use sysfs content /sys/class/net/<pf_name>/devices/virtfn<sriov_id>/net/
 fn get_vf_iface_name(pf_name: &str, sriov_id: &u32) -> Option<String> {
     let sysfs_path =
-        format!("/sys/class/net/{}/device/virtfn{}/net/", pf_name, sriov_id);
+        format!("/sys/class/net/{pf_name}/device/virtfn{sriov_id}/net/");
     read_folder(&sysfs_path).pop()
 }
 

@@ -75,7 +75,7 @@ impl std::fmt::Display for BondMode {
             Self::Ieee8021AD => write!(f, "802.3ad"),
             Self::BalanceTlb => write!(f, "balance-tlb"),
             Self::BalanceAlb => write!(f, "balance-alb"),
-            Self::Other(u) => write!(f, "{}", u),
+            Self::Other(u) => write!(f, "{u}"),
             Self::Unknown => write!(f, "unknown"),
         }
     }
@@ -445,7 +445,7 @@ impl From<&[InfoBond]> for BondInfo {
                     ]
                     .contains(&ret.mode)
                     {
-                        ret.primary = Some(format!("{}", v));
+                        ret.primary = Some(format!("{v}"));
                     }
                 }
                 InfoBond::PrimaryReselect(v) => {

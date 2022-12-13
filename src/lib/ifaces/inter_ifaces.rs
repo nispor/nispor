@@ -187,8 +187,7 @@ pub(crate) async fn delete_ifaces(
     for (iface_name, iface_index) in ifaces {
         if let Err(e) = handle.link().del(*iface_index).execute().await {
             return Err(NisporError::bug(format!(
-                "Failed to delete interface {} with index {}: {}",
-                iface_name, iface_index, e
+                "Failed to delete interface {iface_name} with index {iface_index}: {e}"
             )));
         }
     }

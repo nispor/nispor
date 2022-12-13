@@ -39,8 +39,7 @@ pub(crate) fn apply_kernel_route_filter(
             Some(index) => rt_nlmsg.nlas.push(Nla::Oif(*index)),
             None => {
                 let e = NisporError::invalid_argument(format!(
-                    "Interface {} not found",
-                    oif
+                    "Interface {oif} not found"
                 ));
                 log::error!("{}", e);
                 return Err(e);

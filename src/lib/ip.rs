@@ -253,8 +253,7 @@ fn is_dynamic_ip(preferred_lft: &str, valid_lft: &str) -> bool {
 
 fn parse_lft_sec(name: &str, lft_str: &str) -> Result<i32, NisporError> {
     let e = NisporError::invalid_argument(format!(
-        "Invalid {} format: expect format 50sec, got {}",
-        name, lft_str
+        "Invalid {name} format: expect format 50sec, got {lft_str}"
     ));
     match lft_str.strip_suffix("sec") {
         Some(a) => a.parse().map_err(|_| {
@@ -273,8 +272,7 @@ pub(crate) fn parse_ip_addr_str(
 ) -> Result<IpAddr, NisporError> {
     IpAddr::from_str(ip_addr_str).map_err(|e| {
         let e = NisporError::invalid_argument(format!(
-            "Invalid IP address {}: {}",
-            ip_addr_str, e
+            "Invalid IP address {ip_addr_str}: {e}"
         ));
         log::error!("{}", e);
         e
@@ -287,8 +285,7 @@ pub(crate) fn parse_ip_net_addr_str(
     let splits: Vec<&str> = ip_net_str.split('/').collect();
     if splits.len() > 2 || splits.is_empty() {
         let e = NisporError::invalid_argument(format!(
-            "Invalid IP network address {}",
-            ip_net_str,
+            "Invalid IP network address {ip_net_str}",
         ));
         log::error!("{}", e);
         return Err(e);
@@ -297,8 +294,7 @@ pub(crate) fn parse_ip_net_addr_str(
     let prefix_len = if let Some(prefix_len_str) = splits.get(1) {
         prefix_len_str.parse::<u8>().map_err(|e| {
             let e = NisporError::invalid_argument(format!(
-                "Invalid IP network prefix {}: {}",
-                ip_net_str, e
+                "Invalid IP network prefix {ip_net_str}: {e}"
             ));
             log::error!("{}", e);
             e

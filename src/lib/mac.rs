@@ -16,7 +16,7 @@ pub(crate) fn parse_as_mac(
     }
     let mut rt = String::new();
     for (i, m) in data.iter().enumerate().take(mac_len) {
-        write!(rt, "{:02x}", m).ok();
+        write!(rt, "{m:02x}").ok();
         if i != mac_len - 1 {
             rt.push(':');
         }
@@ -38,8 +38,7 @@ pub(crate) fn mac_str_to_raw(mac_addr: &str) -> Result<Vec<u8>, NisporError> {
             Ok(i) => mac_raw.push(i),
             Err(e) => {
                 return Err(NisporError::invalid_argument(format!(
-                    "Invalid hex string for MAC address {}: {}",
-                    mac_addr, e
+                    "Invalid hex string for MAC address {mac_addr}: {e}"
                 )));
             }
         }

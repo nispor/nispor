@@ -130,7 +130,7 @@ fn left_time_to_string(left_time: i32) -> String {
     if left_time == -1 {
         "forever".into()
     } else {
-        format!("{}sec", left_time)
+        format!("{left_time}sec")
     }
 }
 
