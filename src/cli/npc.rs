@@ -33,7 +33,7 @@ impl From<String> for CliError {
 impl From<NisporError> for CliError {
     fn from(e: NisporError) -> Self {
         Self {
-            error: format!("{}", e),
+            error: format!("{e}"),
         }
     }
 }
@@ -75,7 +75,7 @@ impl CliIfaceBrief {
                 write!(link_string, " {}", brief.link_info.as_str()).ok();
             }
             if let Some(ctrl) = brief.controller.as_ref() {
-                write!(link_string, " controller {}", ctrl).ok();
+                write!(link_string, " controller {ctrl}").ok();
             }
 
             ret.push(link_string);
@@ -98,16 +98,16 @@ impl CliIfaceBrief {
             }
 
             for ip in &brief.ipv4 {
-                ret.push(format!("{}ipv4 {}", INDENT, ip));
+                ret.push(format!("{INDENT}ipv4 {ip}"));
             }
             for gw in &brief.gw4 {
-                ret.push(format!("{}gw4 {}", INDENT, gw));
+                ret.push(format!("{INDENT}gw4 {gw}"));
             }
             for ip in &brief.ipv6 {
-                ret.push(format!("{}ipv6 {}", INDENT, ip));
+                ret.push(format!("{INDENT}ipv6 {ip}"));
             }
             for gw in &brief.gw6 {
-                ret.push(format!("{}gw6 {}", INDENT, gw));
+                ret.push(format!("{INDENT}gw6 {gw}"));
             }
         }
         ret.join("\n")
@@ -164,7 +164,7 @@ impl CliIfaceBrief {
                 flags: iface
                     .flags
                     .iter()
-                    .map(|flag| format!("{:?}", flag).to_uppercase())
+                    .map(|flag| format!("{flag:?}").to_uppercase())
                     .collect(),
                 state: iface.state.clone(),
                 mac: iface.mac_address.clone(),
@@ -503,17 +503,13 @@ fn apply_conf(file_path: &str) -> Result<CliReply, CliError> {
     let fd = match std::fs::File::open(file_path) {
         Ok(fd) => fd,
         Err(e) => {
-            return Err(
-                format!("Filed to open file {}: {}", file_path, e).into()
-            );
+            return Err(format!("Filed to open file {file_path}: {e}").into());
         }
     };
     let net_conf: NetConf = match serde_yaml::from_reader(fd) {
         Ok(c) => c,
         Err(e) => {
-            return Err(
-                format!("Invalid YAML file {}: {}", file_path, e,).into()
-            );
+            return Err(format!("Invalid YAML file {file_path}: {e}",).into());
         }
     };
     net_conf.apply()?;
@@ -562,7 +558,7 @@ fn get_link_info(iface: &Iface) -> String {
             bond.subordinates.join(LIST_SPLITER)
         );
         if let Some(p) = bond.primary.as_deref() {
-            write!(bond_line, " primary {}", p).ok();
+            write!(bond_line, " primary {p}").ok();
         }
         bond_line
     } else if let Some(bridge) = iface.bridge.as_ref() {
@@ -613,7 +609,7 @@ fn get_ifaces(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
                 Ok(CliReply::Ifaces(vec![iface.clone()]))
             }
         } else {
-            Err(format!("Interface '{}' not found", iface_name).into())
+            Err(format!("Interface '{iface_name}' not found").into())
         }
     } else if matches.is_present("delete") {
         Err("Need to specific a interface to delete".to_string().into())
@@ -630,7 +626,7 @@ fn get_routes(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
         if scope != "a" && scope != "all" {
             let rt_scope = RouteScope::from(scope);
             if rt_scope == RouteScope::Unknown {
-                return Err(format!("Invalid scope {}", scope).into());
+                return Err(format!("Invalid scope {scope}").into());
             }
             route_filter.scope = Some(rt_scope);
         }
@@ -639,7 +635,7 @@ fn get_routes(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
     if let Some(protocol) = matches.value_of("protocol") {
         let rt_protocol = RouteProtocol::from(protocol);
         if rt_protocol == RouteProtocol::Unknown {
-            return Err(format!("Invalid protocol {}", protocol).into());
+            return Err(format!("Invalid protocol {protocol}").into());
         }
         route_filter.protocol = Some(rt_protocol);
     }
@@ -649,7 +645,7 @@ fn get_routes(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
             "main" => RT_TABLE_MAIN,
             "local" => RT_TABLE_LOCAL,
             _ => table.parse::<u8>().map_err(|e| CliError {
-                error: format!("{}", e),
+                error: format!("{e}"),
             })?,
         });
     }
@@ -706,12 +702,11 @@ fn get_brief(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
                 }
             }
             Err(format!(
-                "BUG: Interface '{}' not found in CliIfaceBrief",
-                iface_name
+                "BUG: Interface '{iface_name}' not found in CliIfaceBrief"
             )
             .into())
         } else {
-            Err(format!("Interface '{}' not found", iface_name).into())
+            Err(format!("Interface '{iface_name}' not found").into())
         }
     } else {
         /* Show everything if no cmdline arg has been supplied */

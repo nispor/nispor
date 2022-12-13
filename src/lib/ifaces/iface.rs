@@ -303,7 +303,7 @@ pub(crate) fn parse_nl_msg_to_iface(
         } else if let Nla::OperState(state) = nla {
             iface_state.state = _get_iface_state(state);
         } else if let Nla::Master(controller) = nla {
-            iface_state.controller = Some(format!("{}", controller));
+            iface_state.controller = Some(format!("{controller}"));
         } else if let Nla::Link(l) = nla {
             link = Some(*l);
         } else if let Nla::Info(infos) = nla {
@@ -325,7 +325,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                             "openvswitch" => IfaceType::OpenvSwitch,
                             _ => IfaceType::Other(s.clone()),
                         },
-                        _ => IfaceType::Other(format!("{:?}", t)),
+                        _ => IfaceType::Other(format!("{t:?}")),
                     };
                     if let IfaceType::Other(_) = iface_type {
                         /* We did not find an explicit link type. Instead it's
@@ -424,29 +424,29 @@ pub(crate) fn parse_nl_msg_to_iface(
     }
     if let Some(ref mut vlan_info) = iface_state.vlan {
         if let Some(base_iface_index) = link {
-            vlan_info.base_iface = format!("{}", base_iface_index);
+            vlan_info.base_iface = format!("{base_iface_index}");
         }
     }
     if let Some(ref mut ib_info) = iface_state.ipoib {
         if let Some(base_iface_index) = link {
-            ib_info.base_iface = Some(format!("{}", base_iface_index));
+            ib_info.base_iface = Some(format!("{base_iface_index}"));
         }
     }
     if let Some(iface_index) = link {
         match iface_state.iface_type {
             IfaceType::Veth => {
                 iface_state.veth = Some(VethInfo {
-                    peer: format!("{}", iface_index),
+                    peer: format!("{iface_index}"),
                 })
             }
             IfaceType::MacVlan => {
                 if let Some(ref mut mac_vlan_info) = iface_state.mac_vlan {
-                    mac_vlan_info.base_iface = format!("{}", iface_index);
+                    mac_vlan_info.base_iface = format!("{iface_index}");
                 }
             }
             IfaceType::MacVtap => {
                 if let Some(ref mut mac_vtap_info) = iface_state.mac_vtap {
-                    mac_vtap_info.base_iface = format!("{}", iface_index);
+                    mac_vtap_info.base_iface = format!("{iface_index}");
                 }
             }
             _ => (),
@@ -490,7 +490,7 @@ fn _get_iface_state(state: &nlas::State) -> IfaceState {
         nlas::State::Down => IfaceState::Down,
         nlas::State::LowerLayerDown => IfaceState::LowerLayerDown,
         nlas::State::Unknown => IfaceState::Unknown,
-        _ => IfaceState::Other(format!("{:?}", state)),
+        _ => IfaceState::Other(format!("{state:?}")),
     }
 }
 

@@ -369,7 +369,7 @@ impl std::fmt::Display for RouteScope {
             Self::Host => write!(f, "host"),
             Self::NoWhere => write!(f, "no_where"),
             Self::Unknown => write!(f, "unknown"),
-            Self::Other(s) => write!(f, "{}", s),
+            Self::Other(s) => write!(f, "{s}"),
         }
     }
 }
@@ -474,7 +474,7 @@ pub(crate) async fn get_routes(
 
     let mut ifindex_to_name = HashMap::new();
     for (name, index) in iface_name2index.iter() {
-        ifindex_to_name.insert(format!("{}", index), name.to_string());
+        ifindex_to_name.insert(format!("{index}"), name.to_string());
     }
 
     if filter.is_some() {
@@ -535,11 +535,11 @@ fn get_route(
             }
             Nla::Oif(ref d) => {
                 rt.oif = if let Some(iface_name) =
-                    ifindex_to_name.get(&format!("{}", d))
+                    ifindex_to_name.get(&format!("{d}"))
                 {
                     Some(iface_name.clone())
                 } else {
-                    Some(format!("{}", d))
+                    Some(format!("{d}"))
                 }
             }
             Nla::PrefSource(ref d) => {
@@ -638,11 +638,11 @@ fn get_route(
             }
             Nla::Iif(d) => {
                 rt.iif = if let Some(iface_name) =
-                    ifindex_to_name.get(&format!("{}", d))
+                    ifindex_to_name.get(&format!("{d}"))
                 {
                     Some(iface_name.clone())
                 } else {
-                    Some(format!("{}", d))
+                    Some(format!("{d}"))
                 }
             }
             Nla::CacheInfo(ref d) => {
@@ -707,11 +707,11 @@ fn get_route(
                         })?,
                     )?;
                     let iface = if let Some(iface_name) =
-                        ifindex_to_name.get(&format!("{}", iface_index))
+                        ifindex_to_name.get(&format!("{iface_index}"))
                     {
                         iface_name.clone()
                     } else {
-                        format!("{}", iface_index)
+                        format!("{iface_index}")
                     };
                     let mut flags = Vec::new();
                     let flags_raw = d.get(i + 2).ok_or_else(|| {
@@ -763,7 +763,7 @@ fn _addr_to_string(
     Ok(match family {
         AddressFamily::IPv4 => parse_as_ipv4(data)?.to_string(),
         AddressFamily::IPv6 => parse_as_ipv6(data)?.to_string(),
-        _ => format!("{:?}", data),
+        _ => format!("{data:?}"),
     })
 }
 
@@ -829,8 +829,7 @@ async fn apply_route_conf(
             nl_msg.nlas.push(Nla::Iif(*iface_index));
         } else {
             let e = NisporError::invalid_argument(format!(
-                "Interface {} does not exist",
-                oif
+                "Interface {oif} does not exist"
             ));
             log::error!("{}", e);
             return Err(e);

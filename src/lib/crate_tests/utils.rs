@@ -36,12 +36,12 @@ fn _assert_value_match(
     expected: &serde_json::Value,
     current: &serde_json::Value,
 ) {
-    println!("Asserting expected: {:?}", expected);
-    println!("Asserting current:  {:?}", current);
+    println!("Asserting expected: {expected:?}");
+    println!("Asserting current:  {current:?}");
     match expected {
         serde_json::Value::Object(expected_map) => {
             for (k, v) in expected_map.iter() {
-                println!("Asserting key '{}'", k);
+                println!("Asserting key '{k}'");
                 _assert_value_match(v, current.get(k).unwrap());
             }
         }

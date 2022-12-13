@@ -56,7 +56,7 @@ pub(crate) fn get_vxlan_info(
             } else if let InfoVxlan::Group6(d) = info {
                 vxlan_info.remote = parse_as_ipv6(d)?.to_string();
             } else if let InfoVxlan::Link(d) = *info {
-                vxlan_info.base_iface = format!("{}", d);
+                vxlan_info.base_iface = format!("{d}");
             } else if let InfoVxlan::Local(d) = info {
                 vxlan_info.local = parse_as_ipv4(d)?.to_string();
             } else if let InfoVxlan::Local6(d) = info {
