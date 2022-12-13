@@ -9,6 +9,16 @@ use super::utils::assert_value_match;
 const TEST_TABLE_ID: u32 = 100;
 
 const EXPECTED_YAML_OUTPUT: &str = r#"---
+- action: blackhole
+  address_family: ipv6
+  flags: 0
+  tos: 0
+  table: 100
+  dst: 2001:db8:f::252/128
+  src: 2001:db8:f::255/128
+  iif: eth1
+  oif: eth2
+  priority: 998
 - action: table
   address_family: ipv6
   flags: 0
@@ -19,6 +29,15 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
   iif: eth1
   oif: eth2
   priority: 999
+- action: unreachable
+  address_family: ipv4
+  flags: 0
+  tos: 0
+  dst: 192.0.2.2/32
+  src: 192.0.2.1/32
+  iif: eth1
+  oif: eth2
+  priority: 998
 - action: table
   address_family: ipv4
   flags: 0

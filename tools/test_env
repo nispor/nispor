@@ -187,8 +187,12 @@ elif [ "CHK$1" == "CHKroute" ];then
         nexthop via 2001:db8:f::253 dev eth1 weight 256 onlink
 elif [ "CHK$1" == "CHKrule" ];then
     create_nics
-    sudo ip rule add from 192.0.2.1 to 192.0.2.2 \
-        tos 10 table 100 iif eth1 oif eth2 priority 999
+    sudo ip rule add unreachable from 192.0.2.1 to 192.0.2.2 \
+        table 100 iif eth1 oif eth2 priority 998
+     sudo ip rule add from 192.0.2.1 to 192.0.2.2 \
+         tos 10 table 100 iif eth1 oif eth2 priority 999
+    sudo ip -6 rule add blackhole from 2001:db8:f::255 to 2001:db8:f::252 \
+        table 100 iif eth1 oif eth2 priority 998
     sudo ip -6 rule add from 2001:db8:f::254 to 2001:db8:f::253 \
         tos 10 table 100 iif eth1 oif eth2 priority 999
 elif [ "CHK$1" == "CHKsim" ];then

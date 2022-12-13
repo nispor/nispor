@@ -15,10 +15,10 @@ use serde::{Deserialize, Serialize};
 
 const FR_ACT_TO_TBL: u8 = 1;
 const FR_ACT_GOTO: u8 = 2;
-const FR_ACT_NOP: u8 = 4;
-const FR_ACT_BLACKHOLE: u8 = 32;
-const FR_ACT_UNREACHABLE: u8 = 64;
-const FR_ACT_PROHIBIT: u8 = 128;
+const FR_ACT_NOP: u8 = 3;
+const FR_ACT_BLACKHOLE: u8 = 6;
+const FR_ACT_UNREACHABLE: u8 = 7;
+const FR_ACT_PROHIBIT: u8 = 8;
 
 const RT_TABLE_UNSPEC: u8 = 0;
 
