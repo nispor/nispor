@@ -12,7 +12,7 @@ use rtnetlink::packet::rtnl::link::nlas::Nla;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    ip::{IpConf, Ipv4Info, Ipv6Info},
+    ip::{fill_af_spec_inet_info, IpConf, Ipv4Info, Ipv6Info},
     mac::{mac_str_to_raw, parse_as_mac},
     mptcp::MptcpAddress,
     NisporError, VfInfo,
@@ -418,8 +418,10 @@ pub(crate) fn parse_nl_msg_to_iface(
             }
         } else if let Nla::NetnsId(id) = nla {
             iface_state.link_netnsid = Some(*id);
+        } else if let Nla::AfSpecInet(inet_nla) = nla {
+            fill_af_spec_inet_info(&mut iface_state, inet_nla.as_slice());
         } else {
-            // println!("{} {:?}", name, nla);
+            // Place holder for paring more Nla
         }
     }
     if let Some(ref mut vlan_info) = iface_state.vlan {

@@ -168,3 +168,33 @@ fn test_add_dynamic_ip_repeat() {
         assert_value_match(EXPECTED_IPV6_DYNAMIC_INFO, &iface.ipv6);
     });
 }
+
+fn with_ipv6_token<T>(test: T)
+where
+    T: FnOnce() + panic::UnwindSafe,
+{
+    super::utils::set_network_environment("ipv6token");
+
+    let result = panic::catch_unwind(|| {
+        test();
+    });
+
+    super::utils::clear_network_environment();
+    assert!(result.is_ok())
+}
+
+#[test]
+fn test_ipv6_token() {
+    with_ipv6_token(|| {
+        let state = NetState::retrieve().unwrap();
+        let iface = state.ifaces.get("eth1").unwrap();
+        assert_eq!(
+            iface
+                .ipv6
+                .as_ref()
+                .and_then(|i| i.token.as_ref())
+                .map(|i| i.to_string()),
+            Some("::1".to_string())
+        );
+    })
+}
