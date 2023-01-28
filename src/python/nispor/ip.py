@@ -58,5 +58,9 @@ class NisporIPv6:
     def addresses(self):
         return self._address
 
+    @property
+    def token(self):
+        return self._info.get("token")
+
     def __str__(self):
         return f"{self._info}"

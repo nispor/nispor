@@ -52,6 +52,7 @@ struct CliIfaceBrief {
     mtu: i64,
     ipv4: Vec<String>,
     ipv6: Vec<String>,
+    ipv6_token: Option<String>,
     gw4: Vec<String>,
     gw6: Vec<String>,
 }
@@ -105,6 +106,9 @@ impl CliIfaceBrief {
             }
             for ip in &brief.ipv6 {
                 ret.push(format!("{INDENT}ipv6 {ip}"));
+            }
+            if let Some(token) = brief.ipv6_token.as_ref() {
+                ret.push(format!("{INDENT}ipv6_token {token}"));
             }
             for gw in &brief.gw6 {
                 ret.push(format!("{INDENT}gw6 {gw}"));
@@ -202,6 +206,11 @@ impl CliIfaceBrief {
                     }
                     None => Vec::new(),
                 },
+                ipv6_token: iface
+                    .ipv6
+                    .as_ref()
+                    .and_then(|i| i.token.as_ref())
+                    .map(|t| t.to_string()),
                 gw4: match &iface_to_gw4.get(&iface.name) {
                     Some(gws) => gws.to_vec(),
                     None => Vec::new(),

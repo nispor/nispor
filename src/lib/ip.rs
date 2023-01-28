@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::HashMap;
-use std::net::IpAddr;
+use std::net::{IpAddr, Ipv6Addr};
 use std::str::FromStr;
 
 use netlink_packet_route::rtnl::{
     address::nlas::{CacheInfo, Nla, ADDRESSS_CACHE_INFO_LEN},
+    link::nlas::{AfSpecInet, Inet6},
     AddressMessage,
 };
 use netlink_packet_utils::Emitable;
@@ -36,6 +37,8 @@ pub struct Ipv4AddrInfo {
 #[non_exhaustive]
 pub struct Ipv6Info {
     pub addresses: Vec<Ipv6AddrInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub token: Option<Ipv6Addr>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -305,4 +308,25 @@ pub(crate) fn parse_ip_net_addr_str(
         32
     };
     Ok((parse_ip_addr_str(addr_str)?, prefix_len))
+}
+
+pub(crate) fn fill_af_spec_inet_info(iface: &mut Iface, nlas: &[AfSpecInet]) {
+    for nla in nlas {
+        if let AfSpecInet::Inet6(nlas) = nla {
+            for nla in nlas {
+                if let Inet6::Token(raw) = nla {
+                    // Kernel set all zero as default value
+                    if raw != &[0; 16] {
+                        let token = Ipv6Addr::from(*raw);
+                        if iface.ipv6.is_none() {
+                            iface.ipv6 = Some(Ipv6Info::default());
+                        }
+                        if let Some(ipv6_info) = iface.ipv6.as_mut() {
+                            ipv6_info.token = Some(token);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

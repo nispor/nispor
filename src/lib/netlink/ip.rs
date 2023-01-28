@@ -24,39 +24,31 @@ pub(crate) fn fill_ip_addr(
     match nl_msg.header.family {
         AF_INET => {
             let (iface_index, addr) = parse_ipv4_nlas(nl_msg)?;
-            let iface_name = get_iface_name_by_index(iface_states, iface_index);
-            if !iface_name.is_empty() {
-                let new_ip4_info = match &iface_states[&iface_name].ipv4 {
-                    Some(ip_info) => {
-                        let mut new_ip_info = ip_info.clone();
-                        new_ip_info.addresses.push(addr);
-                        new_ip_info
+            if let Some(i) = get_iface_name_by_index(iface_states, iface_index)
+            {
+                let iface_name = i.to_string();
+                if let Some(iface) = iface_states.get_mut(iface_name.as_str()) {
+                    if iface.ipv4.is_none() {
+                        iface.ipv4 = Some(Ipv4Info::default());
                     }
-                    None => Ipv4Info {
-                        addresses: vec![addr],
-                    },
-                };
-                if let Some(iface) = iface_states.get_mut(&iface_name) {
-                    iface.ipv4 = Some(new_ip4_info);
+                    if let Some(ipv4_info) = iface.ipv4.as_mut() {
+                        ipv4_info.addresses.push(addr);
+                    }
                 }
             }
         }
         AF_INET6 => {
             let (iface_index, addr) = parse_ipv6_nlas(nl_msg)?;
-            let iface_name = get_iface_name_by_index(iface_states, iface_index);
-            if !iface_name.is_empty() {
-                let new_ip6_info = match &iface_states[&iface_name].ipv6 {
-                    Some(ip_info) => {
-                        let mut new_ip_info = ip_info.clone();
-                        new_ip_info.addresses.push(addr);
-                        new_ip_info
+            if let Some(i) = get_iface_name_by_index(iface_states, iface_index)
+            {
+                let iface_name = i.to_string();
+                if let Some(iface) = iface_states.get_mut(iface_name.as_str()) {
+                    if iface.ipv6.is_none() {
+                        iface.ipv6 = Some(Ipv6Info::default());
                     }
-                    None => Ipv6Info {
-                        addresses: vec![addr],
-                    },
-                };
-                if let Some(iface) = iface_states.get_mut(&iface_name) {
-                    iface.ipv6 = Some(new_ip6_info);
+                    if let Some(ipv6_info) = iface.ipv6.as_mut() {
+                        ipv6_info.addresses.push(addr);
+                    }
                 }
             }
         }
@@ -137,11 +129,11 @@ fn left_time_to_string(left_time: i32) -> String {
 fn get_iface_name_by_index(
     iface_states: &HashMap<String, Iface>,
     iface_index: u32,
-) -> String {
+) -> Option<&str> {
     for (iface_name, iface) in iface_states.iter() {
         if iface.index == iface_index {
-            return iface_name.clone();
+            return Some(iface_name.as_str());
         }
     }
-    "".into()
+    None
 }
