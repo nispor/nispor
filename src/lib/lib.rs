@@ -5,6 +5,11 @@ mod crate_tests;
 mod error;
 mod filter;
 mod iface_filter;
+// Since rust 1.62, the `#[default]` can be used for setting default value of
+// `#[derive(Default)]` for enum. The cargo clippy will complain if we impl the
+// Default by ourselves. But currently nispor minimum rust version is 1.58,
+// hence we suppress the clippy warning here.
+#[allow(clippy::derivable_impls)]
 mod ifaces;
 mod ip;
 mod mac;

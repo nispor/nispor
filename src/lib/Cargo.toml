@@ -9,6 +9,7 @@ homepage = "https://github.com/nispor/nispor"
 repository = "https://github.com/nispor/nispor"
 keywords = ["network"]
 categories = ["network-programming", "os"]
+rust-version = "1.58"
 
 [lib]
 name = "nispor"
