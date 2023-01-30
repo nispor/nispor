@@ -228,11 +228,9 @@ fn gen_cache_info_u8(
     preferred_lft: &str,
     valid_lft: &str,
 ) -> Result<[u8; ADDRESSS_CACHE_INFO_LEN], NisporError> {
-    let cache_info = CacheInfo {
-        ifa_preferred: parse_lft_sec("preferred_lft", preferred_lft)?,
-        ifa_valid: parse_lft_sec("valid_lft", valid_lft)?,
-        ..Default::default()
-    };
+    let mut cache_info = CacheInfo::default();
+    cache_info.ifa_preferred = parse_lft_sec("preferred_lft", preferred_lft)?;
+    cache_info.ifa_valid = parse_lft_sec("valid_lft", valid_lft)?;
     let mut buff = [0u8; ADDRESSS_CACHE_INFO_LEN];
     cache_info.emit(&mut buff);
     Ok(buff)

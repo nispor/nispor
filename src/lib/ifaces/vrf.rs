@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::netlink::parse_as_u32;
-use crate::ControllerType;
-use crate::Iface;
-use crate::NisporError;
-use netlink_packet_route::rtnl::link::nlas::InfoData;
-use netlink_packet_route::rtnl::link::nlas::InfoVrf;
-use netlink_packet_route::rtnl::nlas::NlaBuffer;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use netlink_packet_route::link::nlas::{InfoData, InfoVrf};
+use netlink_packet_utils::nla::NlaBuffer;
+use serde::{Deserialize, Serialize};
+
+use crate::{netlink::parse_as_u32, ControllerType, Iface, NisporError};
 
 const IFLA_VRF_PORT_TABLE: u16 = 1;
 

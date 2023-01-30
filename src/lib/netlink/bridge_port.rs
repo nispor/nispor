@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::netlink::nla::parse_as_u16;
-use crate::netlink::nla::parse_as_u32;
-use crate::netlink::nla::parse_as_u64;
-use crate::netlink::nla::parse_as_u8;
-use crate::BridgePortInfo;
-use crate::NisporError;
-use netlink_packet_route::rtnl::nlas::NlasIterator;
+use netlink_packet_utils::nla::NlasIterator;
+
+use crate::{
+    netlink::nla::{parse_as_u16, parse_as_u32, parse_as_u64, parse_as_u8},
+    BridgePortInfo, NisporError,
+};
 
 fn parse_void_port_info(
     _data: &[u8],

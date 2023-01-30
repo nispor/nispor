@@ -5,16 +5,18 @@ use std::net::IpAddr;
 use std::os::unix::io::AsRawFd;
 
 use futures::stream::TryStreamExt;
-use netlink_packet_route::rtnl::{
-    nlas::route::{CacheInfo, CacheInfoBuffer, Metrics, Nla},
-    nlas::{NlaBuffer, NlasIterator},
+use netlink_packet_route::{
+    route::nlas::{CacheInfo, CacheInfoBuffer, Metrics, Nla},
     RouteMessage, RTA_GATEWAY, RTA_VIA, RTN_ANYCAST, RTN_BLACKHOLE,
     RTN_BROADCAST, RTN_LOCAL, RTN_MULTICAST, RTN_NAT, RTN_PROHIBIT, RTN_THROW,
     RTN_UNICAST, RTN_UNREACHABLE, RTN_UNSPEC, RTN_XRESOLVE, RT_SCOPE_HOST,
     RT_SCOPE_LINK, RT_SCOPE_NOWHERE, RT_SCOPE_SITE, RT_SCOPE_UNIVERSE,
     RT_TABLE_MAIN,
 };
-use netlink_packet_utils::traits::Parseable;
+use netlink_packet_utils::{
+    nla::{NlaBuffer, NlasIterator},
+    traits::Parseable,
+};
 use rtnetlink::{new_connection, IpVersion};
 use serde::{Deserialize, Serialize};
 

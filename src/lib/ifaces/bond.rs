@@ -3,10 +3,10 @@
 use std::collections::HashMap;
 use std::net::{Ipv4Addr, Ipv6Addr};
 
-use netlink_packet_route::rtnl::link::nlas::{
-    self, Info, InfoBond, InfoData, InfoKind,
+use netlink_packet_route::link::nlas::{
+    self, Info, InfoBond, InfoData, InfoKind, Nla,
 };
-use rtnetlink::{packet::rtnl::link::nlas::Nla, Handle};
+use rtnetlink::Handle;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -331,6 +331,9 @@ impl From<&[nlas::BondAdInfo]> for BondAdInfo {
                             );
                         }
                     }
+                }
+                _ => {
+                    log::warn!("Unknown BondAdInfo NLA {:?}", nla);
                 }
             }
         }

@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::netlink::parse_as_u32;
-use crate::netlink::parse_as_u8;
-use crate::NisporError;
-use netlink_packet_route::rtnl::link::nlas::InfoData;
-use netlink_packet_route::rtnl::nlas::NlasIterator;
+use netlink_packet_route::link::nlas::InfoData;
+use netlink_packet_utils::nla::NlasIterator;
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    netlink::{parse_as_u32, parse_as_u8},
+    NisporError,
+};
 
 const IFF_TUN: u8 = 1;
 const IFF_TAP: u8 = 2;
