@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::mac::parse_as_mac;
-use crate::netlink::nla::parse_as_u16;
-use crate::netlink::nla::parse_as_u32;
-use crate::netlink::nla::parse_as_u8;
-use crate::BondMiiStatus;
-use crate::BondSubordinateInfo;
-use crate::BondSubordinateState;
-use crate::NisporError;
-use netlink_packet_route::rtnl::nlas::NlasIterator;
+use netlink_packet_utils::nla::NlasIterator;
+
+use crate::{
+    mac::parse_as_mac,
+    netlink::nla::{parse_as_u16, parse_as_u32, parse_as_u8},
+    BondMiiStatus, BondSubordinateInfo, BondSubordinateState, NisporError,
+};
 
 const IFLA_BOND_SLAVE_STATE: u16 = 1;
 const IFLA_BOND_SLAVE_MII_STATUS: u16 = 2;

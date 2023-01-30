@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::rtnl::nlas::NlasIterator;
+use netlink_packet_utils::nla::NlasIterator;
 use serde::{Deserialize, Serialize};
 
 use crate::{

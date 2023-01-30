@@ -2,13 +2,12 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::rtnl::{
+use netlink_packet_route::{
     link::nlas, LinkMessage, ARPHRD_ETHER, ARPHRD_INFINIBAND, ARPHRD_LOOPBACK,
     IFF_ALLMULTI, IFF_AUTOMEDIA, IFF_BROADCAST, IFF_DEBUG, IFF_DORMANT,
     IFF_LOOPBACK, IFF_LOWER_UP, IFF_MASTER, IFF_MULTICAST, IFF_NOARP,
     IFF_POINTOPOINT, IFF_PORTSEL, IFF_PROMISC, IFF_RUNNING, IFF_SLAVE, IFF_UP,
 };
-use rtnetlink::packet::rtnl::link::nlas::Nla;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -288,25 +287,25 @@ pub(crate) fn parse_nl_msg_to_iface(
     iface_state.index = nl_msg.header.index;
     let mut link: Option<u32> = None;
     for nla in &nl_msg.nlas {
-        if let Nla::Mtu(mtu) = nla {
+        if let nlas::Nla::Mtu(mtu) = nla {
             iface_state.mtu = *mtu as i64;
-        } else if let Nla::MinMtu(mtu) = nla {
+        } else if let nlas::Nla::MinMtu(mtu) = nla {
             iface_state.min_mtu =
                 if *mtu != 0 { Some(*mtu as i64) } else { None };
-        } else if let Nla::MaxMtu(mtu) = nla {
+        } else if let nlas::Nla::MaxMtu(mtu) = nla {
             iface_state.max_mtu =
                 if *mtu != 0 { Some(*mtu as i64) } else { None };
-        } else if let Nla::Address(mac) = nla {
+        } else if let nlas::Nla::Address(mac) = nla {
             iface_state.mac_address = parse_as_mac(mac.len(), mac)?;
-        } else if let Nla::PermAddress(mac) = nla {
+        } else if let nlas::Nla::PermAddress(mac) = nla {
             iface_state.permanent_mac_address = parse_as_mac(mac.len(), mac)?;
-        } else if let Nla::OperState(state) = nla {
+        } else if let nlas::Nla::OperState(state) = nla {
             iface_state.state = _get_iface_state(state);
-        } else if let Nla::Master(controller) = nla {
+        } else if let nlas::Nla::Master(controller) = nla {
             iface_state.controller = Some(format!("{controller}"));
-        } else if let Nla::Link(l) = nla {
+        } else if let nlas::Nla::Link(l) = nla {
             link = Some(*l);
-        } else if let Nla::Info(infos) = nla {
+        } else if let nlas::Nla::Info(infos) = nla {
             for info in infos {
                 if let nlas::Info::Kind(t) = info {
                     let iface_type = match t {
@@ -410,15 +409,15 @@ pub(crate) fn parse_nl_msg_to_iface(
                     }
                 }
             }
-        } else if let Nla::VfInfoList(data) = nla {
+        } else if let nlas::Nla::VfInfoList(data) = nla {
             if let Ok(info) =
                 get_sriov_info(&iface_state.name, data, &link_layer_type)
             {
                 iface_state.sriov = Some(info);
             }
-        } else if let Nla::NetnsId(id) = nla {
+        } else if let nlas::Nla::NetnsId(id) = nla {
             iface_state.link_netnsid = Some(*id);
-        } else if let Nla::AfSpecInet(inet_nla) = nla {
+        } else if let nlas::Nla::AfSpecInet(inet_nla) = nla {
             fill_af_spec_inet_info(&mut iface_state, inet_nla.as_slice());
         } else {
             // Place holder for paring more Nla
@@ -460,7 +459,7 @@ pub(crate) fn parse_nl_msg_to_iface(
 
 fn _get_iface_name(nl_msg: &LinkMessage) -> String {
     for nla in &nl_msg.nlas {
-        if let Nla::IfName(name) = nla {
+        if let nlas::Nla::IfName(name) = nla {
             return name.clone();
         }
     }
@@ -477,7 +476,7 @@ pub(crate) fn fill_bridge_vlan_info(
     }
     if let Some(iface_state) = iface_states.get_mut(&name) {
         for nla in &nl_msg.nlas {
-            if let Nla::AfSpecBridge(nlas) = nla {
+            if let nlas::Nla::AfSpecBridge(nlas) = nla {
                 parse_bridge_vlan_info(iface_state, nlas)?;
             }
         }
