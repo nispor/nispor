@@ -38,7 +38,7 @@ pub struct Ipv4AddrInfo {
 pub struct Ipv6Info {
     pub addresses: Vec<Ipv6AddrInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub token: Option<Ipv6Addr>,
+    pub token: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -315,16 +315,28 @@ pub(crate) fn fill_af_spec_inet_info(iface: &mut Iface, nlas: &[AfSpecInet]) {
                 if let Inet6::Token(raw) = nla {
                     // Kernel set all zero as default value
                     if raw != &[0; 16] {
-                        let token = Ipv6Addr::from(*raw);
                         if iface.ipv6.is_none() {
                             iface.ipv6 = Some(Ipv6Info::default());
                         }
                         if let Some(ipv6_info) = iface.ipv6.as_mut() {
-                            ipv6_info.token = Some(token);
+                            ipv6_info.token = Some(ipv6_token_to_string(*raw));
                         }
                     }
                 }
             }
         }
     }
+}
+
+// The Ipv6Addr::to_string() will convert
+//  ::fac1 to ::0.0.250.193
+// Which is no ideal in this case
+// To workaround that, we set leading 64 bites to '2001:db8::', and
+// then trip it out from string.
+fn ipv6_token_to_string(raw: [u8; 16]) -> String {
+    let token = Ipv6Addr::from(raw);
+    let mut segments = token.segments();
+    segments[0] = 0x2001;
+    segments[1] = 0xdb8;
+    Ipv6Addr::from(segments).to_string()["2001:db8".len()..].to_string()
 }

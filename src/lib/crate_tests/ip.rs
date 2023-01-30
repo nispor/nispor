@@ -194,7 +194,7 @@ fn test_ipv6_token() {
                 .as_ref()
                 .and_then(|i| i.token.as_ref())
                 .map(|i| i.to_string()),
-            Some("::1".to_string())
+            Some("::fac1".to_string())
         );
     })
 }
