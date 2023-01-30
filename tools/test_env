@@ -226,7 +226,7 @@ elif [ "CHK$1" == "CHKipv6token" ];then
     sudo ip link set eth1 up
     sudo sysctl -w net.ipv6.conf.eth1.accept_ra=1
     sudo ip -6 addr add 2001:db8:f::1/64 dev eth1
-    sudo ip token set ::1 dev eth1
+    sudo ip token set ::fac1 dev eth1
     for x in $(seq 2 254); do
         for y in $(seq 2 254); do
             echo -n "route add 192.0.${x}.${y}/32 dev eth1 proto "
