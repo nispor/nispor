@@ -1,4 +1,18 @@
 # Changelog
+## [1.2.10] - 2023-01-31
+
+## Break changes
+
+ * N/A
+
+## New features
+
+ * Add support of IPv6 token. (e792ed8)
+
+## Bug fixes
+
+ * N/A
+
 ## [1.2.9] - 2022-12-13
 
 ## Break changes
