@@ -11,7 +11,7 @@ use crate::{Iface, IfaceType, NisporError};
 const ETH_P_8021Q: u16 = 0x8100;
 const ETH_P_8021AD: u16 = 0x88A8;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum VlanProtocol {
