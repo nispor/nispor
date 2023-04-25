@@ -55,12 +55,26 @@ pub(crate) fn apply_kernel_route_filter(
 pub(crate) fn should_drop_by_filter(
     route: &Route,
     filter: &NetStateRouteFilter,
+    has_kernel_filter: bool,
 ) -> bool {
     // The RT_SCOPE_UNIVERSE is 0 which means wildcard in kernel, we need to
     // do filter at userspace.
     if Some(&RouteScope::Universe) == filter.scope.as_ref() {
         route.scope != RouteScope::Universe
     } else {
+        if !has_kernel_filter
+            && ((filter.protocol.is_some()
+                && filter.protocol != Some(route.protocol))
+                || (filter.scope.is_some()
+                    && filter.scope.as_ref() != Some(&route.scope))
+                || (filter.oif.is_some()
+                    && filter.oif.as_ref() != route.oif.as_ref())
+                || (filter.table.is_some()
+                    && filter.table.as_ref().map(|i| (*i).into())
+                        != Some(route.table)))
+        {
+            return true;
+        }
         false
     }
 }

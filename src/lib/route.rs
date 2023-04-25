@@ -487,12 +487,20 @@ pub(crate) async fn get_routes(
 
     for ip_family in [IpVersion::V6, IpVersion::V4] {
         let mut rt_handle = handle.route().get(ip_family);
+        let mut has_kernel_filter = true;
         if let Some(filter) = filter {
-            apply_kernel_route_filter(
+            if let Err(e) = apply_kernel_route_filter(
                 &mut rt_handle,
                 filter,
                 iface_name2index,
-            )?;
+            ) {
+                log::warn!(
+                    "Failed to set kernel space route filter: {e}, \
+                    falling back to user space route filtering which would \
+                    lead to performance penalty"
+                );
+                has_kernel_filter = false;
+            }
         }
 
         let mut links = rt_handle.execute();
@@ -500,7 +508,7 @@ pub(crate) async fn get_routes(
             let route = get_route(rt_msg, &ifindex_to_name)?;
             // User space filter is required for RT_SCOPE_UNIVERSE and etc
             if let Some(filter) = filter {
-                if should_drop_by_filter(&route, filter) {
+                if should_drop_by_filter(&route, filter, has_kernel_filter) {
                     continue;
                 }
             }
