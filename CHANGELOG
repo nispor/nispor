@@ -1,4 +1,19 @@
 # Changelog
+## [1.2.11] - 2023-05-10
+
+## Break changes
+
+ * N/A
+
+## New features
+
+ * N/A
+
+## Bug fixes
+
+ * Fallback to user space route filter when kernel filter failed. (2f655ec)
+ * Enable `Copy` trait for VlanProtocol. (6fedfef)
+
 ## [1.2.10] - 2023-01-31
 
 ## Break changes

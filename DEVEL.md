@@ -59,17 +59,19 @@ autocmd FileType rust nnoremap <silent> <leader>f :RustFmt<cr>
 ## Release workflow
 
 ```bash
-sed -i -e 's/1.2.10/1.2.11/' \
+sed -i -e 's/1.2.11/1.2.12/' \
     Makefile.inc src/*/Cargo.toml src/python/setup.py
 ```
 
 ```bash
-git log --oneline v1.2.10..HEAD
+git log --oneline v1.2.11..HEAD
 ```
 
 ```bash
-cargo vendor-filterer --platform x86_64-unknown-linux-gnu
-tar cfJ nispor-vendor-1.2.10.tar.xz vendor
+cargo vendor-filterer \
+    --platform x86_64-unknown-linux-gnu \
+    --platform s390x-unknown-linux-gnu
+tar cfJ nispor-vendor-1.2.11.tar.xz vendor
 rm vendor -rf
 ```
 
