@@ -26,7 +26,7 @@ pub(crate) fn apply_kernel_route_filter(
     filter: &NetStateRouteFilter,
     iface_name2index: &HashMap<String, u32>,
 ) -> Result<(), NisporError> {
-    let mut rt_nlmsg = handle.message_mut();
+    let rt_nlmsg = handle.message_mut();
 
     if let Some(protocol) = filter.protocol.as_ref() {
         rt_nlmsg.header.protocol = protocol.into();
