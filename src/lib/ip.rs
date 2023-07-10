@@ -188,7 +188,7 @@ async fn apply_ip_conf(
             ));
             if let Err(e) = handle.address().del(nl_msg).execute().await {
                 if let rtnetlink::Error::NetlinkError(ref e) = e {
-                    if e.code == -libc::EADDRNOTAVAIL {
+                    if e.raw_code() == -libc::EADDRNOTAVAIL {
                         return Ok(());
                     }
                 }

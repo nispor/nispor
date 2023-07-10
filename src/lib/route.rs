@@ -858,7 +858,7 @@ async fn apply_route_conf(
     if route.remove {
         if let Err(e) = handle.route().del(nl_msg).execute().await {
             if let rtnetlink::Error::NetlinkError(ref e) = e {
-                if e.code == -libc::ESRCH {
+                if e.raw_code() == -libc::ESRCH {
                     return Ok(());
                 }
             }
@@ -870,7 +870,7 @@ async fn apply_route_conf(
         req.message_mut().nlas = nl_msg.nlas;
         if let Err(e) = req.execute().await {
             if let rtnetlink::Error::NetlinkError(ref e) = e {
-                if e.code == -libc::EEXIST {
+                if e.raw_code() == -libc::EEXIST {
                     return Ok(());
                 }
             }

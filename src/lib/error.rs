@@ -62,7 +62,7 @@ impl std::convert::From<rtnetlink::Error> for NisporError {
     fn from(e: rtnetlink::Error) -> Self {
         match e {
             rtnetlink::Error::NetlinkError(netlink_err) => {
-                match netlink_err.code.abs() {
+                match netlink_err.raw_code().abs() {
                     EEXIST => NisporError::bug(format!(
                         "Got netlink EEXIST error: {netlink_err}"
                     )),
@@ -71,7 +71,8 @@ impl std::convert::From<rtnetlink::Error> for NisporError {
                     }
                     _ => NisporError::bug(format!(
                         "Got netlink unknown error: code {}, msg: {}",
-                        netlink_err.code, netlink_err,
+                        netlink_err.raw_code(),
+                        netlink_err,
                     )),
                 }
             }

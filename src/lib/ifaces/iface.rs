@@ -6,7 +6,7 @@ use netlink_packet_route::{
     link::nlas, LinkMessage, ARPHRD_ETHER, ARPHRD_INFINIBAND, ARPHRD_LOOPBACK,
     IFF_ALLMULTI, IFF_AUTOMEDIA, IFF_BROADCAST, IFF_DEBUG, IFF_DORMANT,
     IFF_LOOPBACK, IFF_LOWER_UP, IFF_MASTER, IFF_MULTICAST, IFF_NOARP,
-    IFF_POINTOPOINT, IFF_PORTSEL, IFF_PROMISC, IFF_RUNNING, IFF_SLAVE, IFF_UP,
+    IFF_POINTOPOINT, IFF_PORTSEL, IFF_PROMISC, IFF_RUNNING, IFF_UP,
 };
 use serde::{Deserialize, Serialize};
 
@@ -39,6 +39,8 @@ use super::{
     },
     vxlan::{get_vxlan_info, VxlanInfo},
 };
+
+const IFF_PORT: u32 = 0x800;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
@@ -376,35 +378,50 @@ pub(crate) fn parse_nl_msg_to_iface(
                 }
             }
             for info in infos {
-                if let nlas::Info::SlaveKind(d) = info {
-                    // Remove the tailing \0
-                    iface_state.controller_type = Some(
-                        std::ffi::CStr::from_bytes_with_nul(d.as_slice())?
-                            .to_str()?
-                            .into(),
-                    )
+                if let nlas::Info::PortKind(d) = info {
+                    match d {
+                        nlas::InfoPortKind::Bond => {
+                            iface_state.controller_type =
+                                Some(ControllerType::Bond)
+                        }
+                        nlas::InfoPortKind::Other(s) => {
+                            iface_state.controller_type =
+                                Some(s.as_str().into())
+                        }
+                        _ => {
+                            log::info!("Unknown port kind {:?}", info);
+                        }
+                    }
                 }
             }
             if let Some(controller_type) = &iface_state.controller_type {
                 for info in infos {
-                    if let nlas::Info::SlaveData(d) = info {
-                        match controller_type {
-                            ControllerType::Bond => {
-                                iface_state.bond_subordinate =
-                                    get_bond_subordinate_info(d)?;
+                    if let nlas::Info::PortData(d) = info {
+                        match d {
+                            nlas::InfoPortData::BondPort(bond_ports) => {
+                                iface_state.bond_subordinate = Some(
+                                    get_bond_subordinate_info(bond_ports)?,
+                                );
                             }
-                            ControllerType::Bridge => {
-                                iface_state.bridge_port =
-                                    get_bridge_port_info(d)?;
+                            nlas::InfoPortData::Other(data) => {
+                                match controller_type {
+                                    ControllerType::Bridge => {
+                                        iface_state.bridge_port =
+                                            get_bridge_port_info(data)?;
+                                    }
+                                    ControllerType::Vrf => {
+                                        iface_state.vrf_subordinate =
+                                            get_vrf_subordinate_info(data)?;
+                                    }
+                                    _ => log::warn!(
+                                        "Unknown controller type {:?}",
+                                        controller_type
+                                    ),
+                                }
                             }
-                            ControllerType::Vrf => {
-                                iface_state.vrf_subordinate =
-                                    get_vrf_subordinate_info(d)?;
+                            _ => {
+                                log::warn!("Unknown InfoPortData {:?}", d);
                             }
-                            _ => log::warn!(
-                                "Unknown controller type {:?}",
-                                controller_type
-                            ),
                         }
                     }
                 }
@@ -539,7 +556,7 @@ fn _parse_iface_flags(flags: u32) -> Vec<IfaceFlags> {
     if (flags & IFF_RUNNING) > 0 {
         ret.push(IfaceFlags::Running)
     }
-    if (flags & IFF_SLAVE) > 0 {
+    if (flags & IFF_PORT) > 0 {
         ret.push(IfaceFlags::Subordinate)
     }
     if (flags & IFF_UP) > 0 {
