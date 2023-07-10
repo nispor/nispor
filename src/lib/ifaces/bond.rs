@@ -4,14 +4,13 @@ use std::collections::HashMap;
 use std::net::{Ipv4Addr, Ipv6Addr};
 
 use netlink_packet_route::link::nlas::{
-    self, Info, InfoBond, InfoData, InfoKind, Nla,
+    self, Info, InfoBond, InfoBondPort, InfoData, InfoKind, Nla,
 };
 use rtnetlink::Handle;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    ifaces::Iface, mac::parse_as_mac, netlink::parse_bond_subordinate_info,
-    ControllerType, IfaceType, NisporError,
+    ifaces::Iface, mac::parse_as_mac, ControllerType, IfaceType, NisporError,
 };
 
 const BOND_MODE_ROUNDROBIN: u8 = 0;
@@ -488,7 +487,7 @@ impl From<&[InfoBond]> for BondInfo {
                         ret.num_grat_arp = Some(*v);
                     }
                 }
-                InfoBond::AllSlavesActive(v) => {
+                InfoBond::AllPortsActive(v) => {
                     ret.all_subordinates_active = Some((*v).into())
                 }
                 // Kernel code has no limit on this, but document require
@@ -498,7 +497,7 @@ impl From<&[InfoBond]> for BondInfo {
                 // balance-tlb and balance-alb modes. Let's follow the kernel
                 // code here.
                 InfoBond::LpInterval(v) => ret.lp_interval = Some(*v),
-                InfoBond::PacketsPerSlave(v) => {
+                InfoBond::PacketsPerPort(v) => {
                     if ret.mode == BondMode::BalanceRoundRobin {
                         ret.packets_per_subordinate = Some(*v);
                     }
@@ -586,6 +585,12 @@ impl From<u8> for BondSubordinateState {
     }
 }
 
+impl Default for BondSubordinateState {
+    fn default() -> Self {
+        Self::Unknown
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
@@ -615,7 +620,13 @@ impl From<u8> for BondMiiStatus {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+impl Default for BondMiiStatus {
+    fn default() -> Self {
+        BondMiiStatus::Unknown
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct BondSubordinateInfo {
     pub subordinate_state: BondSubordinateState,
@@ -645,9 +656,27 @@ pub(crate) fn get_bond_info(
 }
 
 pub(crate) fn get_bond_subordinate_info(
-    data: &[u8],
-) -> Result<Option<BondSubordinateInfo>, NisporError> {
-    Ok(Some(parse_bond_subordinate_info(data)?))
+    nlas: &[InfoBondPort],
+) -> Result<BondSubordinateInfo, NisporError> {
+    let mut ret = BondSubordinateInfo::default();
+    for nla in nlas {
+        match nla {
+            InfoBondPort::LinkFailureCount(d) => ret.link_failure_count = *d,
+            InfoBondPort::MiiStatus(d) => ret.mii_status = u8::from(*d).into(),
+            InfoBondPort::PermHwaddr(d) => {
+                ret.perm_hwaddr = parse_as_mac(d.len(), d)?;
+            }
+            InfoBondPort::QueueId(d) => ret.queue_id = *d,
+            InfoBondPort::BondPortState(d) => {
+                ret.subordinate_state = u8::from(*d).into()
+            }
+            _ => {
+                log::info!("Unknown bond port info {:?}", nla);
+            }
+        }
+    }
+
+    Ok(ret)
 }
 
 pub(crate) fn bond_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
