@@ -11,21 +11,14 @@ jobs:
   lint:
     name: lint
     runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: true
-      matrix:
-        include:
-          - rust_version: "stable"
-          - rust_version: "beta"
-          - rust_version: "nightly"
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install Rust ${{ matrix.rust_version }}
+    - name: Install Rust nightly
       uses: actions-rs/toolchain@v1
       with:
-          toolchain: ${{ matrix.rust_version }}
+          toolchain: nightly
           override: true
           components: rustfmt, clippy
 
