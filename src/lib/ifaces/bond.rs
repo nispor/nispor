@@ -633,6 +633,7 @@ pub struct BondSubordinateInfo {
     pub mii_status: BondMiiStatus,
     pub link_failure_count: u32,
     pub perm_hwaddr: String,
+    pub prio: i32,
     pub queue_id: u16,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ad_aggregator_id: Option<u16>,
@@ -666,6 +667,7 @@ pub(crate) fn get_bond_subordinate_info(
             InfoBondPort::PermHwaddr(d) => {
                 ret.perm_hwaddr = parse_as_mac(d.len(), d)?;
             }
+            InfoBondPort::Prio(d) => ret.prio = *d,
             InfoBondPort::QueueId(d) => ret.queue_id = *d,
             InfoBondPort::BondPortState(d) => {
                 ret.subordinate_state = u8::from(*d).into()
