@@ -148,6 +148,10 @@ class NisporBondSubordinate(NisporBaseSubordinateIface):
         return self._sub_info.get("perm_hwaddr")
 
     @property
+    def prio(self):
+        return self._sub_info.get("prio")
+
+    @property
     def queue_id(self):
         return self._sub_info.get("queue_id")
 
