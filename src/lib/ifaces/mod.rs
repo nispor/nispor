@@ -2,6 +2,9 @@
 
 mod bond;
 mod bridge;
+// Disable `needless_pass_by_ref_mut` check due to upstream issue:
+// https://github.com/rust-netlink/ethtool/issues/12
+#[allow(clippy::needless_pass_by_ref_mut)]
 mod ethtool;
 mod iface;
 mod inter_ifaces;
