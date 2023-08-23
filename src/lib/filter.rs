@@ -68,7 +68,6 @@ pub(crate) fn enable_kernel_strict_check(fd: RawFd) -> Result<(), NisporError> {
             "Failed to set socket option NETLINK_GET_STRICT_CHK: error {}",
             std::io::Error::last_os_error()
         ));
-        log::error!("{}", e);
         return Err(e);
     }
     Ok(())
