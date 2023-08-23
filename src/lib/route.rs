@@ -472,6 +472,7 @@ pub(crate) async fn get_routes(
     filter: Option<&NetStateRouteFilter>,
 ) -> Result<Vec<Route>, NisporError> {
     let mut routes = Vec::new();
+    let mut has_kernel_filter = true;
     let (mut connection, handle, _) = new_connection()?;
 
     let mut ifindex_to_name = HashMap::new();
@@ -480,26 +481,29 @@ pub(crate) async fn get_routes(
     }
 
     if filter.is_some() {
-        enable_kernel_strict_check(connection.socket_mut().as_raw_fd())?;
+        if let Err(e) =
+            enable_kernel_strict_check(connection.socket_mut().as_raw_fd())
+        {
+            log::warn!(
+                "Failed to set kernel space route filter: {e}, \
+                falling back to user space route filtering which would \
+                lead to performance penalty"
+            );
+            has_kernel_filter = false;
+        }
     }
 
     tokio::spawn(connection);
 
     for ip_family in [IpVersion::V6, IpVersion::V4] {
         let mut rt_handle = handle.route().get(ip_family);
-        let mut has_kernel_filter = true;
         if let Some(filter) = filter {
-            if let Err(e) = apply_kernel_route_filter(
-                &mut rt_handle,
-                filter,
-                iface_name2index,
-            ) {
-                log::warn!(
-                    "Failed to set kernel space route filter: {e}, \
-                    falling back to user space route filtering which would \
-                    lead to performance penalty"
-                );
-                has_kernel_filter = false;
+            if has_kernel_filter {
+                apply_kernel_route_filter(
+                    &mut rt_handle,
+                    filter,
+                    iface_name2index,
+                )?;
             }
         }
 
