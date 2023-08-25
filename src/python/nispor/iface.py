@@ -8,6 +8,7 @@ from .bridge import NisporBridgePort
 from .ipoib import NisporIpoib
 from .mac_vlan import NisporMacVlan
 from .mac_vtap import NisporMacVtap
+from .macsec import NisporMacsec
 from .tun import NisporTun
 from .veth import NisporVeth
 from .vlan import NisporVlan
@@ -63,6 +64,8 @@ def _iface_info_to_obj(iface_info):
         iface = NisporMacVtap(iface_info)
     elif iface_type == "Ipoib":
         iface = NisporIpoib(iface_info)
+    elif iface_type == "macsec":
+        iface = NisporMacsec(iface_info)
     else:
         iface = NisporBaseIface(iface_info)
     if ctrl_type == "bond":
