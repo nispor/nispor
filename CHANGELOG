@@ -1,4 +1,14 @@
 # Changelog
+## [1.2.13] - 2023-08-25
+## Break changes
+ * N/A
+
+## New features
+ * Support bond port priority. (79f9d36)
+
+## Bug fixes
+ * Fix route query on Ubuntu 18.04. (c97e6df)
+
 ## [1.2.12] - 2023-07-10
 ## Break changes
  * N/A
