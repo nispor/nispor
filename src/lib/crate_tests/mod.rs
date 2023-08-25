@@ -21,6 +21,8 @@ mod mac_vlan;
 #[cfg(test)]
 mod mac_vtap;
 #[cfg(test)]
+mod macsec;
+#[cfg(test)]
 mod route;
 #[cfg(test)]
 mod route_rule;

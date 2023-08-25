@@ -30,6 +30,7 @@ use super::{
     ipoib::{get_ipoib_info, IpoibInfo},
     mac_vlan::{get_mac_vlan_info, MacVlanInfo},
     mac_vtap::{get_mac_vtap_info, MacVtapInfo},
+    macsec::{get_macsec_info, MacSecInfo},
     sriov::{get_sriov_info, SriovInfo},
     tun::{get_tun_info, TunInfo},
     veth::{VethConf, VethInfo},
@@ -61,6 +62,7 @@ pub enum IfaceType {
     MacVtap,
     OpenvSwitch,
     Ipoib,
+    MacSec,
     Unknown,
     Other(String),
 }
@@ -92,6 +94,7 @@ impl std::fmt::Display for IfaceType {
                 Self::MacVtap => "macvtap",
                 Self::OpenvSwitch => "openvswitch",
                 Self::Ipoib => "ipoib",
+                Self::MacSec => "macsec",
                 Self::Unknown => "unknown",
                 Self::Other(s) => s,
             }
@@ -252,6 +255,8 @@ pub struct Iface {
     pub ipoib: Option<IpoibInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mptcp: Option<Vec<MptcpAddress>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub macsec: Option<MacSecInfo>,
 }
 
 // TODO: impl From Iface to IfaceConf
@@ -322,6 +327,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                         nlas::InfoKind::MacVlan => IfaceType::MacVlan,
                         nlas::InfoKind::MacVtap => IfaceType::MacVtap,
                         nlas::InfoKind::Ipoib => IfaceType::Ipoib,
+                        nlas::InfoKind::MacSec => IfaceType::MacSec,
                         nlas::InfoKind::Other(s) => match s.as_ref() {
                             "openvswitch" => IfaceType::OpenvSwitch,
                             _ => IfaceType::Other(s.clone()),
@@ -369,6 +375,9 @@ pub(crate) fn parse_nl_msg_to_iface(
                         }
                         IfaceType::Ipoib => {
                             iface_state.ipoib = get_ipoib_info(d);
+                        }
+                        IfaceType::MacSec => {
+                            iface_state.macsec = get_macsec_info(d);
                         }
                         _ => log::warn!(
                             "Unhandled IFLA_INFO_DATA for iface type {:?}",

@@ -15,7 +15,7 @@ sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 1>/dev/null
 
 if [ "CHK$1" == "CHK" ];then
     echo 'Need argument: bond, br, brv, vlan, dummy, vxlan, veth, vrf, sriov,'
-    echo 'rm, route, rule, sim, mptcp, bgp'
+    echo 'rm, route, rule, sim, mptcp, bgp, macsec'
     exit 1
 fi
 
@@ -35,6 +35,7 @@ function clean_up {
     sudo ip link del tun1
     sudo ip link del tun2
     sudo ip link del tap1
+    sudo ip link del macsec0
     sudo ip rule del priority 999
     sudo ip -6 rule del priority 999
     sudo modprobe -r netdevsim
@@ -233,6 +234,12 @@ elif [ "CHK$1" == "CHKipv6token" ];then
             echo "186 table $TEST_ROUTE_TABLE_ID"
         done
     done | sudo ip -b -
+elif [ "CHK$1" == "CHKmacsec" ];then
+    create_nics
+    sudo ip link add link eth1 macsec0 type macsec encrypt on
+    sudo ip link set eth1 up
+    sudo ip link set macsec0 up
+    sleep $LINK_WAIT_TIME
 elif [ "CHK$1" == "CHKrm" ];then
     clean_up 2>/dev/null
 fi
