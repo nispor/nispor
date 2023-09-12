@@ -26,7 +26,8 @@ macsec:
   end_station: false
   scb: false
   replay_protect: false
-  validate: strict"#;
+  validate: strict
+  base_iface: eth1"#;
 
 #[test]
 fn test_get_macsec_iface_yaml() {

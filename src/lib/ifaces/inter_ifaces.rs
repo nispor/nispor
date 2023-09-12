@@ -17,6 +17,7 @@ use super::{
     iface::{change_iface_mac, change_iface_state},
     ipoib::ipoib_iface_tidy_up,
     mac_vlan::mac_vlan_iface_tidy_up,
+    macsec::macsec_iface_tidy_up,
     parse_nl_msg_to_iface, parse_nl_msg_to_name_and_index,
     sriov::sriov_vf_iface_tidy_up,
     veth::veth_iface_tidy_up,
@@ -133,6 +134,7 @@ fn tidy_up(iface_states: &mut HashMap<String, Iface>) {
     veth_iface_tidy_up(iface_states);
     vrf_iface_tidy_up(iface_states);
     mac_vlan_iface_tidy_up(iface_states);
+    macsec_iface_tidy_up(iface_states);
     ipoib_iface_tidy_up(iface_states);
     sriov_vf_iface_tidy_up(iface_states);
 }
