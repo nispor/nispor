@@ -459,6 +459,11 @@ pub(crate) fn parse_nl_msg_to_iface(
             ib_info.base_iface = Some(format!("{base_iface_index}"));
         }
     }
+    if let Some(ref mut macsec_info) = iface_state.macsec {
+        if let Some(base_iface_index) = link {
+            macsec_info.base_iface = Some(format!("{base_iface_index}"));
+        }
+    }
     if let Some(iface_index) = link {
         match iface_state.iface_type {
             IfaceType::Veth => {

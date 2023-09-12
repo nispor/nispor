@@ -63,3 +63,7 @@ class NisporMacsec(NisporBaseIface):
     @property
     def offload(self):
         return self._macsec_info["offload"]
+
+    @property
+    def base_iface(self):
+        return self._macsec_info["base_iface"]
