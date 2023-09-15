@@ -5,13 +5,12 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use tokio::runtime;
 
+use super::query::{
+    get_ifaces, get_mptcp, get_route_rules, get_routes, merge_mptcp_info,
+};
 use crate::{
-    error::NisporError,
-    ifaces::{get_ifaces, Iface},
-    mptcp::{get_mptcp, merge_mptcp_info, Mptcp},
-    route::{get_routes, Route},
-    route_rule::{get_route_rules, RouteRule},
-    NetStateFilter, NetStateIfaceFilter,
+    Iface, Mptcp, NetStateFilter, NetStateIfaceFilter, NisporError, Route,
+    RouteRule,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::mac::{parse_as_mac, ETH_ALEN};
-use crate::BridgeInfo;
-use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas::InfoBridge;
+
+use super::super::mac::{parse_as_mac, ETH_ALEN};
+use crate::{BridgeInfo, NisporError};
 
 pub(crate) fn parse_bridge_info(
     infos: &[InfoBridge],

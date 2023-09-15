@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use netlink_packet_route::rtnl::link::nlas;
-use rtnetlink::Handle;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -384,23 +384,4 @@ pub(crate) fn parse_bridge_vlan_info(
         }
     }
     Ok(())
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[non_exhaustive]
-pub struct BridgeConf {}
-
-impl BridgeConf {
-    pub(crate) async fn create(
-        handle: &Handle,
-        name: &str,
-    ) -> Result<(), NisporError> {
-        match handle.link().add().bridge(name.to_string()).execute().await {
-            Ok(_) => Ok(()),
-            Err(e) => Err(NisporError::bug(format!(
-                "Failed to create new bridge '{}': {}",
-                &name, e
-            ))),
-        }
-    }
 }

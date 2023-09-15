@@ -3,55 +3,45 @@
 #[cfg(test)]
 mod crate_tests;
 mod error;
-mod filter;
-mod iface_filter;
+mod mac;
 // Since rust 1.62, the `#[default]` can be used for setting default value of
 // `#[derive(Default)]` for enum. The cargo clippy will complain if we impl the
 // Default by ourselves. But currently nispor minimum rust version is 1.58,
 // hence we suppress the clippy warning here.
-#[allow(clippy::derivable_impls)]
-mod ifaces;
-mod ip;
-mod mac;
-mod mptcp;
+mod conf;
+mod filter;
 mod net_conf;
 mod net_state;
 mod netlink;
-mod route;
-mod route_filter;
-mod route_rule;
-mod route_rule_filter;
+#[allow(clippy::derivable_impls)]
+mod query;
 
-pub use crate::error::NisporError;
-pub use crate::filter::NetStateFilter;
-pub use crate::iface_filter::NetStateIfaceFilter;
-pub use crate::ifaces::{
-    BondAdInfo, BondAdSelect, BondAllSubordinatesActive, BondArpValidate,
-    BondConf, BondFailOverMac, BondInfo, BondLacpRate, BondMiiStatus, BondMode,
-    BondModeArpAllTargets, BondPrimaryReselect, BondSubordinateInfo,
-    BondSubordinateState, BondXmitHashPolicy, BridgeConf, BridgeInfo,
-    BridgePortInfo, BridgePortMulticastRouterType, BridgePortStpState,
-    BridgeStpState, BridgeVlanEntry, BridgeVlanProtocol, ControllerType,
-    EthtoolCoalesceInfo, EthtoolFeatureInfo, EthtoolInfo,
-    EthtoolLinkModeDuplex, EthtoolLinkModeInfo, EthtoolPauseInfo,
-    EthtoolRingInfo, Iface, IfaceConf, IfaceFlags, IfaceState, IfaceType,
-    IpoibInfo, IpoibMode, MacSecCipherId, MacSecInfo, MacSecOffload,
-    MacSecValidate, MacVlanInfo, MacVlanMode, MacVtapInfo, MacVtapMode,
-    SriovInfo, TunInfo, TunMode, VethConf, VethInfo, VfInfo, VfLinkState,
-    VfState, VlanConf, VlanInfo, VlanProtocol, VrfInfo, VrfSubordinateInfo,
-    VxlanInfo,
+pub use crate::conf::{
+    BondConf, BridgeConf, IfaceConf, IpAddrConf, IpConf, RouteConf, VethConf,
+    VlanConf,
 };
-pub use crate::ip::{
-    IpAddrConf, IpConf, IpFamily, Ipv4AddrInfo, Ipv4Info, Ipv6AddrInfo,
-    Ipv6Info,
+pub use crate::error::{ErrorKind, NisporError};
+pub use crate::filter::{
+    NetStateFilter, NetStateIfaceFilter, NetStateRouteFilter,
+    NetStateRouteRuleFilter,
 };
-pub use crate::mptcp::{Mptcp, MptcpAddress, MptcpAddressFlag};
 pub use crate::net_conf::NetConf;
 pub use crate::net_state::NetState;
-pub use crate::route::{
-    AddressFamily, MultipathRoute, MultipathRouteFlags, Route, RouteConf,
-    RouteProtocol, RouteScope, RouteType,
+pub use crate::query::{
+    AddressFamily, BondAdInfo, BondAdSelect, BondAllSubordinatesActive,
+    BondArpValidate, BondFailOverMac, BondInfo, BondLacpRate, BondMiiStatus,
+    BondMode, BondModeArpAllTargets, BondPrimaryReselect, BondSubordinateInfo,
+    BondSubordinateState, BondXmitHashPolicy, BridgeInfo, BridgePortInfo,
+    BridgePortMulticastRouterType, BridgePortStpState, BridgeStpState,
+    BridgeVlanEntry, BridgeVlanProtocol, ControllerType, EthtoolCoalesceInfo,
+    EthtoolFeatureInfo, EthtoolInfo, EthtoolLinkModeDuplex,
+    EthtoolLinkModeInfo, EthtoolPauseInfo, EthtoolRingInfo, Iface, IfaceFlags,
+    IfaceState, IfaceType, IpFamily, IpoibInfo, IpoibMode, Ipv4AddrInfo,
+    Ipv4Info, Ipv6AddrInfo, Ipv6Info, MacSecCipherId, MacSecInfo,
+    MacSecOffload, MacSecValidate, MacVlanInfo, MacVlanMode, MacVtapInfo,
+    MacVtapMode, Mptcp, MptcpAddress, MptcpAddressFlag, MultipathRoute,
+    MultipathRouteFlags, Route, RouteProtocol, RouteRule, RouteScope,
+    RouteType, RuleAction, SriovInfo, TunInfo, TunMode, VethInfo, VfInfo,
+    VfLinkState, VfState, VlanInfo, VlanProtocol, VrfInfo, VrfSubordinateInfo,
+    VxlanInfo,
 };
-pub use crate::route_filter::NetStateRouteFilter;
-pub use crate::route_rule::{RouteRule, RuleAction};
-pub use crate::route_rule_filter::NetStateRouteRuleFilter;

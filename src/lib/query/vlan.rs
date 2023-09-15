@@ -3,10 +3,9 @@
 use std::collections::HashMap;
 
 use netlink_packet_route::rtnl::link::nlas::{InfoData, InfoVlan};
-use rtnetlink::Handle;
 use serde::{Deserialize, Serialize};
 
-use crate::{Iface, IfaceType, NisporError};
+use crate::{Iface, IfaceType};
 
 const ETH_P_8021Q: u16 = 0x8100;
 const ETH_P_8021AD: u16 = 0x88A8;
@@ -111,36 +110,6 @@ fn convert_base_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
             {
                 vlan_info.base_iface = base_iface_name.clone();
             }
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[non_exhaustive]
-pub struct VlanConf {
-    pub vlan_id: u16,
-    pub base_iface: String,
-}
-
-impl VlanConf {
-    pub(crate) async fn create(
-        handle: &Handle,
-        name: &str,
-        vlan_id: u16,
-        base_iface_index: u32,
-    ) -> Result<(), NisporError> {
-        match handle
-            .link()
-            .add()
-            .vlan(name.to_string(), base_iface_index, vlan_id)
-            .execute()
-            .await
-        {
-            Ok(_) => Ok(()),
-            Err(e) => Err(NisporError::bug(format!(
-                "Failed to create new vlan '{}': {}",
-                &name, e
-            ))),
         }
     }
 }

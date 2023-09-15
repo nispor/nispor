@@ -2,10 +2,9 @@
 
 use std::collections::HashMap;
 
-use rtnetlink::Handle;
 use serde::{Deserialize, Serialize};
 
-use crate::{Iface, IfaceType, NisporError};
+use crate::{Iface, IfaceType};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
@@ -13,30 +12,6 @@ pub struct VethInfo {
     // Interface name of peer.
     // Use interface index number when peer interface is in other namespace.
     pub peer: String,
-}
-
-pub type VethConf = VethInfo;
-
-impl VethConf {
-    pub(crate) async fn create(
-        &self,
-        handle: &Handle,
-        name: &str,
-    ) -> Result<(), NisporError> {
-        match handle
-            .link()
-            .add()
-            .veth(name.to_string(), self.peer.clone())
-            .execute()
-            .await
-        {
-            Ok(_) => Ok(()),
-            Err(e) => Err(NisporError::bug(format!(
-                "Failed to create new veth pair '{}' '{}': {}",
-                &name, &self.peer, e
-            ))),
-        }
-    }
 }
 
 pub(crate) fn veth_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {

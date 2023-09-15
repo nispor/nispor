@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    ifaces::{
-        change_ifaces, create_ifaces, delete_ifaces, get_iface_name2index,
-        get_ifaces,
-    },
-    route::apply_routes_conf,
-    IfaceConf, IfaceState, NisporError, RouteConf,
-};
-
 use serde::{Deserialize, Serialize};
 use tokio::runtime;
+
+use super::{
+    conf::{apply_routes_conf, change_ifaces, create_ifaces, delete_ifaces},
+    query::{get_iface_name2index, get_ifaces},
+};
+use crate::{IfaceConf, IfaceState, NisporError, RouteConf};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
