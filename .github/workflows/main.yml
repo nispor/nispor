@@ -57,7 +57,9 @@ jobs:
       run: sudo apt-get -y install valgrind
 
     - name: Install extra kernel module(like netdevsim)
-      run: sudo apt-get -y install linux-modules-extra-azure
+      run: |
+        sudo apt-get update;
+        sudo apt-get -y install "linux-modules-extra-$(uname -r)"
 
     - name: Build
       run: cargo build --verbose --all
