@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 
 use super::{super::mac::mac_str_to_raw, inter_ifaces::change_ifaces};
 use crate::{
-    BridgeConf, Iface, IfaceState, IfaceType, IpConf, NisporError, VethConf,
-    VlanConf,
+    BondConf, BridgeConf, Iface, IfaceState, IfaceType, IpConf, NisporError,
+    VethConf, VlanConf,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -25,6 +25,7 @@ pub struct IfaceConf {
     pub veth: Option<VethConf>,
     pub bridge: Option<BridgeConf>,
     pub vlan: Option<VlanConf>,
+    pub bond: Option<BondConf>,
 }
 
 impl IfaceConf {

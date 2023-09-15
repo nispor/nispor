@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(test)]
-mod crate_tests;
 mod error;
+#[cfg(test)]
+mod integ_tests;
 mod mac;
 // Since rust 1.62, the `#[default]` can be used for setting default value of
 // `#[derive(Default)]` for enum. The cargo clippy will complain if we impl the

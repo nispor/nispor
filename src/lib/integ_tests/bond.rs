@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{NetConf, NetState};
-use pretty_assertions::assert_eq;
-
 use std::panic;
 
+use pretty_assertions::assert_eq;
+
 use super::utils::assert_value_match;
+use crate::{BondMode, NetConf, NetState};
 
 const IFACE_NAME: &str = "bond99";
 const PORT1_NAME: &str = "eth1";
@@ -86,6 +86,8 @@ const BOND_CREATE_YML: &str = r#"---
 ifaces:
   - name: bond99
     type: bond
+    bond:
+      mode: active-backup
   - name: veth1
     type: veth
     controller: bond99
@@ -120,6 +122,7 @@ fn test_create_delete_bond() {
         &iface.bond.as_ref().unwrap().subordinates,
         &vec!["veth1".to_string()]
     );
+    assert_eq!(&iface.bond.as_ref().unwrap().mode, &BondMode::ActiveBackup);
 
     let net_conf: NetConf = serde_yaml::from_str(BOND_PORT_REMOVE_YML).unwrap();
     net_conf.apply().unwrap();
