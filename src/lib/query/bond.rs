@@ -19,7 +19,7 @@ const BOND_MODE_8023AD: u8 = 4;
 const BOND_MODE_TLB: u8 = 5;
 const BOND_MODE_ALB: u8 = 6;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum BondMode {
@@ -43,7 +43,7 @@ pub enum BondMode {
 
 impl Default for BondMode {
     fn default() -> Self {
-        Self::Unknown
+        Self::BalanceRoundRobin
     }
 }
 
@@ -58,6 +58,28 @@ impl From<u8> for BondMode {
             BOND_MODE_TLB => Self::BalanceTlb,
             BOND_MODE_ALB => Self::BalanceAlb,
             _ => Self::Other(d),
+        }
+    }
+}
+
+impl From<BondMode> for u8 {
+    fn from(v: BondMode) -> u8 {
+        match v {
+            BondMode::BalanceRoundRobin => BOND_MODE_ROUNDROBIN,
+            BondMode::ActiveBackup => BOND_MODE_ACTIVEBACKUP,
+            BondMode::BalanceXor => BOND_MODE_XOR,
+            BondMode::Broadcast => BOND_MODE_BROADCAST,
+            BondMode::Ieee8021AD => BOND_MODE_8023AD,
+            BondMode::BalanceTlb => BOND_MODE_TLB,
+            BondMode::BalanceAlb => BOND_MODE_ALB,
+            BondMode::Other(d) => d,
+            BondMode::Unknown => {
+                log::warn!(
+                    "Treating BondMode::Unknown as \
+                    BondMode::BalanceRoundRobin"
+                );
+                BOND_MODE_ROUNDROBIN
+            }
         }
     }
 }

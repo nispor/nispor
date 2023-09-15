@@ -2,6 +2,8 @@
 ifaces:
   - name: bond0
     type: bond
+    bond:
+      mode: active-backup
   - name: veth1
     type: veth
     controller: bond0
