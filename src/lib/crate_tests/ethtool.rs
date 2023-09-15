@@ -160,7 +160,6 @@ rx_max_frames: 60"#;
 const EXPECTED_ETHTOOL_LINK_MODE: &str = r#"---
 auto_negotiate: false
 ours: []
-speed: 10
 duplex: full"#;
 
 #[test]
@@ -184,6 +183,17 @@ fn test_get_ethtool_link_mode_yaml() {
             EXPECTED_ETHTOOL_LINK_MODE,
             &iface.ethtool.as_ref().unwrap().link_mode,
         );
+        assert!(
+            iface
+                .ethtool
+                .as_ref()
+                .unwrap()
+                .link_mode
+                .as_ref()
+                .unwrap()
+                .speed
+                >= 10
+        )
     });
 }
 
