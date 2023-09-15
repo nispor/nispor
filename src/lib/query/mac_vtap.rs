@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::ifaces::mac_vlan::get_mac_vlan_info;
-use crate::ifaces::mac_vlan::MacVlanInfo;
-use crate::ifaces::mac_vlan::MacVlanMode;
-use crate::NisporError;
 use netlink_packet_route::rtnl::link::nlas;
 use serde::{Deserialize, Serialize};
+
+use super::mac_vlan::get_mac_vlan_info;
+use crate::{MacVlanInfo, MacVlanMode, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]

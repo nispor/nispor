@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::error::ErrorKind;
-use crate::netlink::parse_as_ipv4;
-use crate::netlink::parse_as_ipv6;
-use crate::route::AddressFamily;
-use crate::route::RouteProtocol;
-use crate::NisporError;
 use futures::stream::TryStreamExt;
 use netlink_packet_route::rtnl::rule::nlas::Nla;
 use netlink_packet_route::RuleMessage;
 use rtnetlink::new_connection;
 use rtnetlink::IpVersion;
 use serde::{Deserialize, Serialize};
+
+use super::super::netlink::{parse_as_ipv4, parse_as_ipv6};
+use crate::{AddressFamily, ErrorKind, NisporError, RouteProtocol};
 
 const FR_ACT_TO_TBL: u8 = 1;
 const FR_ACT_GOTO: u8 = 2;

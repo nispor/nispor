@@ -10,35 +10,26 @@ use netlink_packet_route::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    ip::{fill_af_spec_inet_info, IpConf, Ipv4Info, Ipv6Info},
-    mac::{mac_str_to_raw, parse_as_mac},
-    mptcp::MptcpAddress,
-    NisporError, VfInfo,
-};
-
 use super::{
-    bond::{
-        get_bond_info, get_bond_subordinate_info, BondInfo, BondSubordinateInfo,
-    },
-    bridge::{
-        get_bridge_info, get_bridge_port_info, parse_bridge_vlan_info,
-        BridgeConf, BridgeInfo, BridgePortInfo,
-    },
-    ethtool::EthtoolInfo,
-    inter_ifaces::change_ifaces,
-    ipoib::{get_ipoib_info, IpoibInfo},
-    mac_vlan::{get_mac_vlan_info, MacVlanInfo},
-    mac_vtap::{get_mac_vtap_info, MacVtapInfo},
-    macsec::{get_macsec_info, MacSecInfo},
-    sriov::{get_sriov_info, SriovInfo},
-    tun::{get_tun_info, TunInfo},
-    veth::{VethConf, VethInfo},
-    vlan::{get_vlan_info, VlanConf, VlanInfo},
-    vrf::{
-        get_vrf_info, get_vrf_subordinate_info, VrfInfo, VrfSubordinateInfo,
-    },
-    vxlan::{get_vxlan_info, VxlanInfo},
+    super::mac::parse_as_mac,
+    bond::{get_bond_info, get_bond_subordinate_info},
+    bridge::{get_bridge_info, get_bridge_port_info, parse_bridge_vlan_info},
+    ip::fill_af_spec_inet_info,
+    ipoib::get_ipoib_info,
+    mac_vlan::get_mac_vlan_info,
+    mac_vtap::get_mac_vtap_info,
+    macsec::get_macsec_info,
+    sriov::get_sriov_info,
+    tun::get_tun_info,
+    vlan::get_vlan_info,
+    vrf::{get_vrf_info, get_vrf_subordinate_info},
+    vxlan::get_vxlan_info,
+};
+use crate::{
+    BondInfo, BondSubordinateInfo, BridgeInfo, BridgePortInfo, EthtoolInfo,
+    IpoibInfo, Ipv4Info, Ipv6Info, MacSecInfo, MacVlanInfo, MacVtapInfo,
+    MptcpAddress, NisporError, SriovInfo, TunInfo, VethInfo, VfInfo, VlanInfo,
+    VrfInfo, VrfSubordinateInfo, VxlanInfo,
 };
 
 const IFF_PORT: u32 = 0x800;
@@ -578,66 +569,4 @@ fn _parse_iface_flags(flags: u32) -> Vec<IfaceFlags> {
     }
 
     ret
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[non_exhaustive]
-pub struct IfaceConf {
-    pub name: String,
-    #[serde(default = "default_iface_state_in_conf")]
-    pub state: IfaceState,
-    #[serde(rename = "type")]
-    pub iface_type: Option<IfaceType>,
-    pub controller: Option<String>,
-    pub ipv4: Option<IpConf>,
-    pub ipv6: Option<IpConf>,
-    pub mac_address: Option<String>,
-    pub veth: Option<VethConf>,
-    pub bridge: Option<BridgeConf>,
-    pub vlan: Option<VlanConf>,
-}
-
-impl IfaceConf {
-    pub async fn apply(&self, cur_iface: &Iface) -> Result<(), NisporError> {
-        log::warn!(
-            "WARN: IfaceConf::apply() is deprecated, \
-            please use NetConf::apply() instead"
-        );
-        let ifaces = vec![self];
-        let mut cur_ifaces = HashMap::new();
-        cur_ifaces.insert(self.name.to_string(), cur_iface.clone());
-        change_ifaces(&ifaces, &cur_ifaces).await
-    }
-}
-
-fn default_iface_state_in_conf() -> IfaceState {
-    IfaceState::Up
-}
-
-pub(crate) async fn change_iface_state(
-    handle: &rtnetlink::Handle,
-    index: u32,
-    up: bool,
-) -> Result<(), NisporError> {
-    if up {
-        handle.link().set(index).up().execute().await?;
-    } else {
-        handle.link().set(index).down().execute().await?;
-    }
-    Ok(())
-}
-
-pub(crate) async fn change_iface_mac(
-    handle: &rtnetlink::Handle,
-    index: u32,
-    mac_address: &str,
-) -> Result<(), NisporError> {
-    change_iface_state(handle, index, false).await?;
-    handle
-        .link()
-        .set(index)
-        .address(mac_str_to_raw(mac_address)?)
-        .execute()
-        .await?;
-    Ok(())
 }
