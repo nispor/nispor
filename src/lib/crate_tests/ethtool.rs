@@ -79,7 +79,6 @@ changeable:
   tx-tcp6-segmentation: true"#;
 
 #[test]
-#[ignore] // Only new version of netdevsim support pause
 fn test_get_ethtool_pause_yaml() {
     with_netdevsim_iface(|| {
         let state = NetState::retrieve().unwrap();
