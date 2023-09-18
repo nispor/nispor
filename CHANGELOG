@@ -1,4 +1,15 @@
 # Changelog
+## [1.2.14] - 2023-09-18
+## Break changes
+ * N/A
+
+## New features
+ * Support MACsec interface. (184cfcf, 528753e)
+ * Support changing bond mode. (30a27af)
+
+## Bug fixes
+ * N/A
+
 ## [1.2.13] - 2023-08-25
 ## Break changes
  * N/A
