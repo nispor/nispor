@@ -45,6 +45,8 @@ pub struct Ipv6AddrInfo {
     pub valid_lft: String,
     // The renaming seonds for this address be preferred
     pub preferred_lft: String,
+    /// IPv6 Address Flags
+    pub flags: Vec<Ipv6AddrFlag>,
 }
 
 pub(crate) fn parse_ip_addr_str(
@@ -128,4 +130,55 @@ pub enum IpFamily {
 
 pub(crate) fn is_ipv6_addr(addr: &str) -> bool {
     addr.contains(':')
+}
+
+const IFA_F_SECONDARY: u32 = 0x01;
+const IFA_F_NODAD: u32 = 0x02;
+const IFA_F_OPTIMISTIC: u32 = 0x04;
+const IFA_F_DADFAILED: u32 = 0x08;
+const IFA_F_HOMEADDRESS: u32 = 0x10;
+const IFA_F_DEPRECATED: u32 = 0x20;
+const IFA_F_TENTATIVE: u32 = 0x40;
+const IFA_F_PERMANENT: u32 = 0x80;
+const IFA_F_MANAGETEMPADDR: u32 = 0x100;
+const IFA_F_NOPREFIXROUTE: u32 = 0x200;
+const IFA_F_MCAUTOJOIN: u32 = 0x400;
+const IFA_F_STABLE_PRIVACY: u32 = 0x800;
+
+#[derive(Clone, Eq, PartialEq, Debug, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[non_exhaustive]
+#[repr(u32)]
+pub enum Ipv6AddrFlag {
+    Secondary = IFA_F_SECONDARY,
+    Nodad = IFA_F_NODAD,
+    Optimistic = IFA_F_OPTIMISTIC,
+    Dadfailed = IFA_F_DADFAILED,
+    Homeaddress = IFA_F_HOMEADDRESS,
+    Deprecated = IFA_F_DEPRECATED,
+    Tentative = IFA_F_TENTATIVE,
+    Permanent = IFA_F_PERMANENT,
+    Managetempaddr = IFA_F_MANAGETEMPADDR,
+    Noprefixroute = IFA_F_NOPREFIXROUTE,
+    Mcautojoin = IFA_F_MCAUTOJOIN,
+    StablePrivacy = IFA_F_STABLE_PRIVACY,
+}
+
+impl Ipv6AddrFlag {
+    pub(crate) fn all() -> [Ipv6AddrFlag; 12] {
+        [
+            Ipv6AddrFlag::Secondary,
+            Ipv6AddrFlag::Nodad,
+            Ipv6AddrFlag::Optimistic,
+            Ipv6AddrFlag::Dadfailed,
+            Ipv6AddrFlag::Homeaddress,
+            Ipv6AddrFlag::Deprecated,
+            Ipv6AddrFlag::Tentative,
+            Ipv6AddrFlag::Permanent,
+            Ipv6AddrFlag::Managetempaddr,
+            Ipv6AddrFlag::Noprefixroute,
+            Ipv6AddrFlag::Mcautojoin,
+            Ipv6AddrFlag::StablePrivacy,
+        ]
+    }
 }

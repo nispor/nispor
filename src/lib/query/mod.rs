@@ -41,7 +41,9 @@ pub use self::ethtool::{
 pub use self::iface::{
     ControllerType, Iface, IfaceFlags, IfaceState, IfaceType,
 };
-pub use self::ip::{IpFamily, Ipv4AddrInfo, Ipv4Info, Ipv6AddrInfo, Ipv6Info};
+pub use self::ip::{
+    IpFamily, Ipv4AddrInfo, Ipv4Info, Ipv6AddrFlag, Ipv6AddrInfo, Ipv6Info,
+};
 pub use self::ipoib::{IpoibInfo, IpoibMode};
 pub use self::mac_vlan::{MacVlanInfo, MacVlanMode};
 pub use self::mac_vtap::{MacVtapInfo, MacVtapMode};

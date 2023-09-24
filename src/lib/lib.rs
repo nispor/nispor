@@ -37,7 +37,7 @@ pub use crate::query::{
     EthtoolFeatureInfo, EthtoolInfo, EthtoolLinkModeDuplex,
     EthtoolLinkModeInfo, EthtoolPauseInfo, EthtoolRingInfo, Iface, IfaceFlags,
     IfaceState, IfaceType, IpFamily, IpoibInfo, IpoibMode, Ipv4AddrInfo,
-    Ipv4Info, Ipv6AddrInfo, Ipv6Info, MacSecCipherId, MacSecInfo,
+    Ipv4Info, Ipv6AddrFlag, Ipv6AddrInfo, Ipv6Info, MacSecCipherId, MacSecInfo,
     MacSecOffload, MacSecValidate, MacVlanInfo, MacVlanMode, MacVtapInfo,
     MacVtapMode, Mptcp, MptcpAddress, MptcpAddressFlag, MultipathRoute,
     MultipathRouteFlags, Route, RouteProtocol, RouteRule, RouteScope,

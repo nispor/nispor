@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::netlink::nla::parse_as_ipv4;
-use crate::netlink::nla::parse_as_ipv6;
-use crate::Iface;
-use crate::Ipv4AddrInfo;
-use crate::Ipv4Info;
-use crate::Ipv6AddrInfo;
-use crate::Ipv6Info;
-use crate::NisporError;
+use crate::{
+    netlink::nla::{parse_as_ipv4, parse_as_ipv6},
+    Iface, Ipv4AddrInfo, Ipv4Info, Ipv6AddrFlag, Ipv6AddrInfo, Ipv6Info,
+    NisporError,
+};
 use netlink_packet_route::address::{CacheInfo, CacheInfoBuffer};
 use netlink_packet_route::rtnl::address::nlas::Nla;
 use netlink_packet_route::rtnl::AddressMessage;
@@ -112,6 +109,8 @@ fn parse_ipv6_nlas(
             ))?;
             addr.preferred_lft = left_time_to_string(cache_info.ifa_preferred);
             addr.valid_lft = left_time_to_string(cache_info.ifa_valid);
+        } else if let Nla::Flags(flags) = nla {
+            addr.flags = _Ipv6AddrFlags::from(*flags).0;
         }
     }
 
@@ -136,4 +135,34 @@ fn get_iface_name_by_index(
         }
     }
     None
+}
+
+#[derive(Clone, Eq, PartialEq, Debug)]
+struct _Ipv6AddrFlags(Vec<Ipv6AddrFlag>);
+
+impl From<u32> for _Ipv6AddrFlags {
+    fn from(d: u32) -> Self {
+        let mut got: u32 = 0;
+        let mut ret = Vec::new();
+        for flag in Ipv6AddrFlag::all() {
+            if (d & (flag as u32)) > 0 {
+                ret.push(flag);
+                got += flag as u32;
+            }
+        }
+        if got != d {
+            eprintln!("Discarded unsupported IFA_FLAGS: {}", d - got);
+        }
+        Self(ret)
+    }
+}
+
+impl From<&_Ipv6AddrFlags> for u32 {
+    fn from(v: &_Ipv6AddrFlags) -> u32 {
+        let mut d: u32 = 0;
+        for flag in &v.0 {
+            d += *flag as u32;
+        }
+        d
+    }
 }
