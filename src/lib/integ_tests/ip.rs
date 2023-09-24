@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{NetConf, NetState};
-use pretty_assertions::assert_eq;
-
 use std::panic;
 
+use pretty_assertions::assert_eq;
+
 use super::utils::assert_value_match;
+use crate::{NetConf, NetState};
 
 const IFACE_NAME: &str = "veth1";
 
@@ -76,8 +76,8 @@ const EXPECTED_IPV4_DYNAMIC_INFO: &str = r#"---
 addresses:
   - address: 192.0.2.1
     prefix_len: 24
-    valid_lft: 120sec
-    preferred_lft: 60sec"#;
+    valid_lft: 118sec
+    preferred_lft: 58sec"#;
 
 const EXPECTED_IPV6_INFO: &str = r#"---
 addresses:
@@ -85,21 +85,28 @@ addresses:
     prefix_len: 64
     valid_lft: forever
     preferred_lft: forever
+    flags:
+    - permanent
   - address: "fe80::223:45ff:fe67:891a"
     prefix_len: 64
     valid_lft: forever
-    preferred_lft: forever"#;
+    preferred_lft: forever
+    flags:
+    - permanent"#;
 
 const EXPECTED_IPV6_DYNAMIC_INFO: &str = r#"---
 addresses:
   - address: "2001:db8:a::9"
     prefix_len: 64
-    valid_lft: 121sec
-    preferred_lft: 61sec
+    valid_lft: 119sec
+    preferred_lft: 59sec
+    flags: []
   - address: "fe80::223:45ff:fe67:891a"
     prefix_len: 64
     valid_lft: forever
-    preferred_lft: forever"#;
+    preferred_lft: forever
+    flags:
+    - permanent"#;
 
 const EXPECTED_EMPTY_IPV6_INFO: &str = r#"---
 addresses:
@@ -113,6 +120,7 @@ fn test_add_and_remove_ip() {
     with_veth_iface(|| {
         let conf: NetConf = serde_yaml::from_str(ADD_IP_CONF).unwrap();
         conf.apply().unwrap();
+        wait_ipv6_dad();
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
@@ -135,6 +143,7 @@ fn test_add_and_remove_dynamic_ip() {
     with_veth_iface(|| {
         let conf: NetConf = serde_yaml::from_str(ADD_IP_CONF_DYNAMIC).unwrap();
         conf.apply().unwrap();
+        wait_ipv6_dad();
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
@@ -160,6 +169,7 @@ fn test_add_dynamic_ip_repeat() {
         conf.apply().unwrap();
         std::thread::sleep(std::time::Duration::from_secs(2));
         conf.apply().unwrap();
+        wait_ipv6_dad();
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
@@ -197,4 +207,8 @@ fn test_ipv6_token() {
             Some("::fac1".to_string())
         );
     })
+}
+
+fn wait_ipv6_dad() {
+    std::thread::sleep(std::time::Duration::from_secs(2));
 }
