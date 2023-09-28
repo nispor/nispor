@@ -15,7 +15,7 @@ sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 1>/dev/null
 
 if [ "CHK$1" == "CHK" ];then
     echo 'Need argument: bond, br, brv, vlan, dummy, vxlan, veth, vrf, sriov,'
-    echo 'rm, route, rule, sim, mptcp, bgp, macsec'
+    echo 'rm, route, rule, sim, mptcp, bgp, macsec, ipv6token, ipv6p2p'
     exit 1
 fi
 
@@ -234,6 +234,12 @@ elif [ "CHK$1" == "CHKipv6token" ];then
             echo "186 table $TEST_ROUTE_TABLE_ID"
         done
     done | sudo ip -b -
+elif [ "CHK$1" == "CHKipv6p2p" ];then
+    create_nics
+    sudo ip link set eth1 up
+    sudo sysctl -w net.ipv6.conf.eth1.accept_ra=1
+    sudo ip -6 addr add 2001:db8:f::1/128 peer 2001:db8:f::2/64 dev eth1
+    sudo ip token set ::fac1 dev eth1
 elif [ "CHK$1" == "CHKmacsec" ];then
     create_nics
     sudo ip link add link eth1 macsec0 type macsec encrypt on
