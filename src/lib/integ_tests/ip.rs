@@ -209,6 +209,47 @@ fn test_ipv6_token() {
     })
 }
 
+fn with_ipv6_p2p<T>(test: T)
+where
+    T: FnOnce() + panic::UnwindSafe,
+{
+    super::utils::set_network_environment("ipv6p2p");
+
+    let result = panic::catch_unwind(|| {
+        test();
+    });
+
+    super::utils::clear_network_environment();
+    assert!(result.is_ok())
+}
+
+const EXPECTED_IPV6_P2P_INFO: &str = r#"---
+addresses:
+  - address: "2001:db8:f::1"
+    prefix_len: 128
+    valid_lft: forever
+    preferred_lft: forever
+    flags:
+    - permanent
+    peer: 2001:db8:f::2
+    peer_prefix_len: 64
+  - address: "fe80::223:45ff:fe67:891a"
+    prefix_len: 64
+    valid_lft: forever
+    preferred_lft: forever
+    flags:
+    - permanent"#;
+
+#[test]
+fn test_ipv6_p2p() {
+    with_ipv6_p2p(|| {
+        wait_ipv6_dad();
+        let state = NetState::retrieve().unwrap();
+        let iface = state.ifaces.get("eth1").unwrap();
+        assert_value_match(EXPECTED_IPV6_P2P_INFO, &iface.ipv6);
+    })
+}
+
 fn wait_ipv6_dad() {
     std::thread::sleep(std::time::Duration::from_secs(2));
 }

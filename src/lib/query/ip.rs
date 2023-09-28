@@ -47,6 +47,10 @@ pub struct Ipv6AddrInfo {
     pub preferred_lft: String,
     /// IPv6 Address Flags
     pub flags: Vec<Ipv6AddrFlag>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub peer: Option<Ipv6Addr>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub peer_prefix_len: Option<u8>,
 }
 
 pub(crate) fn parse_ip_addr_str(

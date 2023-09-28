@@ -101,8 +101,20 @@ fn parse_ipv6_nlas(
     };
 
     for nla in &nl_msg.nlas {
-        if let Nla::Address(addr_vec) = nla {
+        if let Nla::Local(addr_vec) = nla {
             addr.address = parse_as_ipv6(addr_vec.as_slice())?.to_string();
+            addr.peer_prefix_len = Some(addr.prefix_len);
+            addr.prefix_len = 128;
+        }
+    }
+
+    for nla in &nl_msg.nlas {
+        if let Nla::Address(addr_vec) = nla {
+            if addr.peer_prefix_len.is_some() {
+                addr.peer = Some(parse_as_ipv6(addr_vec.as_slice())?);
+            } else {
+                addr.address = parse_as_ipv6(addr_vec.as_slice())?.to_string();
+            }
         } else if let Nla::CacheInfo(cache_info_vec) = nla {
             let cache_info = CacheInfo::parse(&CacheInfoBuffer::new(
                 cache_info_vec.as_slice(),
