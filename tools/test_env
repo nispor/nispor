@@ -96,6 +96,7 @@ elif [ "CHK$1" == "CHKbrv" ];then
     sudo ip link set br0 address $TEST_MAC3
     sudo ip link set br0 up
     sudo bridge vlan add vid 10 pvid untagged dev eth1
+    sudo bridge vlan add vid 11 pvid untagged self dev br0
     sudo bridge vlan add vid 2-4094 dev eth2
     sudo ip link set br0 type bridge vlan_filtering 1
     sleep $LINK_WAIT_TIME

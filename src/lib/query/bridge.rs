@@ -10,7 +10,7 @@ use crate::{
     netlink::{
         parse_af_spec_bridge_info, parse_bridge_info, parse_bridge_port_info,
     },
-    ControllerType, Iface, NisporError,
+    ControllerType, Iface, IfaceType, NisporError,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -381,6 +381,12 @@ pub(crate) fn parse_bridge_vlan_info(
                 Some(vlans) => vlans.extend(cur_vlans),
                 None => port_info.vlans = Some(cur_vlans),
             };
+        }
+    } else if iface_state.iface_type == IfaceType::Bridge {
+        let br_vlan = iface_state.bridge_vlan.get_or_insert(Vec::new());
+        // It's the VLAN of the bridge itself
+        if let Some(cur_vlans) = parse_af_spec_bridge_info(nlas)? {
+            br_vlan.extend(cur_vlans);
         }
     }
     Ok(())
