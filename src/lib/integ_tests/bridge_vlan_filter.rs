@@ -98,6 +98,14 @@ vlans:
     is_pvid: false
     is_egress_untagged: false"#;
 
+static BR_SELF_VLAN: &str = r#"
+  - vid: 1
+    is_pvid: false
+    is_egress_untagged: true
+  - vid: 11
+    is_pvid: true
+    is_egress_untagged: true"#;
+
 #[test]
 fn test_get_br_vlan_filter_iface_yaml() {
     with_br_with_vlan_filter_iface(|| {
@@ -118,6 +126,7 @@ fn test_get_br_vlan_filter_iface_yaml() {
         if let Some(bridge_info) = &iface.bridge {
             assert_eq!(bridge_info.vlan_filtering, Some(true))
         }
+        assert_value_match(BR_SELF_VLAN, iface.bridge_vlan.as_ref().unwrap());
 
         let port1 = &state.ifaces[PORT1_NAME];
         let port2 = &state.ifaces[PORT2_NAME];

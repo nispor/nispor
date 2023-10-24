@@ -26,10 +26,10 @@ use super::{
     vxlan::get_vxlan_info,
 };
 use crate::{
-    BondInfo, BondSubordinateInfo, BridgeInfo, BridgePortInfo, EthtoolInfo,
-    IpoibInfo, Ipv4Info, Ipv6Info, MacSecInfo, MacVlanInfo, MacVtapInfo,
-    MptcpAddress, NisporError, SriovInfo, TunInfo, VethInfo, VfInfo, VlanInfo,
-    VrfInfo, VrfSubordinateInfo, VxlanInfo,
+    BondInfo, BondSubordinateInfo, BridgeInfo, BridgePortInfo, BridgeVlanEntry,
+    EthtoolInfo, IpoibInfo, Ipv4Info, Ipv6Info, MacSecInfo, MacVlanInfo,
+    MacVtapInfo, MptcpAddress, NisporError, SriovInfo, TunInfo, VethInfo,
+    VfInfo, VlanInfo, VrfInfo, VrfSubordinateInfo, VxlanInfo,
 };
 
 const IFF_PORT: u32 = 0x800;
@@ -220,6 +220,8 @@ pub struct Iface {
     pub bond_subordinate: Option<BondSubordinateInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bridge: Option<BridgeInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bridge_vlan: Option<Vec<BridgeVlanEntry>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bridge_port: Option<BridgePortInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
