@@ -2,37 +2,31 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::rtnl::link::nlas::{InfoData, InfoVlan};
+use netlink_packet_route::link::{self, InfoData, InfoVlan};
 use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceType};
 
-const ETH_P_8021Q: u16 = 0x8100;
-const ETH_P_8021AD: u16 = 0x88A8;
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum VlanProtocol {
     #[serde(rename = "802.1q")]
+    #[default]
     Ieee8021Q,
     #[serde(rename = "802.1ad")]
     Ieee8021AD,
     Unknown,
 }
 
-impl Default for VlanProtocol {
-    fn default() -> Self {
-        VlanProtocol::Unknown
-    }
-}
-
-impl From<u16> for VlanProtocol {
-    fn from(d: u16) -> Self {
+impl From<link::VlanProtocol> for VlanProtocol {
+    fn from(d: link::VlanProtocol) -> Self {
         match d {
-            ETH_P_8021Q => VlanProtocol::Ieee8021Q,
-            ETH_P_8021AD => VlanProtocol::Ieee8021AD,
-            _ => VlanProtocol::Unknown,
+            link::VlanProtocol::Ieee8021Q => Self::Ieee8021Q,
+            link::VlanProtocol::Ieee8021Ad => Self::Ieee8021AD,
+            _ => Self::Unknown,
         }
     }
 }
@@ -82,7 +76,7 @@ pub(crate) fn get_vlan_info(data: &InfoData) -> Option<VlanInfo> {
                     vlan_info.is_bridge_binding = true
                 }
             } else {
-                log::warn!("Unknown VLAN info: {:?}", info);
+                log::debug!("Unknown VLAN info: {:?}", info);
             }
         }
         Some(vlan_info)

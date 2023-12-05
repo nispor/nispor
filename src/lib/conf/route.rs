@@ -4,13 +4,12 @@ use std::collections::HashMap;
 use std::net::IpAddr;
 
 use netlink_packet_route::{
-    route::nlas::Nla, RouteMessage, RTN_UNICAST, RTPROT_STATIC,
-    RT_SCOPE_UNIVERSE, RT_TABLE_MAIN,
+    route::{self as rt, RouteAddress, RouteAttribute, RouteMessage},
+    AddressFamily,
 };
 
 use serde::{Deserialize, Serialize};
 
-use super::super::netlink::{AF_INET, AF_INET6};
 use super::super::query::{parse_ip_addr_str, parse_ip_net_addr_str};
 use crate::{NisporError, RouteProtocol};
 
@@ -45,35 +44,39 @@ async fn apply_route_conf(
     iface_name_2_index: &HashMap<String, u32>,
 ) -> Result<(), NisporError> {
     let mut nl_msg = RouteMessage::default();
-    nl_msg.header.kind = RTN_UNICAST;
-    if let Some(p) = route.protocol.as_ref() {
+    nl_msg.header.kind = rt::RouteType::Unicast;
+    if let Some(p) = route.protocol {
         nl_msg.header.protocol = p.into();
     } else {
-        nl_msg.header.protocol = RTPROT_STATIC;
+        nl_msg.header.protocol = rt::RouteProtocol::Static;
     }
-    nl_msg.header.scope = RT_SCOPE_UNIVERSE;
-    nl_msg.header.table = RT_TABLE_MAIN;
+    nl_msg.header.scope = rt::RouteScope::Universe;
+    nl_msg.header.table = rt::RouteHeader::RT_TABLE_MAIN;
     let (dst_addr, dst_prefix) = parse_ip_net_addr_str(route.dst.as_str())?;
     nl_msg.header.destination_prefix_length = dst_prefix;
     match dst_addr {
         IpAddr::V4(addr) => {
-            nl_msg.header.address_family = AF_INET;
-            nl_msg.nlas.push(Nla::Destination(addr.octets().to_vec()));
+            nl_msg.header.address_family = AddressFamily::Inet;
+            nl_msg
+                .attributes
+                .push(RouteAttribute::Destination(RouteAddress::Inet(addr)));
         }
         IpAddr::V6(addr) => {
-            nl_msg.header.address_family = AF_INET6;
-            nl_msg.nlas.push(Nla::Destination(addr.octets().to_vec()));
+            nl_msg.header.address_family = AddressFamily::Inet6;
+            nl_msg
+                .attributes
+                .push(RouteAttribute::Destination(RouteAddress::Inet6(addr)));
         }
     };
     if let Some(t) = route.table.as_ref() {
         nl_msg.header.table = *t;
     }
     if let Some(m) = route.metric.as_ref() {
-        nl_msg.nlas.push(Nla::Priority(*m));
+        nl_msg.attributes.push(RouteAttribute::Priority(*m));
     }
     if let Some(oif) = route.oif.as_deref() {
         if let Some(iface_index) = iface_name_2_index.get(oif) {
-            nl_msg.nlas.push(Nla::Iif(*iface_index));
+            nl_msg.attributes.push(RouteAttribute::Iif(*iface_index));
         } else {
             let e = NisporError::invalid_argument(format!(
                 "Interface {oif} does not exist"
@@ -85,10 +88,14 @@ async fn apply_route_conf(
     if let Some(via) = route.via.as_deref() {
         match parse_ip_addr_str(via)? {
             IpAddr::V4(i) => {
-                nl_msg.nlas.push(Nla::Gateway(i.octets().to_vec()));
+                nl_msg
+                    .attributes
+                    .push(RouteAttribute::Gateway(RouteAddress::Inet(i)));
             }
             IpAddr::V6(i) => {
-                nl_msg.nlas.push(Nla::Gateway(i.octets().to_vec()));
+                nl_msg
+                    .attributes
+                    .push(RouteAttribute::Gateway(RouteAddress::Inet6(i)));
             }
         };
     }
@@ -104,7 +111,7 @@ async fn apply_route_conf(
     } else {
         let mut req = handle.route().add();
         req.message_mut().header = nl_msg.header;
-        req.message_mut().nlas = nl_msg.nlas;
+        req.message_mut().attributes = nl_msg.attributes;
         if let Err(e) = req.execute().await {
             if let rtnetlink::Error::NetlinkError(ref e) = e {
                 if e.raw_code() == -libc::EEXIST {

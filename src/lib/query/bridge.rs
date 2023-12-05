@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::rtnl::link::nlas;
+use netlink_packet_route::link::{AfSpecBridge, InfoData};
 
 use serde::{Deserialize, Serialize};
 
@@ -294,9 +294,9 @@ pub struct BridgePortInfo {
 }
 
 pub(crate) fn get_bridge_info(
-    data: &nlas::InfoData,
+    data: &InfoData,
 ) -> Result<Option<BridgeInfo>, NisporError> {
-    if let nlas::InfoData::Bridge(infos) = data {
+    if let InfoData::Bridge(infos) = data {
         Ok(Some(parse_bridge_info(infos)?))
     } else {
         Ok(None)
@@ -373,7 +373,7 @@ pub struct BridgeVlanEntry {
 
 pub(crate) fn parse_bridge_vlan_info(
     iface_state: &mut Iface,
-    nlas: &[nlas::AfSpecBridge],
+    nlas: &[AfSpecBridge],
 ) -> Result<(), NisporError> {
     if let Some(ref mut port_info) = iface_state.bridge_port {
         if let Some(cur_vlans) = parse_af_spec_bridge_info(nlas)? {

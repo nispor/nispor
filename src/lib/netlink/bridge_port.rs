@@ -369,7 +369,7 @@ pub(crate) fn parse_bridge_port_info(
                 {
                     func(nla.value(), &mut port_info)?;
                 } else {
-                    log::warn!(
+                    log::debug!(
                         "Unhandled IFLA_BRPORT_XXX {} {:?}",
                         nla.kind(),
                         nla.value()

@@ -2,7 +2,7 @@
 
 use crate::BridgeVlanEntry;
 use crate::NisporError;
-use netlink_packet_route::rtnl::link::nlas::{AfSpecBridge, BridgeVlanInfo};
+use netlink_packet_route::link::{AfSpecBridge, BridgeVlanInfo};
 
 // VLAN is PVID, ingress untagged;
 const BRIDGE_VLAN_INFO_PVID: u16 = 1 << 1;

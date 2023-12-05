@@ -3,10 +3,7 @@
 use std::collections::HashMap;
 
 use futures::stream::TryStreamExt;
-use netlink_packet_route::rtnl::{
-    constants::AF_BRIDGE, AF_UNSPEC, RTEXT_FILTER_BRVLAN_COMPRESSED,
-    RTEXT_FILTER_VF,
-};
+use netlink_packet_route::{link::LinkExtentMask, AddressFamily};
 use rtnetlink::new_connection;
 
 use super::{
@@ -44,8 +41,8 @@ pub(crate) async fn get_ifaces(
     let mut link_get_handle = handle.link().get();
 
     if filter.include_sriov_vf_info {
-        link_get_handle =
-            link_get_handle.set_filter_mask(AF_UNSPEC as u8, RTEXT_FILTER_VF);
+        link_get_handle = link_get_handle
+            .set_filter_mask(AddressFamily::Unspec, vec![LinkExtentMask::Vf]);
     }
     if let Some(iface_name) = filter.iface_name.as_ref() {
         link_get_handle = link_get_handle.match_name(iface_name.to_string());
@@ -87,10 +84,10 @@ pub(crate) async fn get_ifaces(
     }
 
     if filter.include_bridge_vlan {
-        let mut link_get_handle = handle
-            .link()
-            .get()
-            .set_filter_mask(AF_BRIDGE as u8, RTEXT_FILTER_BRVLAN_COMPRESSED);
+        let mut link_get_handle = handle.link().get().set_filter_mask(
+            AddressFamily::Bridge,
+            vec![LinkExtentMask::BrvlanCompressed],
+        );
 
         if let Some(iface_name) = filter.iface_name.as_ref() {
             link_get_handle =

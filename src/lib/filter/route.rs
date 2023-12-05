@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::rtnl::route::nlas::Nla;
+use netlink_packet_route::route::RouteAttribute;
 use rtnetlink::RouteGetRequest;
 
 use crate::{NisporError, Route, RouteProtocol, RouteScope};
@@ -28,15 +28,17 @@ pub(crate) fn apply_kernel_route_filter(
 ) -> Result<(), NisporError> {
     let rt_nlmsg = handle.message_mut();
 
-    if let Some(protocol) = filter.protocol.as_ref() {
+    if let Some(protocol) = filter.protocol {
         rt_nlmsg.header.protocol = protocol.into();
     }
-    if let Some(scope) = filter.scope.as_ref() {
+    if let Some(scope) = filter.scope {
         rt_nlmsg.header.scope = scope.into();
     }
     if let Some(oif) = filter.oif.as_ref() {
         match iface_name2index.get(oif) {
-            Some(index) => rt_nlmsg.nlas.push(Nla::Oif(*index)),
+            Some(index) => {
+                rt_nlmsg.attributes.push(RouteAttribute::Oif(*index))
+            }
             None => {
                 let e = NisporError::invalid_argument(format!(
                     "Interface {oif} not found"
@@ -47,7 +49,9 @@ pub(crate) fn apply_kernel_route_filter(
         }
     }
     if let Some(table) = filter.table {
-        rt_nlmsg.nlas.push(Nla::Table(table.into()));
+        rt_nlmsg
+            .attributes
+            .push(RouteAttribute::Table(table.into()));
     }
     Ok(())
 }

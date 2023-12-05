@@ -150,7 +150,7 @@ async fn change_ifaces_controller(
                             handle
                                 .link()
                                 .set(cur_iface.index)
-                                .master(ctrl_iface.index)
+                                .controller(ctrl_iface.index)
                                 .execute()
                                 .await?;
                         }
@@ -159,7 +159,7 @@ async fn change_ifaces_controller(
                         handle
                             .link()
                             .set(cur_iface.index)
-                            .nomaster()
+                            .nocontroller()
                             .execute()
                             .await?;
                     }

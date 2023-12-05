@@ -275,7 +275,7 @@ async fn dump_pause_infos(
         let mut iface_name = None;
         let mut pause_info = EthtoolPauseInfo::default();
 
-        for nla in &ethtool_msg.nlas {
+        for nla in ethtool_msg.nlas.as_slice() {
             if let EthtoolAttr::Pause(nla) = nla {
                 if let EthtoolPauseAttr::Header(hdrs) = nla {
                     iface_name = get_iface_name_from_header(hdrs);
@@ -306,7 +306,7 @@ async fn dump_feature_infos(
         let mut fixed_features: HashMap<String, bool> = HashMap::new();
         let mut changeable_features: HashMap<String, bool> = HashMap::new();
 
-        for nla in &ethtool_msg.nlas {
+        for nla in ethtool_msg.nlas.as_slice() {
             if let EthtoolAttr::Feature(EthtoolFeatureAttr::NoChange(
                 feature_bits,
             )) = nla
@@ -317,7 +317,7 @@ async fn dump_feature_infos(
             }
         }
 
-        for nla in &ethtool_msg.nlas {
+        for nla in ethtool_msg.nlas.as_slice() {
             if let EthtoolAttr::Feature(EthtoolFeatureAttr::Header(hdrs)) = nla
             {
                 iface_name = get_iface_name_from_header(hdrs);
@@ -325,7 +325,7 @@ async fn dump_feature_infos(
             }
         }
 
-        for nla in &ethtool_msg.nlas {
+        for nla in ethtool_msg.nlas.as_slice() {
             if let EthtoolAttr::Feature(EthtoolFeatureAttr::Hw(feature_bits)) =
                 nla
             {
@@ -362,7 +362,7 @@ async fn dump_feature_infos(
             }
         }
 
-        for nla in &ethtool_msg.nlas {
+        for nla in ethtool_msg.nlas.as_slice() {
             if let EthtoolAttr::Feature(EthtoolFeatureAttr::Active(
                 feature_bits,
             )) = nla
@@ -405,7 +405,7 @@ async fn dump_coalesce_infos(
         let ethtool_msg = genl_msg.payload;
         let mut iface_name = None;
         let mut coalesce_info = EthtoolCoalesceInfo::default();
-        for nla in &ethtool_msg.nlas {
+        for nla in ethtool_msg.nlas.as_slice() {
             if let EthtoolAttr::Coalesce(nla) = nla {
                 match nla {
                     EthtoolCoalesceAttr::Header(hdrs) => {
@@ -500,7 +500,7 @@ async fn dump_ring_infos(
         let ethtool_msg = genl_msg.payload;
         let mut iface_name = None;
         let mut ring_info = EthtoolRingInfo::default();
-        for nla in &ethtool_msg.nlas {
+        for nla in ethtool_msg.nlas.as_slice() {
             if let EthtoolAttr::Ring(nla) = nla {
                 match nla {
                     EthtoolRingAttr::Header(hdrs) => {
@@ -543,7 +543,7 @@ async fn dump_link_mode_infos(
         let ethtool_msg = genl_msg.payload;
         let mut iface_name = None;
         let mut link_mode_info = EthtoolLinkModeInfo::default();
-        for nla in &ethtool_msg.nlas {
+        for nla in ethtool_msg.nlas.as_slice() {
             if let EthtoolAttr::LinkMode(nla) = nla {
                 match nla {
                     EthtoolLinkModeAttr::Header(hdrs) => {

@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use std::collections::HashMap;
 
-use netlink_packet_route::rtnl::link::nlas::InfoData;
-use netlink_packet_route::rtnl::link::nlas::InfoMacSec;
+use netlink_packet_route::link::{InfoData, InfoMacSec};
 use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceType};
@@ -176,7 +175,7 @@ pub(crate) fn get_macsec_info(data: &InfoData) -> Option<MacSecInfo> {
                     macsec_info.offload = u8::from(d).into();
                 }
                 _ => {
-                    log::warn!("Unknown MACsec info {:?}", info)
+                    log::debug!("Unknown MACsec info {:?}", info)
                 }
             }
         }

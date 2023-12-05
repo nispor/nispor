@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use netlink_packet_route::link::nlas::{
-    Info, InfoBond, InfoData, InfoKind, Nla,
+use netlink_packet_route::link::{
+    InfoBond, InfoData, InfoKind, LinkAttribute, LinkInfo,
 };
 use rtnetlink::Handle;
 use serde::{Deserialize, Serialize};
@@ -26,12 +26,14 @@ impl BondConf {
         let mutator = req.message_mut();
 
         let mode = self.mode.unwrap_or_default();
-        let info = Nla::Info(vec![
-            Info::Kind(InfoKind::Bond),
-            Info::Data(InfoData::Bond(vec![InfoBond::Mode(mode.into())])),
+        let info = LinkAttribute::LinkInfo(vec![
+            LinkInfo::Kind(InfoKind::Bond),
+            LinkInfo::Data(InfoData::Bond(vec![InfoBond::Mode(mode.into())])),
         ]);
-        mutator.nlas.push(info);
-        mutator.nlas.push(Nla::IfName(name.to_string()));
+        mutator.attributes.push(info);
+        mutator
+            .attributes
+            .push(LinkAttribute::IfName(name.to_string()));
 
         match req.execute().await {
             Ok(_) => Ok(()),

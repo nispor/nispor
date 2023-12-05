@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::mac::{parse_as_mac, ETH_ALEN};
-use crate::Iface;
-use crate::IfaceType;
-use crate::NisporError;
-use netlink_packet_route::rtnl::link::nlas;
-use netlink_packet_route::rtnl::link::nlas::InfoMacVlan;
-use netlink_packet_route::rtnl::link::nlas::InfoMacVtap;
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use netlink_packet_route::link::{InfoData, InfoMacVlan, InfoMacVtap};
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    mac::{parse_as_mac, ETH_ALEN},
+    Iface, IfaceType, NisporError,
+};
 
 const MACVLAN_MODE_PRIVATE: u32 = 1;
 const MACVLAN_MODE_VEPA: u32 = 2;
@@ -65,10 +65,10 @@ pub struct MacVlanInfo {
 }
 
 pub(crate) fn get_mac_vlan_info(
-    data: &nlas::InfoData,
+    data: &InfoData,
 ) -> Result<Option<MacVlanInfo>, NisporError> {
     let mut macv_info = MacVlanInfo::default();
-    if let nlas::InfoData::MacVlan(infos) = data {
+    if let InfoData::MacVlan(infos) = data {
         for info in infos {
             if let InfoMacVlan::Mode(d) = *info {
                 macv_info.mode = d.into();
@@ -83,11 +83,11 @@ pub(crate) fn get_mac_vlan_info(
                 }
                 macv_info.allowed_mac_addresses = Some(addrs);
             } else {
-                log::warn!("Unknown MAC VLAN info {:?}", info)
+                log::debug!("Unknown MAC VLAN info {:?}", info)
             }
         }
         Ok(Some(macv_info))
-    } else if let nlas::InfoData::MacVtap(infos) = data {
+    } else if let InfoData::MacVtap(infos) = data {
         for info in infos {
             if let InfoMacVtap::Mode(d) = *info {
                 macv_info.mode = d.into();
@@ -102,7 +102,7 @@ pub(crate) fn get_mac_vlan_info(
                 }
                 macv_info.allowed_mac_addresses = Some(addrs);
             } else {
-                log::warn!("Unknown MAC VTAP info {:?}", info)
+                log::debug!("Unknown MAC VTAP info {:?}", info)
             }
         }
         Ok(Some(macv_info))
