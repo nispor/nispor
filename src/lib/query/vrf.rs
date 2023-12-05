@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::link::nlas::{InfoData, InfoVrf};
+use netlink_packet_route::link::{InfoData, InfoVrf};
 use netlink_packet_utils::nla::NlaBuffer;
 use serde::{Deserialize, Serialize};
 
@@ -30,7 +30,7 @@ pub(crate) fn get_vrf_info(data: &InfoData) -> Option<VrfInfo> {
             if let InfoVrf::TableId(d) = *info {
                 vrf_info.table_id = d;
             } else {
-                log::warn!("Unknown VRF info {:?}", info)
+                log::debug!("Unknown VRF info {:?}", info)
             }
         }
         Some(vrf_info)

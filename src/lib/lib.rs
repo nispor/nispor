@@ -35,7 +35,7 @@ pub use crate::query::{
     BridgePortMulticastRouterType, BridgePortStpState, BridgeStpState,
     BridgeVlanEntry, BridgeVlanProtocol, ControllerType, EthtoolCoalesceInfo,
     EthtoolFeatureInfo, EthtoolInfo, EthtoolLinkModeDuplex,
-    EthtoolLinkModeInfo, EthtoolPauseInfo, EthtoolRingInfo, Iface, IfaceFlags,
+    EthtoolLinkModeInfo, EthtoolPauseInfo, EthtoolRingInfo, Iface, IfaceFlag,
     IfaceState, IfaceType, IpFamily, IpoibInfo, IpoibMode, Ipv4AddrInfo,
     Ipv4Info, Ipv6AddrFlag, Ipv6AddrInfo, Ipv6Info, MacSecCipherId, MacSecInfo,
     MacSecOffload, MacSecValidate, MacVlanInfo, MacVlanMode, MacVtapInfo,

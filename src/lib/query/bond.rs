@@ -3,9 +3,7 @@
 use std::collections::HashMap;
 use std::net::{Ipv4Addr, Ipv6Addr};
 
-use netlink_packet_route::link::nlas::{
-    self, InfoBond, InfoBondPort, InfoData,
-};
+use netlink_packet_route::link::{self, InfoBond, InfoBondPort, InfoData};
 use serde::{Deserialize, Serialize};
 
 use super::super::mac::parse_as_mac;
@@ -331,16 +329,16 @@ pub struct BondAdInfo {
     pub partner_mac: String,
 }
 
-impl From<&[nlas::BondAdInfo]> for BondAdInfo {
-    fn from(nlas: &[nlas::BondAdInfo]) -> Self {
+impl From<&[link::BondAdInfo]> for BondAdInfo {
+    fn from(nlas: &[link::BondAdInfo]) -> Self {
         let mut ret = Self::default();
         for nla in nlas {
             match nla {
-                nlas::BondAdInfo::Aggregator(v) => ret.aggregator = *v,
-                nlas::BondAdInfo::NumPorts(v) => ret.num_ports = *v,
-                nlas::BondAdInfo::ActorKey(v) => ret.actor_key = *v,
-                nlas::BondAdInfo::PartnerKey(v) => ret.partner_key = *v,
-                nlas::BondAdInfo::PartnerMac(v) => {
+                link::BondAdInfo::Aggregator(v) => ret.aggregator = *v,
+                link::BondAdInfo::NumPorts(v) => ret.num_ports = *v,
+                link::BondAdInfo::ActorKey(v) => ret.actor_key = *v,
+                link::BondAdInfo::PartnerKey(v) => ret.partner_key = *v,
+                link::BondAdInfo::PartnerMac(v) => {
                     match parse_as_mac(v.len(), v) {
                         Ok(m) => ret.partner_mac = m,
                         Err(e) => {
@@ -352,7 +350,7 @@ impl From<&[nlas::BondAdInfo]> for BondAdInfo {
                     }
                 }
                 _ => {
-                    log::warn!("Unknown BondAdInfo NLA {:?}", nla);
+                    log::debug!("Unknown BondAdInfo NLA {:?}", nla);
                 }
             }
         }

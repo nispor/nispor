@@ -72,7 +72,7 @@ pub(crate) async fn get_mptcp() -> Result<Mptcp, NisporError> {
 
     while let Some(genl_msg) = limits_handle.try_next().await? {
         let mptcp_msg = genl_msg.payload;
-        for nla in &mptcp_msg.nlas {
+        for nla in mptcp_msg.nlas.as_slice() {
             match nla {
                 MptcpPathManagerAttr::Limits(
                     MptcpPathManagerLimitsAttr::RcvAddAddrs(d),
@@ -164,7 +164,7 @@ fn mptcp_msg_to_nispor(
     mptcp_msg: &MptcpPathManagerMessage,
 ) -> Option<MptcpAddress> {
     let mut address = None;
-    for nla in &mptcp_msg.nlas {
+    for nla in mptcp_msg.nlas.as_slice() {
         if let MptcpPathManagerAttr::Address(
             MptcpPathManagerAddressAttr::Addr4(ip),
         ) = nla
@@ -188,7 +188,7 @@ fn mptcp_msg_to_nispor(
             iface: None,
             iface_index: None,
         };
-        for nla in &mptcp_msg.nlas {
+        for nla in mptcp_msg.nlas.as_slice() {
             if let MptcpPathManagerAttr::Address(addr_attr) = nla {
                 match addr_attr {
                     MptcpPathManagerAddressAttr::Flags(flags) => {

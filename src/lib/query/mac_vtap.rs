@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use netlink_packet_route::rtnl::link::nlas;
+use netlink_packet_route::link::InfoData;
 use serde::{Deserialize, Serialize};
 
 use super::mac_vlan::get_mac_vlan_info;
@@ -67,7 +67,7 @@ impl From<MacVlanInfo> for MacVtapInfo {
 }
 
 pub(crate) fn get_mac_vtap_info(
-    data: &nlas::InfoData,
+    data: &InfoData,
 ) -> Result<Option<MacVtapInfo>, NisporError> {
     if let Some(info) = get_mac_vlan_info(data)? {
         Ok(Some(info.into()))

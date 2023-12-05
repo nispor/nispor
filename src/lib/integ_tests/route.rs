@@ -14,7 +14,7 @@ const EXPECTED_MULTIPATH_YAML_OUTPUT: &str = r#"---
   protocol: static
   scope: universe
   route_type: unicast
-  flags: 0
+  flags: []
   dst: "2001:db8:e::/64"
   cache_clntref: 0
   cache_last_use: 0
@@ -25,7 +25,7 @@ const EXPECTED_MULTIPATH_YAML_OUTPUT: &str = r#"---
   cache_ts: 0
   cache_ts_age: 0
   metric: 1024
-  perf: 0
+  preference: medium
   multipath:
     - via: "2001:db8:f::254"
       iface: eth1
@@ -43,7 +43,7 @@ const EXPECTED_MULTIPATH_YAML_OUTPUT: &str = r#"---
   protocol: static
   scope: universe
   route_type: unicast
-  flags: 0
+  flags: []
   dst: 198.51.100.0/24
   multipath:
     - via: 192.0.2.254
@@ -64,7 +64,7 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
   protocol: dhcp
   scope: universe
   route_type: unicast
-  flags: 0
+  flags: []
   oif: veth1
   gateway: 192.0.2.3
   metric: 500
@@ -74,7 +74,7 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
   protocol: dhcp
   scope: universe
   route_type: unicast
-  flags: 0
+  flags: []
   dst: 198.51.100.0/24
   oif: veth1
   gateway: 192.0.2.2
@@ -85,7 +85,7 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
   protocol: dhcp
   scope: universe
   route_type: unicast
-  flags: 0
+  flags: []
   oif: veth1
   gateway: "2001:db8:a::3"
   cache_clntref: 0
@@ -97,14 +97,14 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
   cache_ts: 0
   cache_ts_age: 0
   metric: 502
-  perf: 0
+  preference: medium
 - address_family: ipv6
   tos: 0
   table: 254
   protocol: dhcp
   scope: universe
   route_type: unicast
-  flags: 0
+  flags: []
   dst: "2001:db8:e::/64"
   oif: veth1
   gateway: "2001:db8:a::2"
@@ -117,7 +117,7 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
   cache_ts: 0
   cache_ts_age: 0
   metric: 503
-  perf: 0"#;
+  preference: medium"#;
 
 const ADD_ROUTE_YML: &str = r#"---
 routes:

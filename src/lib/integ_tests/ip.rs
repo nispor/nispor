@@ -76,8 +76,8 @@ const EXPECTED_IPV4_DYNAMIC_INFO: &str = r#"---
 addresses:
   - address: 192.0.2.1
     prefix_len: 24
-    valid_lft: 118sec
-    preferred_lft: 58sec"#;
+    valid_lft: 115sec
+    preferred_lft: 55sec"#;
 
 const EXPECTED_IPV6_INFO: &str = r#"---
 addresses:
@@ -98,8 +98,8 @@ const EXPECTED_IPV6_DYNAMIC_INFO: &str = r#"---
 addresses:
   - address: "2001:db8:a::9"
     prefix_len: 64
-    valid_lft: 119sec
-    preferred_lft: 59sec
+    valid_lft: 116sec
+    preferred_lft: 56sec
     flags: []
   - address: "fe80::223:45ff:fe67:891a"
     prefix_len: 64
@@ -251,5 +251,5 @@ fn test_ipv6_p2p() {
 }
 
 fn wait_ipv6_dad() {
-    std::thread::sleep(std::time::Duration::from_secs(2));
+    std::thread::sleep(std::time::Duration::from_secs(5));
 }

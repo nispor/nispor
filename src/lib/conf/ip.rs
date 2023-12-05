@@ -4,11 +4,11 @@ use std::collections::HashMap;
 use std::net::IpAddr;
 use std::str::FromStr;
 
-use netlink_packet_route::rtnl::{
-    address::nlas::{CacheInfo, Nla, ADDRESSS_CACHE_INFO_LEN},
-    AddressMessage,
+use netlink_packet_route::{
+    address::{AddressAttribute, AddressMessage, CacheInfo},
+    AddressFamily,
 };
-use netlink_packet_utils::Emitable;
+
 use serde::{Deserialize, Serialize};
 
 use super::super::query::is_ipv6_addr;
@@ -129,14 +129,11 @@ async fn apply_ip_conf(
             nl_msg.header.index = iface_index;
             nl_msg.header.prefix_len = addr_conf.prefix_len;
             nl_msg.header.family = match ip_family {
-                IpFamily::Ipv4 => libc::AF_INET as u8,
-                IpFamily::Ipv6 => libc::AF_INET6 as u8,
+                IpFamily::Ipv4 => AddressFamily::Inet,
+                IpFamily::Ipv6 => AddressFamily::Inet6,
             };
-            nl_msg.nlas.push(Nla::Address(
-                match ip_addr_str_to_enum(&addr_conf.address)? {
-                    IpAddr::V4(i) => i.octets().to_vec(),
-                    IpAddr::V6(i) => i.octets().to_vec(),
-                },
+            nl_msg.attributes.push(AddressAttribute::Address(
+                ip_addr_str_to_enum(&addr_conf.address)?,
             ));
             if let Err(e) = handle.address().del(nl_msg).execute().await {
                 if let rtnetlink::Error::NetlinkError(ref e) = e {
@@ -181,16 +178,14 @@ fn is_dynamic_ip(preferred_lft: &str, valid_lft: &str) -> bool {
         || (valid_lft != "forever" && !valid_lft.is_empty())
 }
 
-fn gen_cache_info_u8(
+fn gen_cache_info(
     preferred_lft: &str,
     valid_lft: &str,
-) -> Result<[u8; ADDRESSS_CACHE_INFO_LEN], NisporError> {
-    let mut cache_info = CacheInfo::default();
-    cache_info.ifa_preferred = parse_lft_sec("preferred_lft", preferred_lft)?;
-    cache_info.ifa_valid = parse_lft_sec("valid_lft", valid_lft)?;
-    let mut buff = [0u8; ADDRESSS_CACHE_INFO_LEN];
-    cache_info.emit(&mut buff);
-    Ok(buff)
+) -> Result<CacheInfo, NisporError> {
+    let mut ret = CacheInfo::default();
+    ret.ifa_preferred = parse_lft_sec("preferred_lft", preferred_lft)?;
+    ret.ifa_valid = parse_lft_sec("valid_lft", valid_lft)?;
+    Ok(ret)
 }
 
 fn handle_dynamic_ip(
@@ -198,13 +193,16 @@ fn handle_dynamic_ip(
     preferred_lft: &str,
     valid_lft: &str,
 ) -> Result<(), NisporError> {
-    nl_msg.nlas.push(Nla::CacheInfo(
-        gen_cache_info_u8(preferred_lft, valid_lft)?.to_vec(),
-    ));
+    nl_msg
+        .attributes
+        .push(AddressAttribute::CacheInfo(gen_cache_info(
+            preferred_lft,
+            valid_lft,
+        )?));
     Ok(())
 }
 
-fn parse_lft_sec(name: &str, lft_str: &str) -> Result<i32, NisporError> {
+fn parse_lft_sec(name: &str, lft_str: &str) -> Result<u32, NisporError> {
     let e = NisporError::invalid_argument(format!(
         "Invalid {name} format: expect format 50sec, got {lft_str}"
     ));

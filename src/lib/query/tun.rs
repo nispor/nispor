@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use netlink_packet_route::link::nlas::InfoData;
-use netlink_packet_utils::nla::NlasIterator;
+use netlink_packet_route::link::InfoData;
+use netlink_packet_utils::nla::Nla;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -70,44 +70,44 @@ impl From<u8> for TunMode {
 
 pub(crate) fn get_tun_info(data: &InfoData) -> Result<TunInfo, NisporError> {
     let mut tun_info = TunInfo::default();
-    if let InfoData::Tun(raw) = data {
-        let nlas = NlasIterator::new(raw);
+    if let InfoData::Tun(nlas) = data {
         for nla in nlas {
-            let nla = nla?;
+            let mut payload = vec![0; nla.value_len()];
+            nla.emit_value(&mut payload);
+            let payload = payload.as_slice();
             match nla.kind() {
                 IFLA_TUN_OWNER => {
-                    tun_info.owner = Some(parse_as_u32(nla.value())?);
+                    tun_info.owner = Some(parse_as_u32(payload)?);
                 }
                 IFLA_TUN_GROUP => {
-                    tun_info.group = Some(parse_as_u32(nla.value())?);
+                    tun_info.group = Some(parse_as_u32(payload)?);
                 }
                 IFLA_TUN_TYPE => {
-                    tun_info.mode = parse_as_u8(nla.value())?.into();
+                    tun_info.mode = parse_as_u8(payload)?.into();
                 }
                 IFLA_TUN_PI => {
-                    tun_info.pi = parse_as_u8(nla.value())? > 0;
+                    tun_info.pi = parse_as_u8(payload)? > 0;
                 }
                 IFLA_TUN_VNET_HDR => {
-                    tun_info.vnet_hdr = parse_as_u8(nla.value())? > 0;
+                    tun_info.vnet_hdr = parse_as_u8(payload)? > 0;
                 }
                 IFLA_TUN_PERSIST => {
-                    tun_info.persist = parse_as_u8(nla.value())? > 0;
+                    tun_info.persist = parse_as_u8(payload)? > 0;
                 }
                 IFLA_TUN_MULTI_QUEUE => {
-                    tun_info.multi_queue = parse_as_u8(nla.value())? > 0;
+                    tun_info.multi_queue = parse_as_u8(payload)? > 0;
                 }
                 IFLA_TUN_NUM_QUEUES => {
-                    tun_info.num_queues = Some(parse_as_u32(nla.value())?);
+                    tun_info.num_queues = Some(parse_as_u32(payload)?);
                 }
                 IFLA_TUN_NUM_DISABLED_QUEUES => {
-                    tun_info.num_disabled_queues =
-                        Some(parse_as_u32(nla.value())?);
+                    tun_info.num_disabled_queues = Some(parse_as_u32(payload)?);
                 }
                 _ => {
                     log::warn!(
                         "Unhandled TUN NLA {} {:?}",
                         nla.kind(),
-                        nla.value()
+                        payload
                     );
                 }
             }

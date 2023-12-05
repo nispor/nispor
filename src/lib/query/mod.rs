@@ -39,7 +39,7 @@ pub use self::ethtool::{
     EthtoolRingInfo,
 };
 pub use self::iface::{
-    ControllerType, Iface, IfaceFlags, IfaceState, IfaceType,
+    ControllerType, Iface, IfaceFlag, IfaceState, IfaceType,
 };
 pub use self::ip::{
     IpFamily, Ipv4AddrInfo, Ipv4Info, Ipv6AddrFlag, Ipv6AddrInfo, Ipv6Info,

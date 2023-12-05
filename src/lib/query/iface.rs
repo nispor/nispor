@@ -2,11 +2,9 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::{
-    link::nlas, LinkMessage, ARPHRD_ETHER, ARPHRD_INFINIBAND, ARPHRD_LOOPBACK,
-    IFF_ALLMULTI, IFF_AUTOMEDIA, IFF_BROADCAST, IFF_DEBUG, IFF_DORMANT,
-    IFF_LOOPBACK, IFF_LOWER_UP, IFF_MASTER, IFF_MULTICAST, IFF_NOARP,
-    IFF_POINTOPOINT, IFF_PORTSEL, IFF_PROMISC, IFF_RUNNING, IFF_UP,
+use netlink_packet_route::link::{
+    self, InfoKind, InfoPortData, InfoPortKind, LinkAttribute, LinkInfo,
+    LinkLayerType, LinkMessage,
 };
 use serde::{Deserialize, Serialize};
 
@@ -31,8 +29,6 @@ use crate::{
     MacVtapInfo, MptcpAddress, NisporError, SriovInfo, TunInfo, VethInfo,
     VfInfo, VlanInfo, VrfInfo, VrfSubordinateInfo, VxlanInfo,
 };
-
-const IFF_PORT: u32 = 0x800;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
@@ -93,7 +89,7 @@ impl std::fmt::Display for IfaceType {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub enum IfaceState {
@@ -101,14 +97,28 @@ pub enum IfaceState {
     Dormant,
     Down,
     LowerLayerDown,
+    Testing,
     Absent, // Only for IfaceConf
     Other(String),
+    #[default]
     Unknown,
 }
 
-impl Default for IfaceState {
-    fn default() -> Self {
-        IfaceState::Unknown
+impl From<link::State> for IfaceState {
+    fn from(d: link::State) -> Self {
+        match d {
+            link::State::Up => Self::Up,
+            link::State::Down => Self::Down,
+            link::State::LowerLayerDown => Self::LowerLayerDown,
+            link::State::Testing => Self::Testing,
+            link::State::Dormant => Self::Dormant,
+            link::State::Unknown => Self::Unknown,
+            _ => {
+                let mut s = format!("{d:?}");
+                s.make_ascii_lowercase();
+                Self::Other(s)
+            }
+        }
     }
 }
 
@@ -122,6 +132,7 @@ impl std::fmt::Display for IfaceState {
                 Self::Dormant => "dormant",
                 Self::Down => "down",
                 Self::LowerLayerDown => "lower_layer_down",
+                Self::Testing => "testing",
                 Self::Absent => "absent",
                 Self::Other(s) => s.as_str(),
                 Self::Unknown => "unknown",
@@ -130,10 +141,10 @@ impl std::fmt::Display for IfaceState {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
-pub enum IfaceFlags {
+pub enum IfaceFlag {
     AllMulti,
     AutoMedia,
     Broadcast,
@@ -151,12 +162,31 @@ pub enum IfaceFlags {
     Subordinate,
     Up,
     Other(u32),
+    #[default]
     Unknown,
 }
 
-impl Default for IfaceFlags {
-    fn default() -> Self {
-        Self::Unknown
+impl From<link::LinkFlag> for IfaceFlag {
+    fn from(d: link::LinkFlag) -> IfaceFlag {
+        match d {
+            link::LinkFlag::Allmulti => Self::AllMulti,
+            link::LinkFlag::Automedia => Self::AutoMedia,
+            link::LinkFlag::Broadcast => Self::Broadcast,
+            link::LinkFlag::Debug => Self::Debug,
+            link::LinkFlag::Dormant => Self::Dormant,
+            link::LinkFlag::Loopback => Self::Loopback,
+            link::LinkFlag::LowerUp => Self::LowerUp,
+            link::LinkFlag::Controller => Self::Controller,
+            link::LinkFlag::Multicast => Self::Multicast,
+            link::LinkFlag::Noarp => Self::NoArp,
+            link::LinkFlag::Pointopoint => Self::PoinToPoint,
+            link::LinkFlag::Portsel => Self::Portsel,
+            link::LinkFlag::Promisc => Self::Promisc,
+            link::LinkFlag::Running => Self::Running,
+            link::LinkFlag::Port => Self::Subordinate,
+            link::LinkFlag::Up => Self::Up,
+            _ => Self::Other(d.into()),
+        }
     }
 }
 
@@ -197,7 +227,7 @@ pub struct Iface {
     pub min_mtu: Option<i64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_mtu: Option<i64>,
-    pub flags: Vec<IfaceFlags>,
+    pub flags: Vec<IfaceFlag>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ipv4: Option<Ipv4Info>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -274,9 +304,9 @@ pub(crate) fn parse_nl_msg_to_iface(
         return Ok(None);
     }
     let link_layer_type = match nl_msg.header.link_layer_type {
-        ARPHRD_ETHER => IfaceType::Ethernet,
-        ARPHRD_LOOPBACK => IfaceType::Loopback,
-        ARPHRD_INFINIBAND => IfaceType::Infiniband,
+        LinkLayerType::Ether => IfaceType::Ethernet,
+        LinkLayerType::Loopback => IfaceType::Loopback,
+        LinkLayerType::Infiniband => IfaceType::Infiniband,
         _ => IfaceType::Unknown,
     };
     let mut iface_state = Iface {
@@ -286,42 +316,42 @@ pub(crate) fn parse_nl_msg_to_iface(
     };
     iface_state.index = nl_msg.header.index;
     let mut link: Option<u32> = None;
-    for nla in &nl_msg.nlas {
-        if let nlas::Nla::Mtu(mtu) = nla {
+    for nla in &nl_msg.attributes {
+        if let LinkAttribute::Mtu(mtu) = nla {
             iface_state.mtu = *mtu as i64;
-        } else if let nlas::Nla::MinMtu(mtu) = nla {
+        } else if let LinkAttribute::MinMtu(mtu) = nla {
             iface_state.min_mtu =
                 if *mtu != 0 { Some(*mtu as i64) } else { None };
-        } else if let nlas::Nla::MaxMtu(mtu) = nla {
+        } else if let LinkAttribute::MaxMtu(mtu) = nla {
             iface_state.max_mtu =
                 if *mtu != 0 { Some(*mtu as i64) } else { None };
-        } else if let nlas::Nla::Address(mac) = nla {
+        } else if let LinkAttribute::Address(mac) = nla {
             iface_state.mac_address = parse_as_mac(mac.len(), mac)?;
-        } else if let nlas::Nla::PermAddress(mac) = nla {
+        } else if let LinkAttribute::PermAddress(mac) = nla {
             iface_state.permanent_mac_address = parse_as_mac(mac.len(), mac)?;
-        } else if let nlas::Nla::OperState(state) = nla {
-            iface_state.state = _get_iface_state(state);
-        } else if let nlas::Nla::Master(controller) = nla {
+        } else if let LinkAttribute::OperState(state) = nla {
+            iface_state.state = (*state).into();
+        } else if let LinkAttribute::Controller(controller) = nla {
             iface_state.controller = Some(format!("{controller}"));
-        } else if let nlas::Nla::Link(l) = nla {
+        } else if let LinkAttribute::Link(l) = nla {
             link = Some(*l);
-        } else if let nlas::Nla::Info(infos) = nla {
+        } else if let LinkAttribute::LinkInfo(infos) = nla {
             for info in infos {
-                if let nlas::Info::Kind(t) = info {
+                if let LinkInfo::Kind(t) = info {
                     let iface_type = match t {
-                        nlas::InfoKind::Bond => IfaceType::Bond,
-                        nlas::InfoKind::Veth => IfaceType::Veth,
-                        nlas::InfoKind::Bridge => IfaceType::Bridge,
-                        nlas::InfoKind::Vlan => IfaceType::Vlan,
-                        nlas::InfoKind::Vxlan => IfaceType::Vxlan,
-                        nlas::InfoKind::Dummy => IfaceType::Dummy,
-                        nlas::InfoKind::Tun => IfaceType::Tun,
-                        nlas::InfoKind::Vrf => IfaceType::Vrf,
-                        nlas::InfoKind::MacVlan => IfaceType::MacVlan,
-                        nlas::InfoKind::MacVtap => IfaceType::MacVtap,
-                        nlas::InfoKind::Ipoib => IfaceType::Ipoib,
-                        nlas::InfoKind::MacSec => IfaceType::MacSec,
-                        nlas::InfoKind::Other(s) => match s.as_ref() {
+                        InfoKind::Bond => IfaceType::Bond,
+                        InfoKind::Veth => IfaceType::Veth,
+                        InfoKind::Bridge => IfaceType::Bridge,
+                        InfoKind::Vlan => IfaceType::Vlan,
+                        InfoKind::Vxlan => IfaceType::Vxlan,
+                        InfoKind::Dummy => IfaceType::Dummy,
+                        InfoKind::Tun => IfaceType::Tun,
+                        InfoKind::Vrf => IfaceType::Vrf,
+                        InfoKind::MacVlan => IfaceType::MacVlan,
+                        InfoKind::MacVtap => IfaceType::MacVtap,
+                        InfoKind::Ipoib => IfaceType::Ipoib,
+                        InfoKind::MacSec => IfaceType::MacSec,
+                        InfoKind::Other(s) => match s.as_ref() {
                             "openvswitch" => IfaceType::OpenvSwitch,
                             _ => IfaceType::Other(s.clone()),
                         },
@@ -341,7 +371,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                 }
             }
             for info in infos {
-                if let nlas::Info::Data(d) = info {
+                if let LinkInfo::Data(d) = info {
                     match iface_state.iface_type {
                         IfaceType::Bond => iface_state.bond = get_bond_info(d)?,
                         IfaceType::Bridge => {
@@ -380,13 +410,13 @@ pub(crate) fn parse_nl_msg_to_iface(
                 }
             }
             for info in infos {
-                if let nlas::Info::PortKind(d) = info {
+                if let LinkInfo::PortKind(d) = info {
                     match d {
-                        nlas::InfoPortKind::Bond => {
+                        InfoPortKind::Bond => {
                             iface_state.controller_type =
                                 Some(ControllerType::Bond)
                         }
-                        nlas::InfoPortKind::Other(s) => {
+                        InfoPortKind::Other(s) => {
                             iface_state.controller_type =
                                 Some(s.as_str().into())
                         }
@@ -398,14 +428,14 @@ pub(crate) fn parse_nl_msg_to_iface(
             }
             if let Some(controller_type) = &iface_state.controller_type {
                 for info in infos {
-                    if let nlas::Info::PortData(d) = info {
+                    if let LinkInfo::PortData(d) = info {
                         match d {
-                            nlas::InfoPortData::BondPort(bond_ports) => {
+                            InfoPortData::BondPort(bond_ports) => {
                                 iface_state.bond_subordinate = Some(
                                     get_bond_subordinate_info(bond_ports)?,
                                 );
                             }
-                            nlas::InfoPortData::Other(data) => {
+                            InfoPortData::Other(data) => {
                                 match controller_type {
                                     ControllerType::Bridge => {
                                         iface_state.bridge_port =
@@ -422,22 +452,22 @@ pub(crate) fn parse_nl_msg_to_iface(
                                 }
                             }
                             _ => {
-                                log::warn!("Unknown InfoPortData {:?}", d);
+                                log::debug!("Unknown InfoPortData {:?}", d);
                             }
                         }
                     }
                 }
             }
-        } else if let nlas::Nla::VfInfoList(data) = nla {
+        } else if let LinkAttribute::VfInfoList(nlas) = nla {
             if let Ok(info) =
-                get_sriov_info(&iface_state.name, data, &link_layer_type)
+                get_sriov_info(&iface_state.name, nlas, &link_layer_type)
             {
                 iface_state.sriov = Some(info);
             }
-        } else if let nlas::Nla::NetnsId(id) = nla {
+        } else if let LinkAttribute::NetnsId(id) = nla {
             iface_state.link_netnsid = Some(*id);
-        } else if let nlas::Nla::AfSpecInet(inet_nla) = nla {
-            fill_af_spec_inet_info(&mut iface_state, inet_nla.as_slice());
+        } else if let LinkAttribute::AfSpecUnspec(nlas) = nla {
+            fill_af_spec_inet_info(&mut iface_state, nlas);
         } else {
             // Place holder for paring more Nla
         }
@@ -477,13 +507,19 @@ pub(crate) fn parse_nl_msg_to_iface(
             _ => (),
         }
     }
-    iface_state.flags = _parse_iface_flags(nl_msg.header.flags);
+    iface_state.flags = nl_msg
+        .header
+        .flags
+        .as_slice()
+        .iter()
+        .map(|f| IfaceFlag::from(*f))
+        .collect();
     Ok(Some(iface_state))
 }
 
 fn _get_iface_name(nl_msg: &LinkMessage) -> String {
-    for nla in &nl_msg.nlas {
-        if let nlas::Nla::IfName(name) = nla {
+    for nla in &nl_msg.attributes {
+        if let LinkAttribute::IfName(name) = nla {
             return name.clone();
         }
     }
@@ -499,76 +535,11 @@ pub(crate) fn fill_bridge_vlan_info(
         return Ok(());
     }
     if let Some(iface_state) = iface_states.get_mut(&name) {
-        for nla in &nl_msg.nlas {
-            if let nlas::Nla::AfSpecBridge(nlas) = nla {
+        for nla in &nl_msg.attributes {
+            if let LinkAttribute::AfSpecBridge(nlas) = nla {
                 parse_bridge_vlan_info(iface_state, nlas)?;
             }
         }
     }
     Ok(())
-}
-
-fn _get_iface_state(state: &nlas::State) -> IfaceState {
-    match state {
-        nlas::State::Up => IfaceState::Up,
-        nlas::State::Dormant => IfaceState::Dormant,
-        nlas::State::Down => IfaceState::Down,
-        nlas::State::LowerLayerDown => IfaceState::LowerLayerDown,
-        nlas::State::Unknown => IfaceState::Unknown,
-        _ => IfaceState::Other(format!("{state:?}")),
-    }
-}
-
-fn _parse_iface_flags(flags: u32) -> Vec<IfaceFlags> {
-    let mut ret = Vec::new();
-    if (flags & IFF_ALLMULTI) > 0 {
-        ret.push(IfaceFlags::AllMulti)
-    }
-    if (flags & IFF_AUTOMEDIA) > 0 {
-        ret.push(IfaceFlags::AutoMedia)
-    }
-    if (flags & IFF_BROADCAST) > 0 {
-        ret.push(IfaceFlags::Broadcast)
-    }
-    if (flags & IFF_DEBUG) > 0 {
-        ret.push(IfaceFlags::Debug)
-    }
-    if (flags & IFF_DORMANT) > 0 {
-        ret.push(IfaceFlags::Dormant)
-    }
-    if (flags & IFF_LOOPBACK) > 0 {
-        ret.push(IfaceFlags::Loopback)
-    }
-    if (flags & IFF_LOWER_UP) > 0 {
-        ret.push(IfaceFlags::LowerUp)
-    }
-    if (flags & IFF_MASTER) > 0 {
-        ret.push(IfaceFlags::Controller)
-    }
-    if (flags & IFF_MULTICAST) > 0 {
-        ret.push(IfaceFlags::Multicast)
-    }
-    if (flags & IFF_NOARP) > 0 {
-        ret.push(IfaceFlags::NoArp)
-    }
-    if (flags & IFF_POINTOPOINT) > 0 {
-        ret.push(IfaceFlags::PoinToPoint)
-    }
-    if (flags & IFF_PORTSEL) > 0 {
-        ret.push(IfaceFlags::Portsel)
-    }
-    if (flags & IFF_PROMISC) > 0 {
-        ret.push(IfaceFlags::Promisc)
-    }
-    if (flags & IFF_RUNNING) > 0 {
-        ret.push(IfaceFlags::Running)
-    }
-    if (flags & IFF_PORT) > 0 {
-        ret.push(IfaceFlags::Subordinate)
-    }
-    if (flags & IFF_UP) > 0 {
-        ret.push(IfaceFlags::Up)
-    }
-
-    ret
 }

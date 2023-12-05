@@ -45,7 +45,8 @@ ifaces:
     veth:
       peer: veth1.ep
   - name: veth1.ep
-    type: veth"#;
+    type: veth
+    "#;
 
 const VETH_CHANGE_MAC_YML: &str = r#"---
 ifaces:
@@ -69,6 +70,8 @@ ifaces:
 fn test_create_down_delete_veth() {
     let net_conf: NetConf = serde_yaml::from_str(VETH_CREATE_YML).unwrap();
     net_conf.apply().unwrap();
+    // Wait 1 second for veth to up
+    std::thread::sleep(std::time::Duration::from_secs(1));
     let state = NetState::retrieve().unwrap();
     let iface = &state.ifaces[IFACE_NAME];
     assert_eq!(&iface.iface_type, &crate::IfaceType::Veth);

@@ -3,7 +3,8 @@
 use std::net::{IpAddr, Ipv6Addr};
 use std::str::FromStr;
 
-use netlink_packet_route::rtnl::link::nlas::{AfSpecInet, Inet6};
+use netlink_packet_route::address;
+use netlink_packet_route::link::{AfSpecInet6, AfSpecUnspec};
 
 use serde::{Deserialize, Serialize};
 
@@ -93,18 +94,18 @@ pub(crate) fn parse_ip_net_addr_str(
     Ok((parse_ip_addr_str(addr_str)?, prefix_len))
 }
 
-pub(crate) fn fill_af_spec_inet_info(iface: &mut Iface, nlas: &[AfSpecInet]) {
+pub(crate) fn fill_af_spec_inet_info(iface: &mut Iface, nlas: &[AfSpecUnspec]) {
     for nla in nlas {
-        if let AfSpecInet::Inet6(nlas) = nla {
+        if let AfSpecUnspec::Inet6(nlas) = nla {
             for nla in nlas {
-                if let Inet6::Token(raw) = nla {
+                if let AfSpecInet6::Token(addr) = nla {
                     // Kernel set all zero as default value
-                    if raw != &[0; 16] {
+                    if *addr != Ipv6Addr::UNSPECIFIED {
                         if iface.ipv6.is_none() {
                             iface.ipv6 = Some(Ipv6Info::default());
                         }
                         if let Some(ipv6_info) = iface.ipv6.as_mut() {
-                            ipv6_info.token = Some(ipv6_token_to_string(*raw));
+                            ipv6_info.token = Some(ipv6_token_to_string(*addr));
                         }
                     }
                 }
@@ -118,9 +119,8 @@ pub(crate) fn fill_af_spec_inet_info(iface: &mut Iface, nlas: &[AfSpecInet]) {
 // Which is no ideal in this case
 // To workaround that, we set leading 64 bites to '2001:db8::', and
 // then trip it out from string.
-fn ipv6_token_to_string(raw: [u8; 16]) -> String {
-    let token = Ipv6Addr::from(raw);
-    let mut segments = token.segments();
+fn ipv6_token_to_string(addr: Ipv6Addr) -> String {
+    let mut segments = addr.segments();
     segments[0] = 0x2001;
     segments[1] = 0xdb8;
     Ipv6Addr::from(segments).to_string()["2001:db8".len()..].to_string()
@@ -136,53 +136,41 @@ pub(crate) fn is_ipv6_addr(addr: &str) -> bool {
     addr.contains(':')
 }
 
-const IFA_F_SECONDARY: u32 = 0x01;
-const IFA_F_NODAD: u32 = 0x02;
-const IFA_F_OPTIMISTIC: u32 = 0x04;
-const IFA_F_DADFAILED: u32 = 0x08;
-const IFA_F_HOMEADDRESS: u32 = 0x10;
-const IFA_F_DEPRECATED: u32 = 0x20;
-const IFA_F_TENTATIVE: u32 = 0x40;
-const IFA_F_PERMANENT: u32 = 0x80;
-const IFA_F_MANAGETEMPADDR: u32 = 0x100;
-const IFA_F_NOPREFIXROUTE: u32 = 0x200;
-const IFA_F_MCAUTOJOIN: u32 = 0x400;
-const IFA_F_STABLE_PRIVACY: u32 = 0x800;
-
 #[derive(Clone, Eq, PartialEq, Debug, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
-#[repr(u32)]
 pub enum Ipv6AddrFlag {
-    Secondary = IFA_F_SECONDARY,
-    Nodad = IFA_F_NODAD,
-    Optimistic = IFA_F_OPTIMISTIC,
-    Dadfailed = IFA_F_DADFAILED,
-    Homeaddress = IFA_F_HOMEADDRESS,
-    Deprecated = IFA_F_DEPRECATED,
-    Tentative = IFA_F_TENTATIVE,
-    Permanent = IFA_F_PERMANENT,
-    Managetempaddr = IFA_F_MANAGETEMPADDR,
-    Noprefixroute = IFA_F_NOPREFIXROUTE,
-    Mcautojoin = IFA_F_MCAUTOJOIN,
-    StablePrivacy = IFA_F_STABLE_PRIVACY,
+    Secondary,
+    Nodad,
+    Optimistic,
+    Dadfailed,
+    Homeaddress,
+    Deprecated,
+    Tentative,
+    Permanent,
+    Managetempaddr,
+    Noprefixroute,
+    Mcautojoin,
+    StablePrivacy,
+    Other(u32),
 }
 
-impl Ipv6AddrFlag {
-    pub(crate) fn all() -> [Ipv6AddrFlag; 12] {
-        [
-            Ipv6AddrFlag::Secondary,
-            Ipv6AddrFlag::Nodad,
-            Ipv6AddrFlag::Optimistic,
-            Ipv6AddrFlag::Dadfailed,
-            Ipv6AddrFlag::Homeaddress,
-            Ipv6AddrFlag::Deprecated,
-            Ipv6AddrFlag::Tentative,
-            Ipv6AddrFlag::Permanent,
-            Ipv6AddrFlag::Managetempaddr,
-            Ipv6AddrFlag::Noprefixroute,
-            Ipv6AddrFlag::Mcautojoin,
-            Ipv6AddrFlag::StablePrivacy,
-        ]
+impl From<address::AddressFlag> for Ipv6AddrFlag {
+    fn from(d: address::AddressFlag) -> Self {
+        match d {
+            address::AddressFlag::Secondary => Self::Secondary,
+            address::AddressFlag::Nodad => Self::Nodad,
+            address::AddressFlag::Optimistic => Self::Optimistic,
+            address::AddressFlag::Dadfailed => Self::Dadfailed,
+            address::AddressFlag::Homeaddress => Self::Homeaddress,
+            address::AddressFlag::Deprecated => Self::Deprecated,
+            address::AddressFlag::Tentative => Self::Tentative,
+            address::AddressFlag::Permanent => Self::Permanent,
+            address::AddressFlag::Managetempaddr => Self::Managetempaddr,
+            address::AddressFlag::Noprefixroute => Self::Noprefixroute,
+            address::AddressFlag::Mcautojoin => Self::Mcautojoin,
+            address::AddressFlag::StablePrivacy => Self::StablePrivacy,
+            _ => Self::Other(d.into()),
+        }
     }
 }

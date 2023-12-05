@@ -2,8 +2,7 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::rtnl::link::nlas::InfoData;
-use netlink_packet_route::rtnl::link::nlas::InfoIpoib;
+use netlink_packet_route::link::{InfoData, InfoIpoib};
 use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceType};
@@ -60,7 +59,7 @@ pub(crate) fn get_ipoib_info(data: &InfoData) -> Option<IpoibInfo> {
             } else if let InfoIpoib::UmCast(d) = *info {
                 ipoib_info.umcast = d > 0;
             } else {
-                log::warn!("Unknown IPoIB info {:?}", info)
+                log::debug!("Unknown IPoIB info {:?}", info)
             }
         }
         Some(ipoib_info)
