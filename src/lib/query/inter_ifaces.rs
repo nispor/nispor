@@ -11,6 +11,7 @@ use super::{
     bond::bond_iface_tidy_up,
     bridge::bridge_iface_tidy_up,
     ethtool::get_ethtool_infos,
+    hsr::hsr_iface_tidy_up,
     iface::{
         fill_bridge_vlan_info, parse_nl_msg_to_iface,
         parse_nl_msg_to_name_and_index,
@@ -130,6 +131,7 @@ fn tidy_up(iface_states: &mut HashMap<String, Iface>) {
     vrf_iface_tidy_up(iface_states);
     mac_vlan_iface_tidy_up(iface_states);
     macsec_iface_tidy_up(iface_states);
+    hsr_iface_tidy_up(iface_states);
     ipoib_iface_tidy_up(iface_states);
     sriov_vf_iface_tidy_up(iface_states);
 }

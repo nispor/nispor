@@ -5,6 +5,7 @@ from .bond import NisporBond
 from .bond import NisporBondSubordinate
 from .bridge import NisporBridge
 from .bridge import NisporBridgePort
+from .hsr import NisporHsr
 from .ipoib import NisporIpoib
 from .mac_vlan import NisporMacVlan
 from .mac_vtap import NisporMacVtap
@@ -66,6 +67,8 @@ def _iface_info_to_obj(iface_info):
         iface = NisporIpoib(iface_info)
     elif iface_type == "macsec":
         iface = NisporMacsec(iface_info)
+    elif iface_type == "hsr":
+        iface = NisporHsr(iface_info)
     else:
         iface = NisporBaseIface(iface_info)
     if ctrl_type == "bond":

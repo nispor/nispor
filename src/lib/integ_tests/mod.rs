@@ -15,6 +15,8 @@ mod dummy;
 #[cfg(test)]
 mod ethtool;
 #[cfg(test)]
+mod hsr;
+#[cfg(test)]
 mod ip;
 #[cfg(test)]
 mod mac_vlan;
