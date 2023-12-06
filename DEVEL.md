@@ -59,12 +59,12 @@ autocmd FileType rust nnoremap <silent> <leader>f :RustFmt<cr>
 ## Release workflow
 
 ```bash
-sed -i -e 's/1.2.13/1.2.14/' \
+sed -i -e 's/1.2.15/1.2.16/' \
     Makefile.inc src/*/Cargo.toml src/python/setup.py
 ```
 
 ```bash
-git log --oneline v1.2.11..HEAD
+git log --oneline v1.2.14..HEAD
 ```
 
 ```bash

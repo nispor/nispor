@@ -1,4 +1,17 @@
 # Changelog
+## [1.2.15] - 2023-09-18
+## Break changes
+ * Changed `IfaceFlags` to `IfaceFlag`. (e126d02)
+
+## New features
+ * Support HSR/PRP interface. (010ee32)
+ * Support IPv6 peer address. (9a8211c)
+ * Support VLAN filter on bridge itself. (181c11b)
+ * Support query IPv6 address flags. (196358a)
+
+## Bug fixes
+ * Fix failure on kernel with new VxLAN and Bond options. (e126d02)
+
 ## [1.2.14] - 2023-09-18
 ## Break changes
  * N/A
