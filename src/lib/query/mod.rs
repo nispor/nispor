@@ -2,6 +2,7 @@
 
 mod bond;
 mod bridge;
+mod hsr;
 mod ip;
 mod mptcp;
 // Disable `needless_pass_by_ref_mut` check due to upstream issue:
@@ -38,6 +39,7 @@ pub use self::ethtool::{
     EthtoolLinkModeDuplex, EthtoolLinkModeInfo, EthtoolPauseInfo,
     EthtoolRingInfo,
 };
+pub use self::hsr::{HsrInfo, HsrProtocol};
 pub use self::iface::{
     ControllerType, Iface, IfaceFlag, IfaceState, IfaceType,
 };

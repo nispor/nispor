@@ -12,6 +12,7 @@ use super::{
     super::mac::parse_as_mac,
     bond::{get_bond_info, get_bond_subordinate_info},
     bridge::{get_bridge_info, get_bridge_port_info, parse_bridge_vlan_info},
+    hsr::get_hsr_info,
     ip::fill_af_spec_inet_info,
     ipoib::get_ipoib_info,
     mac_vlan::get_mac_vlan_info,
@@ -25,9 +26,9 @@ use super::{
 };
 use crate::{
     BondInfo, BondSubordinateInfo, BridgeInfo, BridgePortInfo, BridgeVlanEntry,
-    EthtoolInfo, IpoibInfo, Ipv4Info, Ipv6Info, MacSecInfo, MacVlanInfo,
-    MacVtapInfo, MptcpAddress, NisporError, SriovInfo, TunInfo, VethInfo,
-    VfInfo, VlanInfo, VrfInfo, VrfSubordinateInfo, VxlanInfo,
+    EthtoolInfo, HsrInfo, IpoibInfo, Ipv4Info, Ipv6Info, MacSecInfo,
+    MacVlanInfo, MacVtapInfo, MptcpAddress, NisporError, SriovInfo, TunInfo,
+    VethInfo, VfInfo, VlanInfo, VrfInfo, VrfSubordinateInfo, VxlanInfo,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -50,6 +51,7 @@ pub enum IfaceType {
     OpenvSwitch,
     Ipoib,
     MacSec,
+    Hsr,
     Unknown,
     Other(String),
 }
@@ -82,6 +84,7 @@ impl std::fmt::Display for IfaceType {
                 Self::OpenvSwitch => "openvswitch",
                 Self::Ipoib => "ipoib",
                 Self::MacSec => "macsec",
+                Self::Hsr => "hsr",
                 Self::Unknown => "unknown",
                 Self::Other(s) => s,
             }
@@ -280,6 +283,8 @@ pub struct Iface {
     pub mptcp: Option<Vec<MptcpAddress>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub macsec: Option<MacSecInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub hsr: Option<HsrInfo>,
 }
 
 // TODO: impl From Iface to IfaceConf
@@ -351,6 +356,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                         InfoKind::MacVtap => IfaceType::MacVtap,
                         InfoKind::Ipoib => IfaceType::Ipoib,
                         InfoKind::MacSec => IfaceType::MacSec,
+                        InfoKind::Hsr => IfaceType::Hsr,
                         InfoKind::Other(s) => match s.as_ref() {
                             "openvswitch" => IfaceType::OpenvSwitch,
                             _ => IfaceType::Other(s.clone()),
@@ -401,6 +407,9 @@ pub(crate) fn parse_nl_msg_to_iface(
                         }
                         IfaceType::MacSec => {
                             iface_state.macsec = get_macsec_info(d);
+                        }
+                        IfaceType::Hsr => {
+                            iface_state.hsr = get_hsr_info(d);
                         }
                         _ => log::warn!(
                             "Unhandled IFLA_INFO_DATA for iface type {:?}",
