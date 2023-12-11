@@ -6,10 +6,7 @@ use netlink_packet_route::link::{self, LinkVfInfo};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    mac::{parse_as_mac, ETH_ALEN, INFINIBAND_ALEN},
-    Iface, IfaceType, NisporError,
-};
+use crate::{mac::{parse_as_mac, ETH_ALEN, INFINIBAND_ALEN}, Iface, IfaceType, NisporError, VlanProtocol};
 
 const MAX_ADDR_LEN: usize = 32;
 
@@ -68,6 +65,7 @@ pub struct VfInfo {
     // 0 disables VLAN filter
     pub vlan_id: u32,
     pub qos: u32,
+    pub vlan_proto: VlanProtocol,
     // Max TX bandwidth in Mbps, 0 disables throttling
     pub tx_rate: u32,
     pub spoof_check: bool,
@@ -131,11 +129,13 @@ pub(crate) fn get_sriov_info(
                 link::VfInfo::IbPortGuid(v) => {
                     vf_info.ib_port_guid = Some(format!("{:X}", v.guid));
                 }
-                // The kernel just store IFLA_VF_VLAN in a list with single
-                // content. The vlan protocol is always 0 until
-                // someone set it via IFLA_VF_VLAN_LIST. The iproute does
-                // not support this, so I doubt anyone is using this.
-                link::VfInfo::VlanList(_v) => (),
+                link::VfInfo::VlanList(v) => {
+                    if let Some(vf_vlan) = v.get(0) {
+                        if let link::VfVlan::Info(vf_vlan_info) = vf_vlan {
+                            vf_info.vlan_proto = vf_vlan_info.protocol.into();
+                        }
+                    }
+                }
                 link::VfInfo::Broadcast(v) => {
                     vf_info.broadcast = parse_as_mac(mac_len, &v.addr)?;
                 }
