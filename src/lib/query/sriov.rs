@@ -6,7 +6,10 @@ use netlink_packet_route::link::{self, LinkVfInfo};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{mac::{parse_as_mac, ETH_ALEN, INFINIBAND_ALEN}, Iface, IfaceType, NisporError, VlanProtocol};
+use crate::{
+    mac::{parse_as_mac, ETH_ALEN, INFINIBAND_ALEN},
+    Iface, IfaceType, NisporError, VlanProtocol,
+};
 
 const MAX_ADDR_LEN: usize = 32;
 
@@ -130,10 +133,8 @@ pub(crate) fn get_sriov_info(
                     vf_info.ib_port_guid = Some(format!("{:X}", v.guid));
                 }
                 link::VfInfo::VlanList(v) => {
-                    if let Some(vf_vlan) = v.get(0) {
-                        if let link::VfVlan::Info(vf_vlan_info) = vf_vlan {
-                            vf_info.vlan_proto = vf_vlan_info.protocol.into();
-                        }
+                    if let Some(link::VfVlan::Info(vf_vlan_info)) = v.first() {
+                        vf_info.vlan_proto = vf_vlan_info.protocol.into();
                     }
                 }
                 link::VfInfo::Broadcast(v) => {
