@@ -437,6 +437,10 @@ pub(crate) fn parse_nl_msg_to_iface(
                             iface_state.controller_type =
                                 Some(ControllerType::Bond)
                         }
+                        InfoPortKind::Bridge => {
+                            iface_state.controller_type =
+                                Some(ControllerType::Bridge)
+                        }
                         InfoPortKind::Other(s) => {
                             iface_state.controller_type =
                                 Some(s.as_str().into())
@@ -456,12 +460,12 @@ pub(crate) fn parse_nl_msg_to_iface(
                                     get_bond_subordinate_info(bond_ports)?,
                                 );
                             }
+                            InfoPortData::BridgePort(data) => {
+                                iface_state.bridge_port =
+                                    Some(get_bridge_port_info(data)?);
+                            }
                             InfoPortData::Other(data) => {
                                 match controller_type {
-                                    ControllerType::Bridge => {
-                                        iface_state.bridge_port =
-                                            get_bridge_port_info(data)?;
-                                    }
                                     ControllerType::Vrf => {
                                         iface_state.vrf_subordinate =
                                             get_vrf_subordinate_info(data)?;
