@@ -2,14 +2,12 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::link::{AfSpecBridge, InfoData};
+use netlink_packet_route::link::{AfSpecBridge, InfoBridgePort, InfoData};
 
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    netlink::{
-        parse_af_spec_bridge_info, parse_bridge_info, parse_bridge_port_info,
-    },
+    netlink::{parse_af_spec_bridge_info, parse_bridge_id, parse_bridge_info},
     ControllerType, Iface, IfaceType, NisporError,
 };
 
@@ -291,6 +289,16 @@ pub struct BridgePortInfo {
     pub vlans: Option<Vec<BridgeVlanEntry>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub locked: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mac_authentication_bypass: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_n_groups: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub multicast_max_groups: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub neigh_vlan_supress: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub backup_nexthop_id: Option<u32>,
 }
 
 pub(crate) fn get_bridge_info(
@@ -304,9 +312,85 @@ pub(crate) fn get_bridge_info(
 }
 
 pub(crate) fn get_bridge_port_info(
-    data: &[u8],
-) -> Result<Option<BridgePortInfo>, NisporError> {
-    Ok(Some(parse_bridge_port_info(data)?))
+    nlas: &[InfoBridgePort],
+) -> Result<BridgePortInfo, NisporError> {
+    let mut ret = BridgePortInfo::default();
+
+    for nla in nlas {
+        match nla {
+            InfoBridgePort::State(d) => ret.stp_state = u8::from(*d).into(),
+            InfoBridgePort::Priority(d) => ret.stp_priority = *d,
+            InfoBridgePort::Cost(d) => ret.stp_path_cost = *d,
+            InfoBridgePort::HairpinMode(d) => ret.hairpin_mode = *d,
+            InfoBridgePort::Guard(d) => ret.bpdu_guard = *d,
+            InfoBridgePort::Protect(d) => ret.root_block = *d,
+            InfoBridgePort::FastLeave(d) => ret.multicast_fast_leave = *d,
+            InfoBridgePort::Learning(d) => ret.learning = *d,
+            InfoBridgePort::UnicastFlood(d) => ret.unicast_flood = *d,
+            InfoBridgePort::ProxyARP(d) => ret.proxyarp = *d,
+            InfoBridgePort::ProxyARPWifi(d) => ret.proxyarp_wifi = *d,
+            InfoBridgePort::RootId(d) => {
+                ret.designated_root = parse_bridge_id(d)?
+            }
+            InfoBridgePort::BridgeId(d) => {
+                ret.designated_bridge = parse_bridge_id(d)?
+            }
+            InfoBridgePort::DesignatedPort(d) => ret.designated_port = *d,
+            InfoBridgePort::DesignatedCost(d) => ret.designated_cost = *d,
+            InfoBridgePort::PortId(d) => ret.port_id = format!("0x{:04x}", *d),
+            InfoBridgePort::PortNumber(d) => {
+                ret.port_no = format!("0x{:x}", *d)
+            }
+            InfoBridgePort::TopologyChangeAck(d) => ret.change_ack = *d,
+            InfoBridgePort::ConfigPending(d) => ret.config_pending = *d,
+            InfoBridgePort::MessageAgeTimer(d) => ret.message_age_timer = *d,
+            InfoBridgePort::ForwardDelayTimer(d) => {
+                ret.forward_delay_timer = *d
+            }
+            InfoBridgePort::HoldTimer(d) => ret.hold_timer = *d,
+            InfoBridgePort::Flush => (),
+            InfoBridgePort::MulticastRouter(d) => {
+                ret.multicast_router = u8::from(*d).into()
+            }
+            InfoBridgePort::MulticastFlood(d) => ret.multicast_flood = *d,
+            InfoBridgePort::MulticastToUnicast(d) => {
+                ret.multicast_to_unicast = *d
+            }
+            InfoBridgePort::VlanTunnel(d) => ret.vlan_tunnel = *d,
+            InfoBridgePort::BroadcastFlood(d) => ret.broadcast_flood = *d,
+            InfoBridgePort::GroupFwdMask(d) => ret.group_fwd_mask = *d,
+            InfoBridgePort::NeighSupress(d) => ret.neigh_suppress = *d,
+            InfoBridgePort::Isolated(d) => ret.isolated = *d,
+            InfoBridgePort::BackupPort(d) => ret.backup_port = d.to_string(),
+            InfoBridgePort::MrpRingOpen(d) => ret.mrp_ring_open = Some(*d),
+            InfoBridgePort::MrpInOpen(d) => ret.mrp_in_open = Some(*d),
+            InfoBridgePort::MulticastEhtHostsLimit(d) => {
+                ret.mcast_eht_hosts_limit = Some(*d)
+            }
+            InfoBridgePort::MulticastEhtHostsCnt(d) => {
+                ret.mcast_eht_hosts_cnt = Some(*d)
+            }
+            InfoBridgePort::Locked(d) => ret.locked = Some(*d),
+            InfoBridgePort::Mab(d) => ret.mac_authentication_bypass = Some(*d),
+            InfoBridgePort::MulticastNGroups(d) => {
+                ret.multicast_n_groups = Some(*d)
+            }
+            InfoBridgePort::MulticastMaxGroups(d) => {
+                ret.multicast_max_groups = Some(*d)
+            }
+            InfoBridgePort::NeighVlanSupress(d) => {
+                ret.neigh_vlan_supress = Some(*d)
+            }
+            InfoBridgePort::BackupNextHopId(d) => {
+                ret.backup_nexthop_id = Some(*d)
+            }
+            _ => {
+                log::info!("Unknown bridge port info {:?}", nla);
+            }
+        }
+    }
+
+    Ok(ret)
 }
 
 pub(crate) fn bridge_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {

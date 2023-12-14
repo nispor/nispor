@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use netlink_packet_route::link::InfoBridge;
+use netlink_packet_route::link::{BridgeId, InfoBridge};
 
 use super::super::mac::{parse_as_mac, ETH_ALEN};
 use crate::{BridgeInfo, NisporError};
@@ -29,10 +29,10 @@ pub(crate) fn parse_bridge_info(
             bridge_info.vlan_protocol = Some((*d).into());
         } else if let InfoBridge::GroupFwdMask(d) = info {
             bridge_info.group_fwd_mask = Some(*d);
-        } else if let InfoBridge::RootId((priority, mac)) = info {
-            bridge_info.root_id = Some(parse_bridge_id(*priority, mac)?);
-        } else if let InfoBridge::BridgeId((priority, mac)) = info {
-            bridge_info.bridge_id = Some(parse_bridge_id(*priority, mac)?);
+        } else if let InfoBridge::RootId(bridge_id) = info {
+            bridge_info.root_id = Some(parse_bridge_id(bridge_id)?);
+        } else if let InfoBridge::BridgeId(bridge_id) = info {
+            bridge_info.bridge_id = Some(parse_bridge_id(bridge_id)?);
         } else if let InfoBridge::RootPort(d) = info {
             bridge_info.root_port = Some(*d);
         } else if let InfoBridge::RootPathCost(d) = info {
@@ -107,13 +107,10 @@ pub(crate) fn parse_bridge_info(
     Ok(bridge_info)
 }
 
-fn parse_bridge_id(
-    priority: u16,
-    mac: &[u8; 6],
+pub(crate) fn parse_bridge_id(
+    bridge_id: &BridgeId,
 ) -> Result<String, NisporError> {
-    //Following the format of sysfs
-    let priority_bytes = priority.to_ne_bytes();
-    let mac = parse_as_mac(ETH_ALEN, mac)
+    let mac = parse_as_mac(ETH_ALEN, &bridge_id.address)
         .map_err(|_| {
             NisporError::invalid_argument(
                 "invalid mac address in bridge_id".into(),
@@ -122,8 +119,5 @@ fn parse_bridge_id(
         .to_lowercase()
         .replace(':', "");
 
-    Ok(format!(
-        "{:02x}{:02x}.{}",
-        priority_bytes[0], priority_bytes[1], mac
-    ))
+    Ok(format!("{:04x}.{}", bridge_id.priority, mac))
 }
