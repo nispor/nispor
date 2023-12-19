@@ -23,12 +23,14 @@ use super::{
     vlan::get_vlan_info,
     vrf::{get_vrf_info, get_vrf_subordinate_info},
     vxlan::get_vxlan_info,
+    xfrm::get_xfrm_info,
 };
 use crate::{
     BondInfo, BondSubordinateInfo, BridgeInfo, BridgePortInfo, BridgeVlanEntry,
     EthtoolInfo, HsrInfo, IpoibInfo, Ipv4Info, Ipv6Info, MacSecInfo,
     MacVlanInfo, MacVtapInfo, MptcpAddress, NisporError, SriovInfo, TunInfo,
     VethInfo, VfInfo, VlanInfo, VrfInfo, VrfSubordinateInfo, VxlanInfo,
+    XfrmInfo,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -53,6 +55,7 @@ pub enum IfaceType {
     MacSec,
     Hsr,
     Unknown,
+    Xfrm,
     Other(String),
 }
 
@@ -86,6 +89,7 @@ impl std::fmt::Display for IfaceType {
                 Self::MacSec => "macsec",
                 Self::Hsr => "hsr",
                 Self::Unknown => "unknown",
+                Self::Xfrm => "xfrm",
                 Self::Other(s) => s,
             }
         )
@@ -285,6 +289,8 @@ pub struct Iface {
     pub macsec: Option<MacSecInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hsr: Option<HsrInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub xfrm: Option<XfrmInfo>,
 }
 
 // TODO: impl From Iface to IfaceConf
@@ -357,11 +363,14 @@ pub(crate) fn parse_nl_msg_to_iface(
                         InfoKind::Ipoib => IfaceType::Ipoib,
                         InfoKind::MacSec => IfaceType::MacSec,
                         InfoKind::Hsr => IfaceType::Hsr,
+                        InfoKind::Xfrm => IfaceType::Xfrm,
                         InfoKind::Other(s) => match s.as_ref() {
                             "openvswitch" => IfaceType::OpenvSwitch,
                             _ => IfaceType::Other(s.clone()),
                         },
-                        _ => IfaceType::Other(format!("{t:?}")),
+                        _ => IfaceType::Other(
+                            format!("{t:?}").as_str().to_lowercase(),
+                        ),
                     };
                     if let IfaceType::Other(_) = iface_type {
                         /* We did not find an explicit link type. Instead it's
@@ -410,6 +419,9 @@ pub(crate) fn parse_nl_msg_to_iface(
                         }
                         IfaceType::Hsr => {
                             iface_state.hsr = get_hsr_info(d);
+                        }
+                        IfaceType::Xfrm => {
+                            iface_state.xfrm = get_xfrm_info(d);
                         }
                         _ => log::warn!(
                             "Unhandled IFLA_INFO_DATA for iface type {:?}",
