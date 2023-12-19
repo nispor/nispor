@@ -24,6 +24,7 @@ use super::{
     vlan::vlan_iface_tidy_up,
     vrf::vrf_iface_tidy_up,
     vxlan::vxlan_iface_tidy_up,
+    xfrm::xfrm_iface_tidy_up,
 };
 use crate::{EthtoolInfo, Iface, NetStateIfaceFilter, NisporError};
 
@@ -134,6 +135,7 @@ fn tidy_up(iface_states: &mut HashMap<String, Iface>) {
     hsr_iface_tidy_up(iface_states);
     ipoib_iface_tidy_up(iface_states);
     sriov_vf_iface_tidy_up(iface_states);
+    xfrm_iface_tidy_up(iface_states);
 }
 
 fn controller_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
