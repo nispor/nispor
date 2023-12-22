@@ -366,7 +366,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                         InfoKind::Xfrm => IfaceType::Xfrm,
                         InfoKind::Other(s) => match s.as_ref() {
                             "openvswitch" => IfaceType::OpenvSwitch,
-                            _ => IfaceType::Other(s.clone()),
+                            _ => IfaceType::Other(s.to_lowercase()),
                         },
                         _ => IfaceType::Other(
                             format!("{t:?}").as_str().to_lowercase(),
