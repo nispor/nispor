@@ -1,4 +1,16 @@
 # Changelog
+## [1.2.16] - 2023-12-22
+### Breaking changes
+ - N/A
+
+### New features
+ - Expose async function `NetState::retrieve_with_filter_async()`. (7525da7)
+ - Add support of XFRM interface. (7417ad5)
+ - Add vlan protocol support for sriov. (7cd446f)
+
+### Bug fixes
+ - Use lower case for other interface types. (f646842)
+
 ## [1.2.15] - 2023-09-18
 ## Break changes
  * Changed `IfaceFlags` to `IfaceFlag`. (e126d02)
