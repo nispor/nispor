@@ -1,8 +1,9 @@
-TMPDIR := $(shell mktemp -d)
-TOP_SRC_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))/../../
-DEBUG_NISPOR_SO_FILE=$(TOP_SRC_DIR)/target/debug/libnispor.so
+ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))/../../
 
-include $(TOP_SRC_DIR)/Makefile.inc
+include $(ROOT_DIR)/Makefile.inc
+
+TMPDIR := $(shell mktemp -d)
+DEBUG_NISPOR_SO_FILE=$(ROOT_DIR)/target/debug/libnispor.so
 
 CFLAGS =-g -Wall -Wextra -L$(TMPDIR)
 LDFLAGS =-I$(TMPDIR)
@@ -11,16 +12,16 @@ CC ?=cc
 
 all: check
 
-HEADER_IN = $(TOP_SRC_DIR)/src/clib/nispor.h.in
+HEADER_IN = $(ROOT_DIR)/src/clib/nispor.h.in
 
 nispor.h: $(HEADER_IN)
 	install -p -v -D -m644 $(HEADER_IN) \
 		$(TMPDIR)/nispor.h
-	sed -i -e 's/@_VERSION_MAJOR@/$(CLIB_VERSION_MAJOR)/' \
+	sed -i -e 's/@_VERSION_MAJOR@/$(VERSION_MAJOR)/' \
 		$(TMPDIR)/nispor.h
-	sed -i -e 's/@_VERSION_MINOR@/$(CLIB_VERSION_MINOR)/' \
+	sed -i -e 's/@_VERSION_MINOR@/$(VERSION_MINOR)/' \
 		$(TMPDIR)/nispor.h
-	sed -i -e 's/@_VERSION_MICRO@/$(CLIB_VERSION_MICRO)/' \
+	sed -i -e 's/@_VERSION_MICRO@/$(VERSION_MICRO)/' \
 		$(TMPDIR)/nispor.h
 
 libnispor.so: $(DEBUG_NISPOR_SO_FILE)
