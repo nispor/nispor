@@ -34,10 +34,10 @@ impl NetState {
         filter: &NetStateFilter,
     ) -> Result<NetState, NisporError> {
         let rt = runtime::Builder::new_current_thread().enable_io().build()?;
-        rt.block_on(Self::_retrieve_with_filter(filter))
+        rt.block_on(Self::retrieve_with_filter_async(filter))
     }
 
-    async fn _retrieve_with_filter(
+    pub async fn retrieve_with_filter_async(
         filter: &NetStateFilter,
     ) -> Result<NetState, NisporError> {
         let mut ifaces = if filter.iface.is_none() {
