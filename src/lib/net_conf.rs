@@ -19,8 +19,12 @@ pub struct NetConf {
 impl NetConf {
     pub fn apply(&self) -> Result<(), NisporError> {
         let rt = runtime::Builder::new_current_thread().enable_io().build()?;
+        rt.block_on(self.apply_async())
+    }
+
+    pub async fn apply_async(&self) -> Result<(), NisporError> {
         if let Some(ref ifaces) = &self.ifaces {
-            let cur_iface_name_2_index = rt.block_on(get_iface_name2index())?;
+            let cur_iface_name_2_index = get_iface_name2index().await?;
             let mut new_ifaces = Vec::new();
             let mut del_ifaces = Vec::new();
             let mut chg_ifaces = Vec::new();
@@ -38,16 +42,16 @@ impl NetConf {
                     chg_ifaces.push(iface);
                 }
             }
-            rt.block_on(delete_ifaces(&del_ifaces))?;
-            rt.block_on(create_ifaces(&new_ifaces, &cur_iface_name_2_index))?;
+            delete_ifaces(&del_ifaces).await?;
+            create_ifaces(&new_ifaces, &cur_iface_name_2_index).await?;
 
-            let cur_ifaces = rt.block_on(get_ifaces(None))?;
-            rt.block_on(change_ifaces(&chg_ifaces, &cur_ifaces))?;
+            let cur_ifaces = get_ifaces(None).await?;
+            change_ifaces(&chg_ifaces, &cur_ifaces).await?;
         }
 
         if let Some(routes) = self.routes.as_ref() {
-            let cur_iface_name_2_index = rt.block_on(get_iface_name2index())?;
-            rt.block_on(apply_routes_conf(routes, &cur_iface_name_2_index))?;
+            let cur_iface_name_2_index = get_iface_name2index().await?;
+            apply_routes_conf(routes, &cur_iface_name_2_index).await?;
         }
         Ok(())
     }
