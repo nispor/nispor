@@ -21,7 +21,8 @@ pub(crate) async fn delete_ifaces(
     for (iface_name, iface_index) in ifaces {
         if let Err(e) = handle.link().del(*iface_index).execute().await {
             return Err(NisporError::bug(format!(
-                "Failed to delete interface {iface_name} with index {iface_index}: {e}"
+                "Failed to delete interface {iface_name} \
+                with index {iface_index}: {e}"
             )));
         }
     }
@@ -36,6 +37,7 @@ pub(crate) async fn create_ifaces(
     let (connection, handle, _) = new_connection()?;
     tokio::spawn(connection);
     for iface in ifaces {
+        log::debug!("Creating interface {}", iface.name);
         match iface.iface_type {
             Some(IfaceType::Bridge) => {
                 BridgeConf::create(&handle, &iface.name).await?;
@@ -96,6 +98,9 @@ pub(crate) async fn change_ifaces(
 ) -> Result<(), NisporError> {
     let (connection, handle, _) = new_connection()?;
     tokio::spawn(connection);
+    for iface in ifaces {
+        log::debug!("Changing interface {}", iface.name);
+    }
     change_ifaces_mac(&handle, ifaces, cur_ifaces).await?;
     change_ifaces_controller(&handle, ifaces, cur_ifaces).await?;
     change_ifaces_state(&handle, ifaces, cur_ifaces).await?;

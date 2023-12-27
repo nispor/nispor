@@ -43,15 +43,21 @@ impl NetConf {
                 }
             }
             delete_ifaces(&del_ifaces).await?;
-            create_ifaces(&new_ifaces, &cur_iface_name_2_index).await?;
+            if !new_ifaces.is_empty() {
+                create_ifaces(&new_ifaces, &cur_iface_name_2_index).await?;
+            }
 
-            let cur_ifaces = get_ifaces(None).await?;
-            change_ifaces(&chg_ifaces, &cur_ifaces).await?;
+            if !chg_ifaces.is_empty() {
+                let cur_ifaces = get_ifaces(None).await?;
+                change_ifaces(&chg_ifaces, &cur_ifaces).await?;
+            }
         }
 
         if let Some(routes) = self.routes.as_ref() {
-            let cur_iface_name_2_index = get_iface_name2index().await?;
-            apply_routes_conf(routes, &cur_iface_name_2_index).await?;
+            if !routes.is_empty() {
+                let cur_iface_name_2_index = get_iface_name2index().await?;
+                apply_routes_conf(routes, &cur_iface_name_2_index).await?;
+            }
         }
         Ok(())
     }
