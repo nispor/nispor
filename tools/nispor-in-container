@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# exit on error
+set -e
+
+# default variables
+PODMAN="${PODMAN:=podman}"
+IMG="${IMG:=nispor-test}"
+
+# other variables
+current_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")")"
+root_dir="$(realpath -- "$current_dir/..")"
+containerfile_content="\
+FROM fedora:latest
+RUN dnf install -y cargo ethtool iproute procps-ng
+"
+
+# parse args
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    cmd="$(basename -- "${BASH_SOURCE[0]}")"
+    echo "$cmd [--help | args_for_podman_run...]"
+    echo "Set up a container to test nispor in isolation."
+    echo "Example: $cmd -v /other/path/to/mount:/mount/point:z"
+    echo "Note: tests using netdevsim will fail if executed in the container."
+    exit
+fi
+
+# Build image if doesn't exist
+if ! "$PODMAN" image exists "$IMG"; then
+    "$PODMAN" build -t "$IMG" -f <(echo "$containerfile_content")
+fi
+
+# Run the container
+echo "To run integration tests: 'make check'"
+echo "For manual testing: 'make install', 'tools/test_env' to prepare environment"
+"$PODMAN" run --privileged --rm -it "$@"  \
+    -v "$root_dir:/nispor:z" -w "/nispor" \
+    "$IMG" \
+    /bin/bash
