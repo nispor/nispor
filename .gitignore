@@ -10,3 +10,4 @@ test/clib/nispor_test
 vendor/
 *.orig
 *.rej
+/.vscode
