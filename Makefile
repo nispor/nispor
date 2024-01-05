@@ -37,9 +37,7 @@ SYSTEMD_SYS_UNIT_DIR ?= $(shell \
 	pkg-config --variable=systemdsystemunitdir systemd)
 
 PYTHON3_SITE_DIR ?=$(shell \
-	python3 -c \
-		"from distutils.sysconfig import get_python_lib; \
-		 print(get_python_lib())")
+	python3 -c "import sysconfig; print(sysconfig.get_path('purelib'))")
 
 # Always invoke cargo build for debug
 .PHONY: $(CLI_EXEC_DEBUG)
