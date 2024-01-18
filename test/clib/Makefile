@@ -34,6 +34,7 @@ nispor_test: nispor_test.c nispor.h libnispor.so
 	$(CC) $(CFLAGS) $(LDFLAGS) -o nispor_test nispor_test.c $(LIBS)
 
 check: nispor_test
+	./check_clib_soname.sh $(TMPDIR)/$(CLIB_SO_DEV)
 	LD_LIBRARY_PATH=$(TMPDIR) \
 		valgrind --trace-children=yes --leak-check=full \
 		--error-exitcode=1 \
