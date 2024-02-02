@@ -70,3 +70,12 @@ jobs:
     - name: Run clib test
       if: matrix.rust_version == 'stable'
       run: sudo make check -C test/clib
+  
+  container:
+    name: container
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Test nispor-in-container
+      run: make check_in_container
