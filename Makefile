@@ -59,6 +59,9 @@ check:
 	fi
 	make check -C test/clib
 
+check_in_container:
+	./tools/nispor-in-container -- make check
+
 clean:
 	cargo clean
 	make clean -C test/clib
