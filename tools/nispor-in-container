@@ -3,9 +3,19 @@
 # exit on error
 set -e
 
-# default variables
-PODMAN="${PODMAN:=podman}"
+# default variables, can be overwriten by the environment
 IMG="${IMG:=nispor-test}"
+
+if [[ -z $PODMAN ]]; then
+    if command -v podman &>/dev/null; then
+        PODMAN=podman
+    elif command -v docker &>/dev/null; then
+        PODMAN=docker  # why not?
+    else
+        echo "You need Podman or Docker to use this script" >&2
+        exit 1
+    fi
+fi
 
 # other variables
 current_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")")"
