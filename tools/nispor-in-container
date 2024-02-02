@@ -10,30 +10,52 @@ IMG="${IMG:=nispor-test}"
 # other variables
 current_dir="$(realpath -- "$(dirname -- "${BASH_SOURCE[0]}")")"
 root_dir="$(realpath -- "$current_dir/..")"
+
+# Containerfile
 containerfile_content="\
 FROM fedora:latest
 RUN dnf install -y cargo ethtool iproute procps-ng
+WORKDIR /nispor
+CMD /bin/bash
 "
 
-# parse args
+# show help and exit, if requested
 if [[ "$1" == "-h" || "$1" == "--help" ]]; then
     cmd="$(basename -- "${BASH_SOURCE[0]}")"
-    echo "$cmd [--help | args_for_podman_run...]"
+    echo "$cmd [--help | args_for_podman_run...] [-- command_to_run]"
     echo "Set up a container to test nispor in isolation."
-    echo "Example: $cmd -v /other/path/to/mount:/mount/point:z"
+    echo "Example: $cmd -v /other/path/to/mount:/mount/point:z -- make check"
+    echo "If command_to_run is empty, a bash shell is open in the container"
     echo "Note: tests using netdevsim will fail if executed in the container."
     exit
 fi
+
+# parse args
+args=()
+cmd=()
+while (( $# > 0 )); do
+    if [[ $1 == "--" ]]; then
+        in_cmd=yes
+    else
+        [[ $in_cmd == "yes" ]] && cmd+=("$1") || args+=("$1")
+    fi
+    shift
+done
 
 # Build image if doesn't exist
 if ! "$PODMAN" image exists "$IMG"; then
     "$PODMAN" build -t "$IMG" -f <(echo "$containerfile_content")
 fi
 
+# If we are openning a bash shell, show a few help messages
+if [[ -z "$cmd" ]]; then  
+    echo "To run integration tests: 'make check'"
+    echo "For manual testing: 'make install', 'tools/test_env' to prepare environment"
+fi
+
 # Run the container
-echo "To run integration tests: 'make check'"
-echo "For manual testing: 'make install', 'tools/test_env' to prepare environment"
-"$PODMAN" run --privileged --rm -it "$@"  \
-    -v "$root_dir:/nispor:z" -w "/nispor" \
+"$PODMAN" run --privileged --rm -it  \
+    -v "$root_dir:/nispor:z" \
+    "${args[@]}" \
     "$IMG" \
-    /bin/bash
+    "${cmd[@]}"
