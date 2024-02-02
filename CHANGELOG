@@ -1,4 +1,17 @@
 # Changelog
+## [1.2.17] - 2024-02-02
+### Breaking changes
+ - N/A
+
+### New features
+ - Introduce async function `NetConf::apply_async`. (cdaac3a)
+
+### Bug fixes
+ - bridge: use netlink-packet-route for bridge_port. (e30fef0)
+ - Makefile: fix python install path for Python >= 3.12. (c2ca300)
+ - clib: Use build.rs to fix SONAME. (c0d5d15)
+ - Skip unrequited query. (829590c)
+
 ## [1.2.16] - 2023-12-22
 ### Breaking changes
  - N/A

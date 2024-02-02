@@ -58,25 +58,13 @@ autocmd FileType rust nnoremap <silent> <leader>f :RustFmt<cr>
 
 ## Release workflow
 
-```
+Please install [cargo-vendor-filterer][cargo_vendor_fitler_url],
+setup [hub][hub_url] and cargo credentials, then run:
+
+```bash
 make upstream_release
 ```
 
-```bash
-sed -i -e 's/1.2.15/1.2.16/' \
-    Makefile.inc src/*/Cargo.toml src/python/setup.py
-```
-
-```bash
-git log --oneline v1.2.14..HEAD
-```
-
-```bash
-cargo vendor-filterer \
-    --platform x86_64-unknown-linux-gnu \
-    --platform s390x-unknown-linux-gnu
-tar cfJ nispor-vendor-1.2.11.tar.xz vendor
-rm vendor -rf
-```
-
 [rust-vim]: https://github.com/rust-lang/rust.vim
+[hub_url]: https://hub.github.com/
+[cargo_vendor_fitler_url]: https://github.com/coreos/cargo-vendor-filterer
