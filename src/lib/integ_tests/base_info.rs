@@ -13,6 +13,7 @@ fn test_iface_info_loopback() {
     assert_eq!(&iface.mac_address, "00:00:00:00:00:00");
     assert_eq!(iface.max_mtu, None);
     assert_eq!(iface.min_mtu, None);
+    assert_eq!(iface.driver, None); // loopback device is driver-less
     assert_eq!(
         iface.flags,
         &[

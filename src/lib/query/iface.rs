@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::collections::HashMap;
+use std::path::Path;
 
 use netlink_packet_route::link::{
     self, InfoKind, InfoPortData, InfoPortKind, LinkAttribute, LinkInfo,
@@ -291,6 +292,8 @@ pub struct Iface {
     pub hsr: Option<HsrInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub xfrm: Option<XfrmInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub driver: Option<String>,
 }
 
 // TODO: impl From Iface to IfaceConf
@@ -314,6 +317,7 @@ pub(crate) fn parse_nl_msg_to_iface(
     if name.is_empty() {
         return Ok(None);
     }
+    let driver = _get_iface_driver(name.as_str());
     let link_layer_type = match nl_msg.header.link_layer_type {
         LinkLayerType::Ether => IfaceType::Ethernet,
         LinkLayerType::Loopback => IfaceType::Loopback,
@@ -322,6 +326,7 @@ pub(crate) fn parse_nl_msg_to_iface(
     };
     let mut iface_state = Iface {
         name,
+        driver,
         iface_type: link_layer_type.clone(),
         ..Default::default()
     };
@@ -567,4 +572,39 @@ pub(crate) fn fill_bridge_vlan_info(
         }
     }
     Ok(())
+}
+
+// Currently there is no valid netlink way to get the driver information as the
+// ETHTOOL_GDRVINFO ioctl command has no netlink equivalent. We use sysfs content
+// /sys/class/net/<if_name>/device/ and extract the last element from the "driver"-link
+// (https://docs.kernel.org/admin-guide/sysfs-rules.html)
+fn _get_iface_driver(if_name: &str) -> Option<String> {
+    let sysfs_path = format!("/sys/class/net/{if_name}/device/driver");
+    let path = Path::new(&*sysfs_path);
+
+    let full_path = match path.read_link() {
+        Ok(i) => i,
+        Err(_e) => {
+            return None;
+        }
+    };
+
+    let driver = match full_path.file_name() {
+        Some(i) => i,
+        None => {
+            return None;
+        }
+    };
+
+    let res = match driver.to_str() {
+        Some(i) => i,
+        None => {
+            log::error!(
+                "Driver for iface {if_name} is not a correct UTF-8 name"
+            );
+            return None;
+        }
+    };
+
+    Some(res.to_string())
 }
