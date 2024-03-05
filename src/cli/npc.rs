@@ -703,7 +703,7 @@ fn get_brief(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
     let state = NetState::retrieve_with_filter(&filter)?;
 
     if let Some(iface_name) = matches.get_one::<String>("iface_name") {
-        if state.ifaces.get(iface_name).is_some() {
+        if state.ifaces.contains_key(iface_name) {
             for iface_brief in CliIfaceBrief::from_net_state(&state) {
                 if &iface_brief.name == iface_name {
                     return Ok(CliReply::Brief(vec![iface_brief]));
