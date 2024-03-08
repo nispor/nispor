@@ -102,7 +102,7 @@ fn convert_base_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
             if let Some(base_iface_name) =
                 index_to_name.get(&vlan_info.base_iface)
             {
-                vlan_info.base_iface = base_iface_name.clone();
+                vlan_info.base_iface.clone_from(base_iface_name);
             }
         }
     }

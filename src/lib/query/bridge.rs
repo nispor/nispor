@@ -418,7 +418,7 @@ fn gen_port_list_of_controller(iface_states: &mut HashMap<String, Iface>) {
         if let Some(controller_iface) = iface_states.get_mut(controller) {
             if let Some(ref mut bridge_info) = controller_iface.bridge {
                 ports.sort();
-                bridge_info.ports = ports.clone();
+                bridge_info.ports.clone_from(ports);
             }
         }
     }

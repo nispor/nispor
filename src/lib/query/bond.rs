@@ -729,7 +729,7 @@ fn gen_subordinate_list_of_controller(
         {
             if let Some(ref mut bond_info) = controller_iface.bond {
                 subordinates.sort();
-                bond_info.subordinates = subordinates.clone();
+                bond_info.subordinates.clone_from(subordinates);
             }
         }
     }
