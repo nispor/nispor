@@ -80,7 +80,7 @@ fn gen_subordinate_list_of_controller(
         if let Some(controller_iface) = iface_states.get_mut(controller) {
             if let Some(ref mut vrf_info) = controller_iface.vrf {
                 subordinates.sort();
-                vrf_info.subordinates = subordinates.clone();
+                vrf_info.subordinates.clone_from(subordinates);
             }
         }
     }

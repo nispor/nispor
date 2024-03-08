@@ -553,7 +553,7 @@ async fn dump_link_mode_infos(
                         link_mode_info.auto_negotiate = *d
                     }
                     EthtoolLinkModeAttr::Ours(d) => {
-                        link_mode_info.ours = d.clone()
+                        link_mode_info.ours.clone_from(d)
                     }
                     EthtoolLinkModeAttr::Peer(d) => {
                         link_mode_info.peer = Some(d.clone())
