@@ -32,6 +32,23 @@
 
 `./tools/test_env rm`
 
+## Run the tests
+
+### Locally
+
+`make check`
+
+Warning: this will make changes to your system's network configuration, so this
+is not recommended.
+
+### In a container
+
+`make check_in_container`
+
+### Manual testing and experimenting in a container
+
+`./tools/nispor-in-container` (see help with `--help`)
+
 ## Design
 
 ### Rust module
