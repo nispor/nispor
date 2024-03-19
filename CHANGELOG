@@ -1,4 +1,15 @@
 # Changelog
+## [1.2.18] - 2024-03-19
+### Breaking changes
+ - N/A
+
+### New features
+ - iface: add driver field. (681ed16)
+
+### Bug fixes
+
+ - N/A
+
 ## [1.2.17] - 2024-02-02
 ### Breaking changes
  - N/A
