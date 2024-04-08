@@ -560,7 +560,7 @@ async fn dump_link_mode_infos(
                     }
                     EthtoolLinkModeAttr::Speed(d) => {
                         link_mode_info.speed =
-                            if *d == std::u32::MAX { 0 } else { *d }
+                            if *d == u32::MAX { 0 } else { *d }
                     }
                     EthtoolLinkModeAttr::Duplex(d) => {
                         link_mode_info.duplex = d.into()

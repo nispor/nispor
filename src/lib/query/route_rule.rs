@@ -153,12 +153,12 @@ fn get_rule(rule_msg: RuleMessage) -> Result<RouteRule, NisporError> {
                 rl.tun_id = Some(*d);
             }
             RuleAttribute::SuppressIfGroup(d) => {
-                if *d != std::u32::MAX {
+                if *d != u32::MAX {
                     rl.suppress_ifgroup = Some(*d);
                 }
             }
             RuleAttribute::SuppressPrefixLen(d) => {
-                if *d != std::u32::MAX {
+                if *d != u32::MAX {
                     rl.suppress_prefix_len = Some(*d);
                 }
             }
