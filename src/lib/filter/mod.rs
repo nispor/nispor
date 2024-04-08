@@ -5,7 +5,6 @@ mod net_state;
 mod route;
 mod route_rule;
 
-pub(crate) use self::net_state::enable_kernel_strict_check;
 pub(crate) use self::route::{
     apply_kernel_route_filter, should_drop_by_filter,
 };

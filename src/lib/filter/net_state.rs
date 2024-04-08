@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::os::unix::io::RawFd;
-
 use crate::{
     NetStateIfaceFilter, NetStateRouteFilter, NetStateRouteRuleFilter,
-    NisporError,
 };
 
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -49,26 +46,4 @@ impl NetStateFilter {
             route_rule: None,
         }
     }
-}
-
-const NETLINK_GET_STRICT_CHK: i32 = 12;
-
-pub(crate) fn enable_kernel_strict_check(fd: RawFd) -> Result<(), NisporError> {
-    if unsafe {
-        libc::setsockopt(
-            fd,
-            libc::SOL_NETLINK,
-            NETLINK_GET_STRICT_CHK,
-            1u32.to_ne_bytes().as_ptr() as *const _,
-            4,
-        )
-    } != 0
-    {
-        let e = NisporError::bug(format!(
-            "Failed to set socket option NETLINK_GET_STRICT_CHK: error {}",
-            std::io::Error::last_os_error()
-        ));
-        return Err(e);
-    }
-    Ok(())
 }

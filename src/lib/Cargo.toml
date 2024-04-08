@@ -21,7 +21,7 @@ serde = { version = "1.0.137", features = ["derive"] }
 serde_json = "1.0.81"
 rtnetlink = "0.14.0"
 netlink-packet-route = "0.19.0"
-netlink-sys = "0.8.4"
+netlink-sys = "0.8.6"
 netlink-packet-utils = "0.5.2"
 ethtool = "0.2.5"
 mptcp-pm = "0.1.3"

@@ -2,21 +2,16 @@
 
 use std::collections::HashMap;
 
-use std::os::unix::io::AsRawFd;
-
 use futures::stream::TryStreamExt;
 use netlink_packet_route::route::{
     self as rt, RouteAddress, RouteAttribute, RouteMessage, RouteMetric,
     RouteVia,
 };
-
+use netlink_sys::AsyncSocket;
 use rtnetlink::{new_connection, IpVersion};
 use serde::{Deserialize, Serialize};
 
-use super::super::filter::{
-    apply_kernel_route_filter, enable_kernel_strict_check,
-    should_drop_by_filter,
-};
+use super::super::filter::{apply_kernel_route_filter, should_drop_by_filter};
 use crate::{NetStateRouteFilter, NisporError};
 
 const USER_HZ: u32 = 100;
@@ -450,8 +445,10 @@ pub(crate) async fn get_routes(
     }
 
     if filter.is_some() {
-        if let Err(e) =
-            enable_kernel_strict_check(connection.socket_mut().as_raw_fd())
+        if let Err(e) = connection
+            .socket_mut()
+            .socket_mut()
+            .set_netlink_get_strict_chk(true)
         {
             log::warn!(
                 "Failed to set kernel space route filter: {e}, \
