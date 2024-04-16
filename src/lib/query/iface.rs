@@ -19,7 +19,7 @@ use super::{
     mac_vlan::get_mac_vlan_info,
     mac_vtap::get_mac_vtap_info,
     macsec::get_macsec_info,
-    sriov::get_sriov_info,
+    sriov::{get_sriov_info, sriov_is_enabled},
     tun::get_tun_info,
     vlan::get_vlan_info,
     vrf::{get_vrf_info, get_vrf_subordinate_info},
@@ -492,7 +492,9 @@ pub(crate) fn parse_nl_msg_to_iface(
             if let Ok(info) =
                 get_sriov_info(&iface_state.name, nlas, &link_layer_type)
             {
-                iface_state.sriov = Some(info);
+                if sriov_is_enabled(&iface_state.name) {
+                    iface_state.sriov = Some(info);
+                }
             }
         } else if let LinkAttribute::NetnsId(id) = nla {
             iface_state.link_netnsid = Some(*id);

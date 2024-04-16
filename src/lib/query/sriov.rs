@@ -178,6 +178,14 @@ fn get_vf_iface_name(pf_name: &str, sriov_id: &u32) -> Option<String> {
     read_folder(&sysfs_path).pop()
 }
 
+// SR-IOV can be disabled on BIOS but the VFs netlink attribute will be there. In order to
+// understand if the SR-IOV can be configured we must look at PCI level. If sriov_numvfs is present
+// we can assume that the NIC is SR-IOV capable and it is enabled.
+pub(crate) fn sriov_is_enabled(pf_name: &str) -> bool {
+    let sysfs_path = format!("/sys/class/net/{pf_name}/device/sriov_numvfs");
+    std::fs::File::open(sysfs_path).is_ok()
+}
+
 fn read_folder(folder_path: &str) -> Vec<String> {
     let mut folder_contents = Vec::new();
     let fd = match std::fs::read_dir(folder_path) {
