@@ -1,4 +1,14 @@
 # Changelog
+### [1.2.19] - 2024-04-19
+### Breaking changes
+ - N/A
+
+### New features
+ - N/A
+
+### Bug fixes
+ - Do not report SR-IOV info if sriov_numvfs is missing (c593229).
+
 ## [1.2.18] - 2024-03-19
 ### Breaking changes
  - N/A
