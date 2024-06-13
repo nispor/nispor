@@ -54,6 +54,7 @@ pub struct VfState {
 pub struct SriovInfo {
     pub vfs: Vec<VfInfo>,
     pub num_vfs: Option<u32>,
+    pub drivers_autoprobe: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -99,6 +100,7 @@ pub(crate) fn get_sriov_info(
         _ => MAX_ADDR_LEN,
     };
     sriov_info.num_vfs = get_num_vfs(pf_iface_name);
+    sriov_info.drivers_autoprobe = is_drivers_autoprobe(pf_iface_name);
     for port_nlas in nlas {
         let mut vf_info = VfInfo::default();
         for port_info in &port_nlas.0 {
@@ -178,6 +180,18 @@ fn get_vf_iface_name(pf_name: &str, sriov_id: &u32) -> Option<String> {
     let sysfs_path =
         format!("/sys/class/net/{pf_name}/device/virtfn{sriov_id}/net/");
     read_folder(&sysfs_path).pop()
+}
+
+fn is_drivers_autoprobe(pf_name: &str) -> Option<bool> {
+    let sysfs_path =
+        format!("/sys/class/net/{pf_name}/device/sriov_drivers_autoprobe");
+    match std::fs::read_to_string(sysfs_path) {
+        Ok(s) => match s.trim().parse::<u8>() {
+            Ok(u) => Some(u == 1),
+            _ => None,
+        },
+        _ => None,
+    }
 }
 
 fn get_num_vfs(pf_name: &str) -> Option<u32> {
