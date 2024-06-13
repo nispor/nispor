@@ -53,6 +53,7 @@ pub struct VfState {
 #[non_exhaustive]
 pub struct SriovInfo {
     pub vfs: Vec<VfInfo>,
+    pub num_vfs: Option<u32>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -97,6 +98,7 @@ pub(crate) fn get_sriov_info(
         IfaceType::Infiniband => INFINIBAND_ALEN,
         _ => MAX_ADDR_LEN,
     };
+    sriov_info.num_vfs = get_num_vfs(pf_iface_name);
     for port_nlas in nlas {
         let mut vf_info = VfInfo::default();
         for port_info in &port_nlas.0 {
@@ -176,6 +178,17 @@ fn get_vf_iface_name(pf_name: &str, sriov_id: &u32) -> Option<String> {
     let sysfs_path =
         format!("/sys/class/net/{pf_name}/device/virtfn{sriov_id}/net/");
     read_folder(&sysfs_path).pop()
+}
+
+fn get_num_vfs(pf_name: &str) -> Option<u32> {
+    let sysfs_path = format!("/sys/class/net/{pf_name}/device/sriov_numvfs");
+    match std::fs::read_to_string(sysfs_path) {
+        Ok(s) => match s.trim().parse::<u32>() {
+            Ok(u) => Some(u),
+            _ => None,
+        },
+        _ => None,
+    }
 }
 
 // SR-IOV can be disabled on BIOS but the VFs netlink attribute will be there. In order to
