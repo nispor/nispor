@@ -16,6 +16,7 @@ use super::{
     hsr::get_hsr_info,
     ip::fill_af_spec_inet_info,
     ipoib::get_ipoib_info,
+    ipvlan::get_ip_vlan_info,
     mac_vlan::get_mac_vlan_info,
     mac_vtap::get_mac_vtap_info,
     macsec::get_macsec_info,
@@ -28,10 +29,10 @@ use super::{
 };
 use crate::{
     BondInfo, BondSubordinateInfo, BridgeInfo, BridgePortInfo, BridgeVlanEntry,
-    EthtoolInfo, HsrInfo, IpoibInfo, Ipv4Info, Ipv6Info, MacSecInfo,
-    MacVlanInfo, MacVtapInfo, MptcpAddress, NisporError, SriovInfo, TunInfo,
-    VethInfo, VfInfo, VlanInfo, VrfInfo, VrfSubordinateInfo, VxlanInfo,
-    XfrmInfo,
+    EthtoolInfo, HsrInfo, IpVlanInfo, IpoibInfo, Ipv4Info, Ipv6Info,
+    MacSecInfo, MacVlanInfo, MacVtapInfo, MptcpAddress, NisporError, SriovInfo,
+    TunInfo, VethInfo, VfInfo, VlanInfo, VrfInfo, VrfSubordinateInfo,
+    VxlanInfo, XfrmInfo,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -53,6 +54,7 @@ pub enum IfaceType {
     MacVtap,
     OpenvSwitch,
     Ipoib,
+    IpVlan,
     MacSec,
     Hsr,
     Unknown,
@@ -87,6 +89,7 @@ impl std::fmt::Display for IfaceType {
                 Self::MacVtap => "macvtap",
                 Self::OpenvSwitch => "openvswitch",
                 Self::Ipoib => "ipoib",
+                Self::IpVlan => "ipvlan",
                 Self::MacSec => "macsec",
                 Self::Hsr => "hsr",
                 Self::Unknown => "unknown",
@@ -294,6 +297,8 @@ pub struct Iface {
     pub xfrm: Option<XfrmInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub driver: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ip_vlan: Option<IpVlanInfo>,
 }
 
 // TODO: impl From Iface to IfaceConf
@@ -366,6 +371,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                         InfoKind::MacVlan => IfaceType::MacVlan,
                         InfoKind::MacVtap => IfaceType::MacVtap,
                         InfoKind::Ipoib => IfaceType::Ipoib,
+                        InfoKind::IpVlan => IfaceType::IpVlan,
                         InfoKind::MacSec => IfaceType::MacSec,
                         InfoKind::Hsr => IfaceType::Hsr,
                         InfoKind::Xfrm => IfaceType::Xfrm,
@@ -418,6 +424,9 @@ pub(crate) fn parse_nl_msg_to_iface(
                         }
                         IfaceType::Ipoib => {
                             iface_state.ipoib = get_ipoib_info(d);
+                        }
+                        IfaceType::IpVlan => {
+                            iface_state.ip_vlan = get_ip_vlan_info(d);
                         }
                         IfaceType::MacSec => {
                             iface_state.macsec = get_macsec_info(d);
@@ -525,6 +534,11 @@ pub(crate) fn parse_nl_msg_to_iface(
                 iface_state.veth = Some(VethInfo {
                     peer: format!("{iface_index}"),
                 })
+            }
+            IfaceType::IpVlan => {
+                if let Some(ref mut ip_vlan_info) = iface_state.ip_vlan {
+                    ip_vlan_info.base_iface = format!("{iface_index}");
+                }
             }
             IfaceType::MacVlan => {
                 if let Some(ref mut mac_vlan_info) = iface_state.mac_vlan {

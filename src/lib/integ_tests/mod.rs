@@ -19,6 +19,8 @@ mod hsr;
 #[cfg(test)]
 mod ip;
 #[cfg(test)]
+mod ip_vlan;
+#[cfg(test)]
 mod mac_vlan;
 #[cfg(test)]
 mod mac_vtap;

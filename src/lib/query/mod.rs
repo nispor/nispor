@@ -13,6 +13,7 @@ mod ethtool;
 mod iface;
 mod inter_ifaces;
 mod ipoib;
+mod ipvlan;
 mod mac_vlan;
 mod mac_vtap;
 mod macsec;
@@ -48,6 +49,7 @@ pub use self::ip::{
     IpFamily, Ipv4AddrInfo, Ipv4Info, Ipv6AddrFlag, Ipv6AddrInfo, Ipv6Info,
 };
 pub use self::ipoib::{IpoibInfo, IpoibMode};
+pub use self::ipvlan::{IpVlanFlag, IpVlanInfo, IpVlanMode};
 pub use self::mac_vlan::{MacVlanInfo, MacVlanMode};
 pub use self::mac_vtap::{MacVtapInfo, MacVtapMode};
 pub use self::macsec::{
