@@ -7,6 +7,7 @@ from .bridge import NisporBridge
 from .bridge import NisporBridgePort
 from .hsr import NisporHsr
 from .ipoib import NisporIpoib
+from .ipvlan import NisporIpVlan
 from .mac_vlan import NisporMacVlan
 from .mac_vtap import NisporMacVtap
 from .macsec import NisporMacsec
@@ -65,6 +66,8 @@ def _iface_info_to_obj(iface_info):
         iface = NisporMacVtap(iface_info)
     elif iface_type == "Ipoib":
         iface = NisporIpoib(iface_info)
+    elif iface_type == "ip_vlan":
+        iface = NisporIpVlan(iface_info)
     elif iface_type == "macsec":
         iface = NisporMacsec(iface_info)
     elif iface_type == "hsr":
