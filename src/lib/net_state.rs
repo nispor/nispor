@@ -65,9 +65,18 @@ impl NetState {
 
         let mptcp =
             if filter.iface.as_ref().map(|f| f.include_mptcp) == Some(true) {
-                let mut mptcp = get_mptcp().await?;
-                merge_mptcp_info(&mut ifaces, &mut mptcp);
-                Some(mptcp)
+                match get_mptcp().await {
+                    Ok(mut mptcp) => {
+                        merge_mptcp_info(&mut ifaces, &mut mptcp);
+                        Some(mptcp)
+                    }
+                    Err(e) => {
+                        // The MPTCP address querying need net_admin permission
+                        // we should ignore the failure of that.
+                        log::info!("Failed to query MPTCP: {e}");
+                        None
+                    }
+                }
             } else {
                 None
             };
