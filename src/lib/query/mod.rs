@@ -5,6 +5,7 @@ mod bridge;
 mod hsr;
 mod ip;
 mod mptcp;
+mod wifi;
 mod xfrm;
 // Disable `needless_pass_by_ref_mut` check due to upstream issue:
 // https://github.com/rust-netlink/ethtool/issues/12
@@ -67,6 +68,7 @@ pub use self::veth::VethInfo;
 pub use self::vlan::{VlanInfo, VlanProtocol};
 pub use self::vrf::{VrfInfo, VrfSubordinateInfo};
 pub use self::vxlan::VxlanInfo;
+pub use self::wifi::WifiInfo;
 pub use self::xfrm::XfrmInfo;
 
 pub(crate) use self::{

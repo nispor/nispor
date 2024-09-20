@@ -58,7 +58,7 @@ impl std::error::Error for NisporError {
     /* TODO */
 }
 
-impl std::convert::From<rtnetlink::Error> for NisporError {
+impl From<rtnetlink::Error> for NisporError {
     fn from(e: rtnetlink::Error) -> Self {
         match e {
             rtnetlink::Error::NetlinkError(netlink_err) => {
@@ -84,7 +84,7 @@ impl std::convert::From<rtnetlink::Error> for NisporError {
     }
 }
 
-impl std::convert::From<EthtoolError> for NisporError {
+impl From<EthtoolError> for NisporError {
     fn from(e: EthtoolError) -> Self {
         NisporError {
             kind: ErrorKind::NetlinkError,
@@ -93,7 +93,7 @@ impl std::convert::From<EthtoolError> for NisporError {
     }
 }
 
-impl std::convert::From<std::ffi::FromBytesWithNulError> for NisporError {
+impl From<std::ffi::FromBytesWithNulError> for NisporError {
     fn from(e: std::ffi::FromBytesWithNulError) -> Self {
         NisporError {
             kind: ErrorKind::NisporBug,
@@ -102,7 +102,7 @@ impl std::convert::From<std::ffi::FromBytesWithNulError> for NisporError {
     }
 }
 
-impl std::convert::From<std::str::Utf8Error> for NisporError {
+impl From<std::str::Utf8Error> for NisporError {
     fn from(e: std::str::Utf8Error) -> Self {
         NisporError {
             kind: ErrorKind::NisporBug,
@@ -111,7 +111,7 @@ impl std::convert::From<std::str::Utf8Error> for NisporError {
     }
 }
 
-impl std::convert::From<DecodeError> for NisporError {
+impl From<DecodeError> for NisporError {
     fn from(e: DecodeError) -> Self {
         NisporError {
             kind: ErrorKind::NetlinkError,
@@ -120,7 +120,7 @@ impl std::convert::From<DecodeError> for NisporError {
     }
 }
 
-impl std::convert::From<std::io::Error> for NisporError {
+impl From<std::io::Error> for NisporError {
     fn from(e: std::io::Error) -> Self {
         NisporError {
             kind: ErrorKind::NisporBug,
@@ -129,7 +129,7 @@ impl std::convert::From<std::io::Error> for NisporError {
     }
 }
 
-impl std::convert::From<std::net::AddrParseError> for NisporError {
+impl From<std::net::AddrParseError> for NisporError {
     fn from(e: std::net::AddrParseError) -> Self {
         NisporError {
             kind: ErrorKind::InvalidArgument,
@@ -138,8 +138,17 @@ impl std::convert::From<std::net::AddrParseError> for NisporError {
     }
 }
 
-impl std::convert::From<mptcp_pm::MptcpPathManagerError> for NisporError {
+impl From<mptcp_pm::MptcpPathManagerError> for NisporError {
     fn from(e: mptcp_pm::MptcpPathManagerError) -> Self {
+        NisporError {
+            kind: ErrorKind::NetlinkError,
+            msg: e.to_string(),
+        }
+    }
+}
+
+impl From<wl_nl80211::Nl80211Error> for NisporError {
+    fn from(e: wl_nl80211::Nl80211Error) -> Self {
         NisporError {
             kind: ErrorKind::NetlinkError,
             msg: e.to_string(),

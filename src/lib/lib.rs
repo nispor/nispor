@@ -44,5 +44,5 @@ pub use crate::query::{
     MultipathRouteFlags, Route, RouteProtocol, RouteRule, RouteScope,
     RouteType, RuleAction, SriovInfo, TunInfo, TunMode, VethInfo, VfInfo,
     VfLinkState, VfState, VlanInfo, VlanProtocol, VrfInfo, VrfSubordinateInfo,
-    VxlanInfo, XfrmInfo,
+    VxlanInfo, WifiInfo, XfrmInfo,
 };

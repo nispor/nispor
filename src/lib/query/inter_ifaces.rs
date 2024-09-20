@@ -25,6 +25,7 @@ use super::{
     vlan::vlan_iface_tidy_up,
     vrf::vrf_iface_tidy_up,
     vxlan::vxlan_iface_tidy_up,
+    wifi::fill_wifi_info,
     xfrm::xfrm_iface_tidy_up,
 };
 use crate::{EthtoolInfo, Iface, NetStateIfaceFilter, NisporError};
@@ -118,6 +119,8 @@ pub(crate) async fn get_ifaces(
             }
         };
     }
+
+    fill_wifi_info(&mut iface_states).await?;
 
     tidy_up(&mut iface_states);
     Ok(iface_states)

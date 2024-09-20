@@ -32,7 +32,7 @@ use crate::{
     EthtoolInfo, HsrInfo, IpVlanInfo, IpoibInfo, Ipv4Info, Ipv6Info,
     MacSecInfo, MacVlanInfo, MacVtapInfo, MptcpAddress, NisporError, SriovInfo,
     TunInfo, VethInfo, VfInfo, VlanInfo, VrfInfo, VrfSubordinateInfo,
-    VxlanInfo, XfrmInfo,
+    VxlanInfo, WifiInfo, XfrmInfo,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -59,6 +59,7 @@ pub enum IfaceType {
     Hsr,
     Unknown,
     Xfrm,
+    Wifi,
     Other(String),
 }
 
@@ -94,6 +95,7 @@ impl std::fmt::Display for IfaceType {
                 Self::Hsr => "hsr",
                 Self::Unknown => "unknown",
                 Self::Xfrm => "xfrm",
+                Self::Wifi => "wifi",
                 Self::Other(s) => s,
             }
         )
@@ -299,6 +301,8 @@ pub struct Iface {
     pub driver: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ip_vlan: Option<IpVlanInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub wifi: Option<WifiInfo>,
 }
 
 // TODO: impl From Iface to IfaceConf

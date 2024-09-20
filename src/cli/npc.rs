@@ -590,6 +590,18 @@ fn get_link_info(iface: &Iface) -> String {
             vxlan.dst_port,
             vxlan.local
         )
+    } else if let Some(wifi) = iface.wifi.as_ref() {
+        let mut ret = String::new();
+        if let Some(ssid) = wifi.ssid.as_ref() {
+            write!(ret, "ssid {ssid}").ok();
+        }
+        if let Some(gen) = wifi.generation.as_ref() {
+            write!(ret, " gen {gen}").ok();
+        }
+        if let Some(freq) = wifi.frequency.as_ref() {
+            write!(ret, " freq {freq}").ok();
+        }
+        ret
     } else {
         "".into()
     }
