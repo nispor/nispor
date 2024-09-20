@@ -82,6 +82,8 @@ fn test_create_down_delete_veth() {
     // Change the MAC should have the interface as UP state
     let net_conf: NetConf = serde_yaml::from_str(VETH_CHANGE_MAC_YML).unwrap();
     net_conf.apply().unwrap();
+    // Wait 1 second for veth to up
+    std::thread::sleep(std::time::Duration::from_secs(1));
     let state = NetState::retrieve().unwrap();
     let iface = &state.ifaces[IFACE_NAME];
     assert_eq!(iface.state, IfaceState::Up);
