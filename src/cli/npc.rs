@@ -601,6 +601,17 @@ fn get_link_info(iface: &Iface) -> String {
         if let Some(freq) = wifi.frequency.as_ref() {
             write!(ret, " freq {freq}").ok();
         }
+        if let Some(s) = wifi.signal.as_ref() {
+            let perc = dbm_to_percentage(*s);
+            write!(ret, " signal {s}dBm({perc}%)").ok();
+        }
+        if let Some(r) = wifi.rx_bitrate.as_ref() {
+            let rate = *r as f64 / 10.0;
+            write!(ret, " rx {rate:.1}Mb/s").ok();
+        }
+        if let Some(r) = wifi.rx_width.as_ref() {
+            write!(ret, " rx-width {r}MHz").ok();
+        }
         ret
     } else {
         "".into()
@@ -736,4 +747,23 @@ fn get_brief(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
 
 fn get_full() -> Result<CliReply, CliError> {
     Ok(CliReply::Full(NetState::retrieve()?))
+}
+
+const NOISE_FLOOR_DBM: i8 = -90;
+const SIGNAL_MAX_DBM: i8 = -20;
+
+// The clap is not stable feature yet.
+#[allow(clippy::manual_clamp)]
+// Mimicking NetworkManager `nl80211_xbm_to_percent`
+fn dbm_to_percentage(dbm: i8) -> i8 {
+    let dbm = if dbm > SIGNAL_MAX_DBM {
+        SIGNAL_MAX_DBM
+    } else if dbm < NOISE_FLOOR_DBM {
+        NOISE_FLOOR_DBM
+    } else {
+        dbm
+    };
+    (100.0f64
+        - 70.0f64 * (SIGNAL_MAX_DBM - dbm) as f64
+            / (SIGNAL_MAX_DBM - NOISE_FLOOR_DBM) as f64) as i8
 }
