@@ -1,4 +1,14 @@
 # Changelog
+## [1.2.21] - 2024-09-25
+### Breaking changes
+ - N/A
+
+### New features
+ - N/A
+
+### Bug fixes
+ - Ignore WIFI query failure. (a5c08b0)
+
 ## [1.2.20] - 2024-09-25
 ### Breaking changes
  - N/A
