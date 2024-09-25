@@ -120,7 +120,12 @@ pub(crate) async fn get_ifaces(
         };
     }
 
-    fill_wifi_info(&mut iface_states).await?;
+    // The cfg80211 module might not exists or loaded in environments,
+    // we should only log wifi query failure instead of failing the whole
+    // querying
+    if let Err(e) = fill_wifi_info(&mut iface_states).await {
+        log::warn!("Failed to query WIFI information {e}");
+    }
 
     tidy_up(&mut iface_states);
     Ok(iface_states)
