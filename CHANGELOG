@@ -1,4 +1,17 @@
 # Changelog
+## [1.2.20] - 2024-09-25
+### Breaking changes
+ - N/A
+
+### New features
+ - wifi: Include station information. (2b7d7f7)
+ - wifi: Introduce support of query WIFI status. (c64295d)
+ - python: add ipvlan support. (24f8f50)
+ - ipvlan: add ipvlan support. (3d01d53)
+
+### Bug fixes
+ - mptcp: Ignore error when querying. (23663c6)
+
 ### [1.2.19] - 2024-04-19
 ### Breaking changes
  - N/A
