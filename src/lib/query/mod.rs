@@ -65,7 +65,7 @@ pub use self::route_rule::{RouteRule, RuleAction};
 pub use self::sriov::{SriovInfo, VfInfo, VfLinkState, VfState};
 pub use self::tun::{TunInfo, TunMode};
 pub use self::veth::VethInfo;
-pub use self::vlan::{VlanInfo, VlanProtocol};
+pub use self::vlan::{VlanInfo, VlanProtocol, VlanQosMapping};
 pub use self::vrf::{VrfInfo, VrfSubordinateInfo};
 pub use self::vxlan::VxlanInfo;
 pub use self::wifi::WifiInfo;

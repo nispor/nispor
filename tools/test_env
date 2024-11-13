@@ -111,6 +111,8 @@ elif [ "CHK$1" == "CHKvlan" ];then
     sudo ip link add link eth1 name eth1.101 type vlan id 101
     sudo ip link set eth1.101 address $TEST_MAC3
     sudo ip link set eth1.101 up
+    sudo ip link set eth1.101 type vlan ingress-qos-map 2:9 3:8 4:7
+    sudo ip link set eth1.101 type vlan egress-qos-map 7:4 8:3 9:2
     sleep $LINK_WAIT_TIME
 elif [ "CHK$1" == "CHKdummy" ];then
     sudo ip link add dummy1 type dummy

@@ -17,7 +17,22 @@ is_reorder_hdr: true
 is_gvrp: false
 is_loose_binding: false
 is_mvrp: false
-is_bridge_binding: false"#;
+is_bridge_binding: false
+ingress_qos_map:
+- from: 2
+  to: 9
+- from: 3
+  to: 8
+- from: 4
+  to: 7
+egress_qos_map:
+- from: 7
+  to: 4
+- from: 8
+  to: 3
+- from: 9
+  to: 2
+"#;
 
 #[test]
 fn test_get_vlan_iface_yaml() {

@@ -37,6 +37,26 @@ const VLAN_FLAG_LOOSE_BINDING: u32 = 0x4;
 const VLAN_FLAG_MVRP: u32 = 0x8;
 const VLAN_FLAG_BRIDGE_BINDING: u32 = 0x10;
 
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+)]
+pub struct VlanQosMapping {
+    pub from: u32,
+    pub to: u32,
+}
+
+impl VlanQosMapping {
+    fn from_netlink(
+        map: &netlink_packet_route::link::VlanQosMapping,
+    ) -> Option<Self> {
+        if let netlink_packet_route::link::VlanQosMapping::Mapping(f, t) = map {
+            Some(Self { from: *f, to: *t })
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct VlanInfo {
@@ -48,6 +68,12 @@ pub struct VlanInfo {
     pub is_loose_binding: bool,
     pub is_mvrp: bool,
     pub is_bridge_binding: bool,
+    /// Mapping VLAN header priority to linux internal packet priority for
+    /// incoming packet.
+    pub ingress_qos_map: Vec<VlanQosMapping>,
+    /// Mapping linux internal packet priority to VLAN header priority for
+    /// outgoing packet. Vector of <from, to>.
+    pub egress_qos_map: Vec<VlanQosMapping>,
 }
 
 pub(crate) fn get_vlan_info(data: &InfoData) -> Option<VlanInfo> {
@@ -75,6 +101,18 @@ pub(crate) fn get_vlan_info(data: &InfoData) -> Option<VlanInfo> {
                 if *flags & VLAN_FLAG_BRIDGE_BINDING > 0 {
                     vlan_info.is_bridge_binding = true
                 }
+            } else if let InfoVlan::EgressQos(maps) = info {
+                vlan_info.egress_qos_map = maps
+                    .as_slice()
+                    .iter()
+                    .filter_map(VlanQosMapping::from_netlink)
+                    .collect();
+            } else if let InfoVlan::IngressQos(maps) = info {
+                vlan_info.ingress_qos_map = maps
+                    .as_slice()
+                    .iter()
+                    .filter_map(VlanQosMapping::from_netlink)
+                    .collect();
             } else {
                 log::debug!("Unknown VLAN info: {:?}", info);
             }
