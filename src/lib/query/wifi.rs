@@ -12,20 +12,28 @@ use crate::{Iface, IfaceType, NisporError};
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub struct WifiInfo {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub ssid: Option<String>,
     /// Frequency in MHz
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub frequency: Option<u32>,
     /// WIFI generation, e.g. 6 for WIFI-6.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub generation: Option<u32>,
     /// WIFI signal in dBm
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub signal: Option<i8>,
     /// Receive bitrate in 100kb/s.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rx_bitrate: Option<u32>,
     /// Receive channel width in MHz
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub rx_width: Option<u32>,
     /// Transmit bitrate in 100kb/s.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tx_bitrate: Option<u32>,
     /// Transmit channel width in MHz
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tx_width: Option<u32>,
 }
 

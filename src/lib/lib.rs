@@ -43,6 +43,6 @@ pub use crate::query::{
     MacVtapMode, Mptcp, MptcpAddress, MptcpAddressFlag, MultipathRoute,
     MultipathRouteFlags, Route, RouteProtocol, RouteRule, RouteScope,
     RouteType, RuleAction, SriovInfo, TunInfo, TunMode, VethInfo, VfInfo,
-    VfLinkState, VfState, VlanInfo, VlanProtocol, VrfInfo, VrfSubordinateInfo,
-    VxlanInfo, WifiInfo, XfrmInfo,
+    VfLinkState, VfState, VlanInfo, VlanProtocol, VlanQosMapping, VrfInfo,
+    VrfSubordinateInfo, VxlanInfo, WifiInfo, XfrmInfo,
 };
