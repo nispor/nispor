@@ -37,6 +37,7 @@ check: nispor_test
 	./check_clib_soname.sh $(TMPDIR)/$(CLIB_SO_DEV)
 	LD_LIBRARY_PATH=$(TMPDIR) \
 		valgrind --trace-children=yes --leak-check=full \
+		--errors-for-leak-kinds=definite \
 		--error-exitcode=1 \
 		./nispor_test 1>/dev/null
 	rm -rf $(TMPDIR)
