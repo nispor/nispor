@@ -43,6 +43,7 @@ struct CliIfaceBrief {
     index: u32,
     name: String,
     iface_type: IfaceType,
+    driver: Option<String>,
     controller: Option<String>,
     link_info: String,
     state: IfaceState,
@@ -69,6 +70,10 @@ impl CliIfaceBrief {
                 brief.state,
                 brief.mtu,
             ));
+            if let Some(driver) = brief.driver.as_deref() {
+                ret.push(format!("{}driver {}", INDENT, driver));
+            }
+
             let mut link_string =
                 format!("{}link {}", INDENT, brief.iface_type);
 
@@ -161,6 +166,7 @@ impl CliIfaceBrief {
         for iface in netstate.ifaces.values() {
             ret.push(CliIfaceBrief {
                 index: iface.index,
+                driver: iface.driver.clone(),
                 iface_type: iface.iface_type.clone(),
                 controller: iface.controller.clone(),
                 link_info: get_link_info(iface),
