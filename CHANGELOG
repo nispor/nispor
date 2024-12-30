@@ -1,4 +1,17 @@
 # Changelog
+## [1.2.22] - 2024-12-30
+### Breaking changes
+ - N/A
+
+### New features
+ - vlan: Add query support of QoS mapping. (7917fd0)
+ - sriov: expose sriov_drivers_autoporbe. (8e4eff4)
+ - sriov: export numvfs as reported in sysfs. (93cc21a)
+
+### Bug fixes
+ - cli: Add driver information in brief output. (a198e44)
+ - wifi: Skip serialize for None value. (81fe152)
+
 ## [1.2.21] - 2024-09-25
 ### Breaking changes
  - N/A
