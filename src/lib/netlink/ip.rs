@@ -111,11 +111,7 @@ fn parse_ipv6_nlas(
             addr.preferred_lft = left_time_to_string(v.ifa_preferred);
             addr.valid_lft = left_time_to_string(v.ifa_valid);
         } else if let AddressAttribute::Flags(flags) = nla {
-            addr.flags = flags
-                .as_slice()
-                .iter()
-                .map(|f| Ipv6AddrFlag::from(*f))
-                .collect();
+            addr.flags = flags.iter().map(Ipv6AddrFlag::from).collect();
         }
     }
 

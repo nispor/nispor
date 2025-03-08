@@ -155,22 +155,22 @@ pub enum Ipv6AddrFlag {
     Other(u32),
 }
 
-impl From<address::AddressFlag> for Ipv6AddrFlag {
-    fn from(d: address::AddressFlag) -> Self {
+impl From<address::AddressFlags> for Ipv6AddrFlag {
+    fn from(d: address::AddressFlags) -> Self {
         match d {
-            address::AddressFlag::Secondary => Self::Secondary,
-            address::AddressFlag::Nodad => Self::Nodad,
-            address::AddressFlag::Optimistic => Self::Optimistic,
-            address::AddressFlag::Dadfailed => Self::Dadfailed,
-            address::AddressFlag::Homeaddress => Self::Homeaddress,
-            address::AddressFlag::Deprecated => Self::Deprecated,
-            address::AddressFlag::Tentative => Self::Tentative,
-            address::AddressFlag::Permanent => Self::Permanent,
-            address::AddressFlag::Managetempaddr => Self::Managetempaddr,
-            address::AddressFlag::Noprefixroute => Self::Noprefixroute,
-            address::AddressFlag::Mcautojoin => Self::Mcautojoin,
-            address::AddressFlag::StablePrivacy => Self::StablePrivacy,
-            _ => Self::Other(d.into()),
+            address::AddressFlags::Secondary => Self::Secondary,
+            address::AddressFlags::Nodad => Self::Nodad,
+            address::AddressFlags::Optimistic => Self::Optimistic,
+            address::AddressFlags::Dadfailed => Self::Dadfailed,
+            address::AddressFlags::Homeaddress => Self::Homeaddress,
+            address::AddressFlags::Deprecated => Self::Deprecated,
+            address::AddressFlags::Tentative => Self::Tentative,
+            address::AddressFlags::Permanent => Self::Permanent,
+            address::AddressFlags::Managetempaddr => Self::Managetempaddr,
+            address::AddressFlags::Noprefixroute => Self::Noprefixroute,
+            address::AddressFlags::Mcautojoin => Self::Mcautojoin,
+            address::AddressFlags::StablePrivacy => Self::StablePrivacy,
+            _ => Self::Other(d.bits()),
         }
     }
 }
