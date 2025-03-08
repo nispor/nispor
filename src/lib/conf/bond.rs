@@ -17,10 +17,12 @@ impl BondConf {
         handle: &Handle,
         name: &str,
     ) -> Result<(), NisporError> {
-        let mode: u8 = self.mode.unwrap_or_default().into();
-        let req = handle
-            .link()
-            .add(LinkBond::new(name).mode(mode.into()).up().build());
+        let req = handle.link().add(
+            LinkBond::new(name)
+                .mode(self.mode.unwrap_or_default().into())
+                .up()
+                .build(),
+        );
 
         match req.execute().await {
             Ok(_) => Ok(()),

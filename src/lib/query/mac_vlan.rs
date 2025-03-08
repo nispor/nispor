@@ -10,12 +10,6 @@ use crate::{
     Iface, IfaceType, NisporError,
 };
 
-const MACVLAN_MODE_PRIVATE: u32 = 1;
-const MACVLAN_MODE_VEPA: u32 = 2;
-const MACVLAN_MODE_BRIDGE: u32 = 4;
-const MACVLAN_MODE_PASSTHRU: u32 = 8;
-const MACVLAN_MODE_SOURCE: u32 = 16;
-
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
@@ -41,15 +35,17 @@ impl Default for MacVlanMode {
     }
 }
 
-impl From<u32> for MacVlanMode {
-    fn from(d: u32) -> Self {
+impl From<netlink_packet_route::link::MacVlanMode> for MacVlanMode {
+    fn from(d: netlink_packet_route::link::MacVlanMode) -> Self {
         match d {
-            MACVLAN_MODE_PRIVATE => Self::Private,
-            MACVLAN_MODE_VEPA => Self::Vepa,
-            MACVLAN_MODE_BRIDGE => Self::Bridge,
-            MACVLAN_MODE_PASSTHRU => Self::PassThrough,
-            MACVLAN_MODE_SOURCE => Self::Source,
-            _ => Self::Other(d),
+            netlink_packet_route::link::MacVlanMode::Private => Self::Private,
+            netlink_packet_route::link::MacVlanMode::Vepa => Self::Vepa,
+            netlink_packet_route::link::MacVlanMode::Bridge => Self::Bridge,
+            netlink_packet_route::link::MacVlanMode::Passthrough => {
+                Self::PassThrough
+            }
+            netlink_packet_route::link::MacVlanMode::Source => Self::Source,
+            _ => Self::Other(d.into()),
         }
     }
 }

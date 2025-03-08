@@ -785,7 +785,7 @@ impl From<rt::RouteFlags> for RouteFlag {
             rt::RouteFlags::RtOffload => Self::RtOffload,
             rt::RouteFlags::RtTrap => Self::RtTrap,
             rt::RouteFlags::OffloadFailed => Self::OffloadFailed,
-            _ => Self::Other(d.into()),
+            _ => Self::Other(d.bits()),
         }
     }
 }

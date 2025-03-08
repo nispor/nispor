@@ -2,16 +2,9 @@
 
 use crate::BridgeVlanEntry;
 use crate::NisporError;
-use netlink_packet_route::link::{AfSpecBridge, BridgeVlanInfo};
-
-// VLAN is PVID, ingress untagged;
-const BRIDGE_VLAN_INFO_PVID: u16 = 1 << 1;
-// VLAN egresses untagged;
-const BRIDGE_VLAN_INFO_UNTAGGED: u16 = 1 << 2;
-// VLAN is start of vlan range;
-const BRIDGE_VLAN_INFO_RANGE_BEGIN: u16 = 1 << 3;
-// VLAN is end of vlan range;
-const BRIDGE_VLAN_INFO_RANGE_END: u16 = 1 << 4;
+use netlink_packet_route::link::{
+    AfSpecBridge, BridgeVlanInfo, BridgeVlanInfoFlags,
+};
 
 // TODO: Dup with parse_bond_info
 pub(crate) fn parse_af_spec_bridge_info(
@@ -50,10 +43,11 @@ fn parse_vlan_info(
         vid: nla.vid,
         ..Default::default()
     };
-    entry.is_pvid = (nla.flags & BRIDGE_VLAN_INFO_PVID) > 0;
-    entry.is_egress_untagged = (nla.flags & BRIDGE_VLAN_INFO_UNTAGGED) > 0;
-    entry.is_range_start = (nla.flags & BRIDGE_VLAN_INFO_RANGE_BEGIN) > 0;
-    entry.is_range_end = (nla.flags & BRIDGE_VLAN_INFO_RANGE_END) > 0;
+    entry.is_pvid = nla.flags.contains(BridgeVlanInfoFlags::Pvid);
+    entry.is_egress_untagged =
+        nla.flags.contains(BridgeVlanInfoFlags::Untagged);
+    entry.is_range_start = nla.flags.contains(BridgeVlanInfoFlags::RangeBegin);
+    entry.is_range_end = nla.flags.contains(BridgeVlanInfoFlags::RangeEnd);
     Ok(Some(entry))
 }
 

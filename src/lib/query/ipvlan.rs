@@ -2,17 +2,10 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::link::{InfoData, InfoIpVlan};
+use netlink_packet_route::link::{InfoData, InfoIpVlan, IpVlanFlags};
 use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceType};
-
-const IPVLAN_MODE_L2: u16 = 0;
-const IPVLAN_MODE_L3: u16 = 1;
-const IPVLAN_MODE_L3S: u16 = 2;
-
-const IPVLAN_F_PRIVATE: u16 = 0x01;
-const IPVLAN_F_VEPA: u16 = 0x02;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
@@ -30,13 +23,13 @@ impl Default for IpVlanMode {
     }
 }
 
-impl From<u16> for IpVlanMode {
-    fn from(d: u16) -> Self {
+impl From<netlink_packet_route::link::IpVlanMode> for IpVlanMode {
+    fn from(d: netlink_packet_route::link::IpVlanMode) -> Self {
         match d {
-            IPVLAN_MODE_L2 => Self::L2,
-            IPVLAN_MODE_L3 => Self::L3,
-            IPVLAN_MODE_L3S => Self::L3S,
-            _ => Self::Other(d),
+            netlink_packet_route::link::IpVlanMode::L2 => Self::L2,
+            netlink_packet_route::link::IpVlanMode::L3 => Self::L3,
+            netlink_packet_route::link::IpVlanMode::L3S => Self::L3S,
+            _ => Self::Other(d.into()),
         }
     }
 }
@@ -48,6 +41,16 @@ pub enum IpVlanFlag {
     Private,
     Vepa,
     Other(u16),
+}
+
+impl From<IpVlanFlags> for IpVlanFlag {
+    fn from(d: IpVlanFlags) -> Self {
+        match d {
+            IpVlanFlags::Private => Self::Private,
+            IpVlanFlags::Vepa => Self::Vepa,
+            _ => Self::Other(d.bits()),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -64,26 +67,15 @@ pub(crate) fn get_ip_vlan_info(data: &InfoData) -> Option<IpVlanInfo> {
         for info in infos {
             match *info {
                 InfoIpVlan::Mode(d) => ipv_info.mode = d.into(),
-                InfoIpVlan::Flags(d) => ipv_info.flags = ipvlan_flag_to_enum(d),
+                InfoIpVlan::Flags(d) => {
+                    ipv_info.flags = d.iter().map(IpVlanFlag::from).collect()
+                }
                 _ => log::debug!("Unkwnown IP VLAN info {:?}", info),
             }
         }
         return Some(ipv_info);
     }
     None
-}
-
-fn ipvlan_flag_to_enum(flags: u16) -> Vec<IpVlanFlag> {
-    let mut flags_vec = Vec::new();
-
-    if (IPVLAN_F_PRIVATE & flags) == IPVLAN_F_PRIVATE {
-        flags_vec.push(IpVlanFlag::Private);
-    }
-    if (IPVLAN_F_VEPA & flags) == IPVLAN_F_VEPA {
-        flags_vec.push(IpVlanFlag::Vepa);
-    }
-
-    flags_vec
 }
 
 pub(crate) fn ip_vlan_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {

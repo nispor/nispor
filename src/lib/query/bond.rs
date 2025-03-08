@@ -9,14 +9,6 @@ use serde::{Deserialize, Serialize};
 use super::super::mac::parse_as_mac;
 use crate::{ControllerType, Iface, IfaceType, NisporError};
 
-const BOND_MODE_ROUNDROBIN: u8 = 0;
-const BOND_MODE_ACTIVEBACKUP: u8 = 1;
-const BOND_MODE_XOR: u8 = 2;
-const BOND_MODE_BROADCAST: u8 = 3;
-const BOND_MODE_8023AD: u8 = 4;
-const BOND_MODE_TLB: u8 = 5;
-const BOND_MODE_ALB: u8 = 6;
-
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
@@ -45,38 +37,66 @@ impl Default for BondMode {
     }
 }
 
-impl From<u8> for BondMode {
-    fn from(d: u8) -> Self {
+impl From<netlink_packet_route::link::BondMode> for BondMode {
+    fn from(d: netlink_packet_route::link::BondMode) -> Self {
         match d {
-            BOND_MODE_ROUNDROBIN => Self::BalanceRoundRobin,
-            BOND_MODE_ACTIVEBACKUP => Self::ActiveBackup,
-            BOND_MODE_XOR => Self::BalanceXor,
-            BOND_MODE_BROADCAST => Self::Broadcast,
-            BOND_MODE_8023AD => Self::Ieee8021AD,
-            BOND_MODE_TLB => Self::BalanceTlb,
-            BOND_MODE_ALB => Self::BalanceAlb,
-            _ => Self::Other(d),
+            netlink_packet_route::link::BondMode::BalanceRr => {
+                Self::BalanceRoundRobin
+            }
+            netlink_packet_route::link::BondMode::ActiveBackup => {
+                Self::ActiveBackup
+            }
+            netlink_packet_route::link::BondMode::BalanceXor => {
+                Self::BalanceXor
+            }
+            netlink_packet_route::link::BondMode::Broadcast => Self::Broadcast,
+            netlink_packet_route::link::BondMode::Ieee8023Ad => {
+                Self::Ieee8021AD
+            }
+            netlink_packet_route::link::BondMode::BalanceTlb => {
+                Self::BalanceTlb
+            }
+            netlink_packet_route::link::BondMode::BalanceAlb => {
+                Self::BalanceAlb
+            }
+            _ => Self::Other(d.into()),
         }
     }
 }
 
-impl From<BondMode> for u8 {
-    fn from(v: BondMode) -> u8 {
+impl From<BondMode> for netlink_packet_route::link::BondMode {
+    fn from(v: BondMode) -> netlink_packet_route::link::BondMode {
         match v {
-            BondMode::BalanceRoundRobin => BOND_MODE_ROUNDROBIN,
-            BondMode::ActiveBackup => BOND_MODE_ACTIVEBACKUP,
-            BondMode::BalanceXor => BOND_MODE_XOR,
-            BondMode::Broadcast => BOND_MODE_BROADCAST,
-            BondMode::Ieee8021AD => BOND_MODE_8023AD,
-            BondMode::BalanceTlb => BOND_MODE_TLB,
-            BondMode::BalanceAlb => BOND_MODE_ALB,
-            BondMode::Other(d) => d,
+            BondMode::BalanceRoundRobin => {
+                netlink_packet_route::link::BondMode::BalanceRr
+            }
+            BondMode::ActiveBackup => {
+                netlink_packet_route::link::BondMode::ActiveBackup
+            }
+            BondMode::BalanceXor => {
+                netlink_packet_route::link::BondMode::BalanceXor
+            }
+            BondMode::Broadcast => {
+                netlink_packet_route::link::BondMode::Broadcast
+            }
+            BondMode::Ieee8021AD => {
+                netlink_packet_route::link::BondMode::Ieee8023Ad
+            }
+            BondMode::BalanceTlb => {
+                netlink_packet_route::link::BondMode::BalanceTlb
+            }
+            BondMode::BalanceAlb => {
+                netlink_packet_route::link::BondMode::BalanceAlb
+            }
+            BondMode::Other(d) => {
+                netlink_packet_route::link::BondMode::Other(d)
+            }
             BondMode::Unknown => {
                 log::warn!(
                     "Treating BondMode::Unknown as \
                     BondMode::BalanceRoundRobin"
                 );
-                BOND_MODE_ROUNDROBIN
+                netlink_packet_route::link::BondMode::BalanceRr
             }
         }
     }
@@ -120,15 +140,6 @@ impl From<u32> for BondModeArpAllTargets {
     }
 }
 
-const BOND_ARP_VALIDATE_NONE: u32 = 0;
-const BOND_ARP_VALIDATE_ACTIVE: u32 = 1 << BOND_STATE_ACTIVE as u32;
-const BOND_ARP_VALIDATE_BACKUP: u32 = 1 << BOND_STATE_BACKUP as u32;
-const BOND_ARP_VALIDATE_ALL: u32 =
-    BOND_ARP_VALIDATE_ACTIVE | BOND_ARP_VALIDATE_BACKUP;
-const BOND_ARP_FILTER: u32 = BOND_ARP_VALIDATE_ALL + 1;
-const BOND_ARP_FILTER_ACTIVE: u32 = BOND_ARP_VALIDATE_ACTIVE | BOND_ARP_FILTER;
-const BOND_ARP_FILTER_BACKUP: u32 = BOND_ARP_VALIDATE_BACKUP | BOND_ARP_FILTER;
-
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
@@ -145,17 +156,21 @@ pub enum BondArpValidate {
     Other(u32),
 }
 
-impl From<u32> for BondArpValidate {
-    fn from(d: u32) -> Self {
+impl From<netlink_packet_route::link::BondArpValidate> for BondArpValidate {
+    fn from(d: netlink_packet_route::link::BondArpValidate) -> Self {
         match d {
-            BOND_ARP_VALIDATE_NONE => Self::None,
-            BOND_ARP_VALIDATE_ACTIVE => Self::Active,
-            BOND_ARP_VALIDATE_BACKUP => Self::Backup,
-            BOND_ARP_VALIDATE_ALL => Self::All,
-            BOND_ARP_FILTER => Self::Filter,
-            BOND_ARP_FILTER_ACTIVE => Self::FilterActive,
-            BOND_ARP_FILTER_BACKUP => Self::FilterBackup,
-            _ => Self::Other(d),
+            netlink_packet_route::link::BondArpValidate::None => Self::None,
+            netlink_packet_route::link::BondArpValidate::Active => Self::Active,
+            netlink_packet_route::link::BondArpValidate::Backup => Self::Backup,
+            netlink_packet_route::link::BondArpValidate::All => Self::All,
+            netlink_packet_route::link::BondArpValidate::Filter => Self::Filter,
+            netlink_packet_route::link::BondArpValidate::FilterActive => {
+                Self::FilterActive
+            }
+            netlink_packet_route::link::BondArpValidate::FilterBackup => {
+                Self::FilterBackup
+            }
+            _ => Self::Other(d.into()),
         }
     }
 }
