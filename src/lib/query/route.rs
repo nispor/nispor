@@ -416,17 +416,17 @@ pub enum MultipathRouteFlags {
     Other(u8),
 }
 
-impl From<rt::RouteNextHopFlag> for MultipathRouteFlags {
-    fn from(d: rt::RouteNextHopFlag) -> Self {
+impl From<rt::RouteNextHopFlags> for MultipathRouteFlags {
+    fn from(d: rt::RouteNextHopFlags) -> Self {
         match d {
-            rt::RouteNextHopFlag::Dead => Self::Dead,
-            rt::RouteNextHopFlag::Pervasive => Self::Pervasive,
-            rt::RouteNextHopFlag::Onlink => Self::OnLink,
-            rt::RouteNextHopFlag::Offload => Self::Offload,
-            rt::RouteNextHopFlag::Linkdown => Self::LinkDown,
-            rt::RouteNextHopFlag::Unresolved => Self::Unresolved,
-            rt::RouteNextHopFlag::Trap => Self::Trap,
-            _ => Self::Other(u8::from(d)),
+            rt::RouteNextHopFlags::Dead => Self::Dead,
+            rt::RouteNextHopFlags::Pervasive => Self::Pervasive,
+            rt::RouteNextHopFlags::Onlink => Self::OnLink,
+            rt::RouteNextHopFlags::Offload => Self::Offload,
+            rt::RouteNextHopFlags::Linkdown => Self::LinkDown,
+            rt::RouteNextHopFlags::Unresolved => Self::Unresolved,
+            rt::RouteNextHopFlags::Trap => Self::Trap,
+            _ => Self::Other(d.bits()),
         }
     }
 }
@@ -501,12 +501,7 @@ fn get_route(
     rt.tos = header.tos;
     rt.protocol = header.protocol.into();
     rt.scope = header.scope.into();
-    rt.flags = header
-        .flags
-        .as_slice()
-        .iter()
-        .map(|f| RouteFlag::from(*f))
-        .collect();
+    rt.flags = header.flags.iter().map(RouteFlag::from).collect();
     rt.route_type = header.kind.into();
     let _family = &rt.address_family;
     for nla in &route_msg.attributes {
@@ -669,9 +664,8 @@ fn get_route(
                     };
                     mp_rt.flags = hop
                         .flags
-                        .as_slice()
                         .iter()
-                        .map(|f| MultipathRouteFlags::from(*f))
+                        .map(MultipathRouteFlags::from)
                         .collect();
                     // +1 because ip route does so
                     mp_rt.weight = u16::from(hop.hops) + 1;
@@ -765,25 +759,25 @@ pub enum RouteFlag {
     Other(u32),
 }
 
-impl From<rt::RouteFlag> for RouteFlag {
-    fn from(d: rt::RouteFlag) -> Self {
+impl From<rt::RouteFlags> for RouteFlag {
+    fn from(d: rt::RouteFlags) -> Self {
         match d {
-            rt::RouteFlag::Dead => Self::Dead,
-            rt::RouteFlag::Pervasive => Self::Pervasive,
-            rt::RouteFlag::Onlink => Self::Onlink,
-            rt::RouteFlag::Offload => Self::Offload,
-            rt::RouteFlag::Linkdown => Self::Linkdown,
-            rt::RouteFlag::Unresolved => Self::Unresolved,
-            rt::RouteFlag::Trap => Self::Trap,
-            rt::RouteFlag::Notify => Self::Notify,
-            rt::RouteFlag::Cloned => Self::Cloned,
-            rt::RouteFlag::Equalize => Self::Equalize,
-            rt::RouteFlag::Prefix => Self::Prefix,
-            rt::RouteFlag::LookupTable => Self::LookupTable,
-            rt::RouteFlag::FibMatch => Self::FibMatch,
-            rt::RouteFlag::RtOffload => Self::RtOffload,
-            rt::RouteFlag::RtTrap => Self::RtTrap,
-            rt::RouteFlag::OffloadFailed => Self::OffloadFailed,
+            rt::RouteFlags::Dead => Self::Dead,
+            rt::RouteFlags::Pervasive => Self::Pervasive,
+            rt::RouteFlags::Onlink => Self::Onlink,
+            rt::RouteFlags::Offload => Self::Offload,
+            rt::RouteFlags::Linkdown => Self::Linkdown,
+            rt::RouteFlags::Unresolved => Self::Unresolved,
+            rt::RouteFlags::Trap => Self::Trap,
+            rt::RouteFlags::Notify => Self::Notify,
+            rt::RouteFlags::Cloned => Self::Cloned,
+            rt::RouteFlags::Equalize => Self::Equalize,
+            rt::RouteFlags::Prefix => Self::Prefix,
+            rt::RouteFlags::LookupTable => Self::LookupTable,
+            rt::RouteFlags::FibMatch => Self::FibMatch,
+            rt::RouteFlags::RtOffload => Self::RtOffload,
+            rt::RouteFlags::RtTrap => Self::RtTrap,
+            rt::RouteFlags::OffloadFailed => Self::OffloadFailed,
             _ => Self::Other(d.into()),
         }
     }

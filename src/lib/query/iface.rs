@@ -179,26 +179,26 @@ pub enum IfaceFlag {
     Unknown,
 }
 
-impl From<link::LinkFlag> for IfaceFlag {
-    fn from(d: link::LinkFlag) -> IfaceFlag {
+impl From<link::LinkFlags> for IfaceFlag {
+    fn from(d: link::LinkFlags) -> IfaceFlag {
         match d {
-            link::LinkFlag::Allmulti => Self::AllMulti,
-            link::LinkFlag::Automedia => Self::AutoMedia,
-            link::LinkFlag::Broadcast => Self::Broadcast,
-            link::LinkFlag::Debug => Self::Debug,
-            link::LinkFlag::Dormant => Self::Dormant,
-            link::LinkFlag::Loopback => Self::Loopback,
-            link::LinkFlag::LowerUp => Self::LowerUp,
-            link::LinkFlag::Controller => Self::Controller,
-            link::LinkFlag::Multicast => Self::Multicast,
-            link::LinkFlag::Noarp => Self::NoArp,
-            link::LinkFlag::Pointopoint => Self::PoinToPoint,
-            link::LinkFlag::Portsel => Self::Portsel,
-            link::LinkFlag::Promisc => Self::Promisc,
-            link::LinkFlag::Running => Self::Running,
-            link::LinkFlag::Port => Self::Subordinate,
-            link::LinkFlag::Up => Self::Up,
-            _ => Self::Other(d.into()),
+            link::LinkFlags::Allmulti => Self::AllMulti,
+            link::LinkFlags::Automedia => Self::AutoMedia,
+            link::LinkFlags::Broadcast => Self::Broadcast,
+            link::LinkFlags::Debug => Self::Debug,
+            link::LinkFlags::Dormant => Self::Dormant,
+            link::LinkFlags::Loopback => Self::Loopback,
+            link::LinkFlags::LowerUp => Self::LowerUp,
+            link::LinkFlags::Controller => Self::Controller,
+            link::LinkFlags::Multicast => Self::Multicast,
+            link::LinkFlags::Noarp => Self::NoArp,
+            link::LinkFlags::Pointopoint => Self::PoinToPoint,
+            link::LinkFlags::Portsel => Self::Portsel,
+            link::LinkFlags::Promisc => Self::Promisc,
+            link::LinkFlags::Running => Self::Running,
+            link::LinkFlags::Port => Self::Subordinate,
+            link::LinkFlags::Up => Self::Up,
+            _ => Self::Other(d.bits()),
         }
     }
 }
@@ -557,13 +557,8 @@ pub(crate) fn parse_nl_msg_to_iface(
             _ => (),
         }
     }
-    iface_state.flags = nl_msg
-        .header
-        .flags
-        .as_slice()
-        .iter()
-        .map(|f| IfaceFlag::from(*f))
-        .collect();
+    iface_state.flags =
+        nl_msg.header.flags.iter().map(IfaceFlag::from).collect();
     Ok(Some(iface_state))
 }
 
