@@ -5,10 +5,7 @@ use std::collections::HashMap;
 use netlink_packet_route::link::{InfoData, InfoVxlan};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    netlink::{parse_as_ipv4, parse_as_ipv6},
-    Iface, IfaceType, NisporError,
-};
+use crate::{Iface, IfaceType, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
@@ -52,15 +49,15 @@ pub(crate) fn get_vxlan_info(
             if let InfoVxlan::Id(d) = *info {
                 vxlan_info.vxlan_id = d;
             } else if let InfoVxlan::Group(d) = info {
-                vxlan_info.remote = parse_as_ipv4(d)?.to_string();
+                vxlan_info.remote = d.to_string();
             } else if let InfoVxlan::Group6(d) = info {
-                vxlan_info.remote = parse_as_ipv6(d)?.to_string();
+                vxlan_info.remote = d.to_string();
             } else if let InfoVxlan::Link(d) = *info {
                 vxlan_info.base_iface = format!("{d}");
             } else if let InfoVxlan::Local(d) = info {
-                vxlan_info.local = parse_as_ipv4(d)?.to_string();
+                vxlan_info.local = d.to_string();
             } else if let InfoVxlan::Local6(d) = info {
-                vxlan_info.local = parse_as_ipv6(d)?.to_string();
+                vxlan_info.local = d.to_string();
             } else if let InfoVxlan::Tos(d) = *info {
                 vxlan_info.tos = d;
             } else if let InfoVxlan::Ttl(d) = *info {
