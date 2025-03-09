@@ -24,7 +24,7 @@ pub(crate) fn parse_bridge_info(
         } else if let InfoBridge::Priority(d) = info {
             bridge_info.priority = Some(*d);
         } else if let InfoBridge::VlanFiltering(d) = info {
-            bridge_info.vlan_filtering = Some(*d > 0);
+            bridge_info.vlan_filtering = Some(*d);
         } else if let InfoBridge::VlanProtocol(d) = info {
             bridge_info.vlan_protocol = Some((*d).into());
         } else if let InfoBridge::GroupFwdMask(d) = info {
