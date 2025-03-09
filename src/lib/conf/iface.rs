@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use rtnetlink::LinkUnspec;
 use serde::{Deserialize, Serialize};
 
 use super::{super::mac::mac_str_to_raw, inter_ifaces::change_ifaces};
@@ -51,9 +52,17 @@ pub(crate) async fn change_iface_state(
     up: bool,
 ) -> Result<(), NisporError> {
     if up {
-        handle.link().set(index).up().execute().await?;
+        handle
+            .link()
+            .set(LinkUnspec::new_with_index(index).up().build())
+            .execute()
+            .await?;
     } else {
-        handle.link().set(index).down().execute().await?;
+        handle
+            .link()
+            .set(LinkUnspec::new_with_index(index).down().build())
+            .execute()
+            .await?;
     }
     Ok(())
 }
@@ -66,8 +75,11 @@ pub(crate) async fn change_iface_mac(
     change_iface_state(handle, index, false).await?;
     handle
         .link()
-        .set(index)
-        .address(mac_str_to_raw(mac_address)?)
+        .set(
+            LinkUnspec::new_with_index(index)
+                .address(mac_str_to_raw(mac_address)?)
+                .build(),
+        )
         .execute()
         .await?;
     Ok(())

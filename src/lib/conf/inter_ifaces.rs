@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use rtnetlink::new_connection;
+use rtnetlink::{new_connection, LinkUnspec};
 
 use super::{
     iface::{change_iface_mac, change_iface_state},
@@ -154,8 +154,12 @@ async fn change_ifaces_controller(
                         Some(ctrl_iface) => {
                             handle
                                 .link()
-                                .set(cur_iface.index)
-                                .controller(ctrl_iface.index)
+                                .set(
+                                    LinkUnspec::new_with_index(cur_iface.index)
+                                        .controller(ctrl_iface.index)
+                                        .down()
+                                        .build(),
+                                )
                                 .execute()
                                 .await?;
                         }
@@ -163,8 +167,11 @@ async fn change_ifaces_controller(
                     None => {
                         handle
                             .link()
-                            .set(cur_iface.index)
-                            .nocontroller()
+                            .set(
+                                LinkUnspec::new_with_index(cur_iface.index)
+                                    .nocontroller()
+                                    .build(),
+                            )
                             .execute()
                             .await?;
                     }

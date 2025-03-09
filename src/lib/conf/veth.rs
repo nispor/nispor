@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use rtnetlink::Handle;
+use rtnetlink::{Handle, LinkUnspec, LinkVeth};
 
 use crate::{NisporError, VethInfo};
 
@@ -12,18 +12,30 @@ impl VethConf {
         handle: &Handle,
         name: &str,
     ) -> Result<(), NisporError> {
-        match handle
+        if let Err(e) = handle
             .link()
-            .add()
-            .veth(name.to_string(), self.peer.clone())
+            .add(LinkVeth::new(name, self.peer.as_str()).up().build())
             .execute()
             .await
         {
-            Ok(_) => Ok(()),
-            Err(e) => Err(NisporError::bug(format!(
+            return Err(NisporError::bug(format!(
                 "Failed to create new veth pair '{}' '{}': {}",
                 &name, &self.peer, e
-            ))),
+            )));
         }
+
+        if let Err(e) = handle
+            .link()
+            .set(LinkUnspec::new_with_name(self.peer.as_str()).up().build())
+            .execute()
+            .await
+        {
+            return Err(NisporError::bug(format!(
+                "Failed to bring veth pair up '{}' '{}': {}",
+                &name, &self.peer, e
+            )));
+        }
+
+        Ok(())
     }
 }

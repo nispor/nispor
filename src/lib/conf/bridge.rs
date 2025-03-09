@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use rtnetlink::Handle;
+use rtnetlink::{Handle, LinkBridge};
 use serde::{Deserialize, Serialize};
 
 use crate::NisporError;
@@ -14,7 +14,12 @@ impl BridgeConf {
         handle: &Handle,
         name: &str,
     ) -> Result<(), NisporError> {
-        match handle.link().add().bridge(name.to_string()).execute().await {
+        match handle
+            .link()
+            .add(LinkBridge::new(name).up().build())
+            .execute()
+            .await
+        {
             Ok(_) => Ok(()),
             Err(e) => Err(NisporError::bug(format!(
                 "Failed to create new bridge '{}': {}",
