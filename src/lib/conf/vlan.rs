@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use rtnetlink::Handle;
+use rtnetlink::{Handle, LinkVlan};
 use serde::{Deserialize, Serialize};
 
 use crate::NisporError;
@@ -21,8 +21,7 @@ impl VlanConf {
     ) -> Result<(), NisporError> {
         match handle
             .link()
-            .add()
-            .vlan(name.to_string(), base_iface_index, vlan_id)
+            .add(LinkVlan::new(name, base_iface_index, vlan_id).up().build())
             .execute()
             .await
         {

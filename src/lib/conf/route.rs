@@ -109,9 +109,7 @@ async fn apply_route_conf(
             return Err(e.into());
         }
     } else {
-        let mut req = handle.route().add();
-        req.message_mut().header = nl_msg.header;
-        req.message_mut().attributes = nl_msg.attributes;
+        let req = handle.route().add(nl_msg.clone());
         if let Err(e) = req.execute().await {
             if let rtnetlink::Error::NetlinkError(ref e) = e {
                 if e.raw_code() == -libc::EEXIST {

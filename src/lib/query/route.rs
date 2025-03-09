@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    net::{Ipv4Addr, Ipv6Addr},
+};
 
 use futures::stream::TryStreamExt;
 use netlink_packet_route::route::{
@@ -8,7 +11,7 @@ use netlink_packet_route::route::{
     RouteVia,
 };
 use netlink_sys::AsyncSocket;
-use rtnetlink::{new_connection, IpVersion};
+use rtnetlink::{new_connection, IpVersion, RouteMessageBuilder};
 use serde::{Deserialize, Serialize};
 
 use super::super::filter::{apply_kernel_route_filter, should_drop_by_filter};
@@ -462,7 +465,11 @@ pub(crate) async fn get_routes(
     tokio::spawn(connection);
 
     for ip_family in [IpVersion::V6, IpVersion::V4] {
-        let mut rt_handle = handle.route().get(ip_family);
+        let rt_msg = match ip_family {
+            IpVersion::V4 => RouteMessageBuilder::<Ipv4Addr>::new().build(),
+            IpVersion::V6 => RouteMessageBuilder::<Ipv6Addr>::new().build(),
+        };
+        let mut rt_handle = handle.route().get(rt_msg);
         if let Some(filter) = filter {
             if has_kernel_filter {
                 apply_kernel_route_filter(
