@@ -17,10 +17,10 @@ fn test_iface_info_loopback() {
     assert_eq!(
         iface.flags,
         &[
-            crate::IfaceFlag::Loopback,
-            crate::IfaceFlag::LowerUp,
-            crate::IfaceFlag::Running,
             crate::IfaceFlag::Up,
+            crate::IfaceFlag::Loopback,
+            crate::IfaceFlag::Running,
+            crate::IfaceFlag::LowerUp,
         ]
     );
 }
