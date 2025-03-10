@@ -19,5 +19,5 @@ doc = false
 
 [dependencies]
 nispor = { path = "../lib", version="1.0" }
-libc = "0.2.74"
+libc = "0.2.155"
 serde_json = "1.0"
