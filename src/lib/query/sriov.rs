@@ -197,10 +197,7 @@ fn is_drivers_autoprobe(pf_name: &str) -> Option<bool> {
 fn get_num_vfs(pf_name: &str) -> Option<u32> {
     let sysfs_path = format!("/sys/class/net/{pf_name}/device/sriov_numvfs");
     match std::fs::read_to_string(sysfs_path) {
-        Ok(s) => match s.trim().parse::<u32>() {
-            Ok(u) => Some(u),
-            _ => None,
-        },
+        Ok(s) => s.trim().parse::<u32>().ok(),
         _ => None,
     }
 }
