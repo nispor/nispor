@@ -2,13 +2,10 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::link::{InfoData, InfoVrf};
-use netlink_packet_utils::nla::NlaBuffer;
+use netlink_packet_route::link::{InfoData, InfoVrf, InfoVrfPort};
 use serde::{Deserialize, Serialize};
 
-use crate::{netlink::parse_as_u32, ControllerType, Iface, NisporError};
-
-const IFLA_VRF_PORT_TABLE: u16 = 1;
+use crate::{ControllerType, Iface, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
@@ -40,16 +37,19 @@ pub(crate) fn get_vrf_info(data: &InfoData) -> Option<VrfInfo> {
 }
 
 pub(crate) fn get_vrf_subordinate_info(
-    data: &[u8],
-) -> Result<Option<VrfSubordinateInfo>, NisporError> {
-    let nla_buff = NlaBuffer::new(data);
-    if nla_buff.kind() == IFLA_VRF_PORT_TABLE {
-        Ok(Some(VrfSubordinateInfo {
-            table_id: parse_as_u32(nla_buff.value())?,
-        }))
-    } else {
-        Ok(None)
+    nlas: &[InfoVrfPort],
+) -> Result<VrfSubordinateInfo, NisporError> {
+    let mut ret = VrfSubordinateInfo::default();
+
+    for nla in nlas {
+        match nla {
+            InfoVrfPort::TableId(d) => ret.table_id = *d,
+            _ => {
+                log::info!("Unknown VRF port info {:?}", nla);
+            }
+        }
     }
+    Ok(ret)
 }
 
 pub(crate) fn vrf_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
