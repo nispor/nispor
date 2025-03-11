@@ -34,7 +34,7 @@ pub use crate::query::{
     BondSubordinateState, BondXmitHashPolicy, BridgeInfo, BridgePortInfo,
     BridgePortMulticastRouterType, BridgePortStpState, BridgeStpState,
     BridgeVlanEntry, BridgeVlanProtocol, ControllerType, EthtoolCoalesceInfo,
-    EthtoolFeatureInfo, EthtoolInfo, EthtoolLinkModeDuplex,
+    EthtoolFeatureInfo, EthtoolFecInfo, EthtoolInfo, EthtoolLinkModeDuplex,
     EthtoolLinkModeInfo, EthtoolPauseInfo, EthtoolRingInfo, HsrInfo,
     HsrProtocol, Iface, IfaceFlag, IfaceState, IfaceType, IpFamily, IpVlanFlag,
     IpVlanInfo, IpVlanMode, IpoibInfo, IpoibMode, Ipv4AddrInfo, Ipv4Info,
