@@ -78,6 +78,11 @@ changeable:
   tx-tcp-segmentation: true
   tx-tcp6-segmentation: true"#;
 
+const EXPECTED_FEC_INFO: &str = r#"---
+active: off
+auto: false
+configured: []"#;
+
 #[test]
 fn test_get_ethtool_pause_yaml() {
     with_netdevsim_iface(|| {
@@ -208,4 +213,23 @@ where
 
     super::utils::clear_network_environment();
     assert!(result.is_ok())
+}
+
+#[test]
+fn test_get_ethtool_fec_yaml() {
+    with_netdevsim_iface(|| {
+        let state = NetState::retrieve().unwrap();
+        let iface0 = &state.ifaces[IFACE_NAME0];
+        let iface1 = &state.ifaces[IFACE_NAME1];
+        assert_eq!(&iface0.iface_type, &crate::IfaceType::Ethernet);
+        assert_eq!(&iface1.iface_type, &crate::IfaceType::Ethernet);
+        assert_value_match(
+            EXPECTED_FEC_INFO,
+            &iface0.ethtool.as_ref().unwrap().fec,
+        );
+        assert_value_match(
+            EXPECTED_FEC_INFO,
+            &iface1.ethtool.as_ref().unwrap().fec,
+        );
+    });
 }

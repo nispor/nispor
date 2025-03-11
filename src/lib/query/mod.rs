@@ -38,7 +38,7 @@ pub use self::bridge::{
     BridgePortStpState, BridgeStpState, BridgeVlanEntry, BridgeVlanProtocol,
 };
 pub use self::ethtool::{
-    EthtoolCoalesceInfo, EthtoolFeatureInfo, EthtoolInfo,
+    EthtoolCoalesceInfo, EthtoolFeatureInfo, EthtoolFecInfo, EthtoolInfo,
     EthtoolLinkModeDuplex, EthtoolLinkModeInfo, EthtoolPauseInfo,
     EthtoolRingInfo,
 };

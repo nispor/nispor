@@ -4,8 +4,8 @@ use std::collections::{hash_map::Entry, BTreeMap, HashMap};
 
 use ethtool::{
     EthtoolAttr, EthtoolCoalesceAttr, EthtoolFeatureAttr, EthtoolFeatureBit,
-    EthtoolHandle, EthtoolHeader, EthtoolLinkModeAttr, EthtoolPauseAttr,
-    EthtoolRingAttr,
+    EthtoolFecAttr, EthtoolHandle, EthtoolHeader, EthtoolLinkModeAttr,
+    EthtoolPauseAttr, EthtoolRingAttr,
 };
 use futures::stream::TryStreamExt;
 use serde::{Deserialize, Serialize, Serializer};
@@ -157,6 +157,8 @@ pub struct EthtoolInfo {
     pub ring: Option<EthtoolRingInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub link_mode: Option<EthtoolLinkModeInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fec: Option<EthtoolFecInfo>,
 }
 
 fn ordered_map<S>(
@@ -183,6 +185,8 @@ pub(crate) async fn get_ethtool_infos(
     let mut coalesce_infos = dump_coalesce_infos(&mut handle).await?;
     let mut ring_infos = dump_ring_infos(&mut handle).await?;
     let mut link_mode_infos = dump_link_mode_infos(&mut handle).await?;
+    // TODO: only query when interface filter defined
+    let mut fec_infos = dump_fec_infos(&mut handle).await?;
 
     for (iface_name, pause_info) in pause_infos.drain() {
         infos.insert(
@@ -255,6 +259,22 @@ pub(crate) async fn get_ethtool_infos(
                     iface_name,
                     EthtoolInfo {
                         link_mode: Some(link_mode_info),
+                        ..Default::default()
+                    },
+                );
+            }
+        };
+    }
+    for (iface_name, fec_info) in fec_infos.drain() {
+        match infos.get_mut(&iface_name) {
+            Some(ref mut info) => {
+                info.fec = Some(fec_info);
+            }
+            None => {
+                infos.insert(
+                    iface_name,
+                    EthtoolInfo {
+                        fec: Some(fec_info),
                         ..Default::default()
                     },
                 );
@@ -596,4 +616,70 @@ fn get_iface_name_from_header(hdrs: &[EthtoolHeader]) -> Option<String> {
         }
     }
     None
+}
+
+#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+#[serde(rename_all = "snake_case")]
+#[non_exhaustive]
+pub struct EthtoolFecInfo {
+    pub active: EthtoolFecMode,
+    pub auto: bool,
+    pub configured: Vec<EthtoolFecMode>,
+}
+
+#[derive(
+    Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Copy, Default,
+)]
+#[serde(rename_all = "snake_case")]
+#[non_exhaustive]
+pub enum EthtoolFecMode {
+    #[default]
+    Off,
+    Rs,
+    Baser,
+    Llrs,
+    Other(u32),
+}
+
+impl From<ethtool::EthtoolFecMode> for EthtoolFecMode {
+    fn from(v: ethtool::EthtoolFecMode) -> Self {
+        match v {
+            ethtool::EthtoolFecMode::None => Self::Off,
+            ethtool::EthtoolFecMode::Rs => Self::Rs,
+            ethtool::EthtoolFecMode::Baser => Self::Baser,
+            ethtool::EthtoolFecMode::Llrs => Self::Llrs,
+            _ => Self::Other(u32::from(v)),
+        }
+    }
+}
+
+async fn dump_fec_infos(
+    handle: &mut EthtoolHandle,
+) -> Result<HashMap<String, EthtoolFecInfo>, NisporError> {
+    let mut infos = HashMap::new();
+    let mut fec_handle = handle.fec().get(None).execute().await;
+    while let Some(genl_msg) = fec_handle.try_next().await? {
+        let ethtool_msg = genl_msg.payload;
+        let mut iface_name = None;
+        let mut fec_info = EthtoolFecInfo::default();
+
+        for nla in ethtool_msg.nlas.into_iter() {
+            if let EthtoolAttr::Fec(nla) = nla {
+                if let EthtoolFecAttr::Header(hdrs) = nla {
+                    iface_name = get_iface_name_from_header(&hdrs);
+                } else if let EthtoolFecAttr::Auto(true) = nla {
+                    fec_info.auto = true;
+                } else if let EthtoolFecAttr::Modes(v) = nla {
+                    fec_info.configured =
+                        v.into_iter().map(EthtoolFecMode::from).collect();
+                } else if let EthtoolFecAttr::Active(m) = nla {
+                    fec_info.active = m.into();
+                }
+            }
+        }
+        if let Some(i) = iface_name {
+            infos.insert(i, fec_info);
+        }
+    }
+    Ok(infos)
 }
