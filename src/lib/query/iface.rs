@@ -459,6 +459,10 @@ pub(crate) fn parse_nl_msg_to_iface(
                             iface_state.controller_type =
                                 Some(ControllerType::Bridge)
                         }
+                        InfoPortKind::Vrf => {
+                            iface_state.controller_type =
+                                Some(ControllerType::Vrf)
+                        }
                         InfoPortKind::Other(s) => {
                             iface_state.controller_type =
                                 Some(s.as_str().into())
@@ -482,17 +486,15 @@ pub(crate) fn parse_nl_msg_to_iface(
                                 iface_state.bridge_port =
                                     Some(get_bridge_port_info(data)?);
                             }
-                            InfoPortData::Other(data) => {
-                                match controller_type {
-                                    ControllerType::Vrf => {
-                                        iface_state.vrf_subordinate =
-                                            get_vrf_subordinate_info(data)?;
-                                    }
-                                    _ => log::warn!(
-                                        "Unknown controller type {:?}",
-                                        controller_type
-                                    ),
-                                }
+                            InfoPortData::VrfPort(data) => {
+                                iface_state.vrf_subordinate =
+                                    Some(get_vrf_subordinate_info(data)?);
+                            }
+                            InfoPortData::Other(_) => {
+                                log::warn!(
+                                    "Unknown controller type {:?}",
+                                    controller_type
+                                );
                             }
                             _ => {
                                 log::debug!("Unknown InfoPortData {:?}", d);
