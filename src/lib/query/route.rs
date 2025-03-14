@@ -454,18 +454,20 @@ pub(crate) async fn get_routes(
         ifindex_to_name.insert(format!("{index}"), name.to_string());
     }
 
-    if filter.is_some() {
-        if let Err(e) = connection
-            .socket_mut()
-            .socket_mut()
-            .set_netlink_get_strict_chk(true)
-        {
-            log::warn!(
-                "Failed to set kernel space route filter: {e}, \
-                falling back to user space route filtering which would \
-                lead to performance penalty"
-            );
-            has_kernel_filter = false;
+    if let Some(filter) = filter {
+        if !filter.is_empty() {
+            if let Err(e) = connection
+                .socket_mut()
+                .socket_mut()
+                .set_netlink_get_strict_chk(true)
+            {
+                log::warn!(
+                    "Failed to set kernel space route filter: {e}, \
+                    falling back to user space route filtering which would \
+                    lead to performance penalty"
+                );
+                has_kernel_filter = false;
+            }
         }
     }
 
