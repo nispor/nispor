@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 use std::collections::HashMap;
 
-use netlink_packet_route::link::{InfoData, InfoMacSec};
+use rtnetlink::packet_route::link::{InfoData, InfoMacSec};
 use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceType};

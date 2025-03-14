@@ -3,8 +3,8 @@
 use std::collections::HashMap;
 
 use futures::stream::TryStreamExt;
-use netlink_packet_route::{link::LinkExtentMask, AddressFamily};
 use rtnetlink::new_connection;
+use rtnetlink::packet_route::{link::LinkExtentMask, AddressFamily};
 
 use super::{
     super::netlink::fill_ip_addr,

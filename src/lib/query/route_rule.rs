@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use futures::stream::TryStreamExt;
-use netlink_packet_route::route::RouteHeader;
-use netlink_packet_route::rule::{self, RuleAttribute, RuleMessage};
+use rtnetlink::packet_route::route::RouteHeader;
+use rtnetlink::packet_route::rule::{self, RuleAttribute, RuleMessage};
 
 use rtnetlink::new_connection;
 use rtnetlink::IpVersion;
@@ -221,37 +221,37 @@ pub enum IpProtocol {
     Other(i32),
 }
 
-impl From<netlink_packet_route::IpProtocol> for IpProtocol {
-    fn from(d: netlink_packet_route::IpProtocol) -> Self {
+impl From<rtnetlink::packet_route::IpProtocol> for IpProtocol {
+    fn from(d: rtnetlink::packet_route::IpProtocol) -> Self {
         match d {
-            netlink_packet_route::IpProtocol::Hopopts => Self::Hopopts,
-            netlink_packet_route::IpProtocol::Icmp => Self::Icmp,
-            netlink_packet_route::IpProtocol::Igmp => Self::Igmp,
-            netlink_packet_route::IpProtocol::Ipip => Self::Ipip,
-            netlink_packet_route::IpProtocol::Tcp => Self::Tcp,
-            netlink_packet_route::IpProtocol::Egp => Self::Egp,
-            netlink_packet_route::IpProtocol::Pup => Self::Pup,
-            netlink_packet_route::IpProtocol::Udp => Self::Udp,
-            netlink_packet_route::IpProtocol::Idp => Self::Idp,
-            netlink_packet_route::IpProtocol::Tp => Self::Tp,
-            netlink_packet_route::IpProtocol::Dccp => Self::Dccp,
-            netlink_packet_route::IpProtocol::Ipv6 => Self::Ipv6,
-            netlink_packet_route::IpProtocol::Rsvp => Self::Rsvp,
-            netlink_packet_route::IpProtocol::Gre => Self::Gre,
-            netlink_packet_route::IpProtocol::Esp => Self::Esp,
-            netlink_packet_route::IpProtocol::Ah => Self::Ah,
-            netlink_packet_route::IpProtocol::Mtp => Self::Mtp,
-            netlink_packet_route::IpProtocol::Beetph => Self::Beetph,
-            netlink_packet_route::IpProtocol::Encap => Self::Encap,
-            netlink_packet_route::IpProtocol::Pim => Self::Pim,
-            netlink_packet_route::IpProtocol::Comp => Self::Comp,
-            netlink_packet_route::IpProtocol::L2tp => Self::L2tp,
-            netlink_packet_route::IpProtocol::Sctp => Self::Sctp,
-            netlink_packet_route::IpProtocol::Udplite => Self::Udplite,
-            netlink_packet_route::IpProtocol::Mpls => Self::Mpls,
-            netlink_packet_route::IpProtocol::Ethernet => Self::Ethernet,
-            netlink_packet_route::IpProtocol::Raw => Self::Raw,
-            netlink_packet_route::IpProtocol::Mptcp => Self::Mptcp,
+            rtnetlink::packet_route::IpProtocol::Hopopts => Self::Hopopts,
+            rtnetlink::packet_route::IpProtocol::Icmp => Self::Icmp,
+            rtnetlink::packet_route::IpProtocol::Igmp => Self::Igmp,
+            rtnetlink::packet_route::IpProtocol::Ipip => Self::Ipip,
+            rtnetlink::packet_route::IpProtocol::Tcp => Self::Tcp,
+            rtnetlink::packet_route::IpProtocol::Egp => Self::Egp,
+            rtnetlink::packet_route::IpProtocol::Pup => Self::Pup,
+            rtnetlink::packet_route::IpProtocol::Udp => Self::Udp,
+            rtnetlink::packet_route::IpProtocol::Idp => Self::Idp,
+            rtnetlink::packet_route::IpProtocol::Tp => Self::Tp,
+            rtnetlink::packet_route::IpProtocol::Dccp => Self::Dccp,
+            rtnetlink::packet_route::IpProtocol::Ipv6 => Self::Ipv6,
+            rtnetlink::packet_route::IpProtocol::Rsvp => Self::Rsvp,
+            rtnetlink::packet_route::IpProtocol::Gre => Self::Gre,
+            rtnetlink::packet_route::IpProtocol::Esp => Self::Esp,
+            rtnetlink::packet_route::IpProtocol::Ah => Self::Ah,
+            rtnetlink::packet_route::IpProtocol::Mtp => Self::Mtp,
+            rtnetlink::packet_route::IpProtocol::Beetph => Self::Beetph,
+            rtnetlink::packet_route::IpProtocol::Encap => Self::Encap,
+            rtnetlink::packet_route::IpProtocol::Pim => Self::Pim,
+            rtnetlink::packet_route::IpProtocol::Comp => Self::Comp,
+            rtnetlink::packet_route::IpProtocol::L2tp => Self::L2tp,
+            rtnetlink::packet_route::IpProtocol::Sctp => Self::Sctp,
+            rtnetlink::packet_route::IpProtocol::Udplite => Self::Udplite,
+            rtnetlink::packet_route::IpProtocol::Mpls => Self::Mpls,
+            rtnetlink::packet_route::IpProtocol::Ethernet => Self::Ethernet,
+            rtnetlink::packet_route::IpProtocol::Raw => Self::Raw,
+            rtnetlink::packet_route::IpProtocol::Mptcp => Self::Mptcp,
             _ => Self::Other(d.into()),
         }
     }
@@ -263,8 +263,8 @@ pub struct RouteRealm {
     pub destination: u16,
 }
 
-impl From<netlink_packet_route::route::RouteRealm> for RouteRealm {
-    fn from(d: netlink_packet_route::route::RouteRealm) -> Self {
+impl From<rtnetlink::packet_route::route::RouteRealm> for RouteRealm {
+    fn from(d: rtnetlink::packet_route::route::RouteRealm) -> Self {
         Self {
             source: d.source,
             destination: d.destination,

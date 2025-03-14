@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::link::{self, LinkVfInfo};
+use rtnetlink::packet_route::link::{self, LinkVfInfo};
 
 use serde::{Deserialize, Serialize};
 

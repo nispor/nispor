@@ -6,12 +6,15 @@ use std::{
 };
 
 use futures::stream::TryStreamExt;
-use netlink_packet_route::route::{
-    self as rt, RouteAddress, RouteAttribute, RouteMessage, RouteMetric,
-    RouteVia,
+use rtnetlink::sys::AsyncSocket;
+use rtnetlink::{
+    new_connection,
+    packet_route::route::{
+        self as rt, RouteAddress, RouteAttribute, RouteMessage, RouteMetric,
+        RouteVia,
+    },
+    IpVersion, RouteMessageBuilder,
 };
-use netlink_sys::AsyncSocket;
-use rtnetlink::{new_connection, IpVersion, RouteMessageBuilder};
 use serde::{Deserialize, Serialize};
 
 use super::super::filter::{apply_kernel_route_filter, should_drop_by_filter};
@@ -124,24 +127,28 @@ pub enum AddressFamily {
     Unknown,
 }
 
-impl From<netlink_packet_route::AddressFamily> for AddressFamily {
-    fn from(d: netlink_packet_route::AddressFamily) -> Self {
+impl From<rtnetlink::packet_route::AddressFamily> for AddressFamily {
+    fn from(d: rtnetlink::packet_route::AddressFamily) -> Self {
         match d {
-            netlink_packet_route::AddressFamily::Inet => AddressFamily::IPv4,
-            netlink_packet_route::AddressFamily::Inet6 => AddressFamily::IPv6,
+            rtnetlink::packet_route::AddressFamily::Inet => AddressFamily::IPv4,
+            rtnetlink::packet_route::AddressFamily::Inet6 => {
+                AddressFamily::IPv6
+            }
             _ => Self::Other(u8::from(d)),
         }
     }
 }
 
-impl From<AddressFamily> for netlink_packet_route::AddressFamily {
+impl From<AddressFamily> for rtnetlink::packet_route::AddressFamily {
     fn from(v: AddressFamily) -> Self {
         match v {
-            AddressFamily::IPv4 => netlink_packet_route::AddressFamily::Inet,
-            AddressFamily::IPv6 => netlink_packet_route::AddressFamily::Inet6,
+            AddressFamily::IPv4 => rtnetlink::packet_route::AddressFamily::Inet,
+            AddressFamily::IPv6 => {
+                rtnetlink::packet_route::AddressFamily::Inet6
+            }
             AddressFamily::Other(d) => d.into(),
             AddressFamily::Unknown => {
-                netlink_packet_route::AddressFamily::Unspec
+                rtnetlink::packet_route::AddressFamily::Unspec
             }
         }
     }

@@ -2,7 +2,7 @@
 
 use ethtool::EthtoolError;
 use libc::{EEXIST, EPERM};
-use netlink_packet_utils::DecodeError;
+use rtnetlink::packet_utils::DecodeError;
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]

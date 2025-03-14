@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::link::{InfoData, InfoMacVlan, InfoMacVtap};
+use rtnetlink::packet_route::link::{InfoData, InfoMacVlan, InfoMacVtap};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -35,16 +35,18 @@ impl Default for MacVlanMode {
     }
 }
 
-impl From<netlink_packet_route::link::MacVlanMode> for MacVlanMode {
-    fn from(d: netlink_packet_route::link::MacVlanMode) -> Self {
+impl From<rtnetlink::packet_route::link::MacVlanMode> for MacVlanMode {
+    fn from(d: rtnetlink::packet_route::link::MacVlanMode) -> Self {
         match d {
-            netlink_packet_route::link::MacVlanMode::Private => Self::Private,
-            netlink_packet_route::link::MacVlanMode::Vepa => Self::Vepa,
-            netlink_packet_route::link::MacVlanMode::Bridge => Self::Bridge,
-            netlink_packet_route::link::MacVlanMode::Passthrough => {
+            rtnetlink::packet_route::link::MacVlanMode::Private => {
+                Self::Private
+            }
+            rtnetlink::packet_route::link::MacVlanMode::Vepa => Self::Vepa,
+            rtnetlink::packet_route::link::MacVlanMode::Bridge => Self::Bridge,
+            rtnetlink::packet_route::link::MacVlanMode::Passthrough => {
                 Self::PassThrough
             }
-            netlink_packet_route::link::MacVlanMode::Source => Self::Source,
+            rtnetlink::packet_route::link::MacVlanMode::Source => Self::Source,
             _ => Self::Other(d.into()),
         }
     }

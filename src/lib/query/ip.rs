@@ -3,8 +3,8 @@
 use std::net::{IpAddr, Ipv6Addr};
 use std::str::FromStr;
 
-use netlink_packet_route::address;
-use netlink_packet_route::link::{AfSpecInet6, AfSpecUnspec};
+use rtnetlink::packet_route::address;
+use rtnetlink::packet_route::link::{AfSpecInet6, AfSpecUnspec};
 
 use serde::{Deserialize, Serialize};
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use netlink_packet_route::link::InfoData;
+use rtnetlink::packet_route::link::InfoData;
 use serde::{Deserialize, Serialize};
 
 use super::mac_vlan::get_mac_vlan_info;

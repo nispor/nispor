@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use netlink_packet_route::link::{
+use rtnetlink::packet_route::link::{
     self, InfoKind, InfoPortData, InfoPortKind, LinkAttribute, LinkInfo,
     LinkLayerType, LinkMessage,
 };

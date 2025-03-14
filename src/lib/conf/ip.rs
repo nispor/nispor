@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::net::IpAddr;
 use std::str::FromStr;
 
-use netlink_packet_route::{
+use rtnetlink::packet_route::{
     address::{AddressAttribute, AddressMessage, CacheInfo},
     AddressFamily,
 };

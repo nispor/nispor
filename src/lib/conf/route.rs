@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::net::IpAddr;
 
-use netlink_packet_route::{
+use rtnetlink::packet_route::{
     route::{self as rt, RouteAddress, RouteAttribute, RouteMessage},
     AddressFamily,
 };

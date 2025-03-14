@@ -7,14 +7,14 @@ use crate::{
     Iface, Ipv4AddrInfo, Ipv4Info, Ipv6AddrFlag, Ipv6AddrInfo, Ipv6Info,
     NisporError,
 };
-use netlink_packet_route::address::{AddressAttribute, AddressMessage};
+use rtnetlink::packet_route::address::{AddressAttribute, AddressMessage};
 
 pub(crate) fn fill_ip_addr(
     iface_states: &mut HashMap<String, Iface>,
     nl_msg: &AddressMessage,
 ) -> Result<(), NisporError> {
     match nl_msg.header.family {
-        netlink_packet_route::AddressFamily::Inet => {
+        rtnetlink::packet_route::AddressFamily::Inet => {
             let (iface_index, addr) = parse_ipv4_nlas(nl_msg)?;
             if let Some(i) = get_iface_name_by_index(iface_states, iface_index)
             {
@@ -29,7 +29,7 @@ pub(crate) fn fill_ip_addr(
                 }
             }
         }
-        netlink_packet_route::AddressFamily::Inet6 => {
+        rtnetlink::packet_route::AddressFamily::Inet6 => {
             let (iface_index, addr) = parse_ipv6_nlas(nl_msg)?;
             if let Some(i) = get_iface_name_by_index(iface_states, iface_index)
             {
