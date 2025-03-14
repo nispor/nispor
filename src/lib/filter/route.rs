@@ -20,6 +20,27 @@ pub struct NetStateRouteFilter {
     pub table: Option<u8>,
 }
 
+impl NetStateRouteFilter {
+    pub(crate) fn is_empty(&self) -> bool {
+        if self.protocol.is_some() {
+            return false;
+        }
+
+        if self.scope.is_some() {
+            return false;
+        }
+
+        if self.oif.is_some() {
+            return false;
+        }
+
+        if self.table.is_some() {
+            return false;
+        }
+        true
+    }
+}
+
 pub(crate) fn apply_kernel_route_filter(
     handle: &mut RouteGetRequest,
     filter: &NetStateRouteFilter,
@@ -27,11 +48,19 @@ pub(crate) fn apply_kernel_route_filter(
 ) -> Result<(), NisporError> {
     let rt_nlmsg = handle.message_mut();
 
+    rt_nlmsg.header.destination_prefix_length = 0;
+    rt_nlmsg.header.source_prefix_length = 0;
+    rt_nlmsg.header.kind = rtnetlink::packet_route::route::RouteType::Unspec;
+
     if let Some(protocol) = filter.protocol {
         rt_nlmsg.header.protocol = protocol.into();
+    } else {
+        rt_nlmsg.header.protocol = RouteProtocol::Unspec.into();
     }
     if let Some(scope) = filter.scope {
         rt_nlmsg.header.scope = scope.into();
+    } else {
+        rt_nlmsg.header.scope = RouteScope::Universe.into();
     }
     if let Some(oif) = filter.oif.as_ref() {
         match iface_name2index.get(oif) {
@@ -51,6 +80,8 @@ pub(crate) fn apply_kernel_route_filter(
         rt_nlmsg
             .attributes
             .push(RouteAttribute::Table(table.into()));
+    } else {
+        rt_nlmsg.attributes.push(RouteAttribute::Table(0));
     }
     Ok(())
 }
