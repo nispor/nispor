@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use netlink_packet_route::link::{BridgeId, InfoBridge};
+use rtnetlink::packet_route::link::{BridgeId, InfoBridge};
 
 use super::super::mac::{parse_as_mac, ETH_ALEN};
 use crate::{BridgeInfo, NisporError};

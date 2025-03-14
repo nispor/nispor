@@ -2,7 +2,7 @@
 
 use crate::BridgeVlanEntry;
 use crate::NisporError;
-use netlink_packet_route::link::{
+use rtnetlink::packet_route::link::{
     AfSpecBridge, BridgeVlanInfo, BridgeVlanInfoFlags,
 };
 

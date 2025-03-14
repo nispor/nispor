@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::link::{self, InfoData, InfoVlan};
+use rtnetlink::packet_route::link::{self, InfoData, InfoVlan};
 use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceType};
@@ -47,9 +47,11 @@ pub struct VlanQosMapping {
 
 impl VlanQosMapping {
     fn from_netlink(
-        map: &netlink_packet_route::link::VlanQosMapping,
+        map: &rtnetlink::packet_route::link::VlanQosMapping,
     ) -> Option<Self> {
-        if let netlink_packet_route::link::VlanQosMapping::Mapping(f, t) = map {
+        if let rtnetlink::packet_route::link::VlanQosMapping::Mapping(f, t) =
+            map
+        {
             Some(Self { from: *f, to: *t })
         } else {
             None

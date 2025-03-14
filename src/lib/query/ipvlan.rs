@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::link::{InfoData, InfoIpVlan, IpVlanFlags};
+use rtnetlink::packet_route::link::{InfoData, InfoIpVlan, IpVlanFlags};
 use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceType};
@@ -23,12 +23,12 @@ impl Default for IpVlanMode {
     }
 }
 
-impl From<netlink_packet_route::link::IpVlanMode> for IpVlanMode {
-    fn from(d: netlink_packet_route::link::IpVlanMode) -> Self {
+impl From<rtnetlink::packet_route::link::IpVlanMode> for IpVlanMode {
+    fn from(d: rtnetlink::packet_route::link::IpVlanMode) -> Self {
         match d {
-            netlink_packet_route::link::IpVlanMode::L2 => Self::L2,
-            netlink_packet_route::link::IpVlanMode::L3 => Self::L3,
-            netlink_packet_route::link::IpVlanMode::L3S => Self::L3S,
+            rtnetlink::packet_route::link::IpVlanMode::L2 => Self::L2,
+            rtnetlink::packet_route::link::IpVlanMode::L3 => Self::L3,
+            rtnetlink::packet_route::link::IpVlanMode::L3S => Self::L3S,
             _ => Self::Other(d.into()),
         }
     }

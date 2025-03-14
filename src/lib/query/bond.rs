@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 use std::net::{Ipv4Addr, Ipv6Addr};
 
-use netlink_packet_route::link::{self, InfoBond, InfoBondPort, InfoData};
+use rtnetlink::packet_route::link::{self, InfoBond, InfoBondPort, InfoData};
 use serde::{Deserialize, Serialize};
 
 use super::super::mac::parse_as_mac;
@@ -37,26 +37,28 @@ impl Default for BondMode {
     }
 }
 
-impl From<netlink_packet_route::link::BondMode> for BondMode {
-    fn from(d: netlink_packet_route::link::BondMode) -> Self {
+impl From<rtnetlink::packet_route::link::BondMode> for BondMode {
+    fn from(d: rtnetlink::packet_route::link::BondMode) -> Self {
         match d {
-            netlink_packet_route::link::BondMode::BalanceRr => {
+            rtnetlink::packet_route::link::BondMode::BalanceRr => {
                 Self::BalanceRoundRobin
             }
-            netlink_packet_route::link::BondMode::ActiveBackup => {
+            rtnetlink::packet_route::link::BondMode::ActiveBackup => {
                 Self::ActiveBackup
             }
-            netlink_packet_route::link::BondMode::BalanceXor => {
+            rtnetlink::packet_route::link::BondMode::BalanceXor => {
                 Self::BalanceXor
             }
-            netlink_packet_route::link::BondMode::Broadcast => Self::Broadcast,
-            netlink_packet_route::link::BondMode::Ieee8023Ad => {
+            rtnetlink::packet_route::link::BondMode::Broadcast => {
+                Self::Broadcast
+            }
+            rtnetlink::packet_route::link::BondMode::Ieee8023Ad => {
                 Self::Ieee8021AD
             }
-            netlink_packet_route::link::BondMode::BalanceTlb => {
+            rtnetlink::packet_route::link::BondMode::BalanceTlb => {
                 Self::BalanceTlb
             }
-            netlink_packet_route::link::BondMode::BalanceAlb => {
+            rtnetlink::packet_route::link::BondMode::BalanceAlb => {
                 Self::BalanceAlb
             }
             _ => Self::Other(d.into()),
@@ -64,39 +66,39 @@ impl From<netlink_packet_route::link::BondMode> for BondMode {
     }
 }
 
-impl From<BondMode> for netlink_packet_route::link::BondMode {
-    fn from(v: BondMode) -> netlink_packet_route::link::BondMode {
+impl From<BondMode> for rtnetlink::packet_route::link::BondMode {
+    fn from(v: BondMode) -> rtnetlink::packet_route::link::BondMode {
         match v {
             BondMode::BalanceRoundRobin => {
-                netlink_packet_route::link::BondMode::BalanceRr
+                rtnetlink::packet_route::link::BondMode::BalanceRr
             }
             BondMode::ActiveBackup => {
-                netlink_packet_route::link::BondMode::ActiveBackup
+                rtnetlink::packet_route::link::BondMode::ActiveBackup
             }
             BondMode::BalanceXor => {
-                netlink_packet_route::link::BondMode::BalanceXor
+                rtnetlink::packet_route::link::BondMode::BalanceXor
             }
             BondMode::Broadcast => {
-                netlink_packet_route::link::BondMode::Broadcast
+                rtnetlink::packet_route::link::BondMode::Broadcast
             }
             BondMode::Ieee8021AD => {
-                netlink_packet_route::link::BondMode::Ieee8023Ad
+                rtnetlink::packet_route::link::BondMode::Ieee8023Ad
             }
             BondMode::BalanceTlb => {
-                netlink_packet_route::link::BondMode::BalanceTlb
+                rtnetlink::packet_route::link::BondMode::BalanceTlb
             }
             BondMode::BalanceAlb => {
-                netlink_packet_route::link::BondMode::BalanceAlb
+                rtnetlink::packet_route::link::BondMode::BalanceAlb
             }
             BondMode::Other(d) => {
-                netlink_packet_route::link::BondMode::Other(d)
+                rtnetlink::packet_route::link::BondMode::Other(d)
             }
             BondMode::Unknown => {
                 log::warn!(
                     "Treating BondMode::Unknown as \
                     BondMode::BalanceRoundRobin"
                 );
-                netlink_packet_route::link::BondMode::BalanceRr
+                rtnetlink::packet_route::link::BondMode::BalanceRr
             }
         }
     }
@@ -156,18 +158,24 @@ pub enum BondArpValidate {
     Other(u32),
 }
 
-impl From<netlink_packet_route::link::BondArpValidate> for BondArpValidate {
-    fn from(d: netlink_packet_route::link::BondArpValidate) -> Self {
+impl From<rtnetlink::packet_route::link::BondArpValidate> for BondArpValidate {
+    fn from(d: rtnetlink::packet_route::link::BondArpValidate) -> Self {
         match d {
-            netlink_packet_route::link::BondArpValidate::None => Self::None,
-            netlink_packet_route::link::BondArpValidate::Active => Self::Active,
-            netlink_packet_route::link::BondArpValidate::Backup => Self::Backup,
-            netlink_packet_route::link::BondArpValidate::All => Self::All,
-            netlink_packet_route::link::BondArpValidate::Filter => Self::Filter,
-            netlink_packet_route::link::BondArpValidate::FilterActive => {
+            rtnetlink::packet_route::link::BondArpValidate::None => Self::None,
+            rtnetlink::packet_route::link::BondArpValidate::Active => {
+                Self::Active
+            }
+            rtnetlink::packet_route::link::BondArpValidate::Backup => {
+                Self::Backup
+            }
+            rtnetlink::packet_route::link::BondArpValidate::All => Self::All,
+            rtnetlink::packet_route::link::BondArpValidate::Filter => {
+                Self::Filter
+            }
+            rtnetlink::packet_route::link::BondArpValidate::FilterActive => {
                 Self::FilterActive
             }
-            netlink_packet_route::link::BondArpValidate::FilterBackup => {
+            rtnetlink::packet_route::link::BondArpValidate::FilterBackup => {
                 Self::FilterBackup
             }
             _ => Self::Other(d.into()),

@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::link::{InfoData, InfoIpoib};
+use rtnetlink::packet_route::link::{InfoData, InfoIpoib};
 use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceType};

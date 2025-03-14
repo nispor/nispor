@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use netlink_packet_route::link::InfoData;
-use netlink_packet_utils::nla::Nla;
+use rtnetlink::packet_route::link::InfoData;
+use rtnetlink::packet_utils::nla::Nla;
 use serde::{Deserialize, Serialize};
 
 use crate::{

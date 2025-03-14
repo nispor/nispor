@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::link::{AfSpecBridge, InfoBridgePort, InfoData};
+use rtnetlink::packet_route::link::{AfSpecBridge, InfoBridgePort, InfoData};
 
 use serde::{Deserialize, Serialize};
 

@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use netlink_packet_route::link::{InfoData, InfoVrf, InfoVrfPort};
+use rtnetlink::packet_route::link::{InfoData, InfoVrf, InfoVrfPort};
 use serde::{Deserialize, Serialize};
 
 use crate::{ControllerType, Iface, NisporError};
