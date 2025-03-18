@@ -1,4 +1,14 @@
 # Changelog
+## [1.2.24] - 2025-03-19
+### Breaking changes
+ - N/A
+
+### New features
+ - N/A
+
+### Bug fixes
+ - veth: Use `LinkNetNsId` instead of `IfNetnsId`. (86d85f9)
+
 ## [1.2.23] - 2025-03-18
 ### Breaking changes
  - N/A
