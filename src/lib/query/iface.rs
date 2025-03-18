@@ -511,7 +511,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                     iface_state.sriov = Some(info);
                 }
             }
-        } else if let LinkAttribute::IfNetnsId(id) = nla {
+        } else if let LinkAttribute::LinkNetNsId(id) = nla {
             iface_state.link_netnsid = Some(*id);
         } else if let LinkAttribute::AfSpecUnspec(nlas) = nla {
             fill_af_spec_inet_info(&mut iface_state, nlas);
