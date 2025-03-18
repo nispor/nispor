@@ -1,4 +1,13 @@
 # Changelog
+## [1.2.23] - 2025-03-18
+### Breaking changes
+ - N/A
+
+### New features
+ - ethtool: Add support of FEC. (1a3f206, c6fcfe9)
+
+### Bug fixes
+ - routes: fix route filtering when querying. (2563abf)
 ## [1.2.22] - 2024-12-30
 ### Breaking changes
  - N/A
