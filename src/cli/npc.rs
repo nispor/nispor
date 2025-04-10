@@ -192,6 +192,9 @@ impl CliIfaceBrief {
                                 addr.preferred_lft,
                             ));
                         }
+                        if let Some(fwd) = ip_info.forwarding {
+                            addr_strs.push(format!("forwarding {}", fwd));
+                        }
                         addr_strs
                     }
                     None => Vec::new(),

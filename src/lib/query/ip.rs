@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::net::{IpAddr, Ipv6Addr};
 use std::str::FromStr;
 
@@ -14,6 +16,8 @@ use crate::{Iface, NisporError};
 #[non_exhaustive]
 pub struct Ipv4Info {
     pub addresses: Vec<Ipv4AddrInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub forwarding: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -110,6 +114,51 @@ pub(crate) fn fill_af_spec_inet_info(iface: &mut Iface, nlas: &[AfSpecUnspec]) {
                     }
                 }
             }
+        }
+    }
+}
+
+pub(crate) fn read_ipv4_forwarding(iface_name: &str) -> Option<bool> {
+    let path = format!("/proc/sys/net/ipv4/conf/{}/forwarding", iface_name);
+
+    let file = match File::open(&path) {
+        Ok(f) => f,
+        Err(e) => {
+            log::warn!(
+                "Failed to read IPv4 forwarding value for interface '{}': \
+                 could not open '{}': {}",
+                iface_name,
+                path,
+                e
+            );
+            return None;
+        }
+    };
+
+    let mut reader = BufReader::new(file);
+    let mut line = String::new();
+
+    if let Err(e) = reader.read_line(&mut line) {
+        log::warn!(
+            "Failed to read IPv4 forwarding value from '{}', for interface '{}': {}",
+            path,
+            iface_name,
+            e
+        );
+        return None;
+    }
+
+    match line.trim() {
+        "1" => Some(true),
+        "0" => Some(false),
+        other => {
+            log::warn!(
+                "Unexpected IPv4 forwarding value '{}' in '{}', for interface '{}'",
+                other,
+                path,
+                iface_name
+            );
+            None
         }
     }
 }
