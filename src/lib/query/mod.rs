@@ -73,7 +73,10 @@ pub use self::xfrm::XfrmInfo;
 
 pub(crate) use self::{
     inter_ifaces::{get_iface_name2index, get_ifaces},
-    ip::{is_ipv6_addr, parse_ip_addr_str, parse_ip_net_addr_str},
+    ip::{
+        is_ipv6_addr, parse_ip_addr_str, parse_ip_net_addr_str,
+        read_ipv4_forwarding,
+    },
     mptcp::{get_mptcp, merge_mptcp_info},
     route::get_routes,
     route_rule::get_route_rules,

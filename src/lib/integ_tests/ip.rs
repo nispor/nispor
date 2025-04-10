@@ -4,7 +4,7 @@ use std::panic;
 
 use pretty_assertions::assert_eq;
 
-use super::utils::assert_value_match;
+use super::utils::{assert_value_match, set_ipv4_forwarding};
 use crate::{NetConf, NetState};
 
 const IFACE_NAME: &str = "veth1";
@@ -71,6 +71,22 @@ addresses:
     prefix_len: 24
     valid_lft: forever
     preferred_lft: forever"#;
+
+const EXPECTED_IPV4_INFO_WITH_FORWADRDING_ENABLED: &str = r#"---
+addresses:
+  - address: 192.0.2.1
+    prefix_len: 24
+    valid_lft: forever
+    preferred_lft: forever
+forwarding: true"#;
+
+const EXPECTED_IPV4_INFO_WITH_FORWADRDING_DISABLED: &str = r#"---
+addresses:
+  - address: 192.0.2.1
+    prefix_len: 24
+    valid_lft: forever
+    preferred_lft: forever
+forwarding: false"#;
 
 const EXPECTED_IPV4_DYNAMIC_INFO: &str = r#"---
 addresses:
@@ -252,4 +268,27 @@ fn test_ipv6_p2p() {
 
 fn wait_ipv6_dad() {
     std::thread::sleep(std::time::Duration::from_secs(5));
+}
+
+#[test]
+fn test_read_ip_forwarding() {
+    with_veth_iface(|| {
+        let conf: NetConf = serde_yaml::from_str(ADD_IP_CONF).unwrap();
+        conf.apply().unwrap();
+        wait_ipv6_dad();
+        set_ipv4_forwarding(IFACE_NAME, true);
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_value_match(
+            EXPECTED_IPV4_INFO_WITH_FORWADRDING_ENABLED,
+            &iface.ipv4,
+        );
+        set_ipv4_forwarding(IFACE_NAME, false);
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_value_match(
+            EXPECTED_IPV4_INFO_WITH_FORWADRDING_DISABLED,
+            &iface.ipv4,
+        );
+    });
 }
