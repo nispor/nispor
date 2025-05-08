@@ -5,6 +5,7 @@ mod bridge;
 mod hsr;
 mod ip;
 mod mptcp;
+mod pci;
 mod wifi;
 mod xfrm;
 // Disable `needless_pass_by_ref_mut` check due to upstream issue:
@@ -57,6 +58,7 @@ pub use self::macsec::{
     MacSecCipherId, MacSecInfo, MacSecOffload, MacSecValidate,
 };
 pub use self::mptcp::{Mptcp, MptcpAddress, MptcpAddressFlag};
+pub use self::pci::PciAddress;
 pub use self::route::{
     AddressFamily, MultipathRoute, MultipathRouteFlags, Route, RouteProtocol,
     RouteScope, RouteType,

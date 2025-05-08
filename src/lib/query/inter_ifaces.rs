@@ -120,6 +120,10 @@ pub(crate) async fn get_ifaces(
         };
     }
 
+    for iface in iface_states.values_mut() {
+        iface.fill_pci_address();
+    }
+
     // The cfg80211 module might not exists or loaded in environments,
     // we should only log wifi query failure instead of failing the whole
     // querying

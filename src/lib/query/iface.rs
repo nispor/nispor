@@ -30,9 +30,9 @@ use super::{
 use crate::{
     BondInfo, BondSubordinateInfo, BridgeInfo, BridgePortInfo, BridgeVlanEntry,
     EthtoolInfo, HsrInfo, IpVlanInfo, IpoibInfo, Ipv4Info, Ipv6Info,
-    MacSecInfo, MacVlanInfo, MacVtapInfo, MptcpAddress, NisporError, SriovInfo,
-    TunInfo, VethInfo, VfInfo, VlanInfo, VrfInfo, VrfSubordinateInfo,
-    VxlanInfo, WifiInfo, XfrmInfo,
+    MacSecInfo, MacVlanInfo, MacVtapInfo, MptcpAddress, NisporError,
+    PciAddress, SriovInfo, TunInfo, VethInfo, VfInfo, VlanInfo, VrfInfo,
+    VrfSubordinateInfo, VxlanInfo, WifiInfo, XfrmInfo,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -247,6 +247,8 @@ pub struct Iface {
     pub ipv6: Option<Ipv6Info>,
     #[serde(skip_serializing_if = "String::is_empty")]
     pub mac_address: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pci_address: Option<PciAddress>,
     #[serde(skip_serializing_if = "String::is_empty")]
     pub permanent_mac_address: String,
     #[serde(skip_serializing_if = "Option::is_none")]
