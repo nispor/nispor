@@ -27,7 +27,7 @@ pub(crate) fn get_vrf_info(data: &InfoData) -> Option<VrfInfo> {
             if let InfoVrf::TableId(d) = *info {
                 vrf_info.table_id = d;
             } else {
-                log::debug!("Unknown VRF info {:?}", info)
+                log::debug!("Unknown VRF info {info:?}")
             }
         }
         Some(vrf_info)
@@ -45,7 +45,7 @@ pub(crate) fn get_vrf_subordinate_info(
         match nla {
             InfoVrfPort::TableId(d) => ret.table_id = *d,
             _ => {
-                log::info!("Unknown VRF port info {:?}", nla);
+                log::info!("Unknown VRF port info {nla:?}");
             }
         }
     }

@@ -61,7 +61,7 @@ impl From<u8> for TunMode {
             IFF_TUN => TunMode::Tun,
             IFF_TAP => TunMode::Tap,
             _ => {
-                log::warn!("Unhandled TUN mode {}", d);
+                log::warn!("Unhandled TUN mode {d}");
                 TunMode::Unknown
             }
         }

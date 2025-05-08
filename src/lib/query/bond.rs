@@ -95,8 +95,7 @@ impl From<BondMode> for rtnetlink::packet_route::link::BondMode {
             }
             BondMode::Unknown => {
                 log::warn!(
-                    "Treating BondMode::Unknown as \
-                    BondMode::BalanceRoundRobin"
+                    "Treating BondMode::Unknown as BondMode::BalanceRoundRobin"
                 );
                 rtnetlink::packet_route::link::BondMode::BalanceRr
             }
@@ -366,14 +365,13 @@ impl From<&[link::BondAdInfo]> for BondAdInfo {
                         Ok(m) => ret.partner_mac = m,
                         Err(e) => {
                             log::warn!(
-                                "Failed to parse BondAdInfo.parse_as_mac: {}",
-                                e
+                                "Failed to parse BondAdInfo.parse_as_mac: {e}"
                             );
                         }
                     }
                 }
                 _ => {
-                    log::debug!("Unknown BondAdInfo NLA {:?}", nla);
+                    log::debug!("Unknown BondAdInfo NLA {nla:?}");
                 }
             }
         }
@@ -595,7 +593,7 @@ impl From<&[InfoBond]> for BondInfo {
                 }
                 InfoBond::NsIp6Target(v) => ret.ns_ip6_target = Some(v.clone()),
                 _ => {
-                    log::warn!("Unsupported InfoBond: {:?}", nla);
+                    log::warn!("Unsupported InfoBond: {nla:?}");
                 }
             }
         }
@@ -714,7 +712,7 @@ pub(crate) fn get_bond_subordinate_info(
                 ret.subordinate_state = u8::from(*d).into()
             }
             _ => {
-                log::info!("Unknown bond port info {:?}", nla);
+                log::info!("Unknown bond port info {nla:?}");
             }
         }
     }

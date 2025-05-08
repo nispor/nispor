@@ -59,7 +59,7 @@ pub(crate) fn get_ipoib_info(data: &InfoData) -> Option<IpoibInfo> {
             } else if let InfoIpoib::UmCast(d) = *info {
                 ipoib_info.umcast = d > 0;
             } else {
-                log::debug!("Unknown IPoIB info {:?}", info)
+                log::debug!("Unknown IPoIB info {info:?}")
             }
         }
         Some(ipoib_info)

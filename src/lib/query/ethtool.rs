@@ -498,8 +498,7 @@ async fn dump_coalesce_infos(
                         coalesce_info.rate_sample_interval = Some(*d)
                     }
                     _ => log::warn!(
-                        "WARN: Unsupported EthtoolCoalesceAttr {:?}",
-                        nla
+                        "WARN: Unsupported EthtoolCoalesceAttr {nla:?}"
                     ),
                 }
             }
@@ -540,10 +539,9 @@ async fn dump_ring_infos(
                         ring_info.rx_jumbo = Some(*d)
                     }
                     EthtoolRingAttr::Tx(d) => ring_info.tx = Some(*d),
-                    _ => log::warn!(
-                        "WARN: Unsupported EthtoolRingAttr {:?}",
-                        nla
-                    ),
+                    _ => {
+                        log::warn!("WARN: Unsupported EthtoolRingAttr {nla:?}")
+                    }
                 }
             }
         }
@@ -596,8 +594,7 @@ async fn dump_link_mode_infos(
                     }
 
                     _ => log::warn!(
-                        "WARN: Unsupported EthtoolLinkModeAttr {:?}",
-                        nla
+                        "WARN: Unsupported EthtoolLinkModeAttr {nla:?}"
                     ),
                 }
             }

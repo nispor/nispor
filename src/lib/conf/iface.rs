@@ -32,8 +32,8 @@ pub struct IfaceConf {
 impl IfaceConf {
     pub async fn apply(&self, cur_iface: &Iface) -> Result<(), NisporError> {
         log::warn!(
-            "WARN: IfaceConf::apply() is deprecated, \
-            please use NetConf::apply() instead"
+            "WARN: IfaceConf::apply() is deprecated, please use \
+             NetConf::apply() instead"
         );
         let ifaces = vec![self];
         let mut cur_ifaces = HashMap::new();

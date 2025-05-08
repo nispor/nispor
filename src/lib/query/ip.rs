@@ -65,7 +65,7 @@ pub(crate) fn parse_ip_addr_str(
         let e = NisporError::invalid_argument(format!(
             "Invalid IP address {ip_addr_str}: {e}"
         ));
-        log::error!("{}", e);
+        log::error!("{e}");
         e
     })
 }
@@ -78,7 +78,7 @@ pub(crate) fn parse_ip_net_addr_str(
         let e = NisporError::invalid_argument(format!(
             "Invalid IP network address {ip_net_str}",
         ));
-        log::error!("{}", e);
+        log::error!("{e}");
         return Err(e);
     }
     let addr_str = splits[0];
@@ -87,7 +87,7 @@ pub(crate) fn parse_ip_net_addr_str(
             let e = NisporError::invalid_argument(format!(
                 "Invalid IP network prefix {ip_net_str}: {e}"
             ));
-            log::error!("{}", e);
+            log::error!("{e}");
             e
         })?
     } else if is_ipv6_addr(addr_str) {
@@ -119,17 +119,14 @@ pub(crate) fn fill_af_spec_inet_info(iface: &mut Iface, nlas: &[AfSpecUnspec]) {
 }
 
 pub(crate) fn read_ipv4_forwarding(iface_name: &str) -> Option<bool> {
-    let path = format!("/proc/sys/net/ipv4/conf/{}/forwarding", iface_name);
+    let path = format!("/proc/sys/net/ipv4/conf/{iface_name}/forwarding");
 
     let file = match File::open(&path) {
         Ok(f) => f,
         Err(e) => {
             log::warn!(
-                "Failed to read IPv4 forwarding value for interface '{}': \
-                 could not open '{}': {}",
-                iface_name,
-                path,
-                e
+                "Failed to read IPv4 forwarding value for interface \
+                 '{iface_name}': could not open '{path}': {e}"
             );
             return None;
         }
@@ -140,10 +137,8 @@ pub(crate) fn read_ipv4_forwarding(iface_name: &str) -> Option<bool> {
 
     if let Err(e) = reader.read_line(&mut line) {
         log::warn!(
-            "Failed to read IPv4 forwarding value from '{}', for interface '{}': {}",
-            path,
-            iface_name,
-            e
+            "Failed to read IPv4 forwarding value from '{path}', for \
+             interface '{iface_name}': {e}"
         );
         return None;
     }
@@ -153,10 +148,8 @@ pub(crate) fn read_ipv4_forwarding(iface_name: &str) -> Option<bool> {
         "0" => Some(false),
         other => {
             log::warn!(
-                "Unexpected IPv4 forwarding value '{}' in '{}', for interface '{}'",
-                other,
-                path,
-                iface_name
+                "Unexpected IPv4 forwarding value '{other}' in '{path}', for \
+                 interface '{iface_name}'"
             );
             None
         }

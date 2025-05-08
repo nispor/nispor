@@ -81,7 +81,7 @@ async fn apply_route_conf(
             let e = NisporError::invalid_argument(format!(
                 "Interface {oif} does not exist"
             ));
-            log::error!("{}", e);
+            log::error!("{e}");
             return Err(e);
         }
     }

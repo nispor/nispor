@@ -385,7 +385,7 @@ pub(crate) fn get_bridge_port_info(
                 ret.backup_nexthop_id = Some(*d)
             }
             _ => {
-                log::info!("Unknown bridge port info {:?}", nla);
+                log::info!("Unknown bridge port info {nla:?}");
             }
         }
     }

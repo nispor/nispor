@@ -62,14 +62,14 @@ fn _assert_value_match(
 }
 
 pub(crate) fn set_ipv4_forwarding(iface_name: &str, enabled: bool) {
-    let path = format!("/proc/sys/net/ipv4/conf/{}/forwarding", iface_name);
+    let path = format!("/proc/sys/net/ipv4/conf/{iface_name}/forwarding");
     let value = if enabled { "1" } else { "0" };
 
     let mut file = fs::OpenOptions::new()
         .write(true)
         .open(&path)
-        .unwrap_or_else(|_| panic!("Failed to open {}", path));
+        .unwrap_or_else(|_| panic!("Failed to open {path}"));
 
     file.write_all(value.as_bytes())
-        .unwrap_or_else(|_| panic!("Failed to write to {}", path));
+        .unwrap_or_else(|_| panic!("Failed to write to {path}"));
 }

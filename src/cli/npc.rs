@@ -71,7 +71,7 @@ impl CliIfaceBrief {
                 brief.mtu,
             ));
             if let Some(driver) = brief.driver.as_deref() {
-                ret.push(format!("{}driver {}", INDENT, driver));
+                ret.push(format!("{INDENT}driver {driver}"));
             }
 
             let mut link_string =
@@ -193,7 +193,7 @@ impl CliIfaceBrief {
                             ));
                         }
                         if let Some(fwd) = ip_info.forwarding {
-                            addr_strs.push(format!("forwarding {}", fwd));
+                            addr_strs.push(format!("forwarding {fwd}"));
                         }
                         addr_strs
                     }
@@ -404,8 +404,8 @@ fn main() {
                         .long("dev")
                         .action(clap::ArgAction::Append)
                         .help(
-                            "Show only route entries output to \
-                            the specified interface",
+                            "Show only route entries output to the specified \
+                             interface",
                         ),
                 )
                 .arg(
@@ -414,8 +414,8 @@ fn main() {
                         .long("table")
                         .action(clap::ArgAction::Append)
                         .help(
-                            "Show only route entries output in \
-                            the specified route table",
+                            "Show only route entries output in the specified \
+                             route table",
                         ),
                 )
                 .arg(

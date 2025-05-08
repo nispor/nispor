@@ -462,9 +462,9 @@ pub(crate) async fn get_routes(
                 .set_netlink_get_strict_chk(true)
             {
                 log::warn!(
-                    "Failed to set kernel space route filter: {e}, \
-                    falling back to user space route filtering which would \
-                    lead to performance penalty"
+                    "Failed to set kernel space route filter: {e}, falling \
+                     back to user space route filtering which would lead to \
+                     performance penalty"
                 );
                 has_kernel_filter = false;
             }
@@ -619,10 +619,7 @@ fn get_route(
                             rt.fastopen_no_cookie = Some(*d);
                         }
                         _ => {
-                            log::debug!(
-                                "Unknown RTA_METRICS message {:?}",
-                                nla
-                            );
+                            log::debug!("Unknown RTA_METRICS message {nla:?}");
                         }
                     }
                 }
@@ -690,7 +687,7 @@ fn get_route(
                 rt.multipath = Some(next_hops);
             }
             RouteAttribute::Preference(d) => rt.preference = Some((*d).into()),
-            _ => log::debug!("Unknown NLA message for route {:?}", nla),
+            _ => log::debug!("Unknown NLA message for route {nla:?}"),
         }
     }
 
@@ -702,7 +699,7 @@ fn _rt_addr_to_string(addr: &RouteAddress) -> String {
         RouteAddress::Inet(v) => v.to_string(),
         RouteAddress::Inet6(v) => v.to_string(),
         _ => {
-            log::debug!("Unknown RouteAddress type {:?}", addr);
+            log::debug!("Unknown RouteAddress type {addr:?}");
             String::new()
         }
     }

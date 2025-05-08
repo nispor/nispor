@@ -72,8 +72,8 @@ fn merge_vlan_range(
                     })
                 } else {
                     log::warn!(
-                        "Invalid kernel bridge vlan information: \
-                        missing start VLAN for {}",
+                        "Invalid kernel bridge vlan information: missing \
+                         start VLAN for {}",
                         k_vlan.vid
                     );
                 }

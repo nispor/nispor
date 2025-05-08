@@ -84,7 +84,7 @@ pub(crate) async fn get_mptcp() -> Result<Mptcp, NisporError> {
                     ret.subflows_limit = Some(*d);
                 }
                 _ => {
-                    log::info!("Unsupported MPTCP netlink attribute {:?}", nla)
+                    log::info!("Unsupported MPTCP netlink attribute {nla:?}")
                 }
             }
         }
@@ -146,7 +146,7 @@ pub(crate) fn merge_mptcp_info(
                         addr.iface = Some(iface_index.to_string());
                     }
                 } else {
-                    log::error!("BUG: Got invalid iface index in  {:?}", addr);
+                    log::error!("BUG: Got invalid iface index in  {addr:?}");
                 }
             }
         }
@@ -236,7 +236,7 @@ fn mptcp_flags_to_nispor(
                 Some(MptcpAddressFlag::Implicit)
             }
             _ => {
-                log::info!("Unsupported address flag {:?}", flag);
+                log::info!("Unsupported address flag {flag:?}");
                 None
             }
         } {
