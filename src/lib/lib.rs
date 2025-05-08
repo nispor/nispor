@@ -41,7 +41,7 @@ pub use crate::query::{
     IpoibMode, Ipv4AddrInfo, Ipv4Info, Ipv6AddrFlag, Ipv6AddrInfo, Ipv6Info,
     MacSecCipherId, MacSecInfo, MacSecOffload, MacSecValidate, MacVlanInfo,
     MacVlanMode, MacVtapInfo, MacVtapMode, Mptcp, MptcpAddress,
-    MptcpAddressFlag, MultipathRoute, MultipathRouteFlags, Route,
+    MptcpAddressFlag, MultipathRoute, MultipathRouteFlags, PciAddress, Route,
     RouteProtocol, RouteRule, RouteScope, RouteType, RuleAction, SriovInfo,
     TunInfo, TunMode, VethInfo, VfInfo, VfLinkState, VfState, VlanInfo,
     VlanProtocol, VlanQosMapping, VrfInfo, VrfSubordinateInfo, VxlanInfo,

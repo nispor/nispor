@@ -4,8 +4,8 @@ use clap::{crate_authors, crate_version};
 use nispor::{
     Iface, IfaceConf, IfaceState, IfaceType, Mptcp, NetConf, NetState,
     NetStateFilter, NetStateIfaceFilter, NetStateRouteFilter,
-    NetStateRouteRuleFilter, NisporError, Route, RouteProtocol, RouteRule,
-    RouteScope,
+    NetStateRouteRuleFilter, NisporError, PciAddress, Route, RouteProtocol,
+    RouteRule, RouteScope,
 };
 use serde::Serialize;
 use std::collections::HashMap;
@@ -44,6 +44,7 @@ struct CliIfaceBrief {
     name: String,
     iface_type: IfaceType,
     driver: Option<String>,
+    pci_address: Option<PciAddress>,
     controller: Option<String>,
     link_info: String,
     state: IfaceState,
@@ -71,7 +72,12 @@ impl CliIfaceBrief {
                 brief.mtu,
             ));
             if let Some(driver) = brief.driver.as_deref() {
-                ret.push(format!("{INDENT}driver {driver}"));
+                let mut drv_string = format!("{INDENT}driver {driver}");
+                if let Some(pci_addr) = brief.pci_address.as_ref() {
+                    write!(drv_string, " pci {pci_addr}").ok();
+                }
+
+                ret.push(drv_string);
             }
 
             let mut link_string =
@@ -167,6 +173,7 @@ impl CliIfaceBrief {
             ret.push(CliIfaceBrief {
                 index: iface.index,
                 driver: iface.driver.clone(),
+                pci_address: iface.pci_address,
                 iface_type: iface.iface_type.clone(),
                 controller: iface.controller.clone(),
                 link_info: get_link_info(iface),
