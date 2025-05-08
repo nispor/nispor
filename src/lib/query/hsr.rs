@@ -80,7 +80,7 @@ pub(crate) fn get_hsr_info(data: &InfoData) -> Option<HsrInfo> {
                     hsr_info.protocol = u8::from(d).into();
                 }
                 _ => {
-                    log::warn!("Unknown HSR info {:?}", info);
+                    log::warn!("Unknown HSR info {info:?}");
                 }
             }
         }

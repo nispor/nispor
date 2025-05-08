@@ -70,7 +70,7 @@ pub(crate) fn get_ip_vlan_info(data: &InfoData) -> Option<IpVlanInfo> {
                 InfoIpVlan::Flags(d) => {
                     ipv_info.flags = d.iter().map(IpVlanFlag::from).collect()
                 }
-                _ => log::debug!("Unkwnown IP VLAN info {:?}", info),
+                _ => log::debug!("Unkwnown IP VLAN info {info:?}"),
             }
         }
         return Some(ipv_info);

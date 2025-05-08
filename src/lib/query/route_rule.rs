@@ -123,10 +123,10 @@ fn get_rule(rule_msg: RuleMessage) -> Result<RouteRule, NisporError> {
     for nla in &rule_msg.attributes {
         match nla {
             RuleAttribute::Destination(d) => {
-                rl.dst = Some(format!("{}/{}", d, dst_prefix_len,));
+                rl.dst = Some(format!("{d}/{dst_prefix_len}",));
             }
             RuleAttribute::Source(d) => {
-                rl.src = Some(format!("{}/{}", d, src_prefix_len,));
+                rl.src = Some(format!("{d}/{src_prefix_len}",));
             }
             RuleAttribute::Iifname(d) => {
                 rl.iif = Some(d.clone().to_string());
@@ -176,7 +176,7 @@ fn get_rule(rule_msg: RuleMessage) -> Result<RouteRule, NisporError> {
             RuleAttribute::L3MDev(d) => {
                 rl.l3mdev = Some(*d);
             }
-            _ => log::debug!("Unknown NLA message for route rule {:?}", nla),
+            _ => log::debug!("Unknown NLA message for route rule {nla:?}"),
         }
     }
 

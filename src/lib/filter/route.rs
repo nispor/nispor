@@ -71,7 +71,7 @@ pub(crate) fn apply_kernel_route_filter(
                 let e = NisporError::invalid_argument(format!(
                     "Interface {oif} not found"
                 ));
-                log::error!("{}", e);
+                log::error!("{e}");
                 return Err(e);
             }
         }

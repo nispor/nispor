@@ -167,7 +167,7 @@ fn parse_vf_stats(nlas: &[link::VfStats]) -> Result<VfState, NisporError> {
             link::VfStats::Multicast(d) => state.multicast = *d,
             link::VfStats::RxDropped(d) => state.rx_dropped = *d,
             link::VfStats::TxDropped(d) => state.tx_dropped = *d,
-            _ => log::debug!("Unhandled IFLA_VF_STATS {:?}", nla),
+            _ => log::debug!("Unhandled IFLA_VF_STATS {nla:?}"),
         }
     }
     Ok(state)
@@ -215,7 +215,7 @@ fn read_folder(folder_path: &str) -> Vec<String> {
     let fd = match std::fs::read_dir(folder_path) {
         Ok(f) => f,
         Err(e) => {
-            log::warn!("Failed to read dir {}: {}", folder_path, e);
+            log::warn!("Failed to read dir {folder_path}: {e}");
             return folder_contents;
         }
     };
@@ -223,7 +223,7 @@ fn read_folder(folder_path: &str) -> Vec<String> {
         let entry = match entry {
             Ok(e) => e,
             Err(e) => {
-                log::warn!("Failed to read dir {}: {}", folder_path, e);
+                log::warn!("Failed to read dir {folder_path}: {e}");
                 continue;
             }
         };

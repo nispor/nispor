@@ -115,7 +115,7 @@ pub(crate) async fn get_ifaces(
             }
             Err(e) => {
                 // Ethtool is considered as optional
-                log::warn!("Failed to query ethtool info: {}", e);
+                log::warn!("Failed to query ethtool info: {e}");
             }
         };
     }

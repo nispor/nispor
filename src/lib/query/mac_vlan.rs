@@ -81,7 +81,7 @@ pub(crate) fn get_mac_vlan_info(
                 }
                 macv_info.allowed_mac_addresses = Some(addrs);
             } else {
-                log::debug!("Unknown MAC VLAN info {:?}", info)
+                log::debug!("Unknown MAC VLAN info {info:?}")
             }
         }
         Ok(Some(macv_info))
@@ -100,7 +100,7 @@ pub(crate) fn get_mac_vlan_info(
                 }
                 macv_info.allowed_mac_addresses = Some(addrs);
             } else {
-                log::debug!("Unknown MAC VTAP info {:?}", info)
+                log::debug!("Unknown MAC VTAP info {info:?}")
             }
         }
         Ok(Some(macv_info))

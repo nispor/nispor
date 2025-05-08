@@ -25,7 +25,7 @@ pub(crate) fn get_xfrm_info(data: &InfoData) -> Option<XfrmInfo> {
                     xfrm_info.iface_id = d;
                 }
                 _ => {
-                    log::debug!("Unknown XFRM info {:?}", info);
+                    log::debug!("Unknown XFRM info {info:?}");
                 }
             }
         }

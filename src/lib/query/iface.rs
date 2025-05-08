@@ -412,7 +412,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                                 iface_state.tun = Some(info);
                             }
                             Err(e) => {
-                                log::warn!("Error parsing TUN info: {}", e);
+                                log::warn!("Error parsing TUN info: {e}");
                             }
                         },
                         IfaceType::Vlan => iface_state.vlan = get_vlan_info(d),
@@ -468,7 +468,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                                 Some(s.as_str().into())
                         }
                         _ => {
-                            log::info!("Unknown port kind {:?}", info);
+                            log::info!("Unknown port kind {info:?}");
                         }
                     }
                 }
@@ -492,12 +492,12 @@ pub(crate) fn parse_nl_msg_to_iface(
                             }
                             InfoPortData::Other(_) => {
                                 log::warn!(
-                                    "Unknown controller type {:?}",
-                                    controller_type
+                                    "Unknown controller type \
+                                     {controller_type:?}"
                                 );
                             }
                             _ => {
-                                log::debug!("Unknown InfoPortData {:?}", d);
+                                log::debug!("Unknown InfoPortData {d:?}");
                             }
                         }
                     }

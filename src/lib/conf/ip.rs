@@ -208,11 +208,11 @@ fn parse_lft_sec(name: &str, lft_str: &str) -> Result<u32, NisporError> {
     ));
     match lft_str.strip_suffix("sec") {
         Some(a) => a.parse().map_err(|_| {
-            log::error!("{}", e);
+            log::error!("{e}");
             e
         }),
         None => {
-            log::error!("{}", e);
+            log::error!("{e}");
             Err(e)
         }
     }

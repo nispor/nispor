@@ -116,7 +116,7 @@ pub(crate) fn get_vlan_info(data: &InfoData) -> Option<VlanInfo> {
                     .filter_map(VlanQosMapping::from_netlink)
                     .collect();
             } else {
-                log::debug!("Unknown VLAN info: {:?}", info);
+                log::debug!("Unknown VLAN info: {info:?}");
             }
         }
         Some(vlan_info)

@@ -175,7 +175,7 @@ pub(crate) fn get_macsec_info(data: &InfoData) -> Option<MacSecInfo> {
                     macsec_info.offload = u8::from(d).into();
                 }
                 _ => {
-                    log::debug!("Unknown MACsec info {:?}", info)
+                    log::debug!("Unknown MACsec info {info:?}")
                 }
             }
         }
