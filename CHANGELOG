@@ -1,4 +1,15 @@
 # Changelog
+## [1.2.25] - 2025-06-26
+### Breaking changes
+ - N/A
+
+### New features
+ - Support querying PCI address. (8325986)
+ - Support querying IPv4 sysctl forwarding. (071a2c8)
+
+### Bug fixes
+ - N/A
+
 ## [1.2.24] - 2025-03-19
 ### Breaking changes
  - N/A
