@@ -11,3 +11,6 @@ members = [
 platforms = ["*-unknown-linux-gnu"]
 tier = "2"
 all-features = true
+
+[workspace.package]
+rust-version = "1.77"
