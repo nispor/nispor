@@ -54,6 +54,8 @@ pub struct VfState {
 pub struct SriovInfo {
     pub vfs: Vec<VfInfo>,
     pub num_vfs: Option<u32>,
+    /// The maximum supported number of VFs.
+    pub max_num_vfs: Option<u32>,
     pub drivers_autoprobe: Option<bool>,
 }
 
@@ -100,6 +102,7 @@ pub(crate) fn get_sriov_info(
         _ => MAX_ADDR_LEN,
     };
     sriov_info.num_vfs = get_num_vfs(pf_iface_name);
+    sriov_info.max_num_vfs = get_max_num_vfs(pf_iface_name);
     sriov_info.drivers_autoprobe = is_drivers_autoprobe(pf_iface_name);
     for port_nlas in nlas {
         let mut vf_info = VfInfo::default();
@@ -196,6 +199,14 @@ fn is_drivers_autoprobe(pf_name: &str) -> Option<bool> {
 
 fn get_num_vfs(pf_name: &str) -> Option<u32> {
     let sysfs_path = format!("/sys/class/net/{pf_name}/device/sriov_numvfs");
+    match std::fs::read_to_string(sysfs_path) {
+        Ok(s) => s.trim().parse::<u32>().ok(),
+        _ => None,
+    }
+}
+
+fn get_max_num_vfs(pf_name: &str) -> Option<u32> {
+    let sysfs_path = format!("/sys/class/net/{pf_name}/device/sriov_totalvfs");
     match std::fs::read_to_string(sysfs_path) {
         Ok(s) => s.trim().parse::<u32>().ok(),
         _ => None,
