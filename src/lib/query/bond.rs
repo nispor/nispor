@@ -3,6 +3,10 @@
 use std::collections::HashMap;
 use std::net::{Ipv4Addr, Ipv6Addr};
 
+use rtnetlink::packet_route::link::BondArpAllTargets as RtBondArpAllTargets;
+use rtnetlink::packet_route::link::BondFailOverMac as RtBondFailOverMac;
+use rtnetlink::packet_route::link::BondPrimaryReselect as RtBondPrimaryReselect;
+use rtnetlink::packet_route::link::BondXmitHashPolicy as RtBondXmitHashPolicy;
 use rtnetlink::packet_route::link::{self, InfoBond, InfoBondPort, InfoData};
 use serde::{Deserialize, Serialize};
 
@@ -141,6 +145,16 @@ impl From<u32> for BondModeArpAllTargets {
     }
 }
 
+impl From<RtBondArpAllTargets> for BondModeArpAllTargets {
+    fn from(v: RtBondArpAllTargets) -> Self {
+        match v {
+            RtBondArpAllTargets::Any => Self::Any,
+            RtBondArpAllTargets::All => Self::All,
+            _ => Self::Other(u32::from(v)),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
@@ -207,6 +221,17 @@ impl From<u8> for BondPrimaryReselect {
     }
 }
 
+impl From<RtBondPrimaryReselect> for BondPrimaryReselect {
+    fn from(v: RtBondPrimaryReselect) -> Self {
+        match v {
+            RtBondPrimaryReselect::Always => Self::Always,
+            RtBondPrimaryReselect::Better => Self::Better,
+            RtBondPrimaryReselect::Failure => Self::Failure,
+            _ => Self::Other(u8::from(v)),
+        }
+    }
+}
+
 const BOND_FOM_NONE: u8 = 0;
 const BOND_FOM_ACTIVE: u8 = 1;
 const BOND_FOM_FOLLOW: u8 = 2;
@@ -228,6 +253,17 @@ impl From<u8> for BondFailOverMac {
             BOND_FOM_ACTIVE => Self::Active,
             BOND_FOM_FOLLOW => Self::Follow,
             _ => Self::Other(d),
+        }
+    }
+}
+
+impl From<RtBondFailOverMac> for BondFailOverMac {
+    fn from(v: RtBondFailOverMac) -> Self {
+        match v {
+            RtBondFailOverMac::None => Self::None,
+            RtBondFailOverMac::Active => Self::Active,
+            RtBondFailOverMac::Follow => Self::Follow,
+            _ => Self::Other(u8::from(v)),
         }
     }
 }
@@ -268,6 +304,20 @@ impl From<u8> for BondXmitHashPolicy {
             BOND_XMIT_POLICY_ENCAP34 => Self::Encap34,
             BOND_XMIT_POLICY_VLAN_SRCMAC => Self::VlanSrcMac,
             _ => Self::Other(d),
+        }
+    }
+}
+
+impl From<RtBondXmitHashPolicy> for BondXmitHashPolicy {
+    fn from(v: RtBondXmitHashPolicy) -> Self {
+        match v {
+            RtBondXmitHashPolicy::Layer2 => Self::Layer2,
+            RtBondXmitHashPolicy::Layer34 => Self::Layer34,
+            RtBondXmitHashPolicy::Layer23 => Self::Layer23,
+            RtBondXmitHashPolicy::Encap23 => Self::Encap23,
+            RtBondXmitHashPolicy::Encap34 => Self::Encap34,
+            RtBondXmitHashPolicy::VlanSrcMac => Self::VlanSrcMac,
+            _ => Self::Other(u8::from(v)),
         }
     }
 }
