@@ -13,6 +13,7 @@ use crate::{
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum MacVlanMode {
     /* don't talk to other macvlans */
     Private,
@@ -26,13 +27,8 @@ pub enum MacVlanMode {
     /* use source MAC address list to assign */
     Source,
     Other(u32),
+    #[default]
     Unknown,
-}
-
-impl Default for MacVlanMode {
-    fn default() -> Self {
-        MacVlanMode::Unknown
-    }
 }
 
 impl From<rtnetlink::packet_route::link::MacVlanMode> for MacVlanMode {

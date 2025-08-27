@@ -10,17 +10,13 @@ use crate::{Iface, IfaceType};
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum IpVlanMode {
     L2,
+    #[default]
     L3,
     L3S,
     Other(u16),
-}
-
-impl Default for IpVlanMode {
-    fn default() -> Self {
-        IpVlanMode::L3
-    }
 }
 
 impl From<rtnetlink::packet_route::link::IpVlanMode> for IpVlanMode {

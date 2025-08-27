@@ -13,19 +13,15 @@ const IPOIB_MODE_CONNECTED: u16 = 1;
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum IpoibMode {
     /* using unreliable datagram QPs */
     Datagram,
     /* using connected QPs */
     Connected,
     Other(u16),
+    #[default]
     Unknown,
-}
-
-impl Default for IpoibMode {
-    fn default() -> Self {
-        IpoibMode::Unknown
-    }
 }
 
 impl From<u16> for IpoibMode {

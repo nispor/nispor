@@ -13,17 +13,13 @@ const HSR_PROTOCOL_PRP: u8 = 1;
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum HsrProtocol {
     Hsr,
     Prp,
     Other(u8),
+    #[default]
     Unknown,
-}
-
-impl Default for HsrProtocol {
-    fn default() -> Self {
-        HsrProtocol::Unknown
-    }
 }
 
 impl From<u8> for HsrProtocol {

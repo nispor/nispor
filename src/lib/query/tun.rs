@@ -43,16 +43,12 @@ pub struct TunInfo {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum TunMode {
     Tun,
     Tap,
+    #[default]
     Unknown,
-}
-
-impl Default for TunMode {
-    fn default() -> Self {
-        TunMode::Unknown
-    }
 }
 
 impl From<u8> for TunMode {

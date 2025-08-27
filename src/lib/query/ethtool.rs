@@ -103,9 +103,11 @@ pub struct EthtoolRingInfo {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum EthtoolLinkModeDuplex {
     Half,
     Full,
+    #[default]
     Unknown,
     Other(u8),
 }
@@ -118,12 +120,6 @@ impl From<&ethtool::EthtoolLinkModeDuplex> for EthtoolLinkModeDuplex {
             ethtool::EthtoolLinkModeDuplex::Unknown => Self::Unknown,
             ethtool::EthtoolLinkModeDuplex::Other(d) => Self::Other(*d),
         }
-    }
-}
-
-impl Default for EthtoolLinkModeDuplex {
-    fn default() -> Self {
-        EthtoolLinkModeDuplex::Unknown
     }
 }
 
