@@ -23,18 +23,14 @@ const MACSEC_DEFAULT_CIPHER_ID: u64 = 0x0080020001000001;
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum MacSecValidate {
     Disabled,
     Check,
     Strict,
     Other(u8),
+    #[default]
     Unknown,
-}
-
-impl Default for MacSecValidate {
-    fn default() -> Self {
-        MacSecValidate::Unknown
-    }
 }
 
 impl From<u8> for MacSecValidate {
@@ -51,18 +47,14 @@ impl From<u8> for MacSecValidate {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum MacSecOffload {
     Off,
     Phy,
     Mac,
     Other(u8),
+    #[default]
     Unknown,
-}
-
-impl Default for MacSecOffload {
-    fn default() -> Self {
-        MacSecOffload::Unknown
-    }
 }
 
 impl From<u8> for MacSecOffload {
@@ -79,18 +71,14 @@ impl From<u8> for MacSecOffload {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "kebab-case")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum MacSecCipherId {
+    #[default]
     GcmAes128,
     GcmAes256,
     GcmAesXpn128,
     GcmAesXpn256,
     Other(u64),
-}
-
-impl Default for MacSecCipherId {
-    fn default() -> Self {
-        MacSecCipherId::GcmAes128
-    }
 }
 
 impl From<u64> for MacSecCipherId {

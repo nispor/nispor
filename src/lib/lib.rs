@@ -1,19 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
+mod conf;
 mod error;
+mod filter;
 #[cfg(test)]
 mod integ_tests;
 mod mac;
-// Since rust 1.62, the `#[default]` can be used for setting default value of
-// `#[derive(Default)]` for enum. The cargo clippy will complain if we impl the
-// Default by ourselves. But currently nispor minimum rust version is 1.58,
-// hence we suppress the clippy warning here.
-mod conf;
-mod filter;
 mod net_conf;
 mod net_state;
 mod netlink;
-#[allow(clippy::derivable_impls)]
 mod query;
 
 pub use crate::conf::{

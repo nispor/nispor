@@ -9,6 +9,7 @@ use crate::{MacVlanInfo, MacVlanMode, NisporError};
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum MacVtapMode {
     /* don't talk to other macvlans */
     Private,
@@ -22,13 +23,8 @@ pub enum MacVtapMode {
     /* use source MAC address list to assign */
     Source,
     Other(u32),
+    #[default]
     Unknown,
-}
-
-impl Default for MacVtapMode {
-    fn default() -> Self {
-        MacVtapMode::Unknown
-    }
 }
 
 impl From<MacVlanMode> for MacVtapMode {

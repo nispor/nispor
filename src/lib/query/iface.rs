@@ -38,6 +38,7 @@ use crate::{
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum IfaceType {
     Bond,
     Veth,
@@ -57,16 +58,11 @@ pub enum IfaceType {
     IpVlan,
     MacSec,
     Hsr,
+    #[default]
     Unknown,
     Xfrm,
     Wifi,
     Other(String),
-}
-
-impl Default for IfaceType {
-    fn default() -> Self {
-        IfaceType::Unknown
-    }
 }
 
 impl std::fmt::Display for IfaceType {

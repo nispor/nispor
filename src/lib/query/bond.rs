@@ -683,12 +683,14 @@ impl Default for BondSubordinateState {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum BondMiiStatus {
     LinkUp,
     LinkFail,
     LinkDown,
     LinkBack,
     Other(u8),
+    #[default]
     Unknown,
 }
 
@@ -706,12 +708,6 @@ impl From<u8> for BondMiiStatus {
             BOND_LINK_BACK => Self::LinkBack,
             _ => Self::Other(d),
         }
-    }
-}
-
-impl Default for BondMiiStatus {
-    fn default() -> Self {
-        BondMiiStatus::Unknown
     }
 }
 
