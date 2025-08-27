@@ -7,8 +7,8 @@ use serde::{Deserialize, Serialize};
 
 use super::{super::mac::mac_str_to_raw, inter_ifaces::change_ifaces};
 use crate::{
-    BondConf, BridgeConf, Iface, IfaceState, IfaceType, IpConf, NisporError,
-    VethConf, VlanConf,
+    AltNameConf, BondConf, BridgeConf, Iface, IfaceState, IfaceType, IpConf,
+    NisporError, VethConf, VlanConf,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -19,6 +19,8 @@ pub struct IfaceConf {
     pub state: IfaceState,
     #[serde(rename = "type")]
     pub iface_type: Option<IfaceType>,
+    #[serde(default)]
+    pub alt_names: Vec<AltNameConf>,
     pub controller: Option<String>,
     pub ipv4: Option<IpConf>,
     pub ipv6: Option<IpConf>,
