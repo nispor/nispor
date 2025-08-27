@@ -1,14 +1,14 @@
 [package]
 name = "nispor"
-version = "1.2.26"
-authors = ["Gris Ge <fge@redhat.com>"]
-license = "Apache-2.0"
-edition = "2021"
-description = "Unified interface for Linux network state querying"
-homepage = "https://github.com/nispor/nispor"
-repository = "https://github.com/nispor/nispor"
-keywords = ["network"]
-categories = ["network-programming", "os"]
+version.workspace = true
+authors.workspace = true
+license.workspace = true
+edition.workspace = true
+description.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
 rust-version.workspace = true
 
 [lib]
@@ -17,17 +17,17 @@ path = "lib.rs"
 crate-type = ["lib"]
 
 [dependencies]
-serde = { version = "1.0.137", features = ["derive"] }
-serde_json = "1.0.81"
-rtnetlink = "0.17.0"
-ethtool = "0.2.8"
-mptcp-pm = "0.1.3"
-tokio = { version = "1.19.2", features = ["macros", "rt"] }
-futures = "0.3.21"
-libc = "0.2.155"
-log = "0.4.17"
-wl-nl80211 = "0.2.0"
+serde = { workspace = true }
+serde_json = { workspace = true }
+rtnetlink = { workspace = true }
+ethtool = { workspace = true }
+mptcp-pm = { workspace = true }
+tokio = { workspace = true }
+futures = { workspace = true }
+libc = { workspace = true }
+log = { workspace = true }
+wl-nl80211 = { workspace = true }
 
 [dev-dependencies]
-serde_yaml = "0.9"
+serde_yaml = { workspace = true }
 pretty_assertions = "1.2.1"
