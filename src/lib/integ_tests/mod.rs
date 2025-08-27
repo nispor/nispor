@@ -3,6 +3,8 @@
 mod utils;
 
 #[cfg(test)]
+mod alt_name;
+#[cfg(test)]
 mod base_info;
 #[cfg(test)]
 mod bond;

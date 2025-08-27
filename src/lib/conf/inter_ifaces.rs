@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use rtnetlink::{new_connection, LinkUnspec};
 
 use super::{
+    alt_name::change_alt_names,
     iface::{change_iface_mac, change_iface_state},
     ip::change_ips,
 };
@@ -105,6 +106,7 @@ pub(crate) async fn change_ifaces(
     change_ifaces_controller(&handle, ifaces, cur_ifaces).await?;
     change_ifaces_state(&handle, ifaces, cur_ifaces).await?;
     change_ips(&handle, ifaces, cur_ifaces).await?;
+    change_alt_names(&handle, ifaces, cur_ifaces).await?;
     Ok(())
 }
 

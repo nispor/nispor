@@ -5,7 +5,7 @@ use std::path::Path;
 
 use rtnetlink::packet_route::link::{
     self, InfoKind, InfoPortData, InfoPortKind, LinkAttribute, LinkInfo,
-    LinkLayerType, LinkMessage,
+    LinkLayerType, LinkMessage, Prop,
 };
 use serde::{Deserialize, Serialize};
 
@@ -237,6 +237,8 @@ pub struct Iface {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_mtu: Option<i64>,
     pub flags: Vec<IfaceFlag>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub alt_names: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ipv4: Option<Ipv4Info>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -358,6 +360,17 @@ pub(crate) fn parse_nl_msg_to_iface(
             iface_state.controller = Some(format!("{controller}"));
         } else if let LinkAttribute::Link(l) = nla {
             link = Some(*l);
+        } else if let LinkAttribute::PropList(prop_list) = nla {
+            iface_state.alt_names = prop_list
+                .iter()
+                .filter_map(|p| {
+                    if let Prop::AltIfName(n) = p {
+                        Some(n.to_string())
+                    } else {
+                        None
+                    }
+                })
+                .collect();
         } else if let LinkAttribute::LinkInfo(infos) = nla {
             for info in infos {
                 if let LinkInfo::Kind(t) = info {

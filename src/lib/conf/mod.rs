@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+mod alt_name;
 mod bond;
 mod bridge;
 mod iface;
@@ -9,6 +10,7 @@ mod route;
 mod veth;
 mod vlan;
 
+pub use self::alt_name::AltNameConf;
 pub use self::bond::BondConf;
 pub use self::bridge::BridgeConf;
 pub use self::iface::IfaceConf;

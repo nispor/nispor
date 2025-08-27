@@ -12,8 +12,8 @@ mod netlink;
 mod query;
 
 pub use crate::conf::{
-    BondConf, BridgeConf, IfaceConf, IpAddrConf, IpConf, RouteConf, VethConf,
-    VlanConf,
+    AltNameConf, BondConf, BridgeConf, IfaceConf, IpAddrConf, IpConf,
+    RouteConf, VethConf, VlanConf,
 };
 pub use crate::error::{ErrorKind, NisporError};
 pub use crate::filter::{
