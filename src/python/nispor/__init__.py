@@ -20,4 +20,13 @@ from .veth import NisporVeth
 from .vlan import NisporVlan
 from .vxlan import NisporVxlan
 
+
+import warnings
+
+warnings.warn(
+    "the nispor module is deprecated, please use nmstate instead",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 __all__ = []

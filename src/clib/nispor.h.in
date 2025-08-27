@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#warning "Deprecated, please use rust nispor crate directly"
+
 #ifndef _LIBNISPOR_H_
 #define _LIBNISPOR_H_
 
