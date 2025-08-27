@@ -1,10 +1,10 @@
 [package]
 name = "nispor-clib"
-version = "1.2.26"
+version = "1.2.26-deprecated"
 authors = ["Gris Ge <fge@redhat.com>"]
 license = "Apache-2.0"
 edition = "2021"
-description = "C binding for nispor project"
+description = "C binding for nispor project (deprecated)"
 homepage = "https://github.com/nispor/nispor"
 repository = "https://github.com/nispor/nispor"
 keywords = ["network"]
