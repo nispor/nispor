@@ -57,6 +57,7 @@ struct CliIfaceBrief {
     ipv6_token: Option<String>,
     gw4: Vec<String>,
     gw6: Vec<String>,
+    alt_names: Vec<String>,
 }
 
 impl CliIfaceBrief {
@@ -86,11 +87,20 @@ impl CliIfaceBrief {
             if !brief.link_info.is_empty() {
                 write!(link_string, " {}", brief.link_info.as_str()).ok();
             }
+
             if let Some(ctrl) = brief.controller.as_ref() {
                 write!(link_string, " controller {ctrl}").ok();
             }
 
             ret.push(link_string);
+
+            if !brief.alt_names.is_empty() {
+                ret.push(format!(
+                    "{}altname {}",
+                    INDENT,
+                    brief.alt_names.join(",")
+                ))
+            }
 
             let mut mac_string = String::new();
             if !&brief.mac.is_empty() {
@@ -235,6 +245,7 @@ impl CliIfaceBrief {
                     Some(gws) => gws.to_vec(),
                     None => Vec::new(),
                 },
+                alt_names: iface.alt_names.clone(),
             })
         }
         ret.sort_by(|a, b| a.index.cmp(&b.index));
