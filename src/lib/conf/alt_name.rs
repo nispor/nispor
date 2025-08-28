@@ -7,10 +7,17 @@ use serde::{Deserialize, Serialize};
 use crate::{Iface, IfaceConf, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[non_exhaustive]
 pub struct AltNameConf {
     #[serde(default)]
-    remove: bool,
-    name: String,
+    pub remove: bool,
+    pub name: String,
+}
+
+impl AltNameConf {
+    pub fn new(name: String, remove: bool) -> Self {
+        Self { name, remove }
+    }
 }
 
 pub(crate) async fn change_alt_names(
