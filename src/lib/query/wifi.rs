@@ -44,7 +44,8 @@ pub(crate) async fn fill_wifi_info(
     let (connection, handle, _) = wl_nl80211::new_connection()?;
     tokio::spawn(connection);
 
-    let mut interface_handle = handle.interface().get().execute().await;
+    let mut interface_handle =
+        handle.interface().get(Vec::new()).execute().await;
 
     while let Some(msg) = interface_handle.try_next().await? {
         let attrs = &msg.payload.attributes;
