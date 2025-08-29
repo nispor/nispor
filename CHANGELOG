@@ -1,4 +1,16 @@
 # Changelog
+## [1.2.26] - 2025-08-29
+### Breaking changes
+ - Deprecated nispor C binding and python bindings. (fc73302)
+ - Bump minimum supported rust version to 1.77. (685214e)
+
+### New features
+ - Support querying and changing alt-name. (3741bdc, 9b47393, 27d2858)
+ - Include maximum supported VF count. (413e972)
+
+### Bug fixes
+ - Use latest rust-netlink crates. (45269a0)
+
 ## [1.2.25] - 2025-06-26
 ### Breaking changes
  - N/A
