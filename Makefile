@@ -115,8 +115,7 @@ dist:
 	cargo vendor-filterer $(TMPDIR)/vendor || \
 		(echo -en "\nNot cargo-vendor-filterer, Please install via "; \
 		 echo -e "'cargo install cargo-vendor-filterer'\n")
-	cd $(TMPDIR)
-	tar cfJ $(VENDOR_TARBALL) vendor
+	tar cfJ $(VENDOR_TARBALL) -C $(TMPDIR) vendor
 	rm -rf $(TMPDIR)
 
 upstream_release:
