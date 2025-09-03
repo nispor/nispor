@@ -41,7 +41,7 @@ const VETH_CREATE_YML: &str = r#"---
 ifaces:
   - name: veth1
     type: veth
-    mac_address: 00:23:45:67:89:1a
+    mac-address: 00:23:45:67:89:1a
     veth:
       peer: veth1.ep
   - name: veth1.ep
@@ -52,7 +52,7 @@ const VETH_CHANGE_MAC_YML: &str = r#"---
 ifaces:
   - name: veth1
     type: veth
-    mac_address: 00:23:45:67:89:2a"#;
+    mac-address: 00:23:45:67:89:2a"#;
 
 const VETH_DOWN_YML: &str = r#"---
 ifaces:

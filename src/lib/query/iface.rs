@@ -2,6 +2,7 @@
 
 use std::{collections::HashMap, path::Path};
 
+use futures::stream::TryStreamExt;
 use rtnetlink::packet_route::link::{
     self, InfoKind, InfoPortData, InfoPortKind, LinkAttribute, LinkInfo,
     LinkLayerType, LinkMessage, Prop,
@@ -28,7 +29,7 @@ use super::{
 };
 use crate::{
     BondInfo, BondSubordinateInfo, BridgeInfo, BridgePortInfo, BridgeVlanEntry,
-    EthtoolInfo, HsrInfo, IpVlanInfo, IpoibInfo, Ipv4Info, Ipv6Info,
+    ErrorKind, EthtoolInfo, HsrInfo, IpVlanInfo, IpoibInfo, Ipv4Info, Ipv6Info,
     MacSecInfo, MacVlanInfo, MacVtapInfo, MptcpAddress, NisporError,
     PciAddress, SriovInfo, TunInfo, VethInfo, VfInfo, VlanInfo, VrfInfo,
     VrfSubordinateInfo, VxlanInfo, WifiInfo, XfrmInfo,
@@ -636,4 +637,29 @@ fn _get_iface_driver(if_name: &str) -> Option<String> {
     };
 
     Some(res.to_string())
+}
+
+pub(crate) async fn resolve_iface_index(
+    handle: &rtnetlink::Handle,
+    iface_name: &str,
+) -> Result<u32, NisporError> {
+    let mut links = handle
+        .link()
+        .get()
+        .match_name(iface_name.to_string())
+        .execute();
+
+    while let Some(nl_msg) = links.try_next().await? {
+        if let Some((cur_iface_name, iface_index)) =
+            parse_nl_msg_to_name_and_index(&nl_msg)
+        {
+            if cur_iface_name == iface_name {
+                return Ok(iface_index);
+            }
+        }
+    }
+    Err(NisporError::new(
+        ErrorKind::IfaceNotFound,
+        format!("Interface {iface_name} not found"),
+    ))
 }

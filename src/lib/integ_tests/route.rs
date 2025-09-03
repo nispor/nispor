@@ -184,31 +184,31 @@ fn test_add_remove_route_yaml() {
         // Apply twice to test whether crate ignore duplicate error.
         net_conf.apply().unwrap();
         let state = NetState::retrieve().unwrap();
-        let mut expected_routes = Vec::new();
+        let mut current_routes = Vec::new();
         for route in state.routes {
             if RouteProtocol::Dhcp == route.protocol
                 && route.oif.as_deref() == Some("veth1")
             {
-                expected_routes.push(route)
+                current_routes.push(route)
             }
         }
-        expected_routes.sort_unstable_by_key(|r| r.metric);
-        assert_value_match(EXPECTED_YAML_OUTPUT, &expected_routes);
+        current_routes.sort_unstable_by_key(|r| r.metric);
+        assert_value_match(EXPECTED_YAML_OUTPUT, &current_routes);
 
         let net_conf: NetConf = serde_yaml::from_str(REMOVE_ROUTE_YML).unwrap();
         net_conf.apply().unwrap();
         // Apply twice to test whether crate ignore the not found error.
         net_conf.apply().unwrap();
         let state = NetState::retrieve().unwrap();
-        let mut expected_routes = Vec::new();
+        let mut current_routes = Vec::new();
         for route in state.routes {
             if RouteProtocol::Dhcp == route.protocol
                 && route.oif.as_deref() == Some("veth1")
             {
-                expected_routes.push(route)
+                current_routes.push(route)
             }
         }
-        assert!(expected_routes.is_empty());
+        assert!(current_routes.is_empty());
     })
 }
 
@@ -216,6 +216,7 @@ const VETH_STATIC_IP_CONF: &str = r#"---
 ifaces:
   - name: veth1
     type: veth
+    state: up
     veth:
       peer: veth1.ep
     ipv4:
@@ -225,7 +226,10 @@ ifaces:
     ipv6:
       addresses:
         - address: "2001:db8:a::9"
-          prefix_len: 64"#;
+          prefix_len: 64
+  - name: veth1.ep
+    type: veth
+    state: up"#;
 
 const VETH_ABSENT_CONF: &str = r#"---
 ifaces:
@@ -251,15 +255,15 @@ where
 fn test_get_route_yaml() {
     with_route_test_iface(|| {
         let state = NetState::retrieve().unwrap();
-        let mut expected_routes = Vec::new();
+        let mut current_routes = Vec::new();
         for route in state.routes {
             if Some(TEST_ROUTE_DST_V4.into()) == route.dst
                 || Some(TEST_ROUTE_DST_V6.into()) == route.dst
             {
-                expected_routes.push(route)
+                current_routes.push(route)
             }
         }
-        assert_value_match(EXPECTED_MULTIPATH_YAML_OUTPUT, &expected_routes);
+        assert_value_match(EXPECTED_MULTIPATH_YAML_OUTPUT, &current_routes);
     });
 }
 

@@ -8,6 +8,7 @@ use serde::Serialize;
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ErrorKind {
+    IfaceNotFound,
     InvalidArgument,
     NetlinkError,
     NisporBug,
@@ -28,6 +29,10 @@ pub struct NisporError {
 }
 
 impl NisporError {
+    pub fn new(kind: ErrorKind, msg: String) -> Self {
+        Self { kind, msg }
+    }
+
     pub(crate) fn bug(message: String) -> NisporError {
         NisporError {
             kind: ErrorKind::NisporBug,
@@ -54,9 +59,7 @@ impl std::fmt::Display for NisporError {
     }
 }
 
-impl std::error::Error for NisporError {
-    /* TODO */
-}
+impl std::error::Error for NisporError {}
 
 impl From<rtnetlink::Error> for NisporError {
     fn from(e: rtnetlink::Error) -> Self {

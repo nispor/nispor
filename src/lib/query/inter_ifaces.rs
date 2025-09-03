@@ -32,14 +32,11 @@ use super::{
 };
 use crate::{EthtoolInfo, Iface, NetStateIfaceFilter, NisporError};
 
-pub(crate) async fn get_ifaces(
+pub(crate) async fn get_ifaces_with_handle(
+    handle: &rtnetlink::Handle,
     filter: Option<&NetStateIfaceFilter>,
 ) -> Result<HashMap<String, Iface>, NisporError> {
     let mut iface_states: HashMap<String, Iface> = HashMap::new();
-    let (connection, handle, _) = new_connection()?;
-
-    tokio::spawn(connection);
-
     let default_filter = NetStateIfaceFilter::default();
 
     let filter = filter.unwrap_or(&default_filter);
@@ -135,6 +132,15 @@ pub(crate) async fn get_ifaces(
 
     tidy_up(&mut iface_states);
     Ok(iface_states)
+}
+
+pub(crate) async fn get_ifaces(
+    filter: Option<&NetStateIfaceFilter>,
+) -> Result<HashMap<String, Iface>, NisporError> {
+    let (connection, handle, _) = new_connection()?;
+
+    tokio::spawn(connection);
+    get_ifaces_with_handle(&handle, filter).await
 }
 
 fn tidy_up(iface_states: &mut HashMap<String, Iface>) {
