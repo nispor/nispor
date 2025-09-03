@@ -36,6 +36,11 @@ pub(crate) async fn apply_base_link_changes(
     if cur_iface_state != des_iface.state {
         msg_builder = apply_state_change(msg_builder, des_iface)?;
     }
+    if let Some(mtu) = des_iface.mtu {
+        if cur_iface.mtu != mtu as i64 {
+            msg_builder = msg_builder.mtu(mtu);
+        }
+    }
 
     handle
         .link()
