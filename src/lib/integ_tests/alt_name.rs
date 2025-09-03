@@ -29,7 +29,7 @@ fn test_add_and_remove_alt_name_bulk() {
             r#"---
             ifaces:
               - name: veth1
-                alt_names:
+                alt-names:
                   - name: port1
                   - name: internal"#,
         )
@@ -46,7 +46,7 @@ fn test_add_and_remove_alt_name_bulk() {
             r#"---
             ifaces:
               - name: veth1
-                alt_names:
+                alt-names:
                   - name: port1
                     remove: true
                   - name: internal
@@ -67,7 +67,7 @@ fn test_add_and_remove_alt_name_mixed() {
             r#"---
             ifaces:
               - name: veth1
-                alt_names:
+                alt-names:
                   - name: port1
                   - name: internal"#,
         )
@@ -84,7 +84,7 @@ fn test_add_and_remove_alt_name_mixed() {
             r#"---
             ifaces:
               - name: veth1
-                alt_names:
+                alt-names:
                   - name: internal
                     remove: true
                   - name: wan0"#,

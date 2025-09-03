@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{collections::HashMap, net::IpAddr, str::FromStr};
+use std::{net::IpAddr, str::FromStr};
 
 use rtnetlink::packet_route::{
     address::{AddressAttribute, AddressMessage, CacheInfo},
@@ -8,8 +8,11 @@ use rtnetlink::packet_route::{
 };
 use serde::{Deserialize, Serialize};
 
-use super::super::query::is_ipv6_addr;
-use crate::{Iface, IfaceConf, IpFamily, Ipv4Info, Ipv6Info, NisporError};
+use super::super::query::{get_ifaces_with_handle, is_ipv6_addr};
+use crate::{
+    ErrorKind, IfaceConf, IpFamily, Ipv4Info, Ipv6Info, NetStateIfaceFilter,
+    NisporError,
+};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
@@ -68,46 +71,30 @@ pub struct IpAddrConf {
     pub preferred_lft: String,
 }
 
-impl IpConf {
-    pub async fn apply(
-        &self,
-        handle: &rtnetlink::Handle,
-        cur_iface: &Iface,
-        family: IpFamily,
-    ) -> Result<(), NisporError> {
-        log::warn!("WARN: Deprecated, please use NetConf::apply() instead");
-        let iface = match family {
-            IpFamily::Ipv4 => IfaceConf {
-                ipv4: Some(self.clone()),
-                ..Default::default()
-            },
-            IpFamily::Ipv6 => IfaceConf {
-                ipv6: Some(self.clone()),
-                ..Default::default()
-            },
-        };
-        let ifaces = vec![&iface];
-        let mut cur_ifaces = HashMap::new();
-        cur_ifaces.insert(cur_iface.name.clone(), cur_iface.clone());
-        change_ips(handle, &ifaces, &cur_ifaces).await
-    }
-}
-
-pub(crate) async fn change_ips(
+pub(crate) async fn change_ip_layer(
     handle: &rtnetlink::Handle,
-    ifaces: &[&IfaceConf],
-    cur_ifaces: &HashMap<String, Iface>,
+    des_iface: &IfaceConf,
 ) -> Result<(), NisporError> {
-    for iface in ifaces {
-        if let Some(cur_iface) = cur_ifaces.get(&iface.name) {
-            if let Some(ip_conf) = iface.ipv4.as_ref() {
-                apply_ip_conf(handle, cur_iface.index, ip_conf, IpFamily::Ipv4)
-                    .await?;
-            }
-            if let Some(ip_conf) = iface.ipv6.as_ref() {
-                apply_ip_conf(handle, cur_iface.index, ip_conf, IpFamily::Ipv6)
-                    .await?;
-            }
+    if des_iface.ipv4.is_some() || des_iface.ipv6.is_some() {
+        let mut iface_filter = NetStateIfaceFilter::minimum();
+        iface_filter.iface_name = Some(des_iface.name.to_string());
+        iface_filter.include_ip_address = true;
+        let mut cur_ifaces =
+            get_ifaces_with_handle(handle, Some(&iface_filter)).await?;
+        let cur_iface =
+            cur_ifaces.remove(&des_iface.name).ok_or_else(|| {
+                NisporError::new(
+                    ErrorKind::NisporBug,
+                    format!("Failed to find interface {des_iface:?}"),
+                )
+            })?;
+        if let Some(ip_conf) = des_iface.ipv4.as_ref() {
+            apply_ip_conf(handle, cur_iface.index, ip_conf, IpFamily::Ipv4)
+                .await?;
+        }
+        if let Some(ip_conf) = des_iface.ipv6.as_ref() {
+            apply_ip_conf(handle, cur_iface.index, ip_conf, IpFamily::Ipv6)
+                .await?;
         }
     }
 

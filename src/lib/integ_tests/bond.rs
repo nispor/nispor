@@ -101,6 +101,7 @@ const BOND_PORT_REMOVE_YML: &str = r#"---
 ifaces:
   - name: veth1
     type: veth
+    controller: ""
     veth:
       peer: veth1.ep"#;
 

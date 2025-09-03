@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use rtnetlink::{Handle, LinkBond};
+use rtnetlink::{LinkBond, LinkMessageBuilder};
 use serde::{Deserialize, Serialize};
 
-use crate::{BondMode, NisporError};
+use crate::{BondMode, IfaceConf, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
@@ -12,24 +12,11 @@ pub struct BondConf {
 }
 
 impl BondConf {
-    pub(crate) async fn create(
-        &self,
-        handle: &Handle,
-        name: &str,
-    ) -> Result<(), NisporError> {
-        let req = handle.link().add(
-            LinkBond::new(name)
-                .mode(self.mode.unwrap_or_default().into())
-                .up()
-                .build(),
-        );
-
-        match req.execute().await {
-            Ok(_) => Ok(()),
-            Err(e) => Err(NisporError::bug(format!(
-                "Failed to create new bond '{}': {}",
-                &name, e
-            ))),
-        }
+    pub(crate) fn create(
+        iface: &IfaceConf,
+    ) -> Result<LinkMessageBuilder<LinkBond>, NisporError> {
+        let bond_mode =
+            iface.bond.as_ref().and_then(|b| b.mode).unwrap_or_default();
+        Ok(LinkBond::new(iface.name.as_str()).mode(bond_mode.into()))
     }
 }

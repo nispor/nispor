@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 mod alt_name;
+mod base_iface;
 mod bond;
 mod bridge;
 mod iface;
@@ -21,6 +22,5 @@ pub use self::{
     vlan::VlanConf,
 };
 pub(crate) use self::{
-    inter_ifaces::{change_ifaces, create_ifaces, delete_ifaces},
-    route::apply_routes_conf,
+    inter_ifaces::apply_ifaces_conf, route::apply_routes_conf,
 };
