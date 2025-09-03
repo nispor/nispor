@@ -100,3 +100,30 @@ fn test_create_down_delete_veth() {
     let state = NetState::retrieve().unwrap();
     assert_eq!(None, state.ifaces.get(IFACE_NAME));
 }
+
+#[test]
+fn test_change_veth_mtu() {
+    let net_conf: NetConf = serde_yaml::from_str(
+        r#"---
+        interfaces:
+          - name: veth1
+            type: veth
+            mtu: 2000
+            veth:
+              peer: veth1.ep
+          - name: veth1.ep
+            type: veth
+            "#,
+    )
+    .unwrap();
+    net_conf.apply().unwrap();
+
+    let state = NetState::retrieve().unwrap();
+    let iface = &state.ifaces[IFACE_NAME];
+    assert_eq!(iface.mtu, 2000);
+
+    let net_conf: NetConf = serde_yaml::from_str(VETH_DELETE_YML).unwrap();
+    net_conf.apply().unwrap();
+    let state = NetState::retrieve().unwrap();
+    assert_eq!(None, state.ifaces.get(IFACE_NAME));
+}

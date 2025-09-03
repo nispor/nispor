@@ -27,6 +27,7 @@ pub struct IfaceConf {
     pub ipv4: Option<IpConf>,
     pub ipv6: Option<IpConf>,
     pub mac_address: Option<String>,
+    pub mtu: Option<u32>,
     pub veth: Option<VethConf>,
     pub bridge: Option<BridgeConf>,
     pub vlan: Option<VlanConf>,
