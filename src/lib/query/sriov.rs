@@ -3,7 +3,6 @@
 use std::collections::HashMap;
 
 use rtnetlink::packet_route::link::{self, LinkVfInfo};
-
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -213,9 +212,10 @@ fn get_max_num_vfs(pf_name: &str) -> Option<u32> {
     }
 }
 
-// SR-IOV can be disabled on BIOS but the VFs netlink attribute will be there. In order to
-// understand if the SR-IOV can be configured we must look at PCI level. If sriov_numvfs is present
-// we can assume that the NIC is SR-IOV capable and it is enabled.
+// SR-IOV can be disabled on BIOS but the VFs netlink attribute will be there.
+// In order to understand if the SR-IOV can be configured we must look at PCI
+// level. If sriov_numvfs is present we can assume that the NIC is SR-IOV
+// capable and it is enabled.
 pub(crate) fn sriov_is_enabled(pf_name: &str) -> bool {
     let sysfs_path = format!("/sys/class/net/{pf_name}/device/sriov_numvfs");
     std::fs::File::open(sysfs_path).is_ok()

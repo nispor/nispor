@@ -4,8 +4,10 @@ use std::collections::HashMap;
 use rtnetlink::packet_route::link::{InfoData, InfoHsr};
 use serde::{Deserialize, Serialize};
 
-use crate::mac::{parse_as_mac, ETH_ALEN};
-use crate::{Iface, IfaceType};
+use crate::{
+    mac::{parse_as_mac, ETH_ALEN},
+    Iface, IfaceType,
+};
 
 const HSR_PROTOCOL_HSR: u8 = 0;
 const HSR_PROTOCOL_PRP: u8 = 1;

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::hash_map::Entry;
-use std::collections::HashMap;
-use std::io::Read;
-use std::net::IpAddr;
+use std::{
+    collections::{hash_map::Entry, HashMap},
+    io::Read,
+    net::IpAddr,
+};
 
 use futures::stream::TryStreamExt;
 use mptcp_pm::{

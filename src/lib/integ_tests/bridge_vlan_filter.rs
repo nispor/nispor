@@ -4,9 +4,8 @@ use std::panic;
 
 use pretty_assertions::assert_eq;
 
-use crate::NetState;
-
 use super::utils::assert_value_match;
+use crate::NetState;
 
 const IFACE_NAME: &str = "br0";
 const PORT1_NAME: &str = "eth1";

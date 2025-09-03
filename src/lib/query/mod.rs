@@ -28,51 +28,49 @@ mod vlan;
 mod vrf;
 mod vxlan;
 
-pub use self::bond::{
-    BondAdInfo, BondAdSelect, BondAllSubordinatesActive, BondArpValidate,
-    BondFailOverMac, BondInfo, BondLacpRate, BondMiiStatus, BondMode,
-    BondModeArpAllTargets, BondPrimaryReselect, BondSubordinateInfo,
-    BondSubordinateState, BondXmitHashPolicy,
+pub use self::{
+    bond::{
+        BondAdInfo, BondAdSelect, BondAllSubordinatesActive, BondArpValidate,
+        BondFailOverMac, BondInfo, BondLacpRate, BondMiiStatus, BondMode,
+        BondModeArpAllTargets, BondPrimaryReselect, BondSubordinateInfo,
+        BondSubordinateState, BondXmitHashPolicy,
+    },
+    bridge::{
+        BridgeInfo, BridgePortInfo, BridgePortMulticastRouterType,
+        BridgePortStpState, BridgeStpState, BridgeVlanEntry,
+        BridgeVlanProtocol,
+    },
+    ethtool::{
+        EthtoolCoalesceInfo, EthtoolFeatureInfo, EthtoolFecInfo,
+        EthtoolFecMode, EthtoolInfo, EthtoolLinkModeDuplex,
+        EthtoolLinkModeInfo, EthtoolPauseInfo, EthtoolRingInfo,
+    },
+    hsr::{HsrInfo, HsrProtocol},
+    iface::{ControllerType, Iface, IfaceFlag, IfaceState, IfaceType},
+    ip::{
+        IpFamily, Ipv4AddrInfo, Ipv4Info, Ipv6AddrFlag, Ipv6AddrInfo, Ipv6Info,
+    },
+    ipoib::{IpoibInfo, IpoibMode},
+    ipvlan::{IpVlanFlag, IpVlanInfo, IpVlanMode},
+    mac_vlan::{MacVlanInfo, MacVlanMode},
+    mac_vtap::{MacVtapInfo, MacVtapMode},
+    macsec::{MacSecCipherId, MacSecInfo, MacSecOffload, MacSecValidate},
+    mptcp::{Mptcp, MptcpAddress, MptcpAddressFlag},
+    pci::PciAddress,
+    route::{
+        AddressFamily, MultipathRoute, MultipathRouteFlags, Route,
+        RouteProtocol, RouteScope, RouteType,
+    },
+    route_rule::{RouteRule, RuleAction},
+    sriov::{SriovInfo, VfInfo, VfLinkState, VfState},
+    tun::{TunInfo, TunMode},
+    veth::VethInfo,
+    vlan::{VlanInfo, VlanProtocol, VlanQosMapping},
+    vrf::{VrfInfo, VrfSubordinateInfo},
+    vxlan::VxlanInfo,
+    wifi::WifiInfo,
+    xfrm::XfrmInfo,
 };
-pub use self::bridge::{
-    BridgeInfo, BridgePortInfo, BridgePortMulticastRouterType,
-    BridgePortStpState, BridgeStpState, BridgeVlanEntry, BridgeVlanProtocol,
-};
-pub use self::ethtool::{
-    EthtoolCoalesceInfo, EthtoolFeatureInfo, EthtoolFecInfo, EthtoolFecMode,
-    EthtoolInfo, EthtoolLinkModeDuplex, EthtoolLinkModeInfo, EthtoolPauseInfo,
-    EthtoolRingInfo,
-};
-pub use self::hsr::{HsrInfo, HsrProtocol};
-pub use self::iface::{
-    ControllerType, Iface, IfaceFlag, IfaceState, IfaceType,
-};
-pub use self::ip::{
-    IpFamily, Ipv4AddrInfo, Ipv4Info, Ipv6AddrFlag, Ipv6AddrInfo, Ipv6Info,
-};
-pub use self::ipoib::{IpoibInfo, IpoibMode};
-pub use self::ipvlan::{IpVlanFlag, IpVlanInfo, IpVlanMode};
-pub use self::mac_vlan::{MacVlanInfo, MacVlanMode};
-pub use self::mac_vtap::{MacVtapInfo, MacVtapMode};
-pub use self::macsec::{
-    MacSecCipherId, MacSecInfo, MacSecOffload, MacSecValidate,
-};
-pub use self::mptcp::{Mptcp, MptcpAddress, MptcpAddressFlag};
-pub use self::pci::PciAddress;
-pub use self::route::{
-    AddressFamily, MultipathRoute, MultipathRouteFlags, Route, RouteProtocol,
-    RouteScope, RouteType,
-};
-pub use self::route_rule::{RouteRule, RuleAction};
-pub use self::sriov::{SriovInfo, VfInfo, VfLinkState, VfState};
-pub use self::tun::{TunInfo, TunMode};
-pub use self::veth::VethInfo;
-pub use self::vlan::{VlanInfo, VlanProtocol, VlanQosMapping};
-pub use self::vrf::{VrfInfo, VrfSubordinateInfo};
-pub use self::vxlan::VxlanInfo;
-pub use self::wifi::WifiInfo;
-pub use self::xfrm::XfrmInfo;
-
 pub(crate) use self::{
     inter_ifaces::{get_iface_name2index, get_ifaces},
     ip::{

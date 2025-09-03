@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-use std::net::IpAddr;
+use std::{collections::HashMap, net::IpAddr};
+
+use rtnetlink::packet_route::address::{AddressAttribute, AddressMessage};
 
 use crate::{
     query::read_ipv4_forwarding, Iface, Ipv4AddrInfo, Ipv4Info, Ipv6AddrFlag,
     Ipv6AddrInfo, Ipv6Info, NisporError,
 };
-
-use rtnetlink::packet_route::address::{AddressAttribute, AddressMessage};
 
 pub(crate) fn fill_ip_addr(
     iface_states: &mut HashMap<String, Iface>,

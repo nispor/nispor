@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{NetConf, NetState};
-use pretty_assertions::assert_eq;
-
 use std::panic;
 
+use pretty_assertions::assert_eq;
+
 use super::utils::assert_value_match;
+use crate::{NetConf, NetState};
 
 const IFACE_NAME: &str = "eth1.101";
 

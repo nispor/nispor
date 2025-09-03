@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    collections::HashMap,
+    fmt,
+    fmt::Write as _FmtWrite,
+    io::{stderr, stdout, Write},
+    process,
+};
+
 use clap::{crate_authors, crate_version};
 use nispor::{
     Iface, IfaceConf, IfaceState, IfaceType, Mptcp, NetConf, NetState,
@@ -8,11 +16,6 @@ use nispor::{
     RouteRule, RouteScope,
 };
 use serde::Serialize;
-use std::collections::HashMap;
-use std::fmt;
-use std::fmt::Write as _FmtWrite;
-use std::io::{stderr, stdout, Write};
-use std::process;
 
 const INDENT: &str = "    ";
 const LIST_SPLITER: &str = ",";

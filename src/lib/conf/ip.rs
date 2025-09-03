@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-use std::net::IpAddr;
-use std::str::FromStr;
+use std::{collections::HashMap, net::IpAddr, str::FromStr};
 
 use rtnetlink::packet_route::{
     address::{AddressAttribute, AddressMessage, CacheInfo},
     AddressFamily,
 };
-
 use serde::{Deserialize, Serialize};
 
 use super::super::query::is_ipv6_addr;

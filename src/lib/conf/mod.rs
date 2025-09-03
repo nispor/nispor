@@ -10,16 +10,17 @@ mod route;
 mod veth;
 mod vlan;
 
-pub use self::alt_name::AltNameConf;
-pub use self::bond::BondConf;
-pub use self::bridge::BridgeConf;
-pub use self::iface::IfaceConf;
-pub use self::ip::{IpAddrConf, IpConf};
-pub use self::route::RouteConf;
-pub use self::veth::VethConf;
-pub use self::vlan::VlanConf;
-
-pub(crate) use self::inter_ifaces::{
-    change_ifaces, create_ifaces, delete_ifaces,
+pub use self::{
+    alt_name::AltNameConf,
+    bond::BondConf,
+    bridge::BridgeConf,
+    iface::IfaceConf,
+    ip::{IpAddrConf, IpConf},
+    route::RouteConf,
+    veth::VethConf,
+    vlan::VlanConf,
 };
-pub(crate) use self::route::apply_routes_conf;
+pub(crate) use self::{
+    inter_ifaces::{change_ifaces, create_ifaces, delete_ifaces},
+    route::apply_routes_conf,
+};

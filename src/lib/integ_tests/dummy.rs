@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::NetState;
-use pretty_assertions::assert_eq;
 use std::panic;
+
+use pretty_assertions::assert_eq;
+
+use crate::NetState;
 
 const IFACE_NAME: &str = "dummy1";
 

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::BridgeVlanEntry;
-use crate::NisporError;
 use rtnetlink::packet_route::link::{
     AfSpecBridge, BridgeVlanInfo, BridgeVlanInfoFlags,
 };
+
+use crate::{BridgeVlanEntry, NisporError};
 
 // TODO: Dup with parse_bond_info
 pub(crate) fn parse_af_spec_bridge_info(

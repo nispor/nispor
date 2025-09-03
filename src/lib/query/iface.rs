@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-use std::path::Path;
+use std::{collections::HashMap, path::Path};
 
 use rtnetlink::packet_route::link::{
     self, InfoKind, InfoPortData, InfoPortKind, LinkAttribute, LinkInfo,
@@ -399,14 +398,16 @@ pub(crate) fn parse_nl_msg_to_iface(
                         ),
                     };
                     if let IfaceType::Other(_) = iface_type {
-                        /* We did not find an explicit link type. Instead it's
-                         * just "Other(_)". If we already determined a link type
+                        /* We did not find an explicit link type. Instead
+                         * it's just "Other(_)". If
+                         * we already determined a link type
                          * above (ethernet or infiniband), keep that one. */
                         if iface_state.iface_type == IfaceType::Unknown {
                             iface_state.iface_type = iface_type
                         }
                     } else {
-                        /* We found a better link type based on the kind. Use it. */
+                        /* We found a better link type based on the kind. Use
+                         * it. */
                         iface_state.iface_type = iface_type
                     }
                 }
@@ -603,9 +604,9 @@ pub(crate) fn fill_bridge_vlan_info(
 }
 
 // Currently there is no valid netlink way to get the driver information as the
-// ETHTOOL_GDRVINFO ioctl command has no netlink equivalent. We use sysfs content
-// /sys/class/net/<if_name>/device/ and extract the last element from the "driver"-link
-// (https://docs.kernel.org/admin-guide/sysfs-rules.html)
+// ETHTOOL_GDRVINFO ioctl command has no netlink equivalent. We use sysfs
+// content /sys/class/net/<if_name>/device/ and extract the last element from
+// the "driver"-link (https://docs.kernel.org/admin-guide/sysfs-rules.html)
 fn _get_iface_driver(if_name: &str) -> Option<String> {
     let sysfs_path = format!("/sys/class/net/{if_name}/device/driver");
     let path = Path::new(&*sysfs_path);

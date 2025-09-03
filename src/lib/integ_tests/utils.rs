@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::fs;
-use std::io::Write;
-use std::process::Command;
+use std::{fs, io::Write, process::Command};
 
 use pretty_assertions::assert_eq;
 
