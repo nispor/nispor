@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::NetState;
-
 use std::panic;
 
 use super::utils::assert_value_match;
+use crate::NetState;
 
 const TEST_TABLE_ID: u32 = 100;
 

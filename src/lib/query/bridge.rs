@@ -3,7 +3,6 @@
 use std::collections::HashMap;
 
 use rtnetlink::packet_route::link::{AfSpecBridge, InfoBridgePort, InfoData};
-
 use serde::{Deserialize, Serialize};
 
 use crate::{

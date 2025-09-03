@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::fs::File;
-use std::io::{BufRead, BufReader};
-use std::net::{IpAddr, Ipv6Addr};
-use std::str::FromStr;
+use std::{
+    fs::File,
+    io::{BufRead, BufReader},
+    net::{IpAddr, Ipv6Addr},
+    str::FromStr,
+};
 
-use rtnetlink::packet_route::address;
-use rtnetlink::packet_route::link::{AfSpecInet6, AfSpecUnspec};
-
+use rtnetlink::packet_route::{
+    address,
+    link::{AfSpecInet6, AfSpecUnspec},
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{Iface, NisporError};

@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashMap;
-use std::net::{Ipv4Addr, Ipv6Addr};
+use std::{
+    collections::HashMap,
+    net::{Ipv4Addr, Ipv6Addr},
+};
 
-use rtnetlink::packet_route::link::BondArpAllTargets as RtBondArpAllTargets;
-use rtnetlink::packet_route::link::BondFailOverMac as RtBondFailOverMac;
-use rtnetlink::packet_route::link::BondPrimaryReselect as RtBondPrimaryReselect;
-use rtnetlink::packet_route::link::BondXmitHashPolicy as RtBondXmitHashPolicy;
-use rtnetlink::packet_route::link::{self, InfoBond, InfoBondPort, InfoData};
+use rtnetlink::packet_route::link::{
+    self, BondArpAllTargets as RtBondArpAllTargets,
+    BondFailOverMac as RtBondFailOverMac,
+    BondPrimaryReselect as RtBondPrimaryReselect,
+    BondXmitHashPolicy as RtBondXmitHashPolicy, InfoBond, InfoBondPort,
+    InfoData,
+};
 use serde::{Deserialize, Serialize};
 
 use super::super::mac::parse_as_mac;

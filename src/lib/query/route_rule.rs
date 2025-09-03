@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use futures::stream::TryStreamExt;
-use rtnetlink::packet_route::route::RouteHeader;
-use rtnetlink::packet_route::rule::{self, RuleAttribute, RuleMessage};
-
-use rtnetlink::new_connection;
-use rtnetlink::IpVersion;
+use rtnetlink::{
+    new_connection,
+    packet_route::{
+        route::RouteHeader,
+        rule::{self, RuleAttribute, RuleMessage},
+    },
+    IpVersion,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{AddressFamily, NisporError, RouteProtocol};

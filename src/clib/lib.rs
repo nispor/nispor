@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use libc::{c_char, c_int};
 use std::ffi::CString;
+
+use libc::{c_char, c_int};
 
 #[allow(clippy::not_unsafe_ptr_arg_deref)]
 #[no_mangle]

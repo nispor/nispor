@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{NetConf, NetState, RouteProtocol};
-
 use super::utils::assert_value_match;
+use crate::{NetConf, NetState, RouteProtocol};
 
 const TEST_ROUTE_DST_V4: &str = "198.51.100.0/24";
 const TEST_ROUTE_DST_V6: &str = "2001:db8:e::/64";
