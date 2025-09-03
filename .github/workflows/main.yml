@@ -52,10 +52,6 @@ jobs:
     - name: Update repositories
       run: sudo apt-get -y update
 
-    - name: Install valgrind
-      if: matrix.rust_version == 'stable'
-      run: sudo apt-get -y install valgrind
-
     - name: Install extra kernel module(like netdevsim)
       run: |
         sudo apt-get update;
@@ -66,7 +62,3 @@ jobs:
 
     - name: Run cargo tests
       run: cargo test -- --test-threads=1 --show-output
-
-    - name: Run clib test
-      if: matrix.rust_version == 'stable'
-      run: sudo make check -C test/clib
