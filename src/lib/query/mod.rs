@@ -74,10 +74,7 @@ pub use self::{
 pub(crate) use self::{
     iface::resolve_iface_index,
     inter_ifaces::{get_iface_name2index, get_ifaces, get_ifaces_with_handle},
-    ip::{
-        is_ipv6_addr, parse_ip_addr_str, parse_ip_net_addr_str,
-        read_ipv4_forwarding,
-    },
+    ip::{is_ipv6_addr, parse_ip_addr_str, parse_ip_net_addr_str},
     mptcp::{get_mptcp, merge_mptcp_info},
     route::get_routes,
     route_rule::get_route_rules,
