@@ -5,8 +5,8 @@ use std::{collections::HashMap, net::IpAddr};
 use rtnetlink::packet_route::address::{AddressAttribute, AddressMessage};
 
 use crate::{
-    query::read_ipv4_forwarding, Iface, Ipv4AddrInfo, Ipv4Info, Ipv6AddrFlag,
-    Ipv6AddrInfo, Ipv6Info, NisporError,
+    Iface, Ipv4AddrInfo, Ipv4Info, Ipv6AddrFlag, Ipv6AddrInfo, Ipv6Info,
+    NisporError,
 };
 
 pub(crate) fn fill_ip_addr(
@@ -21,11 +21,7 @@ pub(crate) fn fill_ip_addr(
                 let iface_name = i.to_string();
                 if let Some(iface) = iface_states.get_mut(iface_name.as_str()) {
                     if iface.ipv4.is_none() {
-                        let forwarding = read_ipv4_forwarding(&iface.name);
-                        iface.ipv4 = Some(Ipv4Info {
-                            forwarding,
-                            ..Default::default()
-                        });
+                        iface.ipv4 = Some(Ipv4Info::default());
                     }
                     if let Some(ipv4_info) = iface.ipv4.as_mut() {
                         ipv4_info.addresses.push(addr);

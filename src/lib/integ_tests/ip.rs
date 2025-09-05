@@ -149,7 +149,10 @@ fn test_add_and_remove_ip() {
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
         assert_eq!(iface_type, &crate::IfaceType::Veth);
-        assert_eq!(iface.ipv4, None);
+        assert_eq!(
+            iface.ipv4.as_ref().map(|i| i.addresses.is_empty()),
+            Some(true)
+        );
         assert_value_match(EXPECTED_EMPTY_IPV6_INFO, &iface.ipv6);
     });
 }
@@ -172,7 +175,10 @@ fn test_add_and_remove_dynamic_ip() {
         let iface = &state.ifaces[IFACE_NAME];
         let iface_type = &iface.iface_type;
         assert_eq!(iface_type, &crate::IfaceType::Veth);
-        assert_eq!(iface.ipv4, None);
+        assert_eq!(
+            iface.ipv4.as_ref().map(|i| i.addresses.is_empty()),
+            Some(true)
+        );
         assert_value_match(EXPECTED_EMPTY_IPV6_INFO, &iface.ipv6);
     });
 }

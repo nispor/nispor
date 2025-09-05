@@ -18,6 +18,7 @@ use super::{
         fill_bridge_vlan_info, parse_nl_msg_to_iface,
         parse_nl_msg_to_name_and_index,
     },
+    ip::fill_ip_forwarding,
     ipoib::ipoib_iface_tidy_up,
     ipvlan::ip_vlan_iface_tidy_up,
     mac_vlan::mac_vlan_iface_tidy_up,
@@ -84,6 +85,8 @@ pub(crate) async fn get_ifaces_with_handle(
         while let Some(nl_msg) = addrs.try_next().await? {
             fill_ip_addr(&mut iface_states, &nl_msg)?;
         }
+
+        fill_ip_forwarding(&mut iface_states);
     }
 
     if filter.include_bridge_vlan {

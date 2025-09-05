@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::{
+    collections::HashMap,
     fs::File,
     io::{BufRead, BufReader},
     net::{IpAddr, Ipv6Addr},
@@ -121,7 +122,7 @@ pub(crate) fn fill_af_spec_inet_info(iface: &mut Iface, nlas: &[AfSpecUnspec]) {
     }
 }
 
-pub(crate) fn read_ipv4_forwarding(iface_name: &str) -> Option<bool> {
+fn read_ipv4_forwarding(iface_name: &str) -> Option<bool> {
     let path = format!("/proc/sys/net/ipv4/conf/{iface_name}/forwarding");
 
     let file = match File::open(&path) {
@@ -217,5 +218,14 @@ impl From<address::AddressFlags> for Ipv6AddrFlag {
             address::AddressFlags::StablePrivacy => Self::StablePrivacy,
             _ => Self::Other(d.bits()),
         }
+    }
+}
+
+pub(crate) fn fill_ip_forwarding(iface_states: &mut HashMap<String, Iface>) {
+    for (iface_name, iface_state) in iface_states.iter_mut() {
+        iface_state
+            .ipv4
+            .get_or_insert(Default::default())
+            .forwarding = read_ipv4_forwarding(iface_name);
     }
 }
