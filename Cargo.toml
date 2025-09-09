@@ -14,7 +14,7 @@ all-features = true
 
 [workspace.package]
 rust-version = "1.77"
-version = "1.2.26"
+version = "1.2.27"
 authors = ["Gris Ge <fge@redhat.com>"]
 description = "Unified interface for Linux network state querying"
 edition = "2021"
