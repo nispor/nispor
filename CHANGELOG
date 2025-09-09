@@ -1,4 +1,17 @@
 # Changelog
+## [1.2.27] - 2025-09-09
+### Breaking changes
+ - N/A
+
+### New features
+ - conf: Support applying ECMP route. (9ae5201)
+ - ipv4: Fix forwarding querying without IP address. (5231a4f)
+ - conf: Support change MTU. (f1e968d)
+
+### Bug fixes
+ - Rewrite apply workflow. (db8baea)
+ - Makefile: Fix `make dist` on creating rust vendor tarbal. (13f0eb3)
+
 ## [1.2.26] - 2025-08-29
 ### Breaking changes
  - Deprecated nispor C binding and python bindings. (fc73302)
