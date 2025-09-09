@@ -20,8 +20,10 @@ use crate::{ControllerType, Iface, IfaceType, NisporError};
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum BondMode {
     #[serde(rename = "balance-rr")]
+    #[default]
     BalanceRoundRobin,
     #[serde(rename = "active-backup")]
     ActiveBackup,
@@ -37,12 +39,6 @@ pub enum BondMode {
     BalanceAlb,
     Other(u8),
     Unknown,
-}
-
-impl Default for BondMode {
-    fn default() -> Self {
-        Self::BalanceRoundRobin
-    }
 }
 
 impl From<rtnetlink::packet_route::link::BondMode> for BondMode {
@@ -658,10 +654,12 @@ impl From<&[InfoBond]> for BondInfo {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum BondSubordinateState {
     Active,
     Backup,
     Other(u8),
+    #[default]
     Unknown,
 }
 
@@ -675,12 +673,6 @@ impl From<u8> for BondSubordinateState {
             BOND_STATE_BACKUP => Self::Backup,
             _ => Self::Other(d),
         }
-    }
-}
-
-impl Default for BondSubordinateState {
-    fn default() -> Self {
-        Self::Unknown
     }
 }
 

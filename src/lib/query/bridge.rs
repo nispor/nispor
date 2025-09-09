@@ -158,6 +158,7 @@ pub struct BridgeInfo {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum BridgePortStpState {
     Disabled,
     Listening,
@@ -165,13 +166,8 @@ pub enum BridgePortStpState {
     Forwarding,
     Blocking,
     Other(u8),
+    #[default]
     Unknown,
-}
-
-impl Default for BridgePortStpState {
-    fn default() -> Self {
-        Self::Unknown
-    }
 }
 
 const BR_STATE_DISABLED: u8 = 0;
@@ -196,19 +192,15 @@ impl From<u8> for BridgePortStpState {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
+#[derive(Default)]
 pub enum BridgePortMulticastRouterType {
     Disabled,
     TempQuery,
     Perm,
     Temp,
     Other(u8),
+    #[default]
     Unknown,
-}
-
-impl Default for BridgePortMulticastRouterType {
-    fn default() -> Self {
-        Self::Unknown
-    }
 }
 
 const MDB_RTR_TYPE_DISABLED: u8 = 0;
