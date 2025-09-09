@@ -280,3 +280,55 @@ where
     super::utils::clear_network_environment();
     assert!(result.is_ok())
 }
+
+const TEST_ECMP_ROUTES: &str = r#"
+- dst: 2001:db8:e::/64
+  metric: 502
+  protocol: dhcp
+  table: 254
+  multipath:
+    - via: 2001:db8:a::3
+      weight: 2
+      iface: veth1
+      flags:
+        - on_link
+    - via: 2001:db8:a::2
+      weight: 1
+      iface: veth1
+      flags:
+        - on_link
+- dst: 198.51.100.0/24
+  table: 254
+  metric: 503
+  protocol: dhcp
+  multipath:
+    - via: 192.0.2.254
+      weight: 1
+      iface: veth1
+      flags:
+        - on_link
+    - via: 192.0.2.253
+      weight: 2
+      iface: veth1
+      flags:
+        - on_link
+"#;
+
+#[test]
+fn test_add_and_remove_ecmp_route() {
+    with_veth_static_ip(|| {
+        let state_str = format!("routes:\n{TEST_ECMP_ROUTES}");
+        let net_conf: NetConf = serde_yaml::from_str(&state_str).unwrap();
+        net_conf.apply().unwrap();
+        let state = NetState::retrieve().unwrap();
+        let mut current_routes = Vec::new();
+        for route in state.routes {
+            if RouteProtocol::Dhcp == route.protocol && route.oif.is_none() {
+                current_routes.push(route)
+            }
+        }
+
+        current_routes.sort_unstable_by_key(|r| r.metric);
+        assert_value_match(TEST_ECMP_ROUTES, &current_routes);
+    })
+}
