@@ -411,7 +411,7 @@ pub struct MultipathRoute {
     pub flags: Vec<MultipathRouteFlags>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 pub enum MultipathRouteFlags {
     Dead,

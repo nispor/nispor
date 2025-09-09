@@ -2,14 +2,14 @@
 
 use std::{collections::HashMap, net::IpAddr};
 
-use rtnetlink::packet_route::{
-    route::{self as rt, RouteAddress, RouteAttribute, RouteMessage},
-    AddressFamily,
+use rtnetlink::{
+    packet_route::route::{self as rt},
+    RouteMessageBuilder, RouteNextHopBuilder,
 };
 use serde::{Deserialize, Serialize};
 
 use super::super::query::{parse_ip_addr_str, parse_ip_net_addr_str};
-use crate::{NisporError, RouteProtocol};
+use crate::{ErrorKind, MultipathRouteFlags, NisporError, RouteProtocol};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[non_exhaustive]
@@ -22,6 +22,8 @@ pub struct RouteConf {
     pub metric: Option<u32>,
     pub table: Option<u8>,
     pub protocol: Option<RouteProtocol>,
+    /// ECMP(Equal-Cost Multipath Protocol) routes
+    pub multipath: Option<Vec<RouteMulitpathConf>>,
 }
 
 pub(crate) async fn apply_routes_conf(
@@ -41,40 +43,34 @@ async fn apply_route_conf(
     route: &RouteConf,
     iface_name_2_index: &HashMap<String, u32>,
 ) -> Result<(), NisporError> {
-    let mut nl_msg = RouteMessage::default();
-    nl_msg.header.kind = rt::RouteType::Unicast;
-    if let Some(p) = route.protocol {
-        nl_msg.header.protocol = p.into();
-    } else {
-        nl_msg.header.protocol = rt::RouteProtocol::Static;
-    }
-    nl_msg.header.scope = rt::RouteScope::Universe;
-    nl_msg.header.table = rt::RouteHeader::RT_TABLE_MAIN;
     let (dst_addr, dst_prefix) = parse_ip_net_addr_str(route.dst.as_str())?;
-    nl_msg.header.destination_prefix_length = dst_prefix;
-    match dst_addr {
-        IpAddr::V4(addr) => {
-            nl_msg.header.address_family = AddressFamily::Inet;
-            nl_msg
-                .attributes
-                .push(RouteAttribute::Destination(RouteAddress::Inet(addr)));
-        }
-        IpAddr::V6(addr) => {
-            nl_msg.header.address_family = AddressFamily::Inet6;
-            nl_msg
-                .attributes
-                .push(RouteAttribute::Destination(RouteAddress::Inet6(addr)));
-        }
-    };
-    if let Some(t) = route.table.as_ref() {
-        nl_msg.header.table = *t;
+    let is_ipv6 = dst_addr.is_ipv6();
+    let mut builder = RouteMessageBuilder::<IpAddr>::new()
+        .destination_prefix(dst_addr, dst_prefix)
+        .map_err(|e| {
+            NisporError::new(
+                ErrorKind::NisporBug,
+                format!(
+                    "builder.destination_prefix() failed on {dst_addr}, \
+                     {dst_prefix}): {e}"
+                ),
+            )
+        })?
+        .scope(rt::RouteScope::Universe)
+        .table_id(route.table.unwrap_or(rt::RouteHeader::RT_TABLE_MAIN).into());
+
+    if let Some(p) = route.protocol {
+        builder = builder.protocol(p.into());
+    } else {
+        builder = builder.protocol(rt::RouteProtocol::Static);
     }
+
     if let Some(m) = route.metric.as_ref() {
-        nl_msg.attributes.push(RouteAttribute::Priority(*m));
+        builder = builder.priority(*m);
     }
     if let Some(oif) = route.oif.as_deref() {
         if let Some(iface_index) = iface_name_2_index.get(oif) {
-            nl_msg.attributes.push(RouteAttribute::Iif(*iface_index));
+            builder = builder.output_interface(*iface_index);
         } else {
             let e = NisporError::invalid_argument(format!(
                 "Interface {oif} does not exist"
@@ -84,21 +80,63 @@ async fn apply_route_conf(
         }
     }
     if let Some(via) = route.via.as_deref() {
-        match parse_ip_addr_str(via)? {
-            IpAddr::V4(i) => {
-                nl_msg
-                    .attributes
-                    .push(RouteAttribute::Gateway(RouteAddress::Inet(i)));
-            }
-            IpAddr::V6(i) => {
-                nl_msg
-                    .attributes
-                    .push(RouteAttribute::Gateway(RouteAddress::Inet6(i)));
-            }
-        };
+        let ip = parse_ip_addr_str(via)?;
+        builder = builder.gateway(ip).map_err(|e| {
+            NisporError::new(
+                ErrorKind::NisporBug,
+                format!("builder.gateway() failed on {ip}: {e}"),
+            )
+        })?;
     }
+
+    if let Some(mpaths) = route.multipath.as_ref() {
+        let mut hops: Vec<rt::RouteNextHop> = Vec::new();
+        for mpath in mpaths {
+            let mut np_builder = if is_ipv6 {
+                RouteNextHopBuilder::new_ipv6()
+            } else {
+                RouteNextHopBuilder::new_ipv4()
+            };
+            if let Some(via) = mpath.via.as_ref() {
+                let ip = parse_ip_addr_str(via)?;
+                np_builder = np_builder.via(ip).map_err(|e| {
+                    NisporError::new(
+                        ErrorKind::NisporBug,
+                        format!("next_hop_builder.via() failed on {ip}: {e}"),
+                    )
+                })?;
+            }
+            if let Some(w) = mpath.weight.as_ref() {
+                np_builder = np_builder.weight((*w - 1) as u8);
+            }
+            if let Some(iface) = mpath.iface.as_ref() {
+                if let Some(iface_index) = iface_name_2_index.get(iface) {
+                    np_builder = np_builder.interface(*iface_index);
+                } else {
+                    let e = NisporError::invalid_argument(format!(
+                        "Next hope interface {iface} does not exist"
+                    ));
+                    log::error!("{e}");
+                    return Err(e);
+                }
+            }
+            if !mpath.flags.is_empty() {
+                let mut next_hop_flags =
+                    rt::RouteNextHopFlags::from_bits_retain(0);
+                for flag in mpath.flags.as_slice() {
+                    next_hop_flags |= (*flag).into();
+                }
+                np_builder = np_builder.flags(next_hop_flags);
+            }
+            hops.push(np_builder.build());
+        }
+        if !hops.is_empty() {
+            builder = builder.multipath(hops);
+        }
+    }
+
     if route.remove {
-        if let Err(e) = handle.route().del(nl_msg).execute().await {
+        if let Err(e) = handle.route().del(builder.build()).execute().await {
             if let rtnetlink::Error::NetlinkError(ref e) = e {
                 if e.raw_code() == -libc::ESRCH {
                     return Ok(());
@@ -106,16 +144,46 @@ async fn apply_route_conf(
             }
             return Err(e.into());
         }
-    } else {
-        let req = handle.route().add(nl_msg.clone());
-        if let Err(e) = req.execute().await {
-            if let rtnetlink::Error::NetlinkError(ref e) = e {
-                if e.raw_code() == -libc::EEXIST {
-                    return Ok(());
-                }
+    } else if let Err(e) = handle.route().add(builder.build()).execute().await {
+        if let rtnetlink::Error::NetlinkError(ref e) = e {
+            if e.raw_code() == -libc::EEXIST {
+                return Ok(());
             }
-            return Err(e.into());
         }
+        return Err(e.into());
     }
     Ok(())
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
+pub struct RouteMulitpathConf {
+    /// nexthop address
+    via: Option<String>,
+    /// weight on route path been selected, in the range of 1 - 256
+    weight: Option<u16>,
+    /// Output interface
+    iface: Option<String>,
+    /// Pretend the nexthop is directly attached to this link
+    #[serde(default)]
+    flags: Vec<MultipathRouteFlags>,
+}
+
+impl From<MultipathRouteFlags> for rt::RouteNextHopFlags {
+    fn from(v: MultipathRouteFlags) -> rt::RouteNextHopFlags {
+        match v {
+            MultipathRouteFlags::Dead => rt::RouteNextHopFlags::Dead,
+            MultipathRouteFlags::Pervasive => rt::RouteNextHopFlags::Pervasive,
+            MultipathRouteFlags::OnLink => rt::RouteNextHopFlags::Onlink,
+            MultipathRouteFlags::Offload => rt::RouteNextHopFlags::Offload,
+            MultipathRouteFlags::LinkDown => rt::RouteNextHopFlags::Linkdown,
+            MultipathRouteFlags::Unresolved => {
+                rt::RouteNextHopFlags::Unresolved
+            }
+            MultipathRouteFlags::Trap => rt::RouteNextHopFlags::Trap,
+            MultipathRouteFlags::Other(d) => {
+                rt::RouteNextHopFlags::from_bits_retain(d)
+            }
+        }
+    }
 }
