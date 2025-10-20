@@ -18,7 +18,6 @@ crate-type = ["lib"]
 
 [dependencies]
 serde = { workspace = true }
-serde_json = { workspace = true }
 rtnetlink = { workspace = true }
 ethtool = { workspace = true }
 mptcp-pm = { workspace = true }
@@ -31,3 +30,4 @@ wl-nl80211 = { workspace = true }
 [dev-dependencies]
 serde_yaml = { workspace = true }
 pretty_assertions = "1.2.1"
+serde_json = { workspace = true }
