@@ -16,6 +16,7 @@ use super::{
     hsr::get_hsr_info,
     ip::fill_af_spec_inet_info,
     ipoib::get_ipoib_info,
+    iptunnel::get_ip_tunnel_info,
     ipvlan::get_ip_vlan_info,
     mac_vlan::get_mac_vlan_info,
     mac_vtap::get_mac_vtap_info,
@@ -29,10 +30,10 @@ use super::{
 };
 use crate::{
     BondInfo, BondSubordinateInfo, BridgeInfo, BridgePortInfo, BridgeVlanEntry,
-    ErrorKind, EthtoolInfo, HsrInfo, IpVlanInfo, IpoibInfo, Ipv4Info, Ipv6Info,
-    MacSecInfo, MacVlanInfo, MacVtapInfo, MptcpAddress, NisporError,
-    PciAddress, SriovInfo, TunInfo, VethInfo, VfInfo, VlanInfo, VrfInfo,
-    VrfSubordinateInfo, VxlanInfo, WifiInfo, XfrmInfo,
+    ErrorKind, EthtoolInfo, HsrInfo, IpTunnelInfo, IpVlanInfo, IpoibInfo,
+    Ipv4Info, Ipv6Info, MacSecInfo, MacVlanInfo, MacVtapInfo, MptcpAddress,
+    NisporError, PciAddress, SriovInfo, TunInfo, VethInfo, VfInfo, VlanInfo,
+    VrfInfo, VrfSubordinateInfo, VxlanInfo, WifiInfo, XfrmInfo,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -53,6 +54,10 @@ pub enum IfaceType {
     Tun,
     MacVlan,
     MacVtap,
+    IpTunnel,
+    Ipip,
+    Ip6Tnl,
+    SitTun,
     OpenvSwitch,
     Ipoib,
     IpVlan,
@@ -84,6 +89,8 @@ impl std::fmt::Display for IfaceType {
                 Self::Tun => "tun",
                 Self::MacVlan => "macvlan",
                 Self::MacVtap => "macvtap",
+                Self::IpTunnel | Self::Ipip | Self::Ip6Tnl | Self::SitTun =>
+                    "iptunnel",
                 Self::OpenvSwitch => "openvswitch",
                 Self::Ipoib => "ipoib",
                 Self::IpVlan => "ipvlan",
@@ -300,6 +307,8 @@ pub struct Iface {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub driver: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub ip_tunnel: Option<IpTunnelInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub ip_vlan: Option<IpVlanInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub wifi: Option<WifiInfo>,
@@ -382,9 +391,12 @@ pub(crate) fn parse_nl_msg_to_iface(
                         InfoKind::Vxlan => IfaceType::Vxlan,
                         InfoKind::Dummy => IfaceType::Dummy,
                         InfoKind::Tun => IfaceType::Tun,
+                        InfoKind::SitTun => IfaceType::SitTun,
                         InfoKind::Vrf => IfaceType::Vrf,
                         InfoKind::MacVlan => IfaceType::MacVlan,
                         InfoKind::MacVtap => IfaceType::MacVtap,
+                        InfoKind::IpIp => IfaceType::Ipip,
+                        InfoKind::Ip6Tnl => IfaceType::Ip6Tnl,
                         InfoKind::Ipoib => IfaceType::Ipoib,
                         InfoKind::IpVlan => IfaceType::IpVlan,
                         InfoKind::MacSec => IfaceType::MacSec,
@@ -450,6 +462,13 @@ pub(crate) fn parse_nl_msg_to_iface(
                         }
                         IfaceType::Hsr => {
                             iface_state.hsr = get_hsr_info(d);
+                        }
+                        IfaceType::Ipip
+                        | IfaceType::Ip6Tnl
+                        | IfaceType::SitTun => {
+                            iface_state.ip_tunnel =
+                                get_ip_tunnel_info(d, iface_state.iface_type);
+                            iface_state.iface_type = IfaceType::IpTunnel;
                         }
                         IfaceType::Xfrm => {
                             iface_state.xfrm = get_xfrm_info(d);

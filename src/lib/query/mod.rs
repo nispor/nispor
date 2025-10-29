@@ -4,6 +4,7 @@ mod bond;
 mod bridge;
 mod hsr;
 mod ip;
+mod iptunnel;
 mod mptcp;
 mod pci;
 mod wifi;
@@ -51,6 +52,10 @@ pub use self::{
         IpFamily, Ipv4AddrInfo, Ipv4Info, Ipv6AddrFlag, Ipv6AddrInfo, Ipv6Info,
     },
     ipoib::{IpoibInfo, IpoibMode},
+    iptunnel::{
+        Ip6TunnelFlags, IpTunnelInfo, IpTunnelMode, TunnelEncapFlags,
+        TunnelEncapType,
+    },
     ipvlan::{IpVlanFlag, IpVlanInfo, IpVlanMode},
     mac_vlan::{MacVlanInfo, MacVlanMode},
     mac_vtap::{MacVtapInfo, MacVtapMode},
