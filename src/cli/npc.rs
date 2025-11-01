@@ -793,7 +793,6 @@ fn dbm_to_percentage(dbm: i8) -> u8 {
     } else {
         dbm
     };
-    (100.0f64
-        - 70.0f64 * (SIGNAL_MAX_DBM - dbm) as f64
-            / (SIGNAL_MAX_DBM - NOISE_FLOOR_DBM) as f64) as u8
+    (100.0f64 * (NOISE_FLOOR_DBM - dbm) as f64
+        / (NOISE_FLOOR_DBM - SIGNAL_MAX_DBM) as f64) as u8
 }
