@@ -4,9 +4,12 @@ use std::collections::HashMap;
 
 use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
-use wl_nl80211::{Nl80211Attr, Nl80211RateInfo, Nl80211StationInfo};
+use wl_nl80211::{
+    Nl80211Attr, Nl80211BssInfo, Nl80211Element, Nl80211Handle,
+    Nl80211RateInfo, Nl80211StationInfo,
+};
 
-use crate::{Iface, IfaceType, NisporError};
+use crate::{mac::parse_as_mac, Iface, IfaceType, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[serde(rename_all = "snake_case")]
@@ -74,7 +77,6 @@ pub(crate) async fn fill_wifi_info(
                 _ => (),
             }
         }
-        // TODO: Use station info to set BSSID(MAC of Station) and signal level.
         iface.wifi = Some(info);
         iface.iface_type = IfaceType::Wifi;
         wifi_ifaces.push(iface.name.clone());
@@ -93,7 +95,34 @@ pub(crate) async fn fill_wifi_info(
         } else {
             continue;
         };
+
+        // 802.11g connection in kernel does not have SSID stored in reply of
+        // handle.interface().get()
+        // We need to use station MAC and scan results instead
+        let mac_to_ssid = if wifi.ssid.is_none() {
+            get_mac_ssid_map(&handle, iface.index).await?
+        } else {
+            HashMap::new()
+        };
+
         while let Some(msg) = station_handle.try_next().await? {
+            if wifi.ssid.is_none() {
+                if let Some(station_mac) =
+                    msg.payload.attributes.as_slice().iter().find_map(|attr| {
+                        if let Nl80211Attr::Mac(m) = attr {
+                            Some(m)
+                        } else {
+                            None
+                        }
+                    })
+                {
+                    let mac_str =
+                        parse_as_mac(ETH_ALEN, station_mac.as_slice())?;
+                    if let Some(ssid) = mac_to_ssid.get(&mac_str) {
+                        wifi.ssid = Some(ssid.to_string());
+                    }
+                }
+            }
             let sta_infos = if let Some(sta_infos) =
                 msg.payload.attributes.as_slice().iter().find_map(|attr| {
                     if let Nl80211Attr::StationInfo(infos) = attr {
@@ -154,4 +183,48 @@ pub(crate) async fn fill_wifi_info(
     }
 
     Ok(())
+}
+
+const ETH_ALEN: usize = 6;
+
+async fn get_mac_ssid_map(
+    handle: &Nl80211Handle,
+    iface_index: u32,
+) -> Result<HashMap<String, String>, NisporError> {
+    let mut ret = HashMap::new();
+    let mut scan_handle = handle.scan().dump(iface_index).execute().await;
+    while let Some(msg) = scan_handle.try_next().await? {
+        let mut ssid: Option<String> = None;
+        let mut mac_str: Option<String> = None;
+        for attr in msg.payload.attributes.as_slice() {
+            if ssid.is_some() && mac_str.is_some() {
+                break;
+            }
+            if let Nl80211Attr::Bss(bss_infos) = attr {
+                for bss_info in bss_infos {
+                    if ssid.is_some() && mac_str.is_some() {
+                        break;
+                    }
+                    if let Nl80211BssInfo::Bssid(mac) = bss_info {
+                        mac_str = Some(parse_as_mac(ETH_ALEN, mac)?);
+                    } else if let Nl80211BssInfo::InformationElements(ies) =
+                        bss_info
+                    {
+                        ssid = ies.iter().find_map(|ie| {
+                            if let Nl80211Element::Ssid(s) = ie {
+                                Some(s.to_string())
+                            } else {
+                                None
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        if let (Some(ssid), Some(mac_str)) = (ssid, mac_str) {
+            ret.insert(mac_str, ssid);
+        }
+    }
+
+    Ok(ret)
 }
