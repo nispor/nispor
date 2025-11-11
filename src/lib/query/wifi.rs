@@ -6,7 +6,7 @@ use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
 use wl_nl80211::{
     Nl80211Attr, Nl80211BssInfo, Nl80211Element, Nl80211Handle,
-    Nl80211RateInfo, Nl80211StationInfo,
+    Nl80211RateInfo, Nl80211StationFlags, Nl80211StationInfo,
 };
 
 use crate::{mac::parse_as_mac, Iface, IfaceType, NisporError};
@@ -105,6 +105,8 @@ pub(crate) async fn fill_wifi_info(
             HashMap::new()
         };
 
+        let mut authorized = false;
+
         while let Some(msg) = station_handle.try_next().await? {
             if wifi.ssid.is_none() {
                 if let Some(station_mac) =
@@ -151,6 +153,11 @@ pub(crate) async fn fill_wifi_info(
                             }
                         }
                     }
+                    Nl80211StationInfo::StationFlags(v) => {
+                        if v.set.contains(Nl80211StationFlags::Authorized) {
+                            authorized = true;
+                        }
+                    }
                     Nl80211StationInfo::RxBitrate(rates) => {
                         for rate in rates {
                             match rate {
@@ -178,6 +185,11 @@ pub(crate) async fn fill_wifi_info(
                     }
                     _ => (),
                 }
+            }
+            // TODO(Gris Ge): Once wl_nl80211 support NL80211_ATTR_AUTH_TYPE,
+            // we should not clean SSID for WEP or Open system
+            if !authorized {
+                wifi.ssid = None;
             }
         }
     }
