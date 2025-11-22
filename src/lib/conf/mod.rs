@@ -4,6 +4,7 @@ mod alt_name;
 mod base_iface;
 mod bond;
 mod bridge;
+mod dummy;
 mod iface;
 mod inter_ifaces;
 mod ip;
@@ -15,6 +16,7 @@ pub use self::{
     alt_name::AltNameConf,
     bond::BondConf,
     bridge::BridgeConf,
+    dummy::DummyConf,
     iface::IfaceConf,
     ip::{IpAddrConf, IpConf},
     route::RouteConf,
