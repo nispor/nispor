@@ -7,8 +7,8 @@ use super::{
     base_iface::apply_base_link_changes, ip::change_ip_layer,
 };
 use crate::{
-    AltNameConf, BondConf, BridgeConf, ErrorKind, Iface, IfaceState, IfaceType,
-    IpConf, NetStateIfaceFilter, NisporError, VethConf, VlanConf,
+    AltNameConf, BondConf, BridgeConf, DummyConf, ErrorKind, Iface, IfaceState,
+    IfaceType, IpConf, NetStateIfaceFilter, NisporError, VethConf, VlanConf,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -91,6 +91,7 @@ async fn create_iface(
         Some(IfaceType::Veth) => VethConf::create(iface)?.build(),
         Some(IfaceType::Bond) => BondConf::create(iface)?.build(),
         Some(IfaceType::Vlan) => VlanConf::create(handle, iface).await?.build(),
+        Some(IfaceType::Dummy) => DummyConf::create(iface)?.build(),
         Some(_) => {
             return Err(NisporError::invalid_argument(format!(
                 "Cannot create unsupported interface {:?}",
