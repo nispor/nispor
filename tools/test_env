@@ -32,6 +32,7 @@ function clean_up {
     sudo ip link del vxlan0
     sudo ip link del eth1
     sudo ip link del eth2
+    sudo ip link del eth3
     sudo ip link del vrf0
     sudo ip link del tun1
     sudo ip link del tun2
@@ -258,6 +259,20 @@ elif [ "CHK$1" == "CHKhsr" ];then
         supervision 45 proto 1
     sudo ip link set eth1 up
     sudo ip link set eth2 up
+    sudo ip link set hsr0 up
+    sleep $LINK_WAIT_TIME
+elif [ "CHK$1" == "CHKhsr_interlink" ];then
+    create_nics
+
+    sudo ip link add eth3 type veth peer name eth3.ep
+    sudo ip link set eth3 address $TEST_MAC3
+    sudo ip link set eth3.ep up
+
+    sudo ip link add name hsr0 type hsr slave1 eth1 slave2 eth2 \
+        supervision 45 interlink eth3
+    sudo ip link set eth1 up
+    sudo ip link set eth2 up
+    sudo ip link set eth3 up
     sudo ip link set hsr0 up
     sleep $LINK_WAIT_TIME
 elif [ "CHK$1" == "CHKxfrm" ];then

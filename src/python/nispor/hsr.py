@@ -17,6 +17,10 @@ class NisporHsr(NisporBaseIface):
         return self._hsr_info["port2"]
 
     @property
+    def interlink(self):
+        return self._hsr_info["interlink"]
+
+    @property
     def supervision_addr(self):
         return self._hsr_info["supervision_addr"]
 

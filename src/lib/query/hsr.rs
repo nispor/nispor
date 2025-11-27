@@ -39,6 +39,7 @@ impl From<u8> for HsrProtocol {
 pub struct HsrInfo {
     pub port1: Option<String>,
     pub port2: Option<String>,
+    pub interlink: Option<String>,
     pub supervision_addr: String,
     pub seq_nr: u16,
     pub multicast_spec: u8,
@@ -48,6 +49,8 @@ pub struct HsrInfo {
     _port1_ifindex: u32,
     #[serde(skip_serializing)]
     _port2_ifindex: u32,
+    #[serde(skip_serializing)]
+    _interlink_ifindex: u32,
 }
 
 pub(crate) fn get_hsr_info(data: &InfoData) -> Option<HsrInfo> {
@@ -60,6 +63,9 @@ pub(crate) fn get_hsr_info(data: &InfoData) -> Option<HsrInfo> {
                 }
                 InfoHsr::Port2(d) => {
                     hsr_info._port2_ifindex = d;
+                }
+                InfoHsr::Interlink(d) => {
+                    hsr_info._interlink_ifindex = d;
                 }
                 InfoHsr::SupervisionAddr(d) => {
                     hsr_info.supervision_addr =
@@ -111,6 +117,11 @@ fn fill_port_iface_names(iface_states: &mut HashMap<String, Iface>) {
                 index_to_name.get(&hsr_info._port2_ifindex)
             {
                 hsr_info.port2 = Some(port2_iface_name.to_string());
+            }
+            if let Some(interlink_iface_name) =
+                index_to_name.get(&hsr_info._interlink_ifindex)
+            {
+                hsr_info.interlink = Some(interlink_iface_name.to_string());
             }
         }
     }
