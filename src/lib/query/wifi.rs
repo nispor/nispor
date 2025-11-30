@@ -6,7 +6,8 @@ use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
 use wl_nl80211::{
     Nl80211Attr, Nl80211BssInfo, Nl80211Element, Nl80211Handle,
-    Nl80211RateInfo, Nl80211StationFlags, Nl80211StationInfo,
+    Nl80211InterfaceType, Nl80211RateInfo, Nl80211StationFlags,
+    Nl80211StationInfo,
 };
 
 use crate::{mac::parse_as_mac, Iface, IfaceType, NisporError};
@@ -15,8 +16,11 @@ use crate::{mac::parse_as_mac, Iface, IfaceType, NisporError};
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 pub struct WifiInfo {
+    pub mode: WifiMode,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ssid: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bssid: Option<String>,
     /// Frequency in MHz
     #[serde(skip_serializing_if = "Option::is_none")]
     pub frequency: Option<u32>,
@@ -74,7 +78,15 @@ pub(crate) async fn fill_wifi_info(
             match attr {
                 Nl80211Attr::WiphyFreq(f) => info.frequency = Some(*f),
                 Nl80211Attr::Ssid(s) => info.ssid = Some(s.to_string()),
+                Nl80211Attr::IfType(t) => info.mode = (*t).into(),
                 _ => (),
+            }
+        }
+        if info.mode == WifiMode::Ap {
+            if let Some(Nl80211Attr::Mac(mac)) =
+                attrs.iter().find(|a| matches!(a, Nl80211Attr::Mac(_)))
+            {
+                info.bssid = parse_as_mac(mac.len(), mac.as_slice()).ok();
             }
         }
         iface.wifi = Some(info);
@@ -88,13 +100,17 @@ pub(crate) async fn fill_wifi_info(
         } else {
             continue;
         };
-        let mut station_handle =
-            handle.station().dump(iface.index).execute().await;
         let wifi = if let Some(w) = iface.wifi.as_mut() {
             w
         } else {
             continue;
         };
+        if wifi.mode != WifiMode::Station {
+            continue;
+        }
+
+        let mut station_handle =
+            handle.station().dump(iface.index).execute().await;
 
         // 802.11g connection in kernel does not have SSID stored in reply of
         // handle.interface().get()
@@ -108,21 +124,19 @@ pub(crate) async fn fill_wifi_info(
         let mut authorized = false;
 
         while let Some(msg) = station_handle.try_next().await? {
-            if wifi.ssid.is_none() {
-                if let Some(station_mac) =
-                    msg.payload.attributes.as_slice().iter().find_map(|attr| {
-                        if let Nl80211Attr::Mac(m) = attr {
-                            Some(m)
-                        } else {
-                            None
-                        }
-                    })
-                {
-                    let mac_str =
-                        parse_as_mac(ETH_ALEN, station_mac.as_slice())?;
-                    if let Some(ssid) = mac_to_ssid.get(&mac_str) {
-                        wifi.ssid = Some(ssid.to_string());
+            if let Some(station_mac) =
+                msg.payload.attributes.as_slice().iter().find_map(|attr| {
+                    if let Nl80211Attr::Mac(m) = attr {
+                        Some(m)
+                    } else {
+                        None
                     }
+                })
+            {
+                let mac_str = parse_as_mac(ETH_ALEN, station_mac.as_slice())?;
+                wifi.bssid = Some(mac_str.to_string());
+                if let Some(ssid) = mac_to_ssid.get(&mac_str) {
+                    wifi.ssid = Some(ssid.to_string());
                 }
             }
             let sta_infos = if let Some(sta_infos) =
@@ -239,4 +253,25 @@ async fn get_mac_ssid_map(
     }
 
     Ok(ret)
+}
+
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum WifiMode {
+    Station,
+    Ap,
+    #[default]
+    Unknown,
+}
+
+impl From<Nl80211InterfaceType> for WifiMode {
+    fn from(v: Nl80211InterfaceType) -> Self {
+        match v {
+            Nl80211InterfaceType::Station => Self::Station,
+            Nl80211InterfaceType::Ap => Self::Ap,
+            _ => Self::Unknown,
+        }
+    }
 }
