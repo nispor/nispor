@@ -65,11 +65,13 @@ pub(crate) async fn get_ifaces_with_handle(
         .and_then(|name| iface_states.get(name))
         .map(|i| i.index);
 
-    if filter.iface_name.is_some() && iface_index.is_none() {
-        return Err(NisporError::invalid_argument(format!(
-            "Interface {} not found",
-            filter.iface_name.as_ref().unwrap()
-        )));
+    if iface_index.is_none() {
+        if let Some(iface_name) = filter.iface_name.as_ref() {
+            return Err(NisporError::invalid_argument(format!(
+                "Interface {} not found",
+                iface_name,
+            )));
+        }
     }
 
     if filter.include_ip_address || filter.include_mptcp {
