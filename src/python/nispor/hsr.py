@@ -10,32 +10,32 @@ class NisporHsr(NisporBaseIface):
 
     @property
     def port1(self):
-        return self._hsr_info["port1"]
+        return self._hsr_info.get("port1")
 
     @property
     def port2(self):
-        return self._hsr_info["port2"]
+        return self._hsr_info.get("port2")
 
     @property
     def interlink(self):
-        return self._hsr_info["interlink"]
+        return self._hsr_info.get("interlink")
 
     @property
     def supervision_addr(self):
-        return self._hsr_info["supervision_addr"]
+        return self._hsr_info.get("supervision_addr")
 
     @property
     def seq_nr(self):
-        return self._hsr_info["seq_nr"]
+        return self._hsr_info.get("seq_nr")
 
     @property
     def multicast_spec(self):
-        return self._hsr_info["multicast_spec"]
+        return self._hsr_info.get("multicast_spec")
 
     @property
     def version(self):
-        return self._hsr_info["version"]
+        return self._hsr_info.get("version")
 
     @property
     def protocol(self):
-        return self._hsr_info["protocol"]
+        return self._hsr_info.get("protocol")
