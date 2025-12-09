@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use rtnetlink::packet_route::link::{self, InfoData, InfoVlan};
+use rtnetlink::packet_route::link::{self, InfoData, InfoVlan, VlanFlags};
 use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceType};
@@ -30,12 +30,6 @@ impl From<link::VlanProtocol> for VlanProtocol {
         }
     }
 }
-
-const VLAN_FLAG_REORDER_HDR: u32 = 0x1;
-const VLAN_FLAG_GVRP: u32 = 0x2;
-const VLAN_FLAG_LOOSE_BINDING: u32 = 0x4;
-const VLAN_FLAG_MVRP: u32 = 0x8;
-const VLAN_FLAG_BRIDGE_BINDING: u32 = 0x10;
 
 #[derive(
     Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
@@ -88,21 +82,14 @@ pub(crate) fn get_vlan_info(data: &InfoData) -> Option<VlanInfo> {
                 vlan_info.protocol = (*d).into();
             } else if let InfoVlan::Flags((flags, _)) = info {
                 // The kernel always set the mask as u32::MAX
-                if *flags & VLAN_FLAG_REORDER_HDR > 0 {
-                    vlan_info.is_reorder_hdr = true
-                }
-                if *flags & VLAN_FLAG_GVRP > 0 {
-                    vlan_info.is_gvrp = true
-                }
-                if *flags & VLAN_FLAG_LOOSE_BINDING > 0 {
-                    vlan_info.is_loose_binding = true
-                }
-                if *flags & VLAN_FLAG_MVRP > 0 {
-                    vlan_info.is_mvrp = true
-                }
-                if *flags & VLAN_FLAG_BRIDGE_BINDING > 0 {
-                    vlan_info.is_bridge_binding = true
-                }
+                vlan_info.is_reorder_hdr =
+                    flags.contains(VlanFlags::ReorderHdr);
+                vlan_info.is_gvrp = flags.contains(VlanFlags::Gvrp);
+                vlan_info.is_loose_binding =
+                    flags.contains(VlanFlags::LooseBinding);
+                vlan_info.is_mvrp = flags.contains(VlanFlags::Mvrp);
+                vlan_info.is_bridge_binding =
+                    flags.contains(VlanFlags::BridgeBinding);
             } else if let InfoVlan::EgressQos(maps) = info {
                 vlan_info.egress_qos_map = maps
                     .as_slice()
