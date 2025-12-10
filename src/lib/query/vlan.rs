@@ -31,6 +31,21 @@ impl From<link::VlanProtocol> for VlanProtocol {
     }
 }
 
+impl From<VlanProtocol> for link::VlanProtocol {
+    fn from(v: VlanProtocol) -> Self {
+        match v {
+            VlanProtocol::Ieee8021Q => link::VlanProtocol::Ieee8021Q,
+            VlanProtocol::Ieee8021AD => link::VlanProtocol::Ieee8021Ad,
+            VlanProtocol::Unknown => {
+                log::warn!(
+                    "Unknown vlan protocol {v:?}, treating it as 802.1q"
+                );
+                link::VlanProtocol::Ieee8021Q
+            }
+        }
+    }
+}
+
 #[derive(
     Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
 )]
@@ -40,15 +55,20 @@ pub struct VlanQosMapping {
 }
 
 impl VlanQosMapping {
-    fn from_netlink(
-        map: &rtnetlink::packet_route::link::VlanQosMapping,
-    ) -> Option<Self> {
-        if let rtnetlink::packet_route::link::VlanQosMapping::Mapping(f, t) =
-            map
-        {
+    fn from_netlink(map: &link::VlanQosMapping) -> Option<Self> {
+        if let link::VlanQosMapping::Mapping(f, t) = map {
             Some(Self { from: *f, to: *t })
         } else {
             None
+        }
+    }
+}
+
+impl From<&VlanQosMapping> for rtnetlink::QosMapping {
+    fn from(v: &VlanQosMapping) -> Self {
+        Self {
+            from: v.from,
+            to: v.to,
         }
     }
 }
