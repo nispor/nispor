@@ -22,7 +22,7 @@ ifaces:
       is_reorder_hdr: true
       is_gvrp: true
       is_loose_binding: true
-      is_mvrp: true
+      is_mvrp: false
       is_bridge_binding: true
       ingress_qos_map:
       - from: 2
@@ -38,6 +38,20 @@ ifaces:
         to: 3
       - from: 9
         to: 2
+"#;
+
+const VLAN_CHANGE_FULL_INFO_YAML: &str = r#"
+ifaces:
+  - name: dummy1.99
+    type: vlan
+    vlan:
+      base_iface: dummy1
+      vlan_id: 99
+      is_reorder_hdr: false
+      is_gvrp: false
+      is_loose_binding: false
+      is_mvrp: false
+      is_bridge_binding: false
 "#;
 
 const VLAN_DELETE_YML: &str = r#"---
@@ -57,7 +71,7 @@ base_iface: dummy1
 is_reorder_hdr: true
 is_gvrp: true
 is_loose_binding: true
-is_mvrp: true
+is_mvrp: false
 is_bridge_binding: true
 ingress_qos_map:
 - from: 2
@@ -75,13 +89,47 @@ egress_qos_map:
   to: 2
 "#;
 
+const EXPECTED_CHANGED_VLAN_INFO: &str = r#"---
+vlan_id: 99
+protocol: 802.1q
+base_iface: dummy1
+is_reorder_hdr: false
+is_gvrp: false
+is_loose_binding: false
+is_mvrp: false
+is_bridge_binding: false
+ingress_qos_map:
+- from: 2
+  to: 9
+- from: 3
+  to: 8
+- from: 4
+  to: 7
+egress_qos_map:
+- from: 7
+  to: 4
+- from: 8
+  to: 3
+- from: 9
+  to: 2
+"#;
+
 #[test]
-fn test_create_and_delete_vlan() {
+fn test_create_change_and_delete_vlan() {
     with_vlan_iface(|| {
         let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         assert_eq!(iface.iface_type, crate::IfaceType::Vlan);
         assert_value_match(EXPECTED_VLAN_INFO, &iface.vlan);
+
+        let net_conf: NetConf =
+            serde_yaml::from_str(VLAN_CHANGE_FULL_INFO_YAML).unwrap();
+        net_conf.apply().unwrap();
+
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(iface.iface_type, crate::IfaceType::Vlan);
+        assert_value_match(EXPECTED_CHANGED_VLAN_INFO, &iface.vlan);
     });
 }
 

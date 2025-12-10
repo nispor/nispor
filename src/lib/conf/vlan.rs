@@ -19,7 +19,9 @@ pub struct VlanConf {
     pub is_loose_binding: Option<bool>,
     pub is_mvrp: Option<bool>,
     pub is_bridge_binding: Option<bool>,
+    #[serde(default)]
     pub ingress_qos_map: Vec<VlanQosMapping>,
+    #[serde(default)]
     pub egress_qos_map: Vec<VlanQosMapping>,
 }
 

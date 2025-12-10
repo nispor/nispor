@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
+use rtnetlink::{
+    packet_core::{NLM_F_ACK, NLM_F_REQUEST},
+    packet_route::link::LinkMessage,
+};
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -86,24 +90,13 @@ async fn create_iface(
     handle: &rtnetlink::Handle,
     iface: &IfaceConf,
 ) -> Result<(), NisporError> {
-    let msg = match iface.iface_type {
-        Some(IfaceType::Bridge) => BridgeConf::create(iface).build(),
-        Some(IfaceType::Veth) => VethConf::create(iface)?.build(),
-        Some(IfaceType::Bond) => BondConf::create(iface)?.build(),
-        Some(IfaceType::Vlan) => VlanConf::create(handle, iface).await?.build(),
-        Some(IfaceType::Dummy) => DummyConf::create(iface)?.build(),
-        Some(_) => {
-            return Err(NisporError::invalid_argument(format!(
-                "Cannot create unsupported interface {:?}",
-                &iface
-            )));
-        }
-        None => {
-            return Err(NisporError::invalid_argument(format!(
-                "No interface type defined for new interface {:?}",
-                &iface
-            )));
-        }
+    let msg = if iface.iface_type.is_some() {
+        gen_link_msg(handle, iface).await?
+    } else {
+        return Err(NisporError::invalid_argument(format!(
+            "No interface type defined for new interface {:?}",
+            &iface
+        )));
     };
     handle.link().add(msg).execute().await.map_err(|e| {
         NisporError::new(
@@ -113,12 +106,50 @@ async fn create_iface(
     })
 }
 
+async fn gen_link_msg(
+    handle: &rtnetlink::Handle,
+    iface: &IfaceConf,
+) -> Result<LinkMessage, NisporError> {
+    Ok(match iface.iface_type.as_ref() {
+        Some(IfaceType::Bridge) => BridgeConf::create(iface).build(),
+        Some(IfaceType::Veth) => VethConf::create(iface)?.build(),
+        Some(IfaceType::Bond) => BondConf::create(iface)?.build(),
+        Some(IfaceType::Vlan) => VlanConf::create(handle, iface).await?.build(),
+        Some(IfaceType::Dummy) => DummyConf::create(iface)?.build(),
+        Some(t) => {
+            return Err(NisporError::invalid_argument(format!(
+                "Unsupported interface type {t}: {iface:?}",
+            )));
+        }
+        None => {
+            unreachable!("BUG: gen_link_msg(): Empty interface type {iface:?}",)
+        }
+    })
+}
+
 async fn change_iface(
     handle: &rtnetlink::Handle,
     des_iface: &IfaceConf,
     cur_iface: &Iface,
 ) -> Result<(), NisporError> {
-    // TODO: Change link layer settings(bond, veth, bridg, etc)
+    if des_iface.iface_type.is_some() {
+        let msg = gen_link_msg(handle, des_iface).await?;
+        // Even we are changing existing interface, kernel still require us to
+        // use `RTM_NEWLINK`. The `RTM_SETLINK` is only used for bridge VLAN
+        // filtering.
+        handle
+            .link()
+            .add(msg)
+            .set_flags(NLM_F_ACK | NLM_F_REQUEST)
+            .execute()
+            .await
+            .map_err(|e| {
+                NisporError::new(
+                    ErrorKind::NisporBug,
+                    format!("Failed to change interface {des_iface:?}: {e}"),
+                )
+            })?;
+    };
     apply_base_link_changes(handle, des_iface, cur_iface).await?;
 
     change_iface_alt_name(handle, des_iface, cur_iface).await?;
