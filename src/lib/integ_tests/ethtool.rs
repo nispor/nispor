@@ -19,7 +19,6 @@ const EXPECTED_FEATURE_INFO: &str = r#"---
 fixed:
   esp-hw-offload: false
   esp-tx-csum-hw-offload: false
-  fcoe-mtu: false
   highdma: true
   hsr-dup-offload: false
   hsr-fwd-offload: false
@@ -29,7 +28,6 @@ fixed:
   l2-fwd-offload: false
   loopback: true
   macsec-hw-offload: false
-  netns-local: true
   rx-all: false
   rx-checksum: true
   rx-fcs: false
@@ -58,7 +56,6 @@ fixed:
   tx-gso-robust: false
   tx-ipxip4-segmentation: false
   tx-ipxip6-segmentation: false
-  tx-lockless: true
   tx-nocache-copy: false
   tx-scatter-gather-fraglist: true
   tx-tunnel-remcsum-segmentation: false
