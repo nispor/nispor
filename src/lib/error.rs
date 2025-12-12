@@ -15,6 +15,11 @@ pub enum ErrorKind {
     PermissionDeny,
 }
 
+impl ErrorKind {
+    #[allow(non_upper_case_globals)]
+    pub const Bug: Self = Self::NisporBug;
+}
+
 impl std::fmt::Display for ErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{self:?}")

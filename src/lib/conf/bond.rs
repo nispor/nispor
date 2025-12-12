@@ -3,7 +3,7 @@
 use rtnetlink::{LinkBond, LinkMessageBuilder};
 use serde::{Deserialize, Serialize};
 
-use crate::{BondMode, IfaceConf, NisporError};
+use crate::{BondMode, IfaceConf};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
@@ -12,11 +12,13 @@ pub struct BondConf {
 }
 
 impl BondConf {
-    pub(crate) fn create(
+    pub(crate) fn gen_link_msg_builder(
         iface: &IfaceConf,
-    ) -> Result<LinkMessageBuilder<LinkBond>, NisporError> {
-        let bond_mode =
-            iface.bond.as_ref().and_then(|b| b.mode).unwrap_or_default();
-        Ok(LinkBond::new(iface.name.as_str()).mode(bond_mode.into()))
+    ) -> LinkMessageBuilder<LinkBond> {
+        let mut builder = LinkBond::new(iface.name.as_str());
+        if let Some(bond_mode) = iface.bond.as_ref().and_then(|b| b.mode) {
+            builder = builder.mode(bond_mode.into());
+        }
+        builder
     }
 }

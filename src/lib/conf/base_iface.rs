@@ -1,138 +1,116 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use rtnetlink::{LinkMessageBuilder, LinkUnspec};
+use rtnetlink::{
+    packet_route::link::LinkMessage, LinkMessageBuilder, LinkUnspec,
+};
 
 use super::super::{mac::mac_str_to_raw, query::resolve_iface_index};
 use crate::{ErrorKind, Iface, IfaceConf, IfaceState, NisporError};
 
-pub(crate) async fn apply_base_link_changes(
+pub(crate) async fn apply_base_link_changes<T>(
     handle: &rtnetlink::Handle,
+    mut builder: LinkMessageBuilder<T>,
     des_iface: &IfaceConf,
-    cur_iface: &Iface,
-) -> Result<(), NisporError> {
-    let mut msg_builder = LinkUnspec::new_with_name(des_iface.name.as_str());
-    let mut cur_iface_state = cur_iface.state.clone();
-    if let Some(mac) = des_iface.mac_address.as_deref() {
-        if cur_iface.mac_address.as_str() != mac {
-            // Need to bring interface down to change the MAC
-            if cur_iface_state != IfaceState::Down {
-                link_down(handle, cur_iface.index).await?;
-                cur_iface_state = IfaceState::Down;
-            }
-            msg_builder = apply_mac_change(msg_builder, des_iface)?;
-        }
-    }
-    if let Some(des_ctrl) = des_iface.controller.as_ref() {
-        if Some(des_ctrl) != cur_iface.controller.as_ref() {
-            // Need down interface for changing controller
-            if cur_iface_state != IfaceState::Down {
-                link_down(handle, cur_iface.index).await?;
-                cur_iface_state = IfaceState::Down;
-            }
-            apply_controller_change(handle, des_iface.name.as_str(), des_ctrl)
-                .await?;
-        }
-    }
-    if cur_iface_state != des_iface.state {
-        msg_builder = apply_state_change(msg_builder, des_iface)?;
-    }
+    cur_iface: Option<&Iface>,
+) -> Result<Vec<LinkMessage>, NisporError> {
+    let mut ret: Vec<LinkMessage> = Vec::new();
+
+    // We cannot bring interface up when changing controller, hence
+    // we need to bring interface up after controller changed.
+    let mut is_changing_ctrller = false;
+    let mut post_apply_msg: Option<LinkMessage> = None;
+
+    // Interface is created with DOWN state, so even current interface not
+    // exist yet, its current state should be DOWN.
+    let mut cur_iface_state = cur_iface
+        .as_ref()
+        .map(|c| c.state.clone())
+        .unwrap_or(IfaceState::Down);
+
     if let Some(mtu) = des_iface.mtu {
-        if cur_iface.mtu != mtu as i64 {
-            msg_builder = msg_builder.mtu(mtu);
+        builder = builder.mtu(mtu);
+    }
+
+    if let Some(des_mac) = des_iface.mac_address.as_ref() {
+        if !des_mac.is_empty() {
+            if let Some(cur_iface) = cur_iface.as_ref() {
+                if des_mac.to_uppercase()
+                    != cur_iface.mac_address.as_str().to_uppercase()
+                    && cur_iface_state != IfaceState::Down
+                {
+                    // Need to bring interface down to change the MAC
+                    ret.push(
+                        LinkUnspec::new_with_index(cur_iface.index)
+                            .down()
+                            .build(),
+                    );
+                    cur_iface_state = IfaceState::Down;
+                }
+            }
+            builder = builder.address(mac_str_to_raw(des_mac)?);
         }
     }
 
-    handle
-        .link()
-        .set(msg_builder.build())
-        .execute()
-        .await
-        .map_err(|e| {
-            NisporError::new(
-                ErrorKind::NisporBug,
-                format!("Failed to change interface {des_iface:?}: {e}"),
-            )
-        })
-}
+    if let Some(des_ctrl) = des_iface.controller.as_ref() {
+        if let Some(cur_ctrl) =
+            cur_iface.as_ref().and_then(|c| c.controller.as_ref())
+        {
+            if des_ctrl != cur_ctrl {
+                // Need to bring down interface for changing controller
+                if cur_iface_state != IfaceState::Down {
+                    ret.push(
+                        LinkUnspec::new_with_name(des_iface.name.as_str())
+                            .down()
+                            .build(),
+                    );
+                    cur_iface_state = IfaceState::Down;
+                }
+            }
+        }
 
-fn apply_state_change<T>(
-    msg_builder: LinkMessageBuilder<T>,
-    iface: &IfaceConf,
-) -> Result<LinkMessageBuilder<T>, NisporError> {
-    match iface.state {
-        IfaceState::Up => Ok(msg_builder.up()),
-        IfaceState::Down => Ok(msg_builder.down()),
-        IfaceState::Absent => Err(NisporError::new(
-            ErrorKind::NisporBug,
-            format!(
-                "apply_state_change() got IfaceState::Absent which should \
-                 never reach here: {iface:?}",
-            ),
-        )),
-        _ => Err(NisporError::new(
-            ErrorKind::InvalidArgument,
-            format!(
-                "Invalid interface state {} which should never reach here",
-                iface.state
-            ),
-        )),
+        is_changing_ctrller = true;
+        if des_ctrl.is_empty() {
+            builder = builder.nocontroller();
+        } else {
+            let ctrl_index = resolve_iface_index(handle, des_ctrl).await?;
+            builder = builder.controller(ctrl_index);
+        }
     }
-}
 
-fn apply_mac_change<T>(
-    msg_builder: LinkMessageBuilder<T>,
-    iface: &IfaceConf,
-) -> Result<LinkMessageBuilder<T>, NisporError> {
-    if let Some(mac_address) = iface.mac_address.as_deref() {
-        Ok(msg_builder.address(mac_str_to_raw(mac_address)?))
-    } else {
-        Ok(msg_builder)
+    // When changing controller, we cannot make the interface as up yet.
+    if cur_iface_state != des_iface.state {
+        match &des_iface.state {
+            IfaceState::Up => {
+                if is_changing_ctrller {
+                    builder = builder.down();
+                    post_apply_msg = Some(
+                        LinkUnspec::new_with_name(des_iface.name.as_str())
+                            .up()
+                            .build(),
+                    );
+                } else {
+                    builder = builder.up();
+                }
+            }
+            IfaceState::Down => {
+                builder = builder.down();
+            }
+            state => {
+                return Err(NisporError::new(
+                    ErrorKind::Bug,
+                    format!(
+                        "apply_base_link_changes(): Invalid interface state \
+                         {state}"
+                    ),
+                ));
+            }
+        }
     }
-}
 
-/// `ctrl_name.is_empty()` means detach
-async fn apply_controller_change(
-    handle: &rtnetlink::Handle,
-    iface_name: &str,
-    ctrl_name: &str,
-) -> Result<(), NisporError> {
-    let msg_builder = if ctrl_name.is_empty() {
-        LinkUnspec::new_with_name(iface_name).nocontroller()
-    } else {
-        let ctrl_index = resolve_iface_index(handle, ctrl_name).await?;
-        LinkUnspec::new_with_name(iface_name).controller(ctrl_index)
-    };
+    ret.push(builder.build());
+    if let Some(msg) = post_apply_msg {
+        ret.push(msg)
+    }
 
-    handle
-        .link()
-        .set(msg_builder.build())
-        .execute()
-        .await
-        .map_err(|e| {
-            NisporError::new(
-                ErrorKind::NisporBug,
-                format!(
-                    "Failed to change interface {iface_name} controller \
-                     {ctrl_name}: {e}"
-                ),
-            )
-        })
-}
-
-async fn link_down(
-    handle: &rtnetlink::Handle,
-    index: u32,
-) -> Result<(), NisporError> {
-    log::debug!("Bring interface {index} down");
-    handle
-        .link()
-        .set(LinkUnspec::new_with_index(index).down().build())
-        .execute()
-        .await
-        .map_err(|e| {
-            NisporError::new(
-                ErrorKind::NisporBug,
-                format!("Failed to link down iface index {index}: {e}"),
-            )
-        })
+    Ok(ret)
 }

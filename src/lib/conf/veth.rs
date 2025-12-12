@@ -1,22 +1,34 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use rtnetlink::{LinkMessageBuilder, LinkVeth};
+use rtnetlink::{packet_route::link::InfoKind, LinkMessageBuilder, LinkVeth};
 
-use crate::{ErrorKind, IfaceConf, NisporError, VethInfo};
+use crate::{ErrorKind, Iface, IfaceConf, NisporError, VethInfo};
 
 pub type VethConf = VethInfo;
 
 impl VethConf {
-    pub(crate) fn create(
+    pub(crate) fn gen_link_msg_builder(
         iface: &IfaceConf,
+        cur_iface: Option<&Iface>,
     ) -> Result<LinkMessageBuilder<LinkVeth>, NisporError> {
         if let Some(veth_conf) = &iface.veth {
-            Ok(LinkVeth::new(iface.name.as_str(), veth_conf.peer.as_str()))
+            if cur_iface.as_ref().and_then(|c| c.veth.as_ref()).is_some() {
+                Err(NisporError::new(
+                    ErrorKind::InvalidArgument,
+                    format!(
+                        "Please remove veth section since veth interface {} \
+                         already exists",
+                        iface.name
+                    ),
+                ))
+            } else {
+                Ok(LinkVeth::new(iface.name.as_str(), veth_conf.peer.as_str()))
+            }
         } else {
-            Err(NisporError::new(
-                ErrorKind::InvalidArgument,
-                "No veth peer defined to creating veth".to_string(),
-            ))
+            Ok(LinkMessageBuilder::<LinkVeth>::new_with_info_kind(
+                InfoKind::Veth,
+            )
+            .name(iface.name.to_string()))
         }
     }
 }
