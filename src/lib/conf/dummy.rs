@@ -3,16 +3,16 @@
 use rtnetlink::{LinkDummy, LinkMessageBuilder};
 use serde::{Deserialize, Serialize};
 
-use crate::{IfaceConf, NisporError};
+use crate::IfaceConf;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
-pub struct DummyConf;
+pub struct DummyConf {}
 
 impl DummyConf {
-    pub(crate) fn create(
+    pub(crate) fn gen_link_msg_builder(
         iface: &IfaceConf,
-    ) -> Result<LinkMessageBuilder<LinkDummy>, NisporError> {
-        Ok(LinkDummy::new(iface.name.as_str()))
+    ) -> LinkMessageBuilder<LinkDummy> {
+        LinkDummy::new(iface.name.as_str())
     }
 }

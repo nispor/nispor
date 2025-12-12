@@ -10,7 +10,9 @@ use crate::IfaceConf;
 pub struct BridgeConf {}
 
 impl BridgeConf {
-    pub(crate) fn create(iface: &IfaceConf) -> LinkMessageBuilder<LinkBridge> {
+    pub(crate) fn gen_link_msg_builder(
+        iface: &IfaceConf,
+    ) -> LinkMessageBuilder<LinkBridge> {
         LinkBridge::new(iface.name.as_str())
     }
 }
