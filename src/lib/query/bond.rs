@@ -7,7 +7,7 @@ use std::{
 
 use rtnetlink::packet_route::link::{
     self, BondArpAllTargets as RtBondArpAllTargets,
-    BondFailOverMac as RtBondFailOverMac,
+    BondArpValidate as RtBondArpValidate, BondFailOverMac as RtBondFailOverMac,
     BondPrimaryReselect as RtBondPrimaryReselect,
     BondXmitHashPolicy as RtBondXmitHashPolicy, InfoBond, InfoBondPort,
     InfoData,
@@ -123,7 +123,7 @@ impl std::fmt::Display for BondMode {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondModeArpAllTargets {
@@ -155,7 +155,17 @@ impl From<RtBondArpAllTargets> for BondModeArpAllTargets {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+impl From<BondModeArpAllTargets> for RtBondArpAllTargets {
+    fn from(v: BondModeArpAllTargets) -> Self {
+        match v {
+            BondModeArpAllTargets::Any => Self::Any,
+            BondModeArpAllTargets::All => Self::All,
+            BondModeArpAllTargets::Other(d) => Self::Other(d),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondArpValidate {
@@ -171,27 +181,32 @@ pub enum BondArpValidate {
     Other(u32),
 }
 
-impl From<rtnetlink::packet_route::link::BondArpValidate> for BondArpValidate {
-    fn from(d: rtnetlink::packet_route::link::BondArpValidate) -> Self {
+impl From<RtBondArpValidate> for BondArpValidate {
+    fn from(d: RtBondArpValidate) -> Self {
         match d {
-            rtnetlink::packet_route::link::BondArpValidate::None => Self::None,
-            rtnetlink::packet_route::link::BondArpValidate::Active => {
-                Self::Active
-            }
-            rtnetlink::packet_route::link::BondArpValidate::Backup => {
-                Self::Backup
-            }
-            rtnetlink::packet_route::link::BondArpValidate::All => Self::All,
-            rtnetlink::packet_route::link::BondArpValidate::Filter => {
-                Self::Filter
-            }
-            rtnetlink::packet_route::link::BondArpValidate::FilterActive => {
-                Self::FilterActive
-            }
-            rtnetlink::packet_route::link::BondArpValidate::FilterBackup => {
-                Self::FilterBackup
-            }
+            RtBondArpValidate::None => Self::None,
+            RtBondArpValidate::Active => Self::Active,
+            RtBondArpValidate::Backup => Self::Backup,
+            RtBondArpValidate::All => Self::All,
+            RtBondArpValidate::Filter => Self::Filter,
+            RtBondArpValidate::FilterActive => Self::FilterActive,
+            RtBondArpValidate::FilterBackup => Self::FilterBackup,
             _ => Self::Other(d.into()),
+        }
+    }
+}
+
+impl From<BondArpValidate> for RtBondArpValidate {
+    fn from(v: BondArpValidate) -> Self {
+        match v {
+            BondArpValidate::None => Self::None,
+            BondArpValidate::Active => Self::Active,
+            BondArpValidate::Backup => Self::Backup,
+            BondArpValidate::All => Self::All,
+            BondArpValidate::Filter => Self::Filter,
+            BondArpValidate::FilterActive => Self::FilterActive,
+            BondArpValidate::FilterBackup => Self::FilterBackup,
+            BondArpValidate::Other(d) => Self::Other(d),
         }
     }
 }
@@ -200,7 +215,7 @@ const BOND_PRI_RESELECT_ALWAYS: u8 = 0;
 const BOND_PRI_RESELECT_BETTER: u8 = 1;
 const BOND_PRI_RESELECT_FAILURE: u8 = 2;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondPrimaryReselect {
@@ -232,11 +247,22 @@ impl From<RtBondPrimaryReselect> for BondPrimaryReselect {
     }
 }
 
+impl From<BondPrimaryReselect> for RtBondPrimaryReselect {
+    fn from(v: BondPrimaryReselect) -> Self {
+        match v {
+            BondPrimaryReselect::Always => Self::Always,
+            BondPrimaryReselect::Better => Self::Better,
+            BondPrimaryReselect::Failure => Self::Failure,
+            BondPrimaryReselect::Other(d) => Self::Other(d),
+        }
+    }
+}
+
 const BOND_FOM_NONE: u8 = 0;
 const BOND_FOM_ACTIVE: u8 = 1;
 const BOND_FOM_FOLLOW: u8 = 2;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondFailOverMac {
@@ -268,6 +294,17 @@ impl From<RtBondFailOverMac> for BondFailOverMac {
     }
 }
 
+impl From<BondFailOverMac> for RtBondFailOverMac {
+    fn from(v: BondFailOverMac) -> Self {
+        match v {
+            BondFailOverMac::None => Self::None,
+            BondFailOverMac::Active => Self::Active,
+            BondFailOverMac::Follow => Self::Follow,
+            BondFailOverMac::Other(d) => Self::Other(d),
+        }
+    }
+}
+
 const BOND_XMIT_POLICY_LAYER2: u8 = 0;
 const BOND_XMIT_POLICY_LAYER34: u8 = 1;
 const BOND_XMIT_POLICY_LAYER23: u8 = 2;
@@ -275,7 +312,7 @@ const BOND_XMIT_POLICY_ENCAP23: u8 = 3;
 const BOND_XMIT_POLICY_ENCAP34: u8 = 4;
 const BOND_XMIT_POLICY_VLAN_SRCMAC: u8 = 5;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondXmitHashPolicy {
@@ -322,10 +359,24 @@ impl From<RtBondXmitHashPolicy> for BondXmitHashPolicy {
     }
 }
 
+impl From<BondXmitHashPolicy> for RtBondXmitHashPolicy {
+    fn from(v: BondXmitHashPolicy) -> Self {
+        match v {
+            BondXmitHashPolicy::Layer2 => Self::Layer2,
+            BondXmitHashPolicy::Layer34 => Self::Layer34,
+            BondXmitHashPolicy::Layer23 => Self::Layer23,
+            BondXmitHashPolicy::Encap23 => Self::Encap23,
+            BondXmitHashPolicy::Encap34 => Self::Encap34,
+            BondXmitHashPolicy::VlanSrcMac => Self::VlanSrcMac,
+            BondXmitHashPolicy::Other(d) => Self::Other(d),
+        }
+    }
+}
+
 const BOND_ALL_SUBORDINATES_ACTIVE_DROPPED: u8 = 0;
 const BOND_ALL_SUBORDINATES_ACTIVE_DELIEVERD: u8 = 1;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondAllSubordinatesActive {
@@ -344,10 +395,24 @@ impl From<u8> for BondAllSubordinatesActive {
     }
 }
 
+impl From<BondAllSubordinatesActive> for u8 {
+    fn from(v: BondAllSubordinatesActive) -> u8 {
+        match v {
+            BondAllSubordinatesActive::Dropped => {
+                BOND_ALL_SUBORDINATES_ACTIVE_DROPPED
+            }
+            BondAllSubordinatesActive::Delivered => {
+                BOND_ALL_SUBORDINATES_ACTIVE_DELIEVERD
+            }
+            BondAllSubordinatesActive::Other(d) => d,
+        }
+    }
+}
+
 const AD_LACP_SLOW: u8 = 0;
 const AD_LACP_FAST: u8 = 1;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondLacpRate {
@@ -366,11 +431,21 @@ impl From<u8> for BondLacpRate {
     }
 }
 
+impl From<BondLacpRate> for u8 {
+    fn from(v: BondLacpRate) -> u8 {
+        match v {
+            BondLacpRate::Slow => AD_LACP_SLOW,
+            BondLacpRate::Fast => AD_LACP_FAST,
+            BondLacpRate::Other(d) => d,
+        }
+    }
+}
+
 const BOND_AD_STABLE: u8 = 0;
 const BOND_AD_BANDWIDTH: u8 = 1;
 const BOND_AD_COUNT: u8 = 2;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum BondAdSelect {
@@ -387,6 +462,17 @@ impl From<u8> for BondAdSelect {
             BOND_AD_BANDWIDTH => Self::Bandwidth,
             BOND_AD_COUNT => Self::Count,
             _ => Self::Other(d),
+        }
+    }
+}
+
+impl From<BondAdSelect> for u8 {
+    fn from(v: BondAdSelect) -> u8 {
+        match v {
+            BondAdSelect::Stable => BOND_AD_STABLE,
+            BondAdSelect::Bandwidth => BOND_AD_BANDWIDTH,
+            BondAdSelect::Count => BOND_AD_COUNT,
+            BondAdSelect::Other(d) => d,
         }
     }
 }
