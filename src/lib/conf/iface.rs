@@ -122,7 +122,7 @@ async fn gen_link_msg(
         Some(IfaceType::Bond) => {
             apply_base_link_changes(
                 handle,
-                BondConf::gen_link_msg_builder(des_iface),
+                BondConf::gen_link_msg_builder(handle, des_iface).await?,
                 des_iface,
                 cur_iface,
             )
