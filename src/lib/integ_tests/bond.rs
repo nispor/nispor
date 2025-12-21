@@ -5,7 +5,7 @@ use std::panic;
 use pretty_assertions::assert_eq;
 
 use super::utils::assert_value_match;
-use crate::{NetConf, NetState};
+use crate::{BondMode, NetConf, NetState};
 
 const IFACE_NAME: &str = "bond99";
 const PORT1_NAME: &str = "dummy1";
@@ -164,5 +164,36 @@ fn test_change_bond_disable_miimon_enable_arp_interval() {
         assert_eq!(iface.bond.as_ref().unwrap().updelay, Some(0));
         assert_eq!(iface.bond.as_ref().unwrap().downdelay, Some(0));
         assert_eq!(iface.bond.as_ref().unwrap().arp_interval, Some(30));
+    })
+}
+
+const CHANGE_BOND_MODE_YAML: &str = r#"---
+interfaces:
+  - name: dummy1
+    state: up
+    controller: ""
+  - name: dummy2
+    state: up
+    controller: ""
+  - name: bond99
+    type: bond
+    state: up
+    bond:
+      mode: balance-rr"#;
+
+#[test]
+fn test_change_bond_mode() {
+    with_bond_iface(|| {
+        let net_conf: NetConf =
+            serde_yaml::from_str(CHANGE_BOND_MODE_YAML).unwrap();
+        net_conf.apply().unwrap();
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(&iface.iface_type, &crate::IfaceType::Bond);
+        assert!(&iface.flags.contains(&crate::IfaceFlag::Up));
+        assert_eq!(
+            iface.bond.as_ref().unwrap().mode,
+            BondMode::BalanceRoundRobin
+        );
     })
 }

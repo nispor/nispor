@@ -10,7 +10,7 @@ use crate::{
     query::resolve_iface_index,
     BondAdSelect, BondAllSubordinatesActive, BondArpValidate, BondFailOverMac,
     BondLacpRate, BondMode, BondModeArpAllTargets, BondPrimaryReselect,
-    BondXmitHashPolicy, ErrorKind, IfaceConf, NisporError,
+    BondXmitHashPolicy, ErrorKind, Iface, IfaceConf, NisporError,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -79,11 +79,19 @@ impl BondConf {
     pub(crate) async fn gen_link_msg_builder(
         handle: &rtnetlink::Handle,
         iface: &IfaceConf,
+        cur_iface: Option<&Iface>,
     ) -> Result<LinkMessageBuilder<LinkBond>, NisporError> {
         let mut builder = LinkBond::new(iface.name.as_str());
         if let Some(bond_conf) = iface.bond.as_ref() {
             if let Some(bond_mode) = bond_conf.mode {
-                builder = builder.mode(bond_mode.into());
+                let cur_bond_mode =
+                    cur_iface.and_then(|i| i.bond.as_ref()).map(|b| b.mode);
+
+                // Only include bond mode request when changing, otherwise
+                // kernel will reject us.
+                if Some(bond_mode) != cur_bond_mode {
+                    builder = builder.mode(bond_mode.into());
+                }
             }
             if let Some(v) = bond_conf.miimon {
                 builder = builder.miimon(v);
