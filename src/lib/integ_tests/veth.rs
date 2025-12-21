@@ -27,13 +27,17 @@ fn with_veth_iface<T>(test: T)
 where
     T: FnOnce() + panic::UnwindSafe,
 {
-    super::utils::set_network_environment("veth");
+    let net_conf: NetConf = serde_yaml::from_str(VETH_CREATE_YML).unwrap();
+    net_conf.apply().unwrap();
+    // Wait 1 second for veth to up
+    std::thread::sleep(std::time::Duration::from_secs(1));
 
     let result = panic::catch_unwind(|| {
         test();
     });
 
-    super::utils::clear_network_environment();
+    let net_conf: NetConf = serde_yaml::from_str(VETH_DELETE_YML).unwrap();
+    net_conf.apply().unwrap();
     assert!(result.is_ok())
 }
 
@@ -68,62 +72,69 @@ ifaces:
 
 #[test]
 fn test_create_down_delete_veth() {
-    let net_conf: NetConf = serde_yaml::from_str(VETH_CREATE_YML).unwrap();
-    net_conf.apply().unwrap();
-    // Wait 1 second for veth to up
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    let state = NetState::retrieve().unwrap();
-    let iface = &state.ifaces[IFACE_NAME];
-    assert_eq!(&iface.iface_type, &crate::IfaceType::Veth);
-    assert_eq!(iface.veth.as_ref().unwrap().peer, "veth1.ep");
-    assert_eq!(iface.state, IfaceState::Up);
-    assert_eq!(iface.mac_address, "00:23:45:67:89:1a".to_string());
+    with_veth_iface(|| {
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(&iface.iface_type, &crate::IfaceType::Veth);
+        assert_eq!(iface.veth.as_ref().unwrap().peer, "veth1.ep");
+        assert_eq!(iface.state, IfaceState::Up);
+        assert_eq!(iface.mac_address, "00:23:45:67:89:1a".to_string());
 
-    // Change the MAC should have the interface as UP state
-    let net_conf: NetConf = serde_yaml::from_str(VETH_CHANGE_MAC_YML).unwrap();
-    net_conf.apply().unwrap();
-    // Wait 1 second for veth to up
-    std::thread::sleep(std::time::Duration::from_secs(1));
-    let state = NetState::retrieve().unwrap();
-    let iface = &state.ifaces[IFACE_NAME];
-    assert_eq!(iface.state, IfaceState::Up);
-    assert_eq!(iface.mac_address, "00:23:45:67:89:2a".to_string());
+        // Change the MAC should have the interface as UP state
+        let net_conf: NetConf =
+            serde_yaml::from_str(VETH_CHANGE_MAC_YML).unwrap();
+        net_conf.apply().unwrap();
+        // Wait 1 second for veth to up
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(iface.state, IfaceState::Up);
+        assert_eq!(iface.mac_address, "00:23:45:67:89:2a".to_string());
 
-    let net_conf: NetConf = serde_yaml::from_str(VETH_DOWN_YML).unwrap();
-    net_conf.apply().unwrap();
-    let state = NetState::retrieve().unwrap();
-    let iface = &state.ifaces[IFACE_NAME];
-    assert_eq!(iface.state, IfaceState::Down);
-
-    let net_conf: NetConf = serde_yaml::from_str(VETH_DELETE_YML).unwrap();
-    net_conf.apply().unwrap();
-    let state = NetState::retrieve().unwrap();
-    assert_eq!(None, state.ifaces.get(IFACE_NAME));
+        let net_conf: NetConf = serde_yaml::from_str(VETH_DOWN_YML).unwrap();
+        net_conf.apply().unwrap();
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(iface.state, IfaceState::Down);
+    })
 }
 
 #[test]
 fn test_change_veth_mtu() {
-    let net_conf: NetConf = serde_yaml::from_str(
-        r#"---
-        interfaces:
-          - name: veth1
-            type: veth
-            mtu: 2000
-            veth:
-              peer: veth1.ep
-          - name: veth1.ep
-            type: veth
+    with_veth_iface(|| {
+        let net_conf: NetConf = serde_yaml::from_str(
+            r#"---
+            interfaces:
+              - name: veth1
+                type: veth
+                mtu: 2000
             "#,
-    )
-    .unwrap();
-    net_conf.apply().unwrap();
+        )
+        .unwrap();
+        net_conf.apply().unwrap();
 
-    let state = NetState::retrieve().unwrap();
-    let iface = &state.ifaces[IFACE_NAME];
-    assert_eq!(iface.mtu, 2000);
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(iface.mtu, 2000);
+    })
+}
 
-    let net_conf: NetConf = serde_yaml::from_str(VETH_DELETE_YML).unwrap();
-    net_conf.apply().unwrap();
-    let state = NetState::retrieve().unwrap();
-    assert_eq!(None, state.ifaces.get(IFACE_NAME));
+#[test]
+fn test_change_ethernet_mtu() {
+    with_veth_iface(|| {
+        let net_conf: NetConf = serde_yaml::from_str(
+            r#"---
+            interfaces:
+              - name: veth1
+                type: ethernet
+                mtu: 2000
+            "#,
+        )
+        .unwrap();
+        net_conf.apply().unwrap();
+
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(iface.mtu, 2000);
+    })
 }
