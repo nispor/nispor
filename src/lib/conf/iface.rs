@@ -176,12 +176,7 @@ async fn gen_link_msg(
             )
             .await?
         }
-        Some(t) => {
-            return Err(NisporError::invalid_argument(format!(
-                "Unsupported interface type {t}: {des_iface:?}",
-            )));
-        }
-        None => {
+        _ => {
             apply_base_link_changes(
                 handle,
                 LinkUnspec::new_with_name(des_iface.name.as_str()),
