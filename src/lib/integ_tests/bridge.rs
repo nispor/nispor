@@ -5,11 +5,11 @@ use std::panic;
 use pretty_assertions::assert_eq;
 
 use super::utils::assert_value_match;
-use crate::{NetConf, NetState};
+use crate::{BridgeStpState, NetConf, NetState};
 
 const IFACE_NAME: &str = "br0";
-const PORT1_NAME: &str = "eth1";
-const PORT2_NAME: &str = "eth2";
+const PORT1_NAME: &str = "dummy1";
+const PORT2_NAME: &str = "dummy2";
 
 // On Archlinux where HZ == 300, these properties will be rounded up by
 // `jiffies_to_clock_t()` of kernel:
@@ -30,8 +30,8 @@ name: br0
 iface_type: bridge
 bridge:
   ports:
-    - eth1
-    - eth2
+    - dummy1
+    - dummy2
   bridge_id: 8000.00234567891c
   group_fwd_mask: 0
   root_id: 8000.00234567891c
@@ -49,9 +49,8 @@ bridge:
   vlan_protocol: 802.1q
   default_pvid: 1
   vlan_stats_enabled: false
-  vlan_stats_per_host: false
+  vlan_stats_per_port: false
   stp_state: disabled
-  hello_timer: 0
   priority: 32768
   multicast_router: temp_query
   multicast_snooping: true
@@ -68,7 +67,7 @@ bridge:
 const EXPECTED_PORT1_BRIDGE_INFO: &str = r#"---
 stp_state: forwarding
 stp_priority: 32
-stp_path_cost: 2
+stp_path_cost: 100
 hairpin_mode: false
 bpdu_guard: false
 root_block: false
@@ -86,7 +85,6 @@ port_no: "0x1"
 change_ack: false
 config_pending: false
 message_age_timer: 0
-forward_delay_timer: 0
 hold_timer: 0
 multicast_router: temp_query
 multicast_flood: true
@@ -107,7 +105,7 @@ vlans:
 const EXPECTED_PORT2_BRIDGE_INFO: &str = r#"---
 stp_state: forwarding
 stp_priority: 32
-stp_path_cost: 2
+stp_path_cost: 100
 hairpin_mode: false
 bpdu_guard: false
 root_block: false
@@ -125,7 +123,6 @@ port_no: "0x2"
 change_ack: false
 config_pending: false
 message_age_timer: 0
-forward_delay_timer: 0
 hold_timer: 0
 multicast_router: temp_query
 multicast_flood: true
@@ -143,31 +140,55 @@ vlans:
     is_pvid: true
     is_egress_untagged: true"#;
 
-#[test]
-fn test_get_br_iface_yaml() {
-    with_br_iface(|| {
-        let mut state = NetState::retrieve().unwrap();
-        let iface = state.ifaces.get_mut(IFACE_NAME).unwrap();
-        if let Some(ref mut bridge_info) = iface.bridge {
-            bridge_info.gc_timer = None;
-            // Below value is not supported by RHEL 8 and Ubuntu CI
-            bridge_info.multi_bool_opt = None;
-            // Below value is different between CI and RHEL/CentOS 8
-            // https://blog.grisge.info/posts/br_on_250hz_kernel/
-            bridge_info.multicast_startup_query_interval = None;
-        }
-        let port1 = state.ifaces.get_mut(PORT1_NAME).unwrap();
-        if let Some(ref mut port_info) = port1.bridge_port {
-            port_info.forward_delay_timer = 0;
-            // Below values are not supported by Github CI Ubuntu 20.04
-            port_info.mrp_in_open = None;
-        }
-        let port2 = state.ifaces.get_mut(PORT2_NAME).unwrap();
-        if let Some(ref mut port_info) = port2.bridge_port {
-            port_info.forward_delay_timer = 0;
-            port_info.mrp_in_open = None;
-        }
+const BRIDGE_CREATE_YML: &str = r#"---
+interfaces:
+  - name: br0
+    type: bridge
+    mac-address: 00:23:45:67:89:1c
+    bridge:
+      stp-state: disabled
+  - name: dummy1
+    type: dummy
+    state: up
+    controller: br0
+  - name: dummy2
+    type: dummy
+    state: up
+    controller: br0
+    "#;
 
+const BRIDGE_DELETE_YML: &str = r#"---
+interfaces:
+  - name: br0
+    type: bridge
+    state: absent
+  - name: dummy1
+    type: dummy
+    state: absent
+  - name: dummy2
+    type: dummy
+    state: absent"#;
+
+fn with_br_iface<T>(test: T)
+where
+    T: FnOnce() + panic::UnwindSafe,
+{
+    let net_conf: NetConf = serde_yaml::from_str(BRIDGE_CREATE_YML).unwrap();
+    net_conf.apply().unwrap();
+
+    let result = panic::catch_unwind(|| {
+        test();
+    });
+
+    let net_conf: NetConf = serde_yaml::from_str(BRIDGE_DELETE_YML).unwrap();
+    net_conf.apply().unwrap();
+    assert!(result.is_ok())
+}
+
+#[test]
+fn test_create_delete_bridge() {
+    with_br_iface(|| {
+        let state = NetState::retrieve().unwrap();
         let iface = &state.ifaces[IFACE_NAME];
         let port1 = &state.ifaces[PORT1_NAME];
         let port2 = &state.ifaces[PORT2_NAME];
@@ -177,43 +198,31 @@ fn test_get_br_iface_yaml() {
         assert_value_match(EXPECTED_PORT1_BRIDGE_INFO, &port1.bridge_port);
         assert_value_match(EXPECTED_PORT2_BRIDGE_INFO, &port2.bridge_port);
     });
-}
-
-fn with_br_iface<T>(test: T)
-where
-    T: FnOnce() + panic::UnwindSafe,
-{
-    super::utils::set_network_environment("br");
-
-    let result = panic::catch_unwind(|| {
-        test();
-    });
-
-    super::utils::clear_network_environment();
-    assert!(result.is_ok())
-}
-
-const BRIDGE_CREATE_YML: &str = r#"---
-ifaces:
-  - name: br0
-    type: bridge"#;
-
-const BRIDGE_DELETE_YML: &str = r#"---
-ifaces:
-  - name: br0
-    type: bridge
-    state: absent"#;
-
-#[test]
-fn test_create_delete_bridge() {
-    let net_conf: NetConf = serde_yaml::from_str(BRIDGE_CREATE_YML).unwrap();
-    net_conf.apply().unwrap();
-    let state = NetState::retrieve().unwrap();
-    let iface = &state.ifaces[IFACE_NAME];
-    assert_eq!(&iface.iface_type, &crate::IfaceType::Bridge);
-
-    let net_conf: NetConf = serde_yaml::from_str(BRIDGE_DELETE_YML).unwrap();
-    net_conf.apply().unwrap();
     let state = NetState::retrieve().unwrap();
     assert_eq!(None, state.ifaces.get(IFACE_NAME));
+}
+
+#[test]
+fn test_bridge_change_stp_state() {
+    with_br_iface(|| {
+        let net_conf: NetConf = serde_yaml::from_str(
+            r#"---
+                interfaces:
+                - name: br0
+                  type: linux-bridge
+                  bridge:
+                    stp_state: kernel_stp
+                "#,
+        )
+        .unwrap();
+        net_conf.apply().unwrap();
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[IFACE_NAME];
+        assert_eq!(iface.iface_type, crate::IfaceType::Bridge);
+
+        assert_eq!(
+            iface.bridge.as_ref().and_then(|b| b.stp_state.as_ref()),
+            Some(&BridgeStpState::KernelStp)
+        );
+    });
 }

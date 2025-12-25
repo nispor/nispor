@@ -3,11 +3,43 @@
 use rtnetlink::packet_route::link::{
     AfSpecBridge, BridgeVlanInfo, BridgeVlanInfoFlags,
 };
+use serde::{Deserialize, Serialize};
 
-use crate::{BridgeVlanEntry, NisporError};
+use crate::{Iface, IfaceType, NisporError};
 
-// TODO: Dup with parse_bond_info
-pub(crate) fn parse_af_spec_bridge_info(
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[non_exhaustive]
+pub struct BridgeVlanEntry {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vid: Option<u16>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vid_range: Option<(u16, u16)>,
+    pub is_pvid: bool, // is PVID and ingress untagged
+    pub is_egress_untagged: bool,
+}
+
+pub(crate) fn parse_bridge_vlan_info(
+    iface_state: &mut Iface,
+    nlas: &[AfSpecBridge],
+) -> Result<(), NisporError> {
+    if let Some(ref mut port_info) = iface_state.bridge_port {
+        if let Some(cur_vlans) = parse_af_spec_bridge_info(nlas)? {
+            match port_info.vlans.as_mut() {
+                Some(vlans) => vlans.extend(cur_vlans),
+                None => port_info.vlans = Some(cur_vlans),
+            };
+        }
+    } else if iface_state.iface_type == IfaceType::Bridge {
+        let br_vlan = iface_state.bridge_vlan.get_or_insert(Vec::new());
+        // It's the VLAN of the bridge itself
+        if let Some(cur_vlans) = parse_af_spec_bridge_info(nlas)? {
+            br_vlan.extend(cur_vlans);
+        }
+    }
+    Ok(())
+}
+
+fn parse_af_spec_bridge_info(
     nlas: &[AfSpecBridge],
 ) -> Result<Option<Vec<BridgeVlanEntry>>, NisporError> {
     let mut vlans = Vec::new();

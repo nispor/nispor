@@ -137,7 +137,7 @@ impl BondConf {
                 builder = builder.num_peer_notif(v);
             }
             if let Some(v) = bond_conf.all_ports_active {
-                builder = builder.all_ports_active(u8::from(v));
+                builder = builder.all_ports_active(v.into());
             }
             if let Some(v) = bond_conf.min_links {
                 builder = builder.min_links(v);

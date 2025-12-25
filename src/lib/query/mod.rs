@@ -2,6 +2,7 @@
 
 mod bond;
 mod bridge;
+mod bridge_vlan;
 mod hsr;
 mod ip;
 mod iptunnel;
@@ -37,10 +38,10 @@ pub use self::{
         BondPrimaryReselect, BondXmitHashPolicy,
     },
     bridge::{
-        BridgeInfo, BridgePortInfo, BridgePortMulticastRouterType,
-        BridgePortStpState, BridgeStpState, BridgeVlanEntry,
-        BridgeVlanProtocol,
+        BridgeInfo, BridgeMulticastRouterType, BridgePortInfo,
+        BridgePortStpState, BridgeStpState,
     },
+    bridge_vlan::BridgeVlanEntry,
     ethtool::{
         EthtoolCoalesceInfo, EthtoolFeatureInfo, EthtoolFecInfo,
         EthtoolFecMode, EthtoolInfo, EthtoolLinkModeDuplex,

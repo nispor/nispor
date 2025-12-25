@@ -373,9 +373,6 @@ impl From<BondXmitHashPolicy> for RtBondXmitHashPolicy {
     }
 }
 
-const BOND_ALL_SUBORDINATES_ACTIVE_DROPPED: u8 = 0;
-const BOND_ALL_SUBORDINATES_ACTIVE_DELIEVERD: u8 = 1;
-
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
@@ -385,30 +382,25 @@ pub enum BondAllPortsActive {
     Other(u8),
 }
 
-impl From<u8> for BondAllPortsActive {
-    fn from(d: u8) -> Self {
+impl From<link::BondAllPortActive> for BondAllPortsActive {
+    fn from(d: link::BondAllPortActive) -> Self {
         match d {
-            BOND_ALL_SUBORDINATES_ACTIVE_DROPPED => Self::Dropped,
-            BOND_ALL_SUBORDINATES_ACTIVE_DELIEVERD => Self::Delivered,
-            _ => Self::Other(d),
+            link::BondAllPortActive::Dropped => Self::Dropped,
+            link::BondAllPortActive::Delivered => Self::Delivered,
+            _ => Self::Other(d.into()),
         }
     }
 }
 
-impl From<BondAllPortsActive> for u8 {
-    fn from(v: BondAllPortsActive) -> u8 {
+impl From<BondAllPortsActive> for link::BondAllPortActive {
+    fn from(v: BondAllPortsActive) -> link::BondAllPortActive {
         match v {
-            BondAllPortsActive::Dropped => BOND_ALL_SUBORDINATES_ACTIVE_DROPPED,
-            BondAllPortsActive::Delivered => {
-                BOND_ALL_SUBORDINATES_ACTIVE_DELIEVERD
-            }
-            BondAllPortsActive::Other(d) => d,
+            BondAllPortsActive::Dropped => link::BondAllPortActive::Dropped,
+            BondAllPortsActive::Delivered => link::BondAllPortActive::Delivered,
+            BondAllPortsActive::Other(d) => link::BondAllPortActive::Other(d),
         }
     }
 }
-
-const AD_LACP_SLOW: u8 = 0;
-const AD_LACP_FAST: u8 = 1;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
@@ -419,22 +411,22 @@ pub enum BondLacpRate {
     Other(u8),
 }
 
-impl From<u8> for BondLacpRate {
-    fn from(d: u8) -> Self {
+impl From<link::BondLacpRate> for BondLacpRate {
+    fn from(d: link::BondLacpRate) -> Self {
         match d {
-            AD_LACP_SLOW => Self::Slow,
-            AD_LACP_FAST => Self::Fast,
-            _ => Self::Other(d),
+            link::BondLacpRate::Slow => Self::Slow,
+            link::BondLacpRate::Fast => Self::Fast,
+            _ => Self::Other(d.into()),
         }
     }
 }
 
-impl From<BondLacpRate> for u8 {
-    fn from(v: BondLacpRate) -> u8 {
+impl From<BondLacpRate> for link::BondLacpRate {
+    fn from(v: BondLacpRate) -> link::BondLacpRate {
         match v {
-            BondLacpRate::Slow => AD_LACP_SLOW,
-            BondLacpRate::Fast => AD_LACP_FAST,
-            BondLacpRate::Other(d) => d,
+            BondLacpRate::Slow => link::BondLacpRate::Slow,
+            BondLacpRate::Fast => link::BondLacpRate::Fast,
+            BondLacpRate::Other(d) => link::BondLacpRate::Other(d),
         }
     }
 }
@@ -598,7 +590,7 @@ impl From<&[InfoBond]> for BondInfo {
                 InfoBond::MiiMon(v) => ret.miimon = Some(*v),
                 InfoBond::UpDelay(v) => ret.updelay = Some(*v),
                 InfoBond::DownDelay(v) => ret.downdelay = Some(*v),
-                InfoBond::UseCarrier(v) => ret.use_carrier = Some(*v > 0),
+                InfoBond::UseCarrier(v) => ret.use_carrier = Some(*v),
                 InfoBond::ArpInterval(v) => ret.arp_interval = Some(*v),
                 InfoBond::ArpIpTarget(v) => {
                     ret.arp_ip_target = ipv4_addr_array_to_string(v).ok()
@@ -705,13 +697,13 @@ impl From<&[InfoBond]> for BondInfo {
                     if [BondMode::BalanceTlb, BondMode::BalanceAlb]
                         .contains(&ret.mode)
                     {
-                        ret.tlb_dynamic_lb = Some(*v > 0);
+                        ret.tlb_dynamic_lb = Some(*v);
                     }
                 }
                 InfoBond::PeerNotifDelay(v) => ret.peer_notif_delay = Some(*v),
                 InfoBond::AdLacpActive(v) => {
                     if ret.mode == BondMode::Ieee8021AD {
-                        ret.lacp_active = Some(*v > 0);
+                        ret.lacp_active = Some(*v);
                     }
                 }
                 InfoBond::MissedMax(v) => {
