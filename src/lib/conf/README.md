@@ -13,9 +13,9 @@ nispor crate:
   corresponding bond MTU adjustments, will not be handled by nispor crate.
 
 * **Overlapping Properties**: Properties that overlap between different
-  interface types, such as bond's `subordinates` property and `BaseInterface`'s
+  interface types, such as bond's `ports` property and `BaseInterface`'s
   `controller` property, are not supported in apply operations. To avoid
-  conflicts, nispor will not introduce `subordinates` or `ports` properties for
+  conflicts, nispor will not introduce `ports` properties for
   bond, bridge, or other interfaces during apply operations.
 
 * **Interface Ordering**: When creating related interfaces (e.g., a VLAN

@@ -15,7 +15,7 @@ const EXPECTED_BOND_IFACE: &str = r#"---
 name: bond99
 iface_type: bond
 bond:
-  subordinates:
+  ports:
   - dummy1
   - dummy2
   mode: active-backup
@@ -28,21 +28,21 @@ bond:
   arp_validate: none
   primary_reselect: always
   resend_igmp: 1
-  all_subordinates_active: dropped
+  all_ports_active: dropped
   min_links: 0
   lp_interval: 1
   peer_notif_delay: 0
   "#;
 
 const EXPECTED_PORT1_INFO: &str = r#"---
-subordinate_state: active
+port_state: active
 mii_status: link_up
 link_failure_count: 0
 perm_hwaddr: "00:23:45:67:89:1a"
 queue_id: 0"#;
 
 const EXPECTED_PORT2_INFO: &str = r#"---
-subordinate_state: backup
+port_state: backup
 mii_status: link_up
 link_failure_count: 0
 perm_hwaddr: "00:23:45:67:89:1b"
@@ -63,7 +63,7 @@ interfaces:
       arp_validate: none
       primary_reselect: always
       resend_igmp: 1
-      all_subordinates_active: dropped
+      all_ports_active: dropped
       min_links: 0
       lp_interval: 1
       peer_notif_delay: 0
@@ -134,8 +134,8 @@ fn test_create_delete_bond() {
         let port2 = &state.ifaces[PORT2_NAME];
         assert_value_match(EXPECTED_BOND_IFACE, &iface);
 
-        assert_value_match(EXPECTED_PORT1_INFO, &port1.bond_subordinate);
-        assert_value_match(EXPECTED_PORT2_INFO, &port2.bond_subordinate);
+        assert_value_match(EXPECTED_PORT1_INFO, &port1.bond_port);
+        assert_value_match(EXPECTED_PORT2_INFO, &port2.bond_port);
         assert_eq!(port1.controller, Some("bond99".to_string()));
         assert_eq!(port2.controller, Some("bond99".to_string()));
         assert_eq!(port1.controller_type, Some(crate::ControllerType::Bond));
@@ -148,7 +148,7 @@ fn test_create_delete_bond() {
         let iface = &state.ifaces[IFACE_NAME];
         assert_eq!(&iface.iface_type, &crate::IfaceType::Bond);
         let empty_vec: Vec<String> = Vec::new();
-        assert_eq!(&iface.bond.as_ref().unwrap().subordinates, &empty_vec);
+        assert_eq!(&iface.bond.as_ref().unwrap().ports, &empty_vec);
     });
 }
 

@@ -133,9 +133,9 @@ pub struct EthtoolLinkModeInfo {
     pub speed: u32,
     pub duplex: EthtoolLinkModeDuplex,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub controller_subordinate_cfg: Option<u8>,
+    pub controller_port_cfg: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub controller_subordinate_state: Option<u8>,
+    pub controller_port_state: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lanes: Option<u32>,
 }
@@ -581,10 +581,10 @@ async fn dump_link_mode_infos(
                         link_mode_info.duplex = d.into()
                     }
                     EthtoolLinkModeAttr::ControllerSubordinateCfg(d) => {
-                        link_mode_info.controller_subordinate_cfg = Some(*d)
+                        link_mode_info.controller_port_cfg = Some(*d)
                     }
                     EthtoolLinkModeAttr::ControllerSubordinateState(d) => {
-                        link_mode_info.controller_subordinate_state = Some(*d)
+                        link_mode_info.controller_port_state = Some(*d)
                     }
                     EthtoolLinkModeAttr::Lanes(d) => {
                         link_mode_info.lanes = Some(*d)

@@ -31,10 +31,10 @@ mod vxlan;
 
 pub use self::{
     bond::{
-        BondAdInfo, BondAdSelect, BondAllSubordinatesActive, BondArpValidate,
+        BondAdInfo, BondAdSelect, BondAllPortsActive, BondArpValidate,
         BondFailOverMac, BondInfo, BondLacpRate, BondMiiStatus, BondMode,
-        BondModeArpAllTargets, BondPrimaryReselect, BondSubordinateInfo,
-        BondSubordinateState, BondXmitHashPolicy,
+        BondModeArpAllTargets, BondPortInfo, BondPortState,
+        BondPrimaryReselect, BondXmitHashPolicy,
     },
     bridge::{
         BridgeInfo, BridgePortInfo, BridgePortMulticastRouterType,
@@ -71,7 +71,7 @@ pub use self::{
     tun::{TunInfo, TunMode},
     veth::VethInfo,
     vlan::{VlanInfo, VlanProtocol, VlanQosMapping},
-    vrf::{VrfInfo, VrfSubordinateInfo},
+    vrf::{VrfInfo, VrfPortInfo},
     vxlan::VxlanInfo,
     wifi::WifiInfo,
     xfrm::XfrmInfo,
