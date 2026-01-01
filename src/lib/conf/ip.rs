@@ -8,11 +8,8 @@ use rtnetlink::packet_route::{
 };
 use serde::{Deserialize, Serialize};
 
-use super::super::query::{get_ifaces_with_handle, is_ipv6_addr};
-use crate::{
-    ErrorKind, IfaceConf, IpFamily, Ipv4Info, Ipv6Info, NetStateIfaceFilter,
-    NisporError,
-};
+use super::super::query::is_ipv6_addr;
+use crate::{Iface, IfaceConf, IpFamily, Ipv4Info, Ipv6Info, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
@@ -74,28 +71,13 @@ pub struct IpAddrConf {
 pub(crate) async fn change_ip_layer(
     handle: &rtnetlink::Handle,
     des_iface: &IfaceConf,
+    cur_iface: &Iface,
 ) -> Result<(), NisporError> {
-    if des_iface.ipv4.is_some() || des_iface.ipv6.is_some() {
-        let mut iface_filter = NetStateIfaceFilter::minimum();
-        iface_filter.iface_name = Some(des_iface.name.to_string());
-        iface_filter.include_ip_address = true;
-        let mut cur_ifaces =
-            get_ifaces_with_handle(handle, Some(&iface_filter)).await?;
-        let cur_iface =
-            cur_ifaces.remove(&des_iface.name).ok_or_else(|| {
-                NisporError::new(
-                    ErrorKind::NisporBug,
-                    format!("Failed to find interface {des_iface:?}"),
-                )
-            })?;
-        if let Some(ip_conf) = des_iface.ipv4.as_ref() {
-            apply_ip_conf(handle, cur_iface.index, ip_conf, IpFamily::Ipv4)
-                .await?;
-        }
-        if let Some(ip_conf) = des_iface.ipv6.as_ref() {
-            apply_ip_conf(handle, cur_iface.index, ip_conf, IpFamily::Ipv6)
-                .await?;
-        }
+    if let Some(ip_conf) = des_iface.ipv4.as_ref() {
+        apply_ip_conf(handle, cur_iface.index, ip_conf, IpFamily::Ipv4).await?;
+    }
+    if let Some(ip_conf) = des_iface.ipv6.as_ref() {
+        apply_ip_conf(handle, cur_iface.index, ip_conf, IpFamily::Ipv6).await?;
     }
 
     Ok(())
