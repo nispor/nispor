@@ -486,13 +486,11 @@ fn main() {
         .subcommand(clap::Command::new("mptcp").about("Show mptcp state"))
         .subcommand(
             clap::Command::new("set")
+                .visible_aliases(["a", "apply"])
                 .about("Set network state from file")
-                .arg(
-                    clap::Arg::new("file_path")
-                        .required(true)
-                        .index(1)
-                        .help("Network state file to apply"),
-                ),
+                .arg(clap::Arg::new("file_path").required(true).index(1).help(
+                    "Network state file to apply (for test purpose only)",
+                )),
         )
         .get_matches();
 
