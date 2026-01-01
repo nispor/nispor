@@ -66,34 +66,34 @@ bridge:
 
 const EXPECTED_PORT1_BRIDGE_INFO: &str = r#"---
 stp_state: forwarding
-stp_priority: 32
-stp_path_cost: 100
-hairpin_mode: false
-bpdu_guard: false
-root_block: false
-multicast_fast_leave: false
+stp_priority: 60
+stp_path_cost: 1000
+hairpin_mode: true
+bpdu_guard: true
+root_block: true
+multicast_fast_leave: true
 learning: true
 unicast_flood: true
-proxy_arp: false
-proxy_arp_wifi: false
+proxy_arp: true
+proxy_arp_wifi: true
 designated_root: 8000.00234567891c
 designated_bridge: 8000.00234567891c
-designated_port: 32769
+designated_port: 61441
 designated_cost: 0
-port_id: "0x8001"
+port_id: "0xf001"
 port_no: "0x1"
 change_ack: false
 config_pending: false
 message_age_timer: 0
 hold_timer: 0
-multicast_router: temp_query
+multicast_router: perm
 multicast_flood: true
-multicast_to_unicast: false
+multicast_to_unicast: true
 vlan_tunnel: false
 broadcast_flood: true
-group_fwd_mask: 0
-neigh_suppress: false
-isolated: false
+group_fwd_mask: 1
+neigh_suppress: true
+isolated: true
 mrp_ring_open: false
 mcast_eht_hosts_limit: 512
 mcast_eht_hosts_cnt: 0
@@ -104,34 +104,34 @@ vlans:
 
 const EXPECTED_PORT2_BRIDGE_INFO: &str = r#"---
 stp_state: forwarding
-stp_priority: 32
-stp_path_cost: 100
-hairpin_mode: false
-bpdu_guard: false
-root_block: false
-multicast_fast_leave: false
+stp_priority: 50
+stp_path_cost: 1001
+hairpin_mode: true
+bpdu_guard: true
+root_block: true
+multicast_fast_leave: true
 learning: true
 unicast_flood: true
-proxy_arp: false
-proxy_arp_wifi: false
+proxy_arp: true
+proxy_arp_wifi: true
 designated_root: 8000.00234567891c
 designated_bridge: 8000.00234567891c
-designated_port: 32770
+designated_port: 51202
 designated_cost: 0
-port_id: "0x8002"
+port_id: "0xc802"
 port_no: "0x2"
 change_ack: false
 config_pending: false
 message_age_timer: 0
 hold_timer: 0
-multicast_router: temp_query
+multicast_router: perm
 multicast_flood: true
-multicast_to_unicast: false
+multicast_to_unicast: true
 vlan_tunnel: false
 broadcast_flood: true
-group_fwd_mask: 0
-neigh_suppress: false
-isolated: false
+group_fwd_mask: 1
+neigh_suppress: true
+isolated: true
 mrp_ring_open: false
 mcast_eht_hosts_limit: 512
 mcast_eht_hosts_cnt: 0
@@ -151,10 +151,60 @@ interfaces:
     type: dummy
     state: up
     controller: br0
+    bridge-port:
+      flush: false
+      stp_priority: 60
+      stp_path_cost: 1000
+      hairpin_mode: true
+      bpdu_guard: true
+      root_block: true
+      multicast_fast_leave: true
+      learning: true
+      unicast_flood: true
+      proxy_arp: true
+      proxy_arp_wifi: true
+      multicast_router: perm
+      multicast_flood: true
+      multicast_to_unicast: true
+      vlan_tunnel: false
+      broadcast_flood: true
+      group_fwd_mask: 1
+      neigh_suppress: true
+      isolated: true
+      mac_authentication_bypass: true
+      backup_port: 0
+      locked: true
+      neigh_vlan_suppress: false
+      backup_nexthop_id: 0
   - name: dummy2
     type: dummy
     state: up
     controller: br0
+    bridge-port:
+      flush: false
+      stp_priority: 50
+      stp_path_cost: 1001
+      hairpin_mode: true
+      bpdu_guard: true
+      root_block: true
+      multicast_fast_leave: true
+      learning: true
+      unicast_flood: true
+      proxy_arp: true
+      proxy_arp_wifi: true
+      multicast_router: perm
+      multicast_flood: true
+      multicast_to_unicast: true
+      vlan_tunnel: false
+      broadcast_flood: true
+      group_fwd_mask: 1
+      neigh_suppress: true
+      isolated: true
+      mac_authentication_bypass: true
+      backup_port: 0
+      locked: true
+      neigh_vlan_suppress: false
+      backup_nexthop_id: 0
     "#;
 
 const BRIDGE_DELETE_YML: &str = r#"---
