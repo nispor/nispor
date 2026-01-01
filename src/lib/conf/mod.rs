@@ -6,6 +6,7 @@ mod bond;
 mod bond_port;
 mod bridge;
 mod bridge_port;
+mod bridge_vlan;
 mod dummy;
 mod iface;
 mod inter_ifaces;

@@ -4,11 +4,13 @@ use rtnetlink::{LinkBridge, LinkMessageBuilder};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    BridgeMulticastRouterType, BridgeStpState, IfaceConf, VlanProtocol,
+    BridgeMulticastRouterType, BridgeStpState, BridgeVlanEntry, IfaceConf,
+    VlanProtocol,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
+#[serde(deny_unknown_fields)]
 pub struct BridgeConf {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ageing_time: Option<u32>,
@@ -86,6 +88,9 @@ pub struct BridgeConf {
     pub nf_call_arptables: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mdb_offload_fail_notification: Option<bool>,
+    /// VLANs of the bridge itself
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vlans: Option<Vec<BridgeVlanEntry>>,
 }
 
 impl BridgeConf {
