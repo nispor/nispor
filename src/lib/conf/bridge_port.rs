@@ -3,7 +3,9 @@
 use rtnetlink::{packet_route::link::LinkMessage, LinkBridgePort};
 use serde::{Deserialize, Serialize};
 
-use crate::{BridgeMulticastRouterType, BridgePortStpState, Iface};
+use crate::{
+    BridgeMulticastRouterType, BridgePortStpState, BridgeVlanEntry, Iface,
+};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
@@ -36,10 +38,14 @@ pub struct BridgePortConf {
     pub locked: Option<bool>,
     pub neigh_vlan_suppress: Option<bool>,
     pub backup_nexthop_id: Option<u32>,
+    pub vlans: Option<Vec<BridgeVlanEntry>>,
 }
 
 impl BridgePortConf {
-    pub(crate) fn gen_link_msg(&self, cur_iface: &Iface) -> LinkMessage {
+    pub(crate) fn gen_port_conf_link_msg(
+        &self,
+        cur_iface: &Iface,
+    ) -> LinkMessage {
         let mut builder = LinkBridgePort::new(cur_iface.index);
 
         if self.flush {

@@ -146,7 +146,7 @@ interfaces:
     type: bridge
     mac-address: 00:23:45:67:89:1c
     bridge:
-      stp-state: disabled
+      stp_state: disabled
   - name: dummy1
     type: dummy
     state: up
