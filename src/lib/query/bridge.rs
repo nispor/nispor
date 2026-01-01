@@ -267,7 +267,7 @@ pub struct BridgePortInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub multicast_max_groups: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub neigh_vlan_supress: Option<bool>,
+    pub neigh_vlan_suppress: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub backup_nexthop_id: Option<u32>,
 }
@@ -350,7 +350,7 @@ pub(crate) fn get_bridge_port_info(
                 ret.multicast_max_groups = Some(*d)
             }
             InfoBridgePort::NeighVlanSupress(d) => {
-                ret.neigh_vlan_supress = Some(*d)
+                ret.neigh_vlan_suppress = Some(*d)
             }
             InfoBridgePort::BackupNextHopId(d) => {
                 ret.backup_nexthop_id = Some(*d)

@@ -5,6 +5,7 @@ mod base_iface;
 mod bond;
 mod bond_port;
 mod bridge;
+mod bridge_port;
 mod dummy;
 mod iface;
 mod inter_ifaces;
@@ -18,6 +19,7 @@ pub use self::{
     bond::BondConf,
     bond_port::BondPortConf,
     bridge::BridgeConf,
+    bridge_port::BridgePortConf,
     dummy::DummyConf,
     iface::IfaceConf,
     ip::{IpAddrConf, IpConf},
