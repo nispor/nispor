@@ -373,38 +373,34 @@ impl From<BondXmitHashPolicy> for RtBondXmitHashPolicy {
     }
 }
 
-const BOND_ALL_SUBORDINATES_ACTIVE_DROPPED: u8 = 0;
-const BOND_ALL_SUBORDINATES_ACTIVE_DELIEVERD: u8 = 1;
+const BOND_ALL_PORTS_ACTIVE_DROPPED: u8 = 0;
+const BOND_ALL_PORTS_ACTIVE_DELIEVERD: u8 = 1;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
-pub enum BondAllSubordinatesActive {
+pub enum BondAllPortsActive {
     Dropped,
     Delivered,
     Other(u8),
 }
 
-impl From<u8> for BondAllSubordinatesActive {
+impl From<u8> for BondAllPortsActive {
     fn from(d: u8) -> Self {
         match d {
-            BOND_ALL_SUBORDINATES_ACTIVE_DROPPED => Self::Dropped,
-            BOND_ALL_SUBORDINATES_ACTIVE_DELIEVERD => Self::Delivered,
+            BOND_ALL_PORTS_ACTIVE_DROPPED => Self::Dropped,
+            BOND_ALL_PORTS_ACTIVE_DELIEVERD => Self::Delivered,
             _ => Self::Other(d),
         }
     }
 }
 
-impl From<BondAllSubordinatesActive> for u8 {
-    fn from(v: BondAllSubordinatesActive) -> u8 {
+impl From<BondAllPortsActive> for u8 {
+    fn from(v: BondAllPortsActive) -> u8 {
         match v {
-            BondAllSubordinatesActive::Dropped => {
-                BOND_ALL_SUBORDINATES_ACTIVE_DROPPED
-            }
-            BondAllSubordinatesActive::Delivered => {
-                BOND_ALL_SUBORDINATES_ACTIVE_DELIEVERD
-            }
-            BondAllSubordinatesActive::Other(d) => d,
+            BondAllPortsActive::Dropped => BOND_ALL_PORTS_ACTIVE_DROPPED,
+            BondAllPortsActive::Delivered => BOND_ALL_PORTS_ACTIVE_DELIEVERD,
+            BondAllPortsActive::Other(d) => d,
         }
     }
 }
@@ -518,7 +514,7 @@ impl From<&[link::BondAdInfo]> for BondAdInfo {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
 pub struct BondInfo {
-    pub subordinates: Vec<String>,
+    pub ports: Vec<String>,
     pub mode: BondMode,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub miimon: Option<u32>,
@@ -551,13 +547,13 @@ pub struct BondInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub num_grat_arp: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub all_subordinates_active: Option<BondAllSubordinatesActive>,
+    pub all_ports_active: Option<BondAllPortsActive>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub min_links: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lp_interval: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub packets_per_subordinate: Option<u32>,
+    pub packets_per_port: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lacp_rate: Option<BondLacpRate>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -663,7 +659,7 @@ impl From<&[InfoBond]> for BondInfo {
                     }
                 }
                 InfoBond::AllPortsActive(v) => {
-                    ret.all_subordinates_active = Some((*v).into())
+                    ret.all_ports_active = Some((*v).into())
                 }
                 // Kernel code has no limit on this, but document require
                 // 802.3ad mode. Let's follow the kernel code here.
@@ -674,7 +670,7 @@ impl From<&[InfoBond]> for BondInfo {
                 InfoBond::LpInterval(v) => ret.lp_interval = Some(*v),
                 InfoBond::PacketsPerPort(v) => {
                     if ret.mode == BondMode::BalanceRoundRobin {
-                        ret.packets_per_subordinate = Some(*v);
+                        ret.packets_per_port = Some(*v);
                     }
                 }
                 InfoBond::AdLacpRate(v) => {
@@ -741,7 +737,7 @@ impl From<&[InfoBond]> for BondInfo {
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 #[derive(Default)]
-pub enum BondSubordinateState {
+pub enum BondPortState {
     Active,
     Backup,
     Other(u8),
@@ -752,7 +748,7 @@ pub enum BondSubordinateState {
 const BOND_STATE_ACTIVE: u8 = 0;
 const BOND_STATE_BACKUP: u8 = 1;
 
-impl From<u8> for BondSubordinateState {
+impl From<u8> for BondPortState {
     fn from(d: u8) -> Self {
         match d {
             BOND_STATE_ACTIVE => Self::Active,
@@ -795,8 +791,8 @@ impl From<u8> for BondMiiStatus {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
-pub struct BondSubordinateInfo {
-    pub subordinate_state: BondSubordinateState,
+pub struct BondPortInfo {
+    pub port_state: BondPortState,
     pub mii_status: BondMiiStatus,
     pub link_failure_count: u32,
     pub perm_hwaddr: String,
@@ -823,10 +819,10 @@ pub(crate) fn get_bond_info(
     }
 }
 
-pub(crate) fn get_bond_subordinate_info(
+pub(crate) fn get_bond_port_info(
     nlas: &[InfoBondPort],
-) -> Result<BondSubordinateInfo, NisporError> {
-    let mut ret = BondSubordinateInfo::default();
+) -> Result<BondPortInfo, NisporError> {
+    let mut ret = BondPortInfo::default();
     for nla in nlas {
         match nla {
             InfoBondPort::LinkFailureCount(d) => ret.link_failure_count = *d,
@@ -837,7 +833,7 @@ pub(crate) fn get_bond_subordinate_info(
             InfoBondPort::Prio(d) => ret.prio = *d,
             InfoBondPort::QueueId(d) => ret.queue_id = *d,
             InfoBondPort::BondPortState(d) => {
-                ret.subordinate_state = u8::from(*d).into()
+                ret.port_state = u8::from(*d).into()
             }
             _ => {
                 log::info!("Unknown bond port info {nla:?}");
@@ -849,36 +845,31 @@ pub(crate) fn get_bond_subordinate_info(
 }
 
 pub(crate) fn bond_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
-    gen_subordinate_list_of_controller(iface_states);
+    gen_port_list_of_controller(iface_states);
     primary_index_to_iface_name(iface_states);
 }
 
-fn gen_subordinate_list_of_controller(
-    iface_states: &mut HashMap<String, Iface>,
-) {
-    let mut controller_subordinates: HashMap<String, Vec<String>> =
-        HashMap::new();
+fn gen_port_list_of_controller(iface_states: &mut HashMap<String, Iface>) {
+    let mut controller_ports: HashMap<String, Vec<String>> = HashMap::new();
     for iface in iface_states.values() {
         if iface.controller_type == Some(ControllerType::Bond) {
             if let Some(controller) = &iface.controller {
-                match controller_subordinates.get_mut(controller) {
-                    Some(subordinates) => subordinates.push(iface.name.clone()),
+                match controller_ports.get_mut(controller) {
+                    Some(ports) => ports.push(iface.name.clone()),
                     None => {
-                        let new_subordinates: Vec<String> =
-                            vec![iface.name.clone()];
-                        controller_subordinates
-                            .insert(controller.clone(), new_subordinates);
+                        let new_ports: Vec<String> = vec![iface.name.clone()];
+                        controller_ports.insert(controller.clone(), new_ports);
                     }
                 };
             }
         }
     }
-    for (controller, subordinates) in controller_subordinates.iter_mut() {
+    for (controller, ports) in controller_ports.iter_mut() {
         if let Some(ref mut controller_iface) = iface_states.get_mut(controller)
         {
             if let Some(ref mut bond_info) = controller_iface.bond {
-                subordinates.sort();
-                bond_info.subordinates.clone_from(subordinates);
+                ports.sort();
+                bond_info.ports.clone_from(ports);
             }
         }
     }

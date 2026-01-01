@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     super::mac::parse_as_mac,
-    bond::{get_bond_info, get_bond_subordinate_info},
+    bond::{get_bond_info, get_bond_port_info},
     bridge::{get_bridge_info, get_bridge_port_info, parse_bridge_vlan_info},
     hsr::get_hsr_info,
     ip::fill_af_spec_inet_info,
@@ -24,16 +24,16 @@ use super::{
     sriov::{get_sriov_info, sriov_is_enabled},
     tun::get_tun_info,
     vlan::get_vlan_info,
-    vrf::{get_vrf_info, get_vrf_subordinate_info},
+    vrf::{get_vrf_info, get_vrf_port_info},
     vxlan::get_vxlan_info,
     xfrm::get_xfrm_info,
 };
 use crate::{
-    BondInfo, BondSubordinateInfo, BridgeInfo, BridgePortInfo, BridgeVlanEntry,
+    BondInfo, BondPortInfo, BridgeInfo, BridgePortInfo, BridgeVlanEntry,
     ErrorKind, EthtoolInfo, HsrInfo, IpTunnelInfo, IpVlanInfo, IpoibInfo,
     Ipv4Info, Ipv6Info, MacSecInfo, MacVlanInfo, MacVtapInfo, MptcpAddress,
     NisporError, PciAddress, SriovInfo, TunInfo, VethInfo, VfInfo, VlanInfo,
-    VrfInfo, VrfSubordinateInfo, VxlanInfo, WifiInfo, XfrmInfo,
+    VrfInfo, VrfPortInfo, VxlanInfo, WifiInfo, XfrmInfo,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -175,7 +175,7 @@ pub enum IfaceFlag {
     Portsel,
     Promisc,
     Running,
-    Subordinate,
+    Port,
     Up,
     Other(u32),
     #[default]
@@ -199,7 +199,7 @@ impl From<link::LinkFlags> for IfaceFlag {
             link::LinkFlags::Portsel => Self::Portsel,
             link::LinkFlags::Promisc => Self::Promisc,
             link::LinkFlags::Running => Self::Running,
-            link::LinkFlags::Port => Self::Subordinate,
+            link::LinkFlags::Port => Self::Port,
             link::LinkFlags::Up => Self::Up,
             _ => Self::Other(d.bits()),
         }
@@ -267,7 +267,7 @@ pub struct Iface {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bond: Option<BondInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub bond_subordinate: Option<BondSubordinateInfo>,
+    pub bond_port: Option<BondPortInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bridge: Option<BridgeInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -285,7 +285,7 @@ pub struct Iface {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vrf: Option<VrfInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub vrf_subordinate: Option<VrfSubordinateInfo>,
+    pub vrf_port: Option<VrfPortInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mac_vlan: Option<MacVlanInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -510,17 +510,16 @@ pub(crate) fn parse_nl_msg_to_iface(
                     if let LinkInfo::PortData(d) = info {
                         match d {
                             InfoPortData::BondPort(bond_ports) => {
-                                iface_state.bond_subordinate = Some(
-                                    get_bond_subordinate_info(bond_ports)?,
-                                );
+                                iface_state.bond_port =
+                                    Some(get_bond_port_info(bond_ports)?);
                             }
                             InfoPortData::BridgePort(data) => {
                                 iface_state.bridge_port =
                                     Some(get_bridge_port_info(data)?);
                             }
                             InfoPortData::VrfPort(data) => {
-                                iface_state.vrf_subordinate =
-                                    Some(get_vrf_subordinate_info(data)?);
+                                iface_state.vrf_port =
+                                    Some(get_vrf_port_info(data)?);
                             }
                             InfoPortData::Other(_) => {
                                 log::warn!(

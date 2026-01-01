@@ -11,7 +11,7 @@ const IFACE_NAME: &str = "vrf0";
 
 const EXPECTED_VRF_INFO: &str = r#"---
 table_id: 10
-subordinates:
+ports:
   - eth1
   - eth2"#;
 
