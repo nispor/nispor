@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     mac::{mac_str_to_raw, ETH_ALEN},
     query::resolve_iface_index,
-    BondAdSelect, BondAllSubordinatesActive, BondArpValidate, BondFailOverMac,
+    BondAdSelect, BondAllPortsActive, BondArpValidate, BondFailOverMac,
     BondLacpRate, BondMode, BondModeArpAllTargets, BondPrimaryReselect,
     BondXmitHashPolicy, ErrorKind, Iface, IfaceConf, NisporError,
 };
@@ -46,13 +46,13 @@ pub struct BondConf {
     #[serde(skip_serializing_if = "Option::is_none", alias = "num_grat_arp")]
     pub num_unsol_na: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub all_subordinates_active: Option<BondAllSubordinatesActive>,
+    pub all_ports_active: Option<BondAllPortsActive>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub min_links: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lp_interval: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub packets_per_subordinate: Option<u32>,
+    pub packets_per_port: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lacp_rate: Option<BondLacpRate>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -136,7 +136,7 @@ impl BondConf {
             if let Some(v) = bond_conf.num_unsol_na {
                 builder = builder.num_peer_notif(v);
             }
-            if let Some(v) = bond_conf.all_subordinates_active {
+            if let Some(v) = bond_conf.all_ports_active {
                 builder = builder.all_ports_active(u8::from(v));
             }
             if let Some(v) = bond_conf.min_links {
@@ -145,7 +145,7 @@ impl BondConf {
             if let Some(v) = bond_conf.lp_interval {
                 builder = builder.lp_interval(v);
             }
-            if let Some(v) = bond_conf.packets_per_subordinate {
+            if let Some(v) = bond_conf.packets_per_port {
                 builder = builder.packets_per_port(v);
             }
             if let Some(v) = bond_conf.lacp_rate {

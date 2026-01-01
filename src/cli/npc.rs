@@ -593,7 +593,7 @@ fn get_link_info(iface: &Iface) -> String {
         let mut bond_line = format!(
             "mode {} ports {}",
             bond.mode,
-            bond.subordinates.join(LIST_SPLITER)
+            bond.ports.join(LIST_SPLITER)
         );
         if let Some(p) = bond.primary.as_deref() {
             write!(bond_line, " primary {p}").ok();
@@ -605,7 +605,7 @@ fn get_link_info(iface: &Iface) -> String {
         format!(
             "table {} ports {}",
             vrf.table_id,
-            vrf.subordinates.join(LIST_SPLITER)
+            vrf.ports.join(LIST_SPLITER)
         )
     } else if let Some(veth) = iface.veth.as_ref() {
         format!("peer {}", veth.peer)

@@ -11,12 +11,12 @@ use crate::{ControllerType, Iface, NisporError};
 #[non_exhaustive]
 pub struct VrfInfo {
     pub table_id: u32,
-    pub subordinates: Vec<String>,
+    pub ports: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
-pub struct VrfSubordinateInfo {
+pub struct VrfPortInfo {
     pub table_id: u32,
 }
 
@@ -36,10 +36,10 @@ pub(crate) fn get_vrf_info(data: &InfoData) -> Option<VrfInfo> {
     }
 }
 
-pub(crate) fn get_vrf_subordinate_info(
+pub(crate) fn get_vrf_port_info(
     nlas: &[InfoVrfPort],
-) -> Result<VrfSubordinateInfo, NisporError> {
-    let mut ret = VrfSubordinateInfo::default();
+) -> Result<VrfPortInfo, NisporError> {
+    let mut ret = VrfPortInfo::default();
 
     for nla in nlas {
         match nla {
@@ -53,34 +53,29 @@ pub(crate) fn get_vrf_subordinate_info(
 }
 
 pub(crate) fn vrf_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
-    gen_subordinate_list_of_controller(iface_states);
+    gen_port_list_of_controller(iface_states);
 }
 
-fn gen_subordinate_list_of_controller(
-    iface_states: &mut HashMap<String, Iface>,
-) {
-    let mut controller_subordinates: HashMap<String, Vec<String>> =
-        HashMap::new();
+fn gen_port_list_of_controller(iface_states: &mut HashMap<String, Iface>) {
+    let mut controller_ports: HashMap<String, Vec<String>> = HashMap::new();
     for iface in iface_states.values() {
         if iface.controller_type == Some(ControllerType::Vrf) {
             if let Some(controller) = &iface.controller {
-                match controller_subordinates.get_mut(controller) {
-                    Some(subordinates) => subordinates.push(iface.name.clone()),
+                match controller_ports.get_mut(controller) {
+                    Some(ports) => ports.push(iface.name.clone()),
                     None => {
-                        let new_subordinates: Vec<String> =
-                            vec![iface.name.clone()];
-                        controller_subordinates
-                            .insert(controller.clone(), new_subordinates);
+                        let new_ports: Vec<String> = vec![iface.name.clone()];
+                        controller_ports.insert(controller.clone(), new_ports);
                     }
                 };
             }
         }
     }
-    for (controller, subordinates) in controller_subordinates.iter_mut() {
+    for (controller, ports) in controller_ports.iter_mut() {
         if let Some(controller_iface) = iface_states.get_mut(controller) {
             if let Some(ref mut vrf_info) = controller_iface.vrf {
-                subordinates.sort();
-                vrf_info.subordinates.clone_from(subordinates);
+                ports.sort();
+                vrf_info.ports.clone_from(ports);
             }
         }
     }
