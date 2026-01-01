@@ -13,8 +13,8 @@ mod query;
 
 pub use crate::{
     conf::{
-        AltNameConf, BondConf, BridgeConf, DummyConf, IfaceConf, IpAddrConf,
-        IpConf, RouteConf, VethConf, VlanConf,
+        AltNameConf, BondConf, BondPortConf, BridgeConf, DummyConf, IfaceConf,
+        IpAddrConf, IpConf, RouteConf, VethConf, VlanConf,
     },
     error::{ErrorKind, NisporError},
     filter::{

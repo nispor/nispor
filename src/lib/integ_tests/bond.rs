@@ -39,14 +39,16 @@ port_state: active
 mii_status: link_up
 link_failure_count: 0
 perm_hwaddr: "00:23:45:67:89:1a"
-queue_id: 0"#;
+prio: -10
+queue_id: 1"#;
 
 const EXPECTED_PORT2_INFO: &str = r#"---
 port_state: backup
 mii_status: link_up
 link_failure_count: 0
 perm_hwaddr: "00:23:45:67:89:1b"
-queue_id: 0"#;
+prio: -20
+queue_id: 2"#;
 
 const BOND_CREATE_YML: &str = r#"---
 interfaces:
@@ -71,11 +73,17 @@ interfaces:
     type: dummy
     controller: bond99
     mac-address: 00:23:45:67:89:1a
+    bond-port:
+      prio: -10
+      queue_id: 1
   - name: dummy2
     type: dummy
     state: up
     controller: bond99
-    mac-address: 00:23:45:67:89:1b"#;
+    mac-address: 00:23:45:67:89:1b
+    bond-port:
+      prio: -20
+      queue_id: 2"#;
 
 const BOND_PORT_REMOVE_YML: &str = r#"---
 interfaces:

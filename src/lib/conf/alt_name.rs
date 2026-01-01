@@ -2,7 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use crate::{query::resolve_iface_index, Iface, IfaceConf, NisporError};
+use crate::{Iface, IfaceConf, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
@@ -21,13 +21,9 @@ impl AltNameConf {
 pub(crate) async fn change_iface_alt_name(
     handle: &rtnetlink::Handle,
     iface: &IfaceConf,
-    cur_iface: Option<&Iface>,
+    cur_iface: &Iface,
 ) -> Result<(), NisporError> {
-    let iface_index = if let Some(i) = cur_iface.as_ref().map(|c| c.index) {
-        i
-    } else {
-        resolve_iface_index(handle, iface.name.as_str()).await?
-    };
+    let iface_index = cur_iface.index;
 
     if is_all_remove(&iface.alt_names) {
         let names: Vec<&str> =

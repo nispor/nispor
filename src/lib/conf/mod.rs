@@ -3,6 +3,7 @@
 mod alt_name;
 mod base_iface;
 mod bond;
+mod bond_port;
 mod bridge;
 mod dummy;
 mod iface;
@@ -15,6 +16,7 @@ mod vlan;
 pub use self::{
     alt_name::AltNameConf,
     bond::BondConf,
+    bond_port::BondPortConf,
     bridge::BridgeConf,
     dummy::DummyConf,
     iface::IfaceConf,
