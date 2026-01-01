@@ -44,6 +44,7 @@ use crate::{
 pub enum IfaceType {
     Bond,
     Veth,
+    #[serde(alias = "linux-bridge")]
     Bridge,
     Vlan,
     Dummy,
