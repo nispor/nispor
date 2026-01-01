@@ -103,7 +103,7 @@ impl BondConf {
                 builder = builder.downdelay(v);
             }
             if let Some(v) = bond_conf.use_carrier {
-                builder = builder.use_carrier(v.into());
+                builder = builder.use_carrier(v);
             }
             if let Some(v) = bond_conf.arp_interval {
                 builder = builder.arp_interval(v);
@@ -137,7 +137,7 @@ impl BondConf {
                 builder = builder.num_peer_notif(v);
             }
             if let Some(v) = bond_conf.all_ports_active {
-                builder = builder.all_ports_active(u8::from(v));
+                builder = builder.all_ports_active(v.into());
             }
             if let Some(v) = bond_conf.min_links {
                 builder = builder.min_links(v);
@@ -186,13 +186,13 @@ impl BondConf {
                 }
             }
             if let Some(v) = bond_conf.tlb_dynamic_lb {
-                builder = builder.tlb_dynamic_lb(v.into());
+                builder = builder.tlb_dynamic_lb(v);
             }
             if let Some(v) = bond_conf.peer_notif_delay {
                 builder = builder.peer_notif_delay(v);
             }
             if let Some(v) = bond_conf.lacp_active {
-                builder = builder.ad_lacp_active(v.into());
+                builder = builder.ad_lacp_active(v);
             }
             if let Some(v) = bond_conf.arp_missed_max {
                 builder = builder.missed_max(v);

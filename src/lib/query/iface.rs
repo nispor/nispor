@@ -12,7 +12,8 @@ use serde::{Deserialize, Serialize};
 use super::{
     super::mac::parse_as_mac,
     bond::{get_bond_info, get_bond_port_info},
-    bridge::{get_bridge_info, get_bridge_port_info, parse_bridge_vlan_info},
+    bridge::{get_bridge_info, get_bridge_port_info},
+    bridge_vlan::parse_bridge_vlan_info,
     hsr::get_hsr_info,
     ip::fill_af_spec_inet_info,
     ipoib::get_ipoib_info,

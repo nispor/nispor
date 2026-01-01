@@ -2,34 +2,40 @@
 
 use std::collections::HashMap;
 
-use rtnetlink::packet_route::link::{InfoData, InfoIpoib};
+use rtnetlink::packet_route::link::{self, InfoData, InfoIpoib};
 use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceType};
-
-const IPOIB_MODE_DATAGRAM: u16 = 0;
-const IPOIB_MODE_CONNECTED: u16 = 1;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 #[derive(Default)]
 pub enum IpoibMode {
-    /* using unreliable datagram QPs */
+    /// using unreliable datagram QPs
+    #[default]
     Datagram,
-    /* using connected QPs */
+    /// using connected QPs
     Connected,
     Other(u16),
-    #[default]
-    Unknown,
 }
 
-impl From<u16> for IpoibMode {
-    fn from(d: u16) -> Self {
+impl From<link::IpoibMode> for IpoibMode {
+    fn from(d: link::IpoibMode) -> Self {
         match d {
-            IPOIB_MODE_DATAGRAM => Self::Datagram,
-            IPOIB_MODE_CONNECTED => Self::Connected,
-            _ => Self::Other(d),
+            link::IpoibMode::Datagram => Self::Datagram,
+            link::IpoibMode::Connected => Self::Connected,
+            _ => Self::Other(d.into()),
+        }
+    }
+}
+
+impl From<IpoibMode> for link::IpoibMode {
+    fn from(v: IpoibMode) -> Self {
+        match v {
+            IpoibMode::Datagram => Self::Datagram,
+            IpoibMode::Connected => Self::Connected,
+            IpoibMode::Other(d) => Self::Other(d),
         }
     }
 }

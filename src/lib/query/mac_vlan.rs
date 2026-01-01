@@ -67,7 +67,7 @@ pub(crate) fn get_mac_vlan_info(
             if let InfoMacVlan::Mode(d) = *info {
                 macv_info.mode = d.into();
             } else if let InfoMacVlan::Flags(d) = *info {
-                macv_info.flags = d;
+                macv_info.flags = d.bits();
             } else if let InfoMacVlan::MacAddrData(d) = info {
                 let mut addrs = Vec::new();
                 for macvlan in d {
@@ -86,7 +86,7 @@ pub(crate) fn get_mac_vlan_info(
             if let InfoMacVtap::Mode(d) = *info {
                 macv_info.mode = d.into();
             } else if let InfoMacVtap::Flags(d) = *info {
-                macv_info.flags = d;
+                macv_info.flags = d.bits();
             } else if let InfoMacVtap::MacAddrData(d) = info {
                 let mut addrs = Vec::new();
                 for macvtap in d {
