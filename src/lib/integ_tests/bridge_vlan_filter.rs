@@ -21,8 +21,8 @@ root_block: false
 multicast_fast_leave: false
 learning: true
 unicast_flood: true
-proxyarp: false
-proxyarp_wifi: false
+proxy_arp: false
+proxy_arp_wifi: false
 designated_root: 8000.00234567891c
 designated_bridge: 8000.00234567891c
 designated_port: 32769
@@ -63,8 +63,8 @@ root_block: false
 multicast_fast_leave: false
 learning: true
 unicast_flood: true
-proxyarp: false
-proxyarp_wifi: false
+proxy_arp: false
+proxy_arp_wifi: false
 designated_root: 8000.00234567891c
 designated_bridge: 8000.00234567891c
 designated_port: 32770

@@ -2,12 +2,14 @@
 
 use std::collections::HashMap;
 
-use rtnetlink::packet_route::link::{AfSpecBridge, InfoBridgePort, InfoData};
+use rtnetlink::packet_route::link::{
+    self, InfoBridge, InfoBridgePort, InfoData,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    netlink::{parse_af_spec_bridge_info, parse_bridge_id, parse_bridge_info},
-    ControllerType, Iface, IfaceType, NisporError,
+    mac::{parse_as_mac, ETH_ALEN},
+    BridgeVlanEntry, ControllerType, Iface, NisporError, VlanProtocol,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
@@ -18,45 +20,26 @@ pub enum BridgeStpState {
     KernelStp,
     UserStp,
     Other(u32),
-    Unknown,
 }
 
-const BR_NO_STP: u32 = 0;
-const BR_KERNEL_STP: u32 = 1;
-const BR_USER_STP: u32 = 2;
-
-impl From<u32> for BridgeStpState {
-    fn from(d: u32) -> Self {
+impl From<link::BridgeStpState> for BridgeStpState {
+    fn from(d: link::BridgeStpState) -> Self {
         match d {
-            BR_NO_STP => Self::Disabled,
-            BR_KERNEL_STP => Self::KernelStp,
-            BR_USER_STP => Self::UserStp,
-            _ => Self::Other(d),
+            link::BridgeStpState::Disabled => Self::Disabled,
+            link::BridgeStpState::KernelStp => Self::KernelStp,
+            link::BridgeStpState::UserStp => Self::UserStp,
+            _ => Self::Other(d.into()),
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-#[serde(rename_all = "snake_case")]
-#[non_exhaustive]
-pub enum BridgeVlanProtocol {
-    #[serde(rename = "802.1q")]
-    Ieee8021Q,
-    #[serde(rename = "802.1ad")]
-    Ieee8021AD,
-    Other(u16),
-    Unknown,
-}
-
-const ETH_P_8021Q: u16 = 0x8100;
-const ETH_P_8021AD: u16 = 0x88A8;
-
-impl From<u16> for BridgeVlanProtocol {
-    fn from(d: u16) -> Self {
+impl From<BridgeStpState> for link::BridgeStpState {
+    fn from(d: BridgeStpState) -> Self {
         match d {
-            ETH_P_8021Q => Self::Ieee8021Q,
-            ETH_P_8021AD => Self::Ieee8021AD,
-            _ => Self::Other(d),
+            BridgeStpState::Disabled => Self::Disabled,
+            BridgeStpState::KernelStp => Self::KernelStp,
+            BridgeStpState::UserStp => Self::UserStp,
+            BridgeStpState::Other(d) => Self::Other(d),
         }
     }
 }
@@ -98,13 +81,13 @@ pub struct BridgeInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vlan_filtering: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub vlan_protocol: Option<BridgeVlanProtocol>,
+    pub vlan_protocol: Option<VlanProtocol>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub default_pvid: Option<u16>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vlan_stats_enabled: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub vlan_stats_per_host: Option<bool>,
+    pub vlan_stats_per_port: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stp_state: Option<BridgeStpState>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -118,9 +101,7 @@ pub struct BridgeInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub priority: Option<u16>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub multi_bool_opt: Option<u64>, // does not avaiable in sysfs yet
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub multicast_router: Option<BridgePortMulticastRouterType>,
+    pub multicast_router: Option<BridgeMulticastRouterType>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub multicast_snooping: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -155,80 +136,79 @@ pub struct BridgeInfo {
     pub multicast_mld_version: Option<u8>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 #[derive(Default)]
 pub enum BridgePortStpState {
+    #[default]
     Disabled,
     Listening,
     Learning,
     Forwarding,
     Blocking,
     Other(u8),
-    #[default]
-    Unknown,
 }
 
-const BR_STATE_DISABLED: u8 = 0;
-const BR_STATE_LISTENING: u8 = 1;
-const BR_STATE_LEARNING: u8 = 2;
-const BR_STATE_FORWARDING: u8 = 3;
-const BR_STATE_BLOCKING: u8 = 4;
-
-impl From<u8> for BridgePortStpState {
-    fn from(d: u8) -> Self {
+impl From<link::BridgePortState> for BridgePortStpState {
+    fn from(d: link::BridgePortState) -> Self {
         match d {
-            BR_STATE_DISABLED => Self::Disabled,
-            BR_STATE_LISTENING => Self::Listening,
-            BR_STATE_LEARNING => Self::Learning,
-            BR_STATE_FORWARDING => Self::Forwarding,
-            BR_STATE_BLOCKING => Self::Blocking,
-            _ => Self::Other(d),
+            link::BridgePortState::Disabled => Self::Disabled,
+            link::BridgePortState::Listening => Self::Listening,
+            link::BridgePortState::Learning => Self::Learning,
+            link::BridgePortState::Forwarding => Self::Forwarding,
+            link::BridgePortState::Blocking => Self::Blocking,
+            _ => Self::Other(d.into()),
         }
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+impl From<BridgePortStpState> for link::BridgePortState {
+    fn from(v: BridgePortStpState) -> Self {
+        match v {
+            BridgePortStpState::Disabled => Self::Disabled,
+            BridgePortStpState::Listening => Self::Listening,
+            BridgePortStpState::Learning => Self::Learning,
+            BridgePortStpState::Forwarding => Self::Forwarding,
+            BridgePortStpState::Blocking => Self::Blocking,
+            BridgePortStpState::Other(d) => Self::Other(d),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
 #[non_exhaustive]
 #[derive(Default)]
-pub enum BridgePortMulticastRouterType {
+pub enum BridgeMulticastRouterType {
+    #[default]
     Disabled,
     TempQuery,
     Perm,
     Temp,
     Other(u8),
-    #[default]
-    Unknown,
 }
 
-const MDB_RTR_TYPE_DISABLED: u8 = 0;
-const MDB_RTR_TYPE_TEMP_QUERY: u8 = 1;
-const MDB_RTR_TYPE_PERM: u8 = 2;
-const MDB_RTR_TYPE_TEMP: u8 = 3;
-
-impl From<u8> for BridgePortMulticastRouterType {
-    fn from(d: u8) -> Self {
+impl From<link::BridgeMulticastRouterType> for BridgeMulticastRouterType {
+    fn from(d: link::BridgeMulticastRouterType) -> Self {
         match d {
-            MDB_RTR_TYPE_DISABLED => Self::Disabled,
-            MDB_RTR_TYPE_TEMP_QUERY => Self::TempQuery,
-            MDB_RTR_TYPE_PERM => Self::Perm,
-            MDB_RTR_TYPE_TEMP => Self::Temp,
-            _ => Self::Other(d),
+            link::BridgeMulticastRouterType::Disabled => Self::Disabled,
+            link::BridgeMulticastRouterType::TempQuery => Self::TempQuery,
+            link::BridgeMulticastRouterType::Permanent => Self::Perm,
+            link::BridgeMulticastRouterType::Temp => Self::Temp,
+            _ => Self::Other(d.into()),
         }
     }
 }
 
-impl From<BridgePortMulticastRouterType> for u8 {
-    fn from(value: BridgePortMulticastRouterType) -> u8 {
+impl From<BridgeMulticastRouterType> for link::BridgeMulticastRouterType {
+    fn from(value: BridgeMulticastRouterType) -> Self {
         match value {
-            BridgePortMulticastRouterType::Disabled => MDB_RTR_TYPE_DISABLED,
-            BridgePortMulticastRouterType::TempQuery => MDB_RTR_TYPE_TEMP_QUERY,
-            BridgePortMulticastRouterType::Perm => MDB_RTR_TYPE_PERM,
-            BridgePortMulticastRouterType::Temp => MDB_RTR_TYPE_TEMP,
-            BridgePortMulticastRouterType::Other(d) => d,
-            BridgePortMulticastRouterType::Unknown => u8::MAX,
+            BridgeMulticastRouterType::Disabled => Self::Disabled,
+            BridgeMulticastRouterType::TempQuery => Self::TempQuery,
+            BridgeMulticastRouterType::Perm => Self::Permanent,
+            BridgeMulticastRouterType::Temp => Self::Temp,
+            BridgeMulticastRouterType::Other(d) => Self::Other(d),
         }
     }
 }
@@ -245,8 +225,8 @@ pub struct BridgePortInfo {
     pub multicast_fast_leave: bool,
     pub learning: bool,
     pub unicast_flood: bool,
-    pub proxyarp: bool,
-    pub proxyarp_wifi: bool,
+    pub proxy_arp: bool,
+    pub proxy_arp_wifi: bool,
     pub designated_root: String,
     pub designated_bridge: String,
     pub designated_port: u16,
@@ -258,7 +238,7 @@ pub struct BridgePortInfo {
     pub message_age_timer: u64,
     pub forward_delay_timer: u64,
     pub hold_timer: u64,
-    pub multicast_router: BridgePortMulticastRouterType,
+    pub multicast_router: BridgeMulticastRouterType,
     pub multicast_flood: bool,
     pub multicast_to_unicast: bool,
     pub vlan_tunnel: bool,
@@ -309,7 +289,7 @@ pub(crate) fn get_bridge_port_info(
 
     for nla in nlas {
         match nla {
-            InfoBridgePort::State(d) => ret.stp_state = u8::from(*d).into(),
+            InfoBridgePort::State(d) => ret.stp_state = (*d).into(),
             InfoBridgePort::Priority(d) => ret.stp_priority = *d,
             InfoBridgePort::Cost(d) => ret.stp_path_cost = *d,
             InfoBridgePort::HairpinMode(d) => ret.hairpin_mode = *d,
@@ -318,8 +298,8 @@ pub(crate) fn get_bridge_port_info(
             InfoBridgePort::FastLeave(d) => ret.multicast_fast_leave = *d,
             InfoBridgePort::Learning(d) => ret.learning = *d,
             InfoBridgePort::UnicastFlood(d) => ret.unicast_flood = *d,
-            InfoBridgePort::ProxyARP(d) => ret.proxyarp = *d,
-            InfoBridgePort::ProxyARPWifi(d) => ret.proxyarp_wifi = *d,
+            InfoBridgePort::ProxyARP(d) => ret.proxy_arp = *d,
+            InfoBridgePort::ProxyARPWifi(d) => ret.proxy_arp_wifi = *d,
             InfoBridgePort::RootId(d) => {
                 ret.designated_root = parse_bridge_id(d)?
             }
@@ -341,7 +321,7 @@ pub(crate) fn get_bridge_port_info(
             InfoBridgePort::HoldTimer(d) => ret.hold_timer = *d,
             InfoBridgePort::Flush => (),
             InfoBridgePort::MulticastRouter(d) => {
-                ret.multicast_router = u8::from(*d).into()
+                ret.multicast_router = (*d).into()
             }
             InfoBridgePort::MulticastFlood(d) => ret.multicast_flood = *d,
             InfoBridgePort::MulticastToUnicast(d) => {
@@ -435,34 +415,113 @@ fn convert_back_port_index_to_name(iface_states: &mut HashMap<String, Iface>) {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[non_exhaustive]
-pub struct BridgeVlanEntry {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub vid: Option<u16>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub vid_range: Option<(u16, u16)>,
-    pub is_pvid: bool, // is PVID and ingress untagged
-    pub is_egress_untagged: bool,
-}
+fn parse_bridge_info(infos: &[InfoBridge]) -> Result<BridgeInfo, NisporError> {
+    let mut bridge_info = BridgeInfo::default();
 
-pub(crate) fn parse_bridge_vlan_info(
-    iface_state: &mut Iface,
-    nlas: &[AfSpecBridge],
-) -> Result<(), NisporError> {
-    if let Some(ref mut port_info) = iface_state.bridge_port {
-        if let Some(cur_vlans) = parse_af_spec_bridge_info(nlas)? {
-            match port_info.vlans.as_mut() {
-                Some(vlans) => vlans.extend(cur_vlans),
-                None => port_info.vlans = Some(cur_vlans),
-            };
-        }
-    } else if iface_state.iface_type == IfaceType::Bridge {
-        let br_vlan = iface_state.bridge_vlan.get_or_insert(Vec::new());
-        // It's the VLAN of the bridge itself
-        if let Some(cur_vlans) = parse_af_spec_bridge_info(nlas)? {
-            br_vlan.extend(cur_vlans);
+    for info in infos {
+        if let InfoBridge::ForwardDelay(d) = info {
+            bridge_info.forward_delay = Some(*d);
+        } else if let InfoBridge::HelloTime(d) = info {
+            bridge_info.hello_time = Some(*d);
+        } else if let InfoBridge::MaxAge(d) = info {
+            bridge_info.max_age = Some(*d);
+        } else if let InfoBridge::AgeingTime(d) = info {
+            bridge_info.ageing_time = Some(*d);
+        } else if let InfoBridge::StpState(d) = info {
+            bridge_info.stp_state = Some((*d).into());
+        } else if let InfoBridge::Priority(d) = info {
+            bridge_info.priority = Some(*d);
+        } else if let InfoBridge::VlanFiltering(d) = info {
+            bridge_info.vlan_filtering = Some(*d);
+        } else if let InfoBridge::VlanProtocol(d) = info {
+            bridge_info.vlan_protocol = Some((*d).into());
+        } else if let InfoBridge::GroupFwdMask(d) = info {
+            bridge_info.group_fwd_mask = Some(*d);
+        } else if let InfoBridge::RootId(bridge_id) = info {
+            bridge_info.root_id = Some(parse_bridge_id(bridge_id)?);
+        } else if let InfoBridge::BridgeId(bridge_id) = info {
+            bridge_info.bridge_id = Some(parse_bridge_id(bridge_id)?);
+        } else if let InfoBridge::RootPort(d) = info {
+            bridge_info.root_port = Some(*d);
+        } else if let InfoBridge::RootPathCost(d) = info {
+            bridge_info.root_path_cost = Some(*d);
+        } else if let InfoBridge::TopologyChange(d) = info {
+            bridge_info.topology_change = Some(*d > 0);
+        } else if let InfoBridge::TopologyChangeDetected(d) = info {
+            bridge_info.topology_change_detected = Some(*d > 0);
+        } else if let InfoBridge::HelloTimer(d) = info {
+            bridge_info.hello_timer = Some(*d);
+        } else if let InfoBridge::TcnTimer(d) = info {
+            bridge_info.tcn_timer = Some(*d);
+        } else if let InfoBridge::TopologyChangeTimer(d) = info {
+            bridge_info.topology_change_timer = Some(*d);
+        } else if let InfoBridge::GcTimer(d) = info {
+            bridge_info.gc_timer = Some(*d);
+        } else if let InfoBridge::GroupAddr(d) = info {
+            bridge_info.group_addr = Some(parse_as_mac(ETH_ALEN, d)?);
+        // InfoBridge::FdbFlush is only used for changing bridge
+        } else if let InfoBridge::MulticastRouter(d) = info {
+            bridge_info.multicast_router = Some((*d).into());
+        } else if let InfoBridge::MulticastSnooping(d) = info {
+            bridge_info.multicast_snooping = Some(*d);
+        } else if let InfoBridge::MulticastQueryUseIfaddr(d) = info {
+            bridge_info.multicast_query_use_ifaddr = Some(*d);
+        } else if let InfoBridge::MulticastQuerier(d) = info {
+            bridge_info.multicast_querier = Some(*d);
+        } else if let InfoBridge::MulticastHashElasticity(d) = info {
+            bridge_info.multicast_hash_elasticity = Some(*d);
+        } else if let InfoBridge::MulticastHashMax(d) = info {
+            bridge_info.multicast_hash_max = Some(*d);
+        } else if let InfoBridge::MulticastLastMemberCount(d) = info {
+            bridge_info.multicast_last_member_count = Some(*d);
+        } else if let InfoBridge::MulticastStartupQueryCount(d) = info {
+            bridge_info.multicast_startup_query_count = Some(*d);
+        } else if let InfoBridge::MulticastLastMemberInterval(d) = info {
+            bridge_info.multicast_last_member_interval = Some(*d);
+        } else if let InfoBridge::MulticastMembershipInterval(d) = info {
+            bridge_info.multicast_membership_interval = Some(*d);
+        } else if let InfoBridge::MulticastQuerierInterval(d) = info {
+            bridge_info.multicast_querier_interval = Some(*d);
+        } else if let InfoBridge::MulticastQueryInterval(d) = info {
+            bridge_info.multicast_query_interval = Some(*d);
+        } else if let InfoBridge::MulticastQueryResponseInterval(d) = info {
+            bridge_info.multicast_query_response_interval = Some(*d);
+        } else if let InfoBridge::MulticastStartupQueryInterval(d) = info {
+            bridge_info.multicast_startup_query_interval = Some(*d);
+        } else if let InfoBridge::NfCallIpTables(d) = info {
+            bridge_info.nf_call_iptables = Some(*d);
+        } else if let InfoBridge::NfCallIp6Tables(d) = info {
+            bridge_info.nf_call_ip6tables = Some(*d);
+        } else if let InfoBridge::NfCallArpTables(d) = info {
+            bridge_info.nf_call_arptables = Some(*d);
+        } else if let InfoBridge::VlanDefaultPvid(d) = info {
+            bridge_info.default_pvid = Some(*d);
+        } else if let InfoBridge::VlanStatsEnabled(d) = info {
+            bridge_info.vlan_stats_enabled = Some(*d);
+        } else if let InfoBridge::MulticastStatsEnabled(d) = info {
+            bridge_info.multicast_stats_enabled = Some(*d);
+        } else if let InfoBridge::MulticastIgmpVersion(d) = info {
+            bridge_info.multicast_igmp_version = Some(*d);
+        } else if let InfoBridge::MulticastMldVersion(d) = info {
+            bridge_info.multicast_mld_version = Some(*d);
+        } else if let InfoBridge::VlanStatsPerPort(d) = info {
+            bridge_info.vlan_stats_per_port = Some(*d);
+        } else {
+            log::debug!("Unknown NLA {:?}", &info);
         }
     }
-    Ok(())
+    Ok(bridge_info)
+}
+
+fn parse_bridge_id(bridge_id: &link::BridgeId) -> Result<String, NisporError> {
+    let mac = parse_as_mac(ETH_ALEN, &bridge_id.address)
+        .map_err(|_| {
+            NisporError::invalid_argument(
+                "invalid mac address in bridge_id".into(),
+            )
+        })?
+        .to_lowercase()
+        .replace(':', "");
+
+    Ok(format!("{:04x}.{}", bridge_id.priority, mac))
 }

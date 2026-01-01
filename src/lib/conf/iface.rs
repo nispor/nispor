@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use rtnetlink::{
-    packet_core::{NLM_F_ACK, NLM_F_REQUEST},
-    packet_route::link::LinkMessage,
-    LinkUnspec,
-};
+use rtnetlink::{packet_route::link::LinkMessage, LinkUnspec};
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -207,22 +203,10 @@ async fn send_change_netlink(
     iface_name: &str,
 ) -> Result<(), NisporError> {
     log::trace!("Changing interface by netlink message {msg:?}");
-    handle
-        .link()
-        .add(msg)
-        // Even we are changing existing interface, kernel still require us to
-        // use `RTM_NEWLINK`. The `RTM_SETLINK` is only used for bridge VLAN
-        // filtering.
-        //
-        // TODO: Use `rtnetlink::LinkHandler::change()` once they
-        // released.
-        .set_flags(NLM_F_ACK | NLM_F_REQUEST)
-        .execute()
-        .await
-        .map_err(|e| {
-            NisporError::new(
-                ErrorKind::NisporBug,
-                format!("Failed to change interface {iface_name}: {e}"),
-            )
-        })
+    handle.link().change(msg).execute().await.map_err(|e| {
+        NisporError::new(
+            ErrorKind::NisporBug,
+            format!("Failed to change interface {iface_name}: {e}"),
+        )
+    })
 }

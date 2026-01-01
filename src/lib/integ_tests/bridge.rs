@@ -49,7 +49,7 @@ bridge:
   vlan_protocol: 802.1q
   default_pvid: 1
   vlan_stats_enabled: false
-  vlan_stats_per_host: false
+  vlan_stats_per_port: false
   stp_state: disabled
   hello_timer: 0
   priority: 32768
@@ -75,8 +75,8 @@ root_block: false
 multicast_fast_leave: false
 learning: true
 unicast_flood: true
-proxyarp: false
-proxyarp_wifi: false
+proxy_arp: false
+proxy_arp_wifi: false
 designated_root: 8000.00234567891c
 designated_bridge: 8000.00234567891c
 designated_port: 32769
@@ -114,8 +114,8 @@ root_block: false
 multicast_fast_leave: false
 learning: true
 unicast_flood: true
-proxyarp: false
-proxyarp_wifi: false
+proxy_arp: false
+proxy_arp_wifi: false
 designated_root: 8000.00234567891c
 designated_bridge: 8000.00234567891c
 designated_port: 32770
@@ -150,8 +150,6 @@ fn test_get_br_iface_yaml() {
         let iface = state.ifaces.get_mut(IFACE_NAME).unwrap();
         if let Some(ref mut bridge_info) = iface.bridge {
             bridge_info.gc_timer = None;
-            // Below value is not supported by RHEL 8 and Ubuntu CI
-            bridge_info.multi_bool_opt = None;
             // Below value is different between CI and RHEL/CentOS 8
             // https://blog.grisge.info/posts/br_on_250hz_kernel/
             bridge_info.multicast_startup_query_interval = None;

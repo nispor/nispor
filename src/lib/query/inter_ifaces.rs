@@ -9,7 +9,6 @@ use rtnetlink::{
 };
 
 use super::{
-    super::netlink::fill_ip_addr,
     bond::bond_iface_tidy_up,
     bridge::bridge_iface_tidy_up,
     ethtool::get_ethtool_infos,
@@ -18,7 +17,7 @@ use super::{
         fill_bridge_vlan_info, parse_nl_msg_to_iface,
         parse_nl_msg_to_name_and_index,
     },
-    ip::fill_ip_forwarding,
+    ip::{fill_ip_addr, fill_ip_forwarding},
     ipoib::ipoib_iface_tidy_up,
     iptunnel::ip_tunnel_iface_tidy_up,
     ipvlan::ip_vlan_iface_tidy_up,
