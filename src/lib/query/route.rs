@@ -413,37 +413,54 @@ pub struct MultipathRoute {
     pub via: String,
     pub iface: String,
     pub weight: u16, // The kernel is u8, but ip route show it after + 1.
-    pub flags: Vec<MultipathRouteFlags>,
+    pub flags: Vec<MultipathRouteFlag>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-pub enum MultipathRouteFlags {
+pub enum MultipathRouteFlag {
     Dead,
     Pervasive,
-    #[serde(rename = "on-link")]
-    OnLink,
+    Onlink,
     Offload,
-    #[serde(rename = "link-down")]
-    LinkDown,
+    Linkdown,
     Unresolved,
     Trap,
     Other(u8),
 }
 
-impl From<rt::RouteNextHopFlags> for MultipathRouteFlags {
-    fn from(d: rt::RouteNextHopFlags) -> Self {
-        match d {
-            rt::RouteNextHopFlags::Dead => Self::Dead,
-            rt::RouteNextHopFlags::Pervasive => Self::Pervasive,
-            rt::RouteNextHopFlags::Onlink => Self::OnLink,
-            rt::RouteNextHopFlags::Offload => Self::Offload,
-            rt::RouteNextHopFlags::Linkdown => Self::LinkDown,
-            rt::RouteNextHopFlags::Unresolved => Self::Unresolved,
-            rt::RouteNextHopFlags::Trap => Self::Trap,
-            _ => Self::Other(d.bits()),
+impl MultipathRouteFlag {
+    pub(crate) fn from_netlink(d: rt::RouteNextHopFlags) -> Vec<Self> {
+        d.iter()
+            .map(|bit| match bit {
+                rt::RouteNextHopFlags::Dead => Self::Dead,
+                rt::RouteNextHopFlags::Pervasive => Self::Pervasive,
+                rt::RouteNextHopFlags::Onlink => Self::Onlink,
+                rt::RouteNextHopFlags::Offload => Self::Offload,
+                rt::RouteNextHopFlags::Linkdown => Self::Linkdown,
+                rt::RouteNextHopFlags::Unresolved => Self::Unresolved,
+                rt::RouteNextHopFlags::Trap => Self::Trap,
+                _ => Self::Other(bit.bits()),
+            })
+            .collect()
+    }
+
+    pub(crate) fn to_netlink(flags: &[Self]) -> rt::RouteNextHopFlags {
+        let mut ret = rt::RouteNextHopFlags::empty();
+        for flag in flags {
+            ret |= match flag {
+                Self::Dead => rt::RouteNextHopFlags::Dead,
+                Self::Pervasive => rt::RouteNextHopFlags::Pervasive,
+                Self::Onlink => rt::RouteNextHopFlags::Onlink,
+                Self::Offload => rt::RouteNextHopFlags::Offload,
+                Self::Linkdown => rt::RouteNextHopFlags::Linkdown,
+                Self::Unresolved => rt::RouteNextHopFlags::Unresolved,
+                Self::Trap => rt::RouteNextHopFlags::Trap,
+                Self::Other(d) => rt::RouteNextHopFlags::from_bits_retain(*d),
+            }
         }
+        ret
     }
 }
 
@@ -681,11 +698,7 @@ fn get_route(
                     } else {
                         format!("{iface_index}")
                     };
-                    mp_rt.flags = hop
-                        .flags
-                        .iter()
-                        .map(MultipathRouteFlags::from)
-                        .collect();
+                    mp_rt.flags = MultipathRouteFlag::from_netlink(hop.flags);
                     // +1 because ip route does so
                     mp_rt.weight = u16::from(hop.hops) + 1;
                     next_hops.push(mp_rt);
