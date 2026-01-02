@@ -67,7 +67,7 @@ pub use self::{
         AddressFamily, MultipathRoute, MultipathRouteFlags, Route,
         RouteProtocol, RouteScope, RouteType,
     },
-    route_rule::{RouteRule, RuleAction},
+    route_rule::{RouteRule, RouteRuleFlag, RuleAction},
     sriov::{SriovInfo, VfInfo, VfLinkState, VfState},
     tun::{TunInfo, TunMode},
     veth::VethInfo,
