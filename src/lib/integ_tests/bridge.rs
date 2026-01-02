@@ -13,204 +13,204 @@ const PORT2_NAME: &str = "dummy2";
 
 // On Archlinux where HZ == 300, these properties will be rounded up by
 // `jiffies_to_clock_t()` of kernel:
-//  * ageing_time
-//  * hello_time
-//  * forward_delay
-//  * max_age
-//  * multicast_last_member_interval
-//  * multicast_membership_interval
-//  * multicast_querier_interval
-//  * multicast_query_interval
-//  * multicast_query_response_interval
+//  * ageing-time
+//  * hello-time
+//  * forward-delay
+//  * max-age
+//  * multicast-last-member-interval
+//  * multicast-membership-interval
+//  * multicast-querier-interval
+//  * multicast-query-interval
+//  * multicast-query-response-interval
 //  Hence we skip those from testing
 //  Ubuntu is 250 HZ, which hold a subset of above list.
 
 const EXPECTED_BRIDGE_INFO: &str = r#"---
 name: br0
-iface_type: bridge
+type: linux-bridge
 bridge:
   ports:
     - dummy1
     - dummy2
-  bridge_id: 8000.00234567891c
-  group_fwd_mask: 0
-  root_id: 8000.00234567891c
-  root_port: 0
-  root_path_cost: 0
-  topology_change: false
-  topology_change_detected: false
-  tcn_timer: 0
-  topology_change_timer: 0
-  group_addr: "01:80:c2:00:00:00"
-  nf_call_iptables: false
-  nf_call_ip6tables: false
-  nf_call_arptables: false
-  vlan_filtering: false
-  vlan_protocol: 802.1q
-  default_pvid: 1
-  vlan_stats_enabled: false
-  vlan_stats_per_port: false
-  stp_state: disabled
+  bridge-id: 8000.00234567891c
+  group-fwd-mask: 0
+  root-id: 8000.00234567891c
+  root-port: 0
+  root-path-cost: 0
+  topology-change: false
+  topology-change-detected: false
+  tcn-timer: 0
+  topology-change-timer: 0
+  group-addr: "01:80:c2:00:00:00"
+  nf-call-iptables: false
+  nf-call-ip6tables: false
+  nf-call-arptables: false
+  vlan-filtering: false
+  vlan-protocol: 802.1q
+  default-pvid: 1
+  vlan-stats-enabled: false
+  vlan-stats-per-port: false
+  stp-state: disabled
   priority: 32768
-  multicast_router: temp_query
-  multicast_snooping: true
-  multicast_query_use_ifaddr: false
-  multicast_querier: false
-  multicast_stats_enabled: false
-  multicast_hash_elasticity: 16
-  multicast_hash_max: 4096
-  multicast_last_member_count: 2
-  multicast_startup_query_count: 2
-  multicast_igmp_version: 2
-  multicast_mld_version: 1"#;
+  multicast-router: temp-query
+  multicast-snooping: true
+  multicast-query-use-ifaddr: false
+  multicast-querier: false
+  multicast-stats-enabled: false
+  multicast-hash-elasticity: 16
+  multicast-hash-max: 4096
+  multicast-last-member-count: 2
+  multicast-startup-query-count: 2
+  multicast-igmp-version: 2
+  multicast-mld-version: 1"#;
 
 const EXPECTED_PORT1_BRIDGE_INFO: &str = r#"---
-stp_state: forwarding
-stp_priority: 60
-stp_path_cost: 1000
-hairpin_mode: true
-bpdu_guard: true
-root_block: true
-multicast_fast_leave: true
+stp-state: forwarding
+stp-priority: 60
+stp-path-cost: 1000
+hairpin-mode: true
+bpdu-guard: true
+root-block: true
+multicast-fast-leave: true
 learning: true
-unicast_flood: true
-proxy_arp: true
-proxy_arp_wifi: true
-designated_root: 8000.00234567891c
-designated_bridge: 8000.00234567891c
-designated_port: 61441
-designated_cost: 0
-port_id: "0xf001"
-port_no: "0x1"
-change_ack: false
-config_pending: false
-message_age_timer: 0
-hold_timer: 0
-multicast_router: perm
-multicast_flood: true
-multicast_to_unicast: true
-vlan_tunnel: false
-broadcast_flood: true
-group_fwd_mask: 1
-neigh_suppress: true
+unicast-flood: true
+proxy-arp: true
+proxy-arp-wifi: true
+designated-root: 8000.00234567891c
+designated-bridge: 8000.00234567891c
+designated-port: 61441
+designated-cost: 0
+port-id: "0xf001"
+port-no: "0x1"
+change-ack: false
+config-pending: false
+message-age-timer: 0
+hold-timer: 0
+multicast-router: perm
+multicast-flood: true
+multicast-to-unicast: true
+vlan-tunnel: false
+broadcast-flood: true
+group-fwd-mask: 1
+neigh-suppress: true
 isolated: true
-mrp_ring_open: false
-mcast_eht_hosts_limit: 512
-mcast_eht_hosts_cnt: 0
+mrp-ring-open: false
+mcast-eht-hosts-limit: 512
+mcast-eht-hosts-cnt: 0
 vlans:
   - vid: 1
-    is_pvid: true
-    is_egress_untagged: true"#;
+    is-pvid: true
+    is-egress-untagged: true"#;
 
 const EXPECTED_PORT2_BRIDGE_INFO: &str = r#"---
-stp_state: forwarding
-stp_priority: 50
-stp_path_cost: 1001
-hairpin_mode: true
-bpdu_guard: true
-root_block: true
-multicast_fast_leave: true
+stp-state: forwarding
+stp-priority: 50
+stp-path-cost: 1001
+hairpin-mode: true
+bpdu-guard: true
+root-block: true
+multicast-fast-leave: true
 learning: true
-unicast_flood: true
-proxy_arp: true
-proxy_arp_wifi: true
-designated_root: 8000.00234567891c
-designated_bridge: 8000.00234567891c
-designated_port: 51202
-designated_cost: 0
-port_id: "0xc802"
-port_no: "0x2"
-change_ack: false
-config_pending: false
-message_age_timer: 0
-hold_timer: 0
-multicast_router: perm
-multicast_flood: true
-multicast_to_unicast: true
-vlan_tunnel: false
-broadcast_flood: true
-group_fwd_mask: 1
-neigh_suppress: true
+unicast-flood: true
+proxy-arp: true
+proxy-arp-wifi: true
+designated-root: 8000.00234567891c
+designated-bridge: 8000.00234567891c
+designated-port: 51202
+designated-cost: 0
+port-id: "0xc802"
+port-no: "0x2"
+change-ack: false
+config-pending: false
+message-age-timer: 0
+hold-timer: 0
+multicast-router: perm
+multicast-flood: true
+multicast-to-unicast: true
+vlan-tunnel: false
+broadcast-flood: true
+group-fwd-mask: 1
+neigh-suppress: true
 isolated: true
-mrp_ring_open: false
-mcast_eht_hosts_limit: 512
-mcast_eht_hosts_cnt: 0
+mrp-ring-open: false
+mcast-eht-hosts-limit: 512
+mcast-eht-hosts-cnt: 0
 vlans:
   - vid: 1
-    is_pvid: true
-    is_egress_untagged: true"#;
+    is-pvid: true
+    is-egress-untagged: true"#;
 
 const BRIDGE_CREATE_YML: &str = r#"---
 interfaces:
   - name: br0
-    type: bridge
+    type: linux-bridge
     mac-address: 00:23:45:67:89:1c
     bridge:
-      stp_state: disabled
+      stp-state: disabled
   - name: dummy1
     type: dummy
     state: up
     controller: br0
     bridge-port:
       flush: false
-      stp_priority: 60
-      stp_path_cost: 1000
-      hairpin_mode: true
-      bpdu_guard: true
-      root_block: true
-      multicast_fast_leave: true
+      stp-priority: 60
+      stp-path-cost: 1000
+      hairpin-mode: true
+      bpdu-guard: true
+      root-block: true
+      multicast-fast-leave: true
       learning: true
-      unicast_flood: true
-      proxy_arp: true
-      proxy_arp_wifi: true
-      multicast_router: perm
-      multicast_flood: true
-      multicast_to_unicast: true
-      vlan_tunnel: false
-      broadcast_flood: true
-      group_fwd_mask: 1
-      neigh_suppress: true
+      unicast-flood: true
+      proxy-arp: true
+      proxy-arp-wifi: true
+      multicast-router: perm
+      multicast-flood: true
+      multicast-to-unicast: true
+      vlan-tunnel: false
+      broadcast-flood: true
+      group-fwd-mask: 1
+      neigh-suppress: true
       isolated: true
-      mac_authentication_bypass: true
-      backup_port: 0
+      mac-authentication-bypass: true
+      backup-port: 0
       locked: true
-      neigh_vlan_suppress: false
-      backup_nexthop_id: 0
+      neigh-vlan-suppress: false
+      backup-nexthop-id: 0
   - name: dummy2
     type: dummy
     state: up
     controller: br0
     bridge-port:
       flush: false
-      stp_priority: 50
-      stp_path_cost: 1001
-      hairpin_mode: true
-      bpdu_guard: true
-      root_block: true
-      multicast_fast_leave: true
+      stp-priority: 50
+      stp-path-cost: 1001
+      hairpin-mode: true
+      bpdu-guard: true
+      root-block: true
+      multicast-fast-leave: true
       learning: true
-      unicast_flood: true
-      proxy_arp: true
-      proxy_arp_wifi: true
-      multicast_router: perm
-      multicast_flood: true
-      multicast_to_unicast: true
-      vlan_tunnel: false
-      broadcast_flood: true
-      group_fwd_mask: 1
-      neigh_suppress: true
+      unicast-flood: true
+      proxy-arp: true
+      proxy-arp-wifi: true
+      multicast-router: perm
+      multicast-flood: true
+      multicast-to-unicast: true
+      vlan-tunnel: false
+      broadcast-flood: true
+      group-fwd-mask: 1
+      neigh-suppress: true
       isolated: true
-      mac_authentication_bypass: true
-      backup_port: 0
+      mac-authentication-bypass: true
+      backup-port: 0
       locked: true
-      neigh_vlan_suppress: false
-      backup_nexthop_id: 0
+      neigh-vlan-suppress: false
+      backup-nexthop-id: 0
     "#;
 
 const BRIDGE_DELETE_YML: &str = r#"---
 interfaces:
   - name: br0
-    type: bridge
+    type: linux-bridge
     state: absent
   - name: dummy1
     type: dummy
@@ -261,7 +261,7 @@ fn test_bridge_change_stp_state() {
                 - name: br0
                   type: linux-bridge
                   bridge:
-                    stp_state: kernel_stp
+                    stp-state: kernel-stp
                 "#,
         )
         .unwrap();

@@ -35,9 +35,7 @@ pub struct IfaceConf {
     pub vlan: Option<VlanConf>,
     #[serde(alias = "link-aggregation")]
     pub bond: Option<BondConf>,
-    #[serde(alias = "bond_port")]
     pub bond_port: Option<BondPortConf>,
-    #[serde(alias = "bridge_port")]
     pub bridge_port: Option<BridgePortConf>,
 }
 
@@ -109,7 +107,7 @@ pub(crate) async fn apply_iface_conf(
                 );
                 handle.link().add(msg).execute().await.map_err(|e| {
                     NisporError::new(
-                        ErrorKind::NisporBug,
+                        ErrorKind::Bug,
                         format!(
                             "Failed to create interface {des_iface:?}: {e}"
                         ),
@@ -216,7 +214,7 @@ async fn delete_iface(
 ) -> Result<(), NisporError> {
     handle.link().del(index).execute().await.map_err(|e| {
         NisporError::new(
-            ErrorKind::NisporBug,
+            ErrorKind::Bug,
             format!("Failed to delete interface {iface_name}: {e}"),
         )
     })
@@ -230,7 +228,7 @@ async fn send_change_netlink(
     log::trace!("Changing interface by netlink message {msg:?}");
     handle.link().change(msg).execute().await.map_err(|e| {
         NisporError::new(
-            ErrorKind::NisporBug,
+            ErrorKind::Bug,
             format!("Failed to change interface {iface_name}: {e}"),
         )
     })
@@ -316,7 +314,7 @@ async fn apply_bridge_vlan_conf(
             .await
             .map_err(|e| {
                 NisporError::new(
-                    ErrorKind::NisporBug,
+                    ErrorKind::Bug,
                     format!(
                         "Failed to remove bridge {} vlan of interface {}: {e}",
                         vlan_entity, iface_name
@@ -331,7 +329,7 @@ async fn apply_bridge_vlan_conf(
         );
         handle.link().set(msg).execute().await.map_err(|e| {
             NisporError::new(
-                ErrorKind::NisporBug,
+                ErrorKind::Bug,
                 format!(
                     "Failed to set bridge {} vlan of interface {}: {e}",
                     vlan_entity, iface_name

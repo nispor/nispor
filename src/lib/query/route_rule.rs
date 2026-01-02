@@ -14,7 +14,8 @@ use serde::{Deserialize, Serialize};
 use crate::{AddressFamily, NisporError, RouteProtocol};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+#[non_exhaustive]
 pub enum RuleAction {
     #[default]
     Unspec,
@@ -49,6 +50,7 @@ impl From<rule::RuleAction> for RuleAction {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct RouteRule {
     pub action: RuleAction,
@@ -189,7 +191,7 @@ fn get_rule(rule_msg: RuleMessage) -> Result<RouteRule, NisporError> {
 #[derive(
     Debug, PartialEq, Eq, Clone, Copy, Default, Serialize, Deserialize,
 )]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum IpProtocol {
     Hopopts,
@@ -261,6 +263,7 @@ impl From<rtnetlink::packet_route::IpProtocol> for IpProtocol {
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct RouteRealm {
     pub source: u16,
     pub destination: u16,

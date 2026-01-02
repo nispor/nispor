@@ -8,13 +8,14 @@ use serde::{Deserialize, Serialize};
 use crate::{
     mac::{mac_str_to_raw, ETH_ALEN},
     query::resolve_iface_index,
-    BondAdSelect, BondAllPortsActive, BondArpValidate, BondFailOverMac,
+    BondAdSelect, BondAllPortActive, BondArpValidate, BondFailOverMac,
     BondLacpRate, BondMode, BondModeArpAllTargets, BondPrimaryReselect,
     BondXmitHashPolicy, ErrorKind, Iface, IfaceConf, NisporError,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct BondConf {
     pub mode: Option<BondMode>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -43,10 +44,10 @@ pub struct BondConf {
     pub xmit_hash_policy: Option<BondXmitHashPolicy>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub resend_igmp: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none", alias = "num_grat_arp")]
+    #[serde(skip_serializing_if = "Option::is_none", alias = "num-grat-arp")]
     pub num_unsol_na: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub all_ports_active: Option<BondAllPortsActive>,
+    pub all_ports_active: Option<BondAllPortActive>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub min_links: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]

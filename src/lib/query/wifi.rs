@@ -13,7 +13,7 @@ use wl_nl80211::{
 use crate::{mac::parse_as_mac, Iface, IfaceType, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct WifiInfo {
     pub mode: WifiMode,
@@ -258,12 +258,13 @@ async fn get_mac_ssid_map(
 #[derive(
     Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
 )]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+#[non_exhaustive]
 pub enum WifiMode {
+    #[default]
     Station,
     Ap,
-    #[default]
-    Unknown,
+    Other(u32),
 }
 
 impl From<Nl80211InterfaceType> for WifiMode {
@@ -271,7 +272,7 @@ impl From<Nl80211InterfaceType> for WifiMode {
         match v {
             Nl80211InterfaceType::Station => Self::Station,
             Nl80211InterfaceType::Ap => Self::Ap,
-            _ => Self::Unknown,
+            _ => Self::Other(v.into()),
         }
     }
 }

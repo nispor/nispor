@@ -7,10 +7,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceType};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum IpoibMode {
     /// using unreliable datagram QPs
     #[default]
@@ -41,6 +42,7 @@ impl From<IpoibMode> for link::IpoibMode {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct IpoibInfo {
     pub pkey: u16,

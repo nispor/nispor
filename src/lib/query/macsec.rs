@@ -20,17 +20,17 @@ const MACSEC_CIPHER_ID_GCM_AES_XPN_128: u64 = 0x0080C20001000003;
 const MACSEC_CIPHER_ID_GCM_AES_XPN_256: u64 = 0x0080C20001000004;
 const MACSEC_DEFAULT_CIPHER_ID: u64 = 0x0080020001000001;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum MacSecValidate {
+    #[default]
     Disabled,
     Check,
     Strict,
     Other(u8),
-    #[default]
-    Unknown,
 }
 
 impl From<u8> for MacSecValidate {
@@ -44,17 +44,17 @@ impl From<u8> for MacSecValidate {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum MacSecOffload {
+    #[default]
     Off,
     Phy,
     Mac,
     Other(u8),
-    #[default]
-    Unknown,
 }
 
 impl From<u8> for MacSecOffload {
@@ -68,10 +68,11 @@ impl From<u8> for MacSecOffload {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "kebab-case")]
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum MacSecCipherId {
     #[default]
     GcmAes128,
@@ -96,6 +97,7 @@ impl From<u64> for MacSecCipherId {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct MacSecInfo {
     pub sci: u64,
     pub port: u16,

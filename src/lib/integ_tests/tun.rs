@@ -14,11 +14,11 @@ mode: tun
 owner: 1001
 group: 0
 pi: false
-vnet_hdr: true
-multi_queue: true
+vnet-hdr: true
+multi-queue: true
 persist: true
-num_queues: 0
-num_disabled_queues: 0"#;
+num-queues: 0
+num-disabled-queues: 0"#;
 
 #[test]
 fn test_get_tun_iface_yaml() {

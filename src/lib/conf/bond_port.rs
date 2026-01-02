@@ -7,7 +7,7 @@ use crate::Iface;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
-#[serde(deny_unknown_fields)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct BondPortConf {
     pub queue_id: Option<u16>,
     pub prio: Option<i32>,

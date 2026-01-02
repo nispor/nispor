@@ -2,7 +2,7 @@
 use std::{collections::HashMap, net::IpAddr};
 
 use rtnetlink::packet_route::{
-    link::{InfoData, InfoIpTunnel},
+    link::{self, InfoData, InfoIpTunnel},
     IpProtocol,
 };
 use serde::{Deserialize, Serialize};
@@ -11,7 +11,7 @@ use crate::{Iface, IfaceType};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[non_exhaustive]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub enum TunnelEncapFlags {
     CSum,
     CSum6,
@@ -19,31 +19,23 @@ pub enum TunnelEncapFlags {
     Other(u16),
 }
 
-impl From<TunnelEncapFlags>
-    for rtnetlink::packet_route::link::TunnelEncapFlags
-{
+impl From<TunnelEncapFlags> for link::TunnelEncapFlags {
     fn from(d: TunnelEncapFlags) -> Self {
         match d {
             TunnelEncapFlags::CSum => Self::CSum,
             TunnelEncapFlags::CSum6 => Self::CSum6,
             TunnelEncapFlags::RemCSum => Self::RemCSum,
-            TunnelEncapFlags::Other(d) => rtnetlink::packet_route::link::TunnelEncapFlags::from_bits_retain(d),
+            TunnelEncapFlags::Other(d) => Self::from_bits_retain(d),
         }
     }
 }
 
-impl From<rtnetlink::packet_route::link::TunnelEncapFlags>
-    for TunnelEncapFlags
-{
-    fn from(d: rtnetlink::packet_route::link::TunnelEncapFlags) -> Self {
+impl From<link::TunnelEncapFlags> for TunnelEncapFlags {
+    fn from(d: link::TunnelEncapFlags) -> Self {
         match d {
-            rtnetlink::packet_route::link::TunnelEncapFlags::CSum => Self::CSum,
-            rtnetlink::packet_route::link::TunnelEncapFlags::CSum6 => {
-                Self::CSum6
-            }
-            rtnetlink::packet_route::link::TunnelEncapFlags::RemCSum => {
-                Self::RemCSum
-            }
+            link::TunnelEncapFlags::CSum => Self::CSum,
+            link::TunnelEncapFlags::CSum6 => Self::CSum6,
+            link::TunnelEncapFlags::RemCSum => Self::RemCSum,
             _ => Self::Other(d.bits()),
         }
     }
@@ -51,7 +43,7 @@ impl From<rtnetlink::packet_route::link::TunnelEncapFlags>
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[non_exhaustive]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub enum TunnelEncapType {
     None,
     Fou,
@@ -89,7 +81,7 @@ impl From<rtnetlink::packet_route::link::TunnelEncapType> for TunnelEncapType {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[non_exhaustive]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub enum Ip6TunnelFlags {
     IgnEncapLimit,
     UseOrigTclass,
@@ -142,10 +134,11 @@ impl From<rtnetlink::packet_route::link::Ip6TunnelFlags> for Ip6TunnelFlags {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum IpTunnelMode {
     #[default]
     Unknown,
@@ -156,6 +149,7 @@ pub enum IpTunnelMode {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct IpTunnelInfo {
     #[serde(skip_serializing_if = "Option::is_none")]

@@ -10,7 +10,7 @@ use crate::NetState;
 const IFACE_NAME: &str = "vrf0";
 
 const EXPECTED_VRF_INFO: &str = r#"---
-table_id: 10
+table-id: 10
 ports:
   - eth1
   - eth2"#;

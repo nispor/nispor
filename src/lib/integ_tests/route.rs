@@ -7,22 +7,22 @@ const TEST_ROUTE_DST_V4: &str = "198.51.100.0/24";
 const TEST_ROUTE_DST_V6: &str = "2001:db8:e::/64";
 
 const EXPECTED_MULTIPATH_YAML_OUTPUT: &str = r#"---
-- address_family: ipv6
+- address-family: ipv6
   tos: 0
   table: 254
   protocol: static
   scope: universe
-  route_type: unicast
+  route-type: unicast
   flags: []
   dst: "2001:db8:e::/64"
-  cache_clntref: 0
-  cache_last_use: 0
-  cache_expires: 0
-  cache_error: 0
-  cache_used: 0
-  cache_id: 0
-  cache_ts: 0
-  cache_ts_age: 0
+  cache-clntref: 0
+  cache-last-use: 0
+  cache-expires: 0
+  cache-error: 0
+  cache-used: 0
+  cache-id: 0
+  cache-ts: 0
+  cache-ts-age: 0
   metric: 1024
   preference: medium
   multipath:
@@ -30,18 +30,18 @@ const EXPECTED_MULTIPATH_YAML_OUTPUT: &str = r#"---
       iface: eth1
       weight: 1
       flags:
-        - on_link
+        - on-link
     - via: "2001:db8:f::253"
       iface: eth1
       weight: 256
       flags:
-        - on_link
-- address_family: ipv4
+        - on-link
+- address-family: ipv4
   tos: 0
   table: 254
   protocol: static
   scope: universe
-  route_type: unicast
+  route-type: unicast
   flags: []
   dst: 198.51.100.0/24
   multipath:
@@ -49,72 +49,72 @@ const EXPECTED_MULTIPATH_YAML_OUTPUT: &str = r#"---
       iface: eth1
       weight: 1
       flags:
-        - on_link
+        - on-link
     - via: 192.0.2.253
       iface: eth1
       weight: 256
       flags:
-        - on_link"#;
+        - on-link"#;
 
 const EXPECTED_YAML_OUTPUT: &str = r#"---
-- address_family: ipv4
+- address-family: ipv4
   tos: 0
   table: 254
   protocol: dhcp
   scope: universe
-  route_type: unicast
+  route-type: unicast
   flags: []
   oif: veth1
   gateway: 192.0.2.3
   metric: 500
-- address_family: ipv4
+- address-family: ipv4
   tos: 0
   table: 254
   protocol: dhcp
   scope: universe
-  route_type: unicast
+  route-type: unicast
   flags: []
   dst: 198.51.100.0/24
   oif: veth1
   gateway: 192.0.2.2
   metric: 501
-- address_family: ipv6
+- address-family: ipv6
   tos: 0
   table: 254
   protocol: dhcp
   scope: universe
-  route_type: unicast
+  route-type: unicast
   flags: []
   oif: veth1
   gateway: "2001:db8:a::3"
-  cache_clntref: 0
-  cache_last_use: 0
-  cache_expires: 0
-  cache_error: 0
-  cache_used: 0
-  cache_id: 0
-  cache_ts: 0
-  cache_ts_age: 0
+  cache-clntref: 0
+  cache-last-use: 0
+  cache-expires: 0
+  cache-error: 0
+  cache-used: 0
+  cache-id: 0
+  cache-ts: 0
+  cache-ts-age: 0
   metric: 502
   preference: medium
-- address_family: ipv6
+- address-family: ipv6
   tos: 0
   table: 254
   protocol: dhcp
   scope: universe
-  route_type: unicast
+  route-type: unicast
   flags: []
   dst: "2001:db8:e::/64"
   oif: veth1
   gateway: "2001:db8:a::2"
-  cache_clntref: 0
-  cache_last_use: 0
-  cache_expires: 0
-  cache_error: 0
-  cache_used: 0
-  cache_id: 0
-  cache_ts: 0
-  cache_ts_age: 0
+  cache-clntref: 0
+  cache-last-use: 0
+  cache-expires: 0
+  cache-error: 0
+  cache-used: 0
+  cache-id: 0
+  cache-ts: 0
+  cache-ts-age: 0
   metric: 503
   preference: medium"#;
 
@@ -213,7 +213,7 @@ fn test_add_remove_route_yaml() {
 }
 
 const VETH_STATIC_IP_CONF: &str = r#"---
-ifaces:
+interfaces:
   - name: veth1
     type: veth
     state: up
@@ -222,17 +222,17 @@ ifaces:
     ipv4:
       addresses:
         - address: "192.0.2.1"
-          prefix_len: 24
+          prefix-len: 24
     ipv6:
       addresses:
         - address: "2001:db8:a::9"
-          prefix_len: 64
+          prefix-len: 64
   - name: veth1.ep
     type: veth
     state: up"#;
 
 const VETH_ABSENT_CONF: &str = r#"---
-ifaces:
+interfaces:
   - name: veth1
     type: veth
     state: absent"#;
@@ -291,12 +291,12 @@ const TEST_ECMP_ROUTES: &str = r#"
       weight: 2
       iface: veth1
       flags:
-        - on_link
+        - on-link
     - via: 2001:db8:a::2
       weight: 1
       iface: veth1
       flags:
-        - on_link
+        - on-link
 - dst: 198.51.100.0/24
   table: 254
   metric: 503
@@ -306,12 +306,12 @@ const TEST_ECMP_ROUTES: &str = r#"
       weight: 1
       iface: veth1
       flags:
-        - on_link
+        - on-link
     - via: 192.0.2.253
       weight: 2
       iface: veth1
       flags:
-        - on_link
+        - on-link
 "#;
 
 #[test]

@@ -37,19 +37,19 @@ use crate::{
     VrfInfo, VrfPortInfo, VxlanInfo, WifiInfo, XfrmInfo,
 };
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-#[serde(rename_all = "snake_case")]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum IfaceType {
     Bond,
     Veth,
-    #[serde(alias = "linux-bridge")]
+    #[serde(rename = "linux-bridge")]
     Bridge,
     Vlan,
     Dummy,
     Vxlan,
     Loopback,
+    #[default]
     Ethernet,
     Infiniband,
     Vrf,
@@ -65,8 +65,6 @@ pub enum IfaceType {
     IpVlan,
     MacSec,
     Hsr,
-    #[default]
-    Unknown,
     Xfrm,
     Wifi,
     Other(String),
@@ -80,7 +78,7 @@ impl std::fmt::Display for IfaceType {
             match self {
                 Self::Bond => "bond",
                 Self::Veth => "veth",
-                Self::Bridge => "bridge",
+                Self::Bridge => "linux-bridge",
                 Self::Vlan => "vlan",
                 Self::Dummy => "dummy",
                 Self::Vxlan => "vxlan",
@@ -98,7 +96,6 @@ impl std::fmt::Display for IfaceType {
                 Self::IpVlan => "ipvlan",
                 Self::MacSec => "macsec",
                 Self::Hsr => "hsr",
-                Self::Unknown => "unknown",
                 Self::Xfrm => "xfrm",
                 Self::Wifi => "wifi",
                 Self::Other(s) => s,
@@ -108,7 +105,7 @@ impl std::fmt::Display for IfaceType {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum IfaceState {
     Up,
@@ -116,10 +113,10 @@ pub enum IfaceState {
     Down,
     LowerLayerDown,
     Testing,
-    Absent, // Only for IfaceConf
-    Other(String),
     #[default]
     Unknown,
+    Absent, // Only for IfaceConf
+    Other(String),
 }
 
 impl From<link::State> for IfaceState {
@@ -149,18 +146,18 @@ impl std::fmt::Display for IfaceState {
                 Self::Up => "up",
                 Self::Dormant => "dormant",
                 Self::Down => "down",
-                Self::LowerLayerDown => "lower_layer_down",
+                Self::LowerLayerDown => "lower-layer-down",
                 Self::Testing => "testing",
                 Self::Absent => "absent",
-                Self::Other(s) => s.as_str(),
                 Self::Unknown => "unknown",
+                Self::Other(s) => s.as_str(),
             }
         )
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum IfaceFlag {
     AllMulti,
@@ -178,10 +175,9 @@ pub enum IfaceFlag {
     Promisc,
     Running,
     Port,
+    #[default]
     Up,
     Other(u32),
-    #[default]
-    Unknown,
 }
 
 impl From<link::LinkFlags> for IfaceFlag {
@@ -209,7 +205,7 @@ impl From<link::LinkFlags> for IfaceFlag {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum ControllerType {
     Bond,
@@ -217,7 +213,6 @@ pub enum ControllerType {
     Vrf,
     OpenvSwitch,
     Other(String),
-    Unknown,
 }
 
 impl From<&str> for ControllerType {
@@ -233,11 +228,13 @@ impl From<&str> for ControllerType {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct Iface {
     pub name: String,
     #[serde(skip_serializing)]
     pub index: u32,
+    #[serde(rename = "type")]
     pub iface_type: IfaceType,
     pub state: IfaceState,
     pub mtu: i64,
@@ -342,7 +339,7 @@ pub(crate) fn parse_nl_msg_to_iface(
         LinkLayerType::Ether => IfaceType::Ethernet,
         LinkLayerType::Loopback => IfaceType::Loopback,
         LinkLayerType::Infiniband => IfaceType::Infiniband,
-        _ => IfaceType::Unknown,
+        d => IfaceType::Other(d.to_string()),
     };
     let mut iface_state = Iface {
         name,
@@ -417,8 +414,8 @@ pub(crate) fn parse_nl_msg_to_iface(
                          * it's just "Other(_)". If
                          * we already determined a link type
                          * above (ethernet or infiniband), keep that one. */
-                        if iface_state.iface_type == IfaceType::Unknown {
-                            iface_state.iface_type = iface_type
+                        if !matches!(&link_layer_type, &IfaceType::Other(_)) {
+                            iface_state.iface_type = link_layer_type.clone();
                         }
                     } else {
                         /* We found a better link type based on the kind. Use

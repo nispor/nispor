@@ -6,6 +6,7 @@ use crate::{Iface, IfaceConf, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct AltNameConf {
     #[serde(default)]
     pub remove: bool,

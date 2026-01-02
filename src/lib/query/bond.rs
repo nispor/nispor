@@ -17,10 +17,11 @@ use serde::{Deserialize, Serialize};
 use super::super::mac::parse_as_mac;
 use crate::{ControllerType, Iface, IfaceType, NisporError};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "snake_case")]
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum BondMode {
     #[serde(rename = "balance-rr")]
     #[default]
@@ -38,71 +39,34 @@ pub enum BondMode {
     #[serde(rename = "balance-alb")]
     BalanceAlb,
     Other(u8),
-    Unknown,
 }
 
-impl From<rtnetlink::packet_route::link::BondMode> for BondMode {
-    fn from(d: rtnetlink::packet_route::link::BondMode) -> Self {
+impl From<link::BondMode> for BondMode {
+    fn from(d: link::BondMode) -> Self {
         match d {
-            rtnetlink::packet_route::link::BondMode::BalanceRr => {
-                Self::BalanceRoundRobin
-            }
-            rtnetlink::packet_route::link::BondMode::ActiveBackup => {
-                Self::ActiveBackup
-            }
-            rtnetlink::packet_route::link::BondMode::BalanceXor => {
-                Self::BalanceXor
-            }
-            rtnetlink::packet_route::link::BondMode::Broadcast => {
-                Self::Broadcast
-            }
-            rtnetlink::packet_route::link::BondMode::Ieee8023Ad => {
-                Self::Ieee8021AD
-            }
-            rtnetlink::packet_route::link::BondMode::BalanceTlb => {
-                Self::BalanceTlb
-            }
-            rtnetlink::packet_route::link::BondMode::BalanceAlb => {
-                Self::BalanceAlb
-            }
+            link::BondMode::BalanceRr => Self::BalanceRoundRobin,
+            link::BondMode::ActiveBackup => Self::ActiveBackup,
+            link::BondMode::BalanceXor => Self::BalanceXor,
+            link::BondMode::Broadcast => Self::Broadcast,
+            link::BondMode::Ieee8023Ad => Self::Ieee8021AD,
+            link::BondMode::BalanceTlb => Self::BalanceTlb,
+            link::BondMode::BalanceAlb => Self::BalanceAlb,
             _ => Self::Other(d.into()),
         }
     }
 }
 
-impl From<BondMode> for rtnetlink::packet_route::link::BondMode {
-    fn from(v: BondMode) -> rtnetlink::packet_route::link::BondMode {
+impl From<BondMode> for link::BondMode {
+    fn from(v: BondMode) -> link::BondMode {
         match v {
-            BondMode::BalanceRoundRobin => {
-                rtnetlink::packet_route::link::BondMode::BalanceRr
-            }
-            BondMode::ActiveBackup => {
-                rtnetlink::packet_route::link::BondMode::ActiveBackup
-            }
-            BondMode::BalanceXor => {
-                rtnetlink::packet_route::link::BondMode::BalanceXor
-            }
-            BondMode::Broadcast => {
-                rtnetlink::packet_route::link::BondMode::Broadcast
-            }
-            BondMode::Ieee8021AD => {
-                rtnetlink::packet_route::link::BondMode::Ieee8023Ad
-            }
-            BondMode::BalanceTlb => {
-                rtnetlink::packet_route::link::BondMode::BalanceTlb
-            }
-            BondMode::BalanceAlb => {
-                rtnetlink::packet_route::link::BondMode::BalanceAlb
-            }
-            BondMode::Other(d) => {
-                rtnetlink::packet_route::link::BondMode::Other(d)
-            }
-            BondMode::Unknown => {
-                log::warn!(
-                    "Treating BondMode::Unknown as BondMode::BalanceRoundRobin"
-                );
-                rtnetlink::packet_route::link::BondMode::BalanceRr
-            }
+            BondMode::BalanceRoundRobin => link::BondMode::BalanceRr,
+            BondMode::ActiveBackup => link::BondMode::ActiveBackup,
+            BondMode::BalanceXor => link::BondMode::BalanceXor,
+            BondMode::Broadcast => link::BondMode::Broadcast,
+            BondMode::Ieee8021AD => link::BondMode::Ieee8023Ad,
+            BondMode::BalanceTlb => link::BondMode::BalanceTlb,
+            BondMode::BalanceAlb => link::BondMode::BalanceAlb,
+            BondMode::Other(d) => link::BondMode::Other(d),
         }
     }
 }
@@ -118,13 +82,12 @@ impl std::fmt::Display for BondMode {
             Self::BalanceTlb => write!(f, "balance-tlb"),
             Self::BalanceAlb => write!(f, "balance-alb"),
             Self::Other(u) => write!(f, "{u}"),
-            Self::Unknown => write!(f, "unknown"),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum BondModeArpAllTargets {
     Any,
@@ -166,7 +129,7 @@ impl From<BondModeArpAllTargets> for RtBondArpAllTargets {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum BondArpValidate {
     None,
@@ -174,9 +137,7 @@ pub enum BondArpValidate {
     Backup,
     All,
     Filter,
-    #[serde(rename = "filter_active")]
     FilterActive,
-    #[serde(rename = "filter_backkup")]
     FilterBackup,
     Other(u32),
 }
@@ -216,7 +177,7 @@ const BOND_PRI_RESELECT_BETTER: u8 = 1;
 const BOND_PRI_RESELECT_FAILURE: u8 = 2;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum BondPrimaryReselect {
     Always,
@@ -263,7 +224,7 @@ const BOND_FOM_ACTIVE: u8 = 1;
 const BOND_FOM_FOLLOW: u8 = 2;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum BondFailOverMac {
     None,
@@ -313,7 +274,7 @@ const BOND_XMIT_POLICY_ENCAP34: u8 = 4;
 const BOND_XMIT_POLICY_VLAN_SRCMAC: u8 = 5;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum BondXmitHashPolicy {
     #[serde(rename = "layer2")]
@@ -374,15 +335,15 @@ impl From<BondXmitHashPolicy> for RtBondXmitHashPolicy {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-pub enum BondAllPortsActive {
+pub enum BondAllPortActive {
     Dropped,
     Delivered,
     Other(u8),
 }
 
-impl From<link::BondAllPortActive> for BondAllPortsActive {
+impl From<link::BondAllPortActive> for BondAllPortActive {
     fn from(d: link::BondAllPortActive) -> Self {
         match d {
             link::BondAllPortActive::Dropped => Self::Dropped,
@@ -392,18 +353,18 @@ impl From<link::BondAllPortActive> for BondAllPortsActive {
     }
 }
 
-impl From<BondAllPortsActive> for link::BondAllPortActive {
-    fn from(v: BondAllPortsActive) -> link::BondAllPortActive {
+impl From<BondAllPortActive> for link::BondAllPortActive {
+    fn from(v: BondAllPortActive) -> link::BondAllPortActive {
         match v {
-            BondAllPortsActive::Dropped => link::BondAllPortActive::Dropped,
-            BondAllPortsActive::Delivered => link::BondAllPortActive::Delivered,
-            BondAllPortsActive::Other(d) => link::BondAllPortActive::Other(d),
+            BondAllPortActive::Dropped => link::BondAllPortActive::Dropped,
+            BondAllPortActive::Delivered => link::BondAllPortActive::Delivered,
+            BondAllPortActive::Other(d) => link::BondAllPortActive::Other(d),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum BondLacpRate {
     Slow,
@@ -436,7 +397,7 @@ const BOND_AD_BANDWIDTH: u8 = 1;
 const BOND_AD_COUNT: u8 = 2;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum BondAdSelect {
     Stable,
@@ -468,6 +429,7 @@ impl From<BondAdSelect> for u8 {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct BondAdInfo {
     pub aggregator: u16,
@@ -506,6 +468,7 @@ impl From<&[link::BondAdInfo]> for BondAdInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct BondInfo {
     pub ports: Vec<String>,
@@ -541,7 +504,7 @@ pub struct BondInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub num_grat_arp: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub all_ports_active: Option<BondAllPortsActive>,
+    pub all_ports_active: Option<BondAllPortActive>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub min_links: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -727,16 +690,14 @@ impl From<&[InfoBond]> for BondInfo {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-#[serde(rename_all = "snake_case")]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum BondPortState {
+    #[default]
     Active,
     Backup,
     Other(u8),
-    #[default]
-    Unknown,
 }
 
 const BOND_STATE_ACTIVE: u8 = 0;
@@ -752,18 +713,16 @@ impl From<u8> for BondPortState {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-#[serde(rename_all = "snake_case")]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum BondMiiStatus {
+    #[default]
     LinkUp,
     LinkFail,
     LinkDown,
     LinkBack,
     Other(u8),
-    #[default]
-    Unknown,
 }
 
 const BOND_LINK_UP: u8 = 0;
@@ -784,6 +743,7 @@ impl From<u8> for BondMiiStatus {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct BondPortInfo {
     pub port_state: BondPortState,

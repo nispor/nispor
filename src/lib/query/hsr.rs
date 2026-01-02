@@ -12,16 +12,16 @@ use crate::{
 const HSR_PROTOCOL_HSR: u8 = 0;
 const HSR_PROTOCOL_PRP: u8 = 1;
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum HsrProtocol {
+    #[default]
     Hsr,
     Prp,
     Other(u8),
-    #[default]
-    Unknown,
 }
 
 impl From<u8> for HsrProtocol {
@@ -35,6 +35,7 @@ impl From<u8> for HsrProtocol {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct HsrInfo {
     pub port1: Option<String>,

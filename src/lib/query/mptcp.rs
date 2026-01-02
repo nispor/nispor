@@ -18,6 +18,7 @@ use crate::{Iface, NisporError};
 const MPTCP_SYSCTL_PATH: &str = "/proc/sys/net/mptcp/enabled";
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct Mptcp {
     pub enabled: bool,
@@ -31,7 +32,7 @@ pub struct Mptcp {
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
 #[non_exhaustive]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub enum MptcpAddressFlag {
     Signal,
     Subflow,
@@ -42,6 +43,7 @@ pub enum MptcpAddressFlag {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[non_exhaustive]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct MptcpAddress {
     pub address: IpAddr,
     #[serde(skip_serializing_if = "Option::is_none")]

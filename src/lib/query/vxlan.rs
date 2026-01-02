@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::{Iface, IfaceType, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct VxlanInfo {
     pub remote: String,

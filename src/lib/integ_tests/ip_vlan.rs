@@ -10,7 +10,7 @@ use crate::NetState;
 const IFACE_NAME: &str = "ipvlan0";
 
 const EXPECTED_IP_VLAN_STATE: &str = r#"---
-base_iface: eth1
+base-iface: eth1
 mode: l2
 flags: []"#;
 

@@ -13,6 +13,7 @@ use serde::{Deserialize, Serialize, Serializer};
 use crate::NisporError;
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct EthtoolPauseInfo {
     pub rx: bool,
@@ -21,7 +22,7 @@ pub struct EthtoolPauseInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct EthtoolFeatureInfo {
     #[serde(serialize_with = "ordered_map")]
@@ -31,6 +32,7 @@ pub struct EthtoolFeatureInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct EthtoolCoalesceInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -80,6 +82,7 @@ pub struct EthtoolCoalesceInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct EthtoolRingInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -100,15 +103,15 @@ pub struct EthtoolRingInfo {
     pub tx_max: Option<u32>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-#[serde(rename_all = "snake_case")]
+const DUPLEX_UNKNOWN: u8 = 0xff;
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum EthtoolLinkModeDuplex {
+    #[default]
     Half,
     Full,
-    #[default]
-    Unknown,
     Other(u8),
 }
 
@@ -117,13 +120,13 @@ impl From<&ethtool::EthtoolLinkModeDuplex> for EthtoolLinkModeDuplex {
         match v {
             ethtool::EthtoolLinkModeDuplex::Half => Self::Half,
             ethtool::EthtoolLinkModeDuplex::Full => Self::Full,
-            ethtool::EthtoolLinkModeDuplex::Unknown => Self::Unknown,
-            ethtool::EthtoolLinkModeDuplex::Other(d) => Self::Other(*d),
+            _ => Self::Other(DUPLEX_UNKNOWN),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct EthtoolLinkModeInfo {
     pub auto_negotiate: bool,
@@ -141,6 +144,7 @@ pub struct EthtoolLinkModeInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct EthtoolInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -613,7 +617,7 @@ fn get_iface_name_from_header(hdrs: &[EthtoolHeader]) -> Option<String> {
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct EthtoolFecInfo {
     pub active: EthtoolFecMode,
@@ -624,7 +628,7 @@ pub struct EthtoolFecInfo {
 #[derive(
     Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Copy, Default,
 )]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum EthtoolFecMode {
     #[default]

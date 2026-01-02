@@ -14,30 +14,30 @@ const PORT2_NAME: &str = "dummy2";
 const EXPECTED_PORT1_BRIDGE_INFO: &str = r#"---
 vlans:
   - vid: 1
-    is_pvid: false
-    is_egress_untagged: true
+    is-pvid: false
+    is-egress-untagged: true
   - vid: 10
-    is_pvid: true
-    is_egress_untagged: true"#;
+    is-pvid: true
+    is-egress-untagged: true"#;
 
 const EXPECTED_PORT2_BRIDGE_INFO: &str = r#"---
 vlans:
   - vid: 1
-    is_pvid: true
-    is_egress_untagged: true
-  - vid_range:
+    is-pvid: true
+    is-egress-untagged: true
+  - vid-range:
       - 2
       - 4094
-    is_pvid: false
-    is_egress_untagged: false"#;
+    is-pvid: false
+    is-egress-untagged: false"#;
 
 static BR_SELF_VLAN: &str = r#"
   - vid: 1
-    is_pvid: false
-    is_egress_untagged: true
+    is-pvid: false
+    is-egress-untagged: true
   - vid: 11
-    is_pvid: true
-    is_egress_untagged: true"#;
+    is-pvid: true
+    is-egress-untagged: true"#;
 
 #[test]
 fn test_get_br_vlan_filter_iface_yaml() {
@@ -59,18 +59,18 @@ fn test_get_br_vlan_filter_iface_yaml() {
 const BRIDGE_CREATE_YML: &str = r#"---
 interfaces:
   - name: br0
-    type: bridge
+    type: linux-bridge
     mac-address: 00:23:45:67:89:1c
     bridge:
-      stp_state: disabled
-      vlan_filtering: true
+      stp-state: disabled
+      vlan-filtering: true
       vlans:
       - vid: 1
-        is_pvid: false
-        is_egress_untagged: true
+        is-pvid: false
+        is-egress-untagged: true
       - vid: 11
-        is_pvid: true
-        is_egress_untagged: true
+        is-pvid: true
+        is-egress-untagged: true
   - name: dummy1
     type: dummy
     state: up
@@ -78,11 +78,11 @@ interfaces:
     bridge-port:
       vlans:
       - vid: 1
-        is_pvid: false
-        is_egress_untagged: true
+        is-pvid: false
+        is-egress-untagged: true
       - vid: 10
-        is_pvid: true
-        is_egress_untagged: true
+        is-pvid: true
+        is-egress-untagged: true
   - name: dummy2
     type: dummy
     state: up
@@ -90,18 +90,18 @@ interfaces:
     bridge-port:
       vlans:
         - vid: 1
-          is_pvid: true
-          is_egress_untagged: true
-        - vid_range:
+          is-pvid: true
+          is-egress-untagged: true
+        - vid-range:
           - 2
           - 4094
-          is_pvid: false
-          is_egress_untagged: false"#;
+          is-pvid: false
+          is-egress-untagged: false"#;
 
 const BRIDGE_DELETE_YML: &str = r#"---
 interfaces:
   - name: br0
-    type: bridge
+    type: linux-bridge
     state: absent
   - name: dummy1
     type: dummy
@@ -129,21 +129,21 @@ where
 const BRIDGE_VLAN_MODIFY_YML: &str = r#"---
 interfaces:
   - name: br0
-    type: bridge
+    type: linux-bridge
     bridge:
-      stp_state: disabled
-      vlan_filtering: true
+      stp-state: disabled
+      vlan-filtering: true
       vlans:
       - vid: 1
-        is_pvid: false
-        is_egress_untagged: true
+        is-pvid: false
+        is-egress-untagged: true
       - vid: 11
-        is_pvid: true
-        is_egress_untagged: true
+        is-pvid: true
+        is-egress-untagged: true
         remove: true
       - vid: 21
-        is_pvid: true
-        is_egress_untagged: true
+        is-pvid: true
+        is-egress-untagged: true
   - name: dummy1
     type: dummy
     state: up
@@ -151,15 +151,15 @@ interfaces:
     bridge-port:
       vlans:
       - vid: 1
-        is_pvid: false
-        is_egress_untagged: true
+        is-pvid: false
+        is-egress-untagged: true
       - vid: 10
-        is_pvid: true
-        is_egress_untagged: true
+        is-pvid: true
+        is-egress-untagged: true
         remove: true
       - vid: 20
-        is_pvid: true
-        is_egress_untagged: true
+        is-pvid: true
+        is-egress-untagged: true
   - name: dummy2
     type: dummy
     state: up
@@ -167,47 +167,47 @@ interfaces:
     bridge-port:
       vlans:
         - vid: 1
-          is_pvid: true
-          is_egress_untagged: true
-        - vid_range:
+          is-pvid: true
+          is-egress-untagged: true
+        - vid-range:
           - 2
           - 4094
-          is_pvid: false
-          is_egress_untagged: false
+          is-pvid: false
+          is-egress-untagged: false
           remove: true
-        - vid_range:
+        - vid-range:
           - 4
           - 4094
-          is_pvid: false
-          is_egress_untagged: false"#;
+          is-pvid: false
+          is-egress-untagged: false"#;
 
 const NEW_PORT1_BRIDGE_INFO: &str = r#"---
 vlans:
   - vid: 1
-    is_pvid: false
-    is_egress_untagged: true
+    is-pvid: false
+    is-egress-untagged: true
   - vid: 20
-    is_pvid: true
-    is_egress_untagged: true"#;
+    is-pvid: true
+    is-egress-untagged: true"#;
 
 const NEW_PORT2_BRIDGE_INFO: &str = r#"---
 vlans:
   - vid: 1
-    is_pvid: true
-    is_egress_untagged: true
-  - vid_range:
+    is-pvid: true
+    is-egress-untagged: true
+  - vid-range:
       - 4
       - 4094
-    is_pvid: false
-    is_egress_untagged: false"#;
+    is-pvid: false
+    is-egress-untagged: false"#;
 
 static NEW_BR_SELF_VLAN: &str = r#"
   - vid: 1
-    is_pvid: false
-    is_egress_untagged: true
+    is-pvid: false
+    is-egress-untagged: true
   - vid: 21
-    is_pvid: true
-    is_egress_untagged: true"#;
+    is-pvid: true
+    is-egress-untagged: true"#;
 
 #[test]
 fn test_modify_bridge_vlan() {

@@ -13,7 +13,7 @@ use crate::{
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum BridgeStpState {
     Disabled,
@@ -45,6 +45,7 @@ impl From<BridgeStpState> for link::BridgeStpState {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct BridgeInfo {
     pub ports: Vec<String>,
@@ -136,10 +137,11 @@ pub struct BridgeInfo {
     pub multicast_mld_version: Option<u8>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "snake_case")]
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum BridgePortStpState {
     #[default]
     Disabled,
@@ -176,10 +178,11 @@ impl From<BridgePortStpState> for link::BridgePortState {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "snake_case")]
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum BridgeMulticastRouterType {
     #[default]
     Disabled,
@@ -214,6 +217,7 @@ impl From<BridgeMulticastRouterType> for link::BridgeMulticastRouterType {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct BridgePortInfo {
     pub stp_state: BridgePortStpState,

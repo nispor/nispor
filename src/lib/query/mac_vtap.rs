@@ -6,11 +6,11 @@ use serde::{Deserialize, Serialize};
 use super::mac_vlan::get_mac_vlan_info;
 use crate::{MacVlanInfo, MacVlanMode, NisporError};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-#[serde(rename_all = "lowercase")]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum MacVtapMode {
+    #[default]
     /* don't talk to other macvlans */
     Private,
     /* talk to other ports through ext bridge */
@@ -23,8 +23,6 @@ pub enum MacVtapMode {
     /* use source MAC address list to assign */
     Source,
     Other(u32),
-    #[default]
-    Unknown,
 }
 
 impl From<MacVlanMode> for MacVtapMode {
@@ -35,13 +33,13 @@ impl From<MacVlanMode> for MacVtapMode {
             MacVlanMode::Bridge => Self::Bridge,
             MacVlanMode::PassThrough => Self::PassThrough,
             MacVlanMode::Source => Self::Source,
-            MacVlanMode::Unknown => Self::Unknown,
             MacVlanMode::Other(u32) => Self::Other(u32),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct MacVtapInfo {
     pub base_iface: String,

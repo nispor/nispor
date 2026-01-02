@@ -10,7 +10,7 @@ use crate::{
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
-#[serde(deny_unknown_fields)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct BridgeConf {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ageing_time: Option<u32>,

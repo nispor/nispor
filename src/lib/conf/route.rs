@@ -13,6 +13,7 @@ use crate::{ErrorKind, MultipathRouteFlags, NisporError, RouteProtocol};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[non_exhaustive]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct RouteConf {
     #[serde(default)]
     pub remove: bool,
@@ -49,7 +50,7 @@ async fn apply_route_conf(
         .destination_prefix(dst_addr, dst_prefix)
         .map_err(|e| {
             NisporError::new(
-                ErrorKind::NisporBug,
+                ErrorKind::Bug,
                 format!(
                     "builder.destination_prefix() failed on {dst_addr}, \
                      {dst_prefix}): {e}"
@@ -83,7 +84,7 @@ async fn apply_route_conf(
         let ip = parse_ip_addr_str(via)?;
         builder = builder.gateway(ip).map_err(|e| {
             NisporError::new(
-                ErrorKind::NisporBug,
+                ErrorKind::Bug,
                 format!("builder.gateway() failed on {ip}: {e}"),
             )
         })?;
@@ -101,7 +102,7 @@ async fn apply_route_conf(
                 let ip = parse_ip_addr_str(via)?;
                 np_builder = np_builder.via(ip).map_err(|e| {
                     NisporError::new(
-                        ErrorKind::NisporBug,
+                        ErrorKind::Bug,
                         format!("next_hop_builder.via() failed on {ip}: {e}"),
                     )
                 })?;
@@ -157,6 +158,7 @@ async fn apply_route_conf(
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[non_exhaustive]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct RouteMulitpathConf {
     /// nexthop address
     via: Option<String>,
