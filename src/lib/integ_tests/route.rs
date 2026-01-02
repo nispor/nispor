@@ -30,12 +30,12 @@ const EXPECTED_MULTIPATH_YAML_OUTPUT: &str = r#"---
       iface: eth1
       weight: 1
       flags:
-        - on-link
+        - onlink
     - via: "2001:db8:f::253"
       iface: eth1
       weight: 256
       flags:
-        - on-link
+        - onlink
 - address-family: ipv4
   tos: 0
   table: 254
@@ -49,12 +49,12 @@ const EXPECTED_MULTIPATH_YAML_OUTPUT: &str = r#"---
       iface: eth1
       weight: 1
       flags:
-        - on-link
+        - onlink
     - via: 192.0.2.253
       iface: eth1
       weight: 256
       flags:
-        - on-link"#;
+        - onlink"#;
 
 const EXPECTED_YAML_OUTPUT: &str = r#"---
 - address-family: ipv4
@@ -291,12 +291,12 @@ const TEST_ECMP_ROUTES: &str = r#"
       weight: 2
       iface: veth1
       flags:
-        - on-link
+        - onlink
     - via: 2001:db8:a::2
       weight: 1
       iface: veth1
       flags:
-        - on-link
+        - onlink
 - dst: 198.51.100.0/24
   table: 254
   metric: 503
@@ -306,12 +306,12 @@ const TEST_ECMP_ROUTES: &str = r#"
       weight: 1
       iface: veth1
       flags:
-        - on-link
+        - onlink
     - via: 192.0.2.253
       weight: 2
       iface: veth1
       flags:
-        - on-link
+        - onlink
 "#;
 
 #[test]

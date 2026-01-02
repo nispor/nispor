@@ -39,7 +39,7 @@ pub use crate::{
         Ipv4Info, Ipv6AddrFlag, Ipv6AddrInfo, Ipv6Info, MacSecCipherId,
         MacSecInfo, MacSecOffload, MacSecValidate, MacVlanFlag, MacVlanInfo,
         MacVlanMode, MacVtapFlag, MacVtapInfo, MacVtapMode, Mptcp,
-        MptcpAddress, MptcpAddressFlag, MultipathRoute, MultipathRouteFlags,
+        MptcpAddress, MptcpAddressFlag, MultipathRoute, MultipathRouteFlag,
         PciAddress, Route, RouteProtocol, RouteRule, RouteRuleFlag, RouteScope,
         RouteType, RuleAction, SriovInfo, TunInfo, TunMode, TunnelEncapFlags,
         TunnelEncapType, VethInfo, VfInfo, VfLinkState, VfState, VlanInfo,

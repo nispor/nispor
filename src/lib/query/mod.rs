@@ -64,7 +64,7 @@ pub use self::{
     mptcp::{Mptcp, MptcpAddress, MptcpAddressFlag},
     pci::PciAddress,
     route::{
-        AddressFamily, MultipathRoute, MultipathRouteFlags, Route,
+        AddressFamily, MultipathRoute, MultipathRouteFlag, Route,
         RouteProtocol, RouteScope, RouteType,
     },
     route_rule::{RouteRule, RouteRuleFlag, RuleAction},

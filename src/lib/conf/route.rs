@@ -9,7 +9,7 @@ use rtnetlink::{
 use serde::{Deserialize, Serialize};
 
 use super::super::query::{parse_ip_addr_str, parse_ip_net_addr_str};
-use crate::{ErrorKind, MultipathRouteFlags, NisporError, RouteProtocol};
+use crate::{ErrorKind, MultipathRouteFlag, NisporError, RouteProtocol};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[non_exhaustive]
@@ -122,12 +122,9 @@ async fn apply_route_conf(
                 }
             }
             if !mpath.flags.is_empty() {
-                let mut next_hop_flags =
-                    rt::RouteNextHopFlags::from_bits_retain(0);
-                for flag in mpath.flags.as_slice() {
-                    next_hop_flags |= (*flag).into();
-                }
-                np_builder = np_builder.flags(next_hop_flags);
+                np_builder = np_builder.flags(MultipathRouteFlag::to_netlink(
+                    mpath.flags.as_slice(),
+                ));
             }
             hops.push(np_builder.build());
         }
@@ -168,24 +165,5 @@ pub struct RouteMulitpathConf {
     iface: Option<String>,
     /// Pretend the nexthop is directly attached to this link
     #[serde(default)]
-    flags: Vec<MultipathRouteFlags>,
-}
-
-impl From<MultipathRouteFlags> for rt::RouteNextHopFlags {
-    fn from(v: MultipathRouteFlags) -> rt::RouteNextHopFlags {
-        match v {
-            MultipathRouteFlags::Dead => rt::RouteNextHopFlags::Dead,
-            MultipathRouteFlags::Pervasive => rt::RouteNextHopFlags::Pervasive,
-            MultipathRouteFlags::OnLink => rt::RouteNextHopFlags::Onlink,
-            MultipathRouteFlags::Offload => rt::RouteNextHopFlags::Offload,
-            MultipathRouteFlags::LinkDown => rt::RouteNextHopFlags::Linkdown,
-            MultipathRouteFlags::Unresolved => {
-                rt::RouteNextHopFlags::Unresolved
-            }
-            MultipathRouteFlags::Trap => rt::RouteNextHopFlags::Trap,
-            MultipathRouteFlags::Other(d) => {
-                rt::RouteNextHopFlags::from_bits_retain(d)
-            }
-        }
-    }
+    flags: Vec<MultipathRouteFlag>,
 }
