@@ -48,7 +48,7 @@ impl From<link::MacVlanMode> for MacVlanMode {
 pub struct MacVlanInfo {
     pub base_iface: String,
     pub mode: MacVlanMode,
-    pub flags: u16,
+    pub flags: Vec<MacVlanFlag>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allowed_mac_addresses: Option<Vec<String>>,
 }
@@ -62,7 +62,7 @@ pub(crate) fn get_mac_vlan_info(
             if let InfoMacVlan::Mode(d) = *info {
                 macv_info.mode = d.into();
             } else if let InfoMacVlan::Flags(d) = *info {
-                macv_info.flags = d.bits();
+                macv_info.flags = MacVlanFlag::from_netlink(d);
             } else if let InfoMacVlan::MacAddrData(d) = info {
                 let mut addrs = Vec::new();
                 for macvlan in d {
@@ -81,7 +81,7 @@ pub(crate) fn get_mac_vlan_info(
             if let InfoMacVtap::Mode(d) = *info {
                 macv_info.mode = d.into();
             } else if let InfoMacVtap::Flags(d) = *info {
-                macv_info.flags = d.bits();
+                macv_info.flags = MacVtapFlag::from_netlink(d);
             } else if let InfoMacVtap::MacAddrData(d) = info {
                 let mut addrs = Vec::new();
                 for macvtap in d {
@@ -126,5 +126,28 @@ fn convert_base_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
                 info.base_iface.clone_from(base_iface_name);
             }
         }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+#[non_exhaustive]
+pub enum MacVlanFlag {
+    NoPromisc,
+    NoDst,
+    Other(u16),
+}
+
+pub type MacVtapFlag = MacVlanFlag;
+
+impl MacVlanFlag {
+    pub(crate) fn from_netlink(d: link::MacVlanFlags) -> Vec<Self> {
+        d.iter()
+            .map(|bit| match bit {
+                link::MacVlanFlags::NoPromisc => Self::NoPromisc,
+                link::MacVlanFlags::NoDst => Self::NoDst,
+                _ => Self::Other(bit.bits()),
+            })
+            .collect()
     }
 }

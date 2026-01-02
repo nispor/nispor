@@ -12,7 +12,7 @@ const IFACE_NAME: &str = "macvtap0";
 const EXPECTED_MAC_VTAP_INFO: &str = r#"---
 base-iface: eth1
 mode: source
-flags: 0
+flags: []
 allowed-mac-addresses:
   - "00:23:45:67:89:1c"
   - "00:23:45:67:89:1b""#;

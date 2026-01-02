@@ -4,7 +4,9 @@ use rtnetlink::packet_route::link::InfoData;
 use serde::{Deserialize, Serialize};
 
 use super::mac_vlan::get_mac_vlan_info;
-use crate::{MacVlanInfo, MacVlanMode, NisporError};
+use crate::{MacVlanFlag, MacVlanInfo, MacVlanMode, NisporError};
+
+pub type MacVtapFlag = MacVlanFlag;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
@@ -44,7 +46,7 @@ impl From<MacVlanMode> for MacVtapMode {
 pub struct MacVtapInfo {
     pub base_iface: String,
     pub mode: MacVtapMode,
-    pub flags: u16,
+    pub flags: Vec<MacVtapFlag>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allowed_mac_addresses: Option<Vec<String>>,
 }
