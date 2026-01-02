@@ -12,7 +12,7 @@ const IFACE_NAME: &str = "mac0";
 const EXPECTED_MAC_VLAN_STATE: &str = r#"---
 base-iface: eth1
 mode: source
-flags: 0
+flags: []
 allowed-mac-addresses:
   - "00:23:45:67:89:1d"
   - "00:23:45:67:89:1c""#;
