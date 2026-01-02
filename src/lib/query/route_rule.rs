@@ -55,7 +55,7 @@ impl From<rule::RuleAction> for RuleAction {
 pub struct RouteRule {
     pub action: RuleAction,
     pub address_family: AddressFamily,
-    pub flags: u32,
+    pub flags: Vec<RouteRuleFlag>,
     pub tos: u8,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub table: Option<u32>,
@@ -114,17 +114,19 @@ pub(crate) async fn get_route_rules() -> Result<Vec<RouteRule>, NisporError> {
 }
 
 fn get_rule(rule_msg: RuleMessage) -> Result<RouteRule, NisporError> {
-    let mut rl = RouteRule::default();
     let header = &rule_msg.header;
-    rl.address_family = header.family.into();
+    let mut rl = RouteRule {
+        address_family: header.family.into(),
+        tos: header.tos,
+        action: header.action.into(),
+        flags: RouteRuleFlag::from_netlink(header.flags),
+        ..Default::default()
+    };
     let src_prefix_len = header.src_len;
     let dst_prefix_len = header.dst_len;
-    rl.tos = header.tos;
-    rl.action = header.action.into();
     if header.table > RouteHeader::RT_TABLE_UNSPEC {
         rl.table = Some(header.table.into());
     }
-    let _family = &rl.address_family;
     for nla in &rule_msg.attributes {
         match nla {
             RuleAttribute::Destination(d) => {
@@ -275,5 +277,32 @@ impl From<rtnetlink::packet_route::route::RouteRealm> for RouteRealm {
             source: d.source,
             destination: d.destination,
         }
+    }
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+#[non_exhaustive]
+pub enum RouteRuleFlag {
+    Permanent,
+    Invert,
+    Unresolved,
+    IifDetached,
+    OifDetached,
+    Other(u32),
+}
+
+impl RouteRuleFlag {
+    pub(crate) fn from_netlink(d: rule::RuleFlags) -> Vec<Self> {
+        d.iter()
+            .map(|bit| match bit {
+                rule::RuleFlags::Permanent => Self::Permanent,
+                rule::RuleFlags::Invert => Self::Invert,
+                rule::RuleFlags::Unresolved => Self::Unresolved,
+                rule::RuleFlags::IifDetached => Self::IifDetached,
+                rule::RuleFlags::OifDetached => Self::OifDetached,
+                _ => Self::Other(bit.bits()),
+            })
+            .collect()
     }
 }
