@@ -9,7 +9,7 @@ use crate::{Iface, IfaceType, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
-#[serde(deny_unknown_fields)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct BridgeVlanEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vid: Option<u16>,

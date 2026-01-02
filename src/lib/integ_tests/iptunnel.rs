@@ -14,8 +14,8 @@ const IFACE_NAME_IPIP6: &str = "ipip60";
 
 const EXPECTED_IPIP_INFO: &str = r#"---
 name: ipip0
-iface_type: ip_tunnel
-ip_tunnel:
+type: ip-tunnel
+ip-tunnel:
   local: 192.0.2.1
   remote: 192.0.2.2
   mode: ipip
@@ -24,8 +24,8 @@ ip_tunnel:
 
 const EXPECTED_SIT_INFO: &str = r#"---
 name: sittest0
-iface_type: ip_tunnel
-ip_tunnel:
+type: ip-tunnel
+ip-tunnel:
   local: 192.0.2.1
   remote: 192.0.2.2
   mode: sit
@@ -34,20 +34,20 @@ ip_tunnel:
 
 const EXPECTED_IP6IP6_INFO: &str = r#"---
 name: ip6ip60
-iface_type: ip_tunnel
-ip_tunnel:
+type: ip-tunnel
+ip-tunnel:
   local: 2001:db8:e::1
   remote: 2001:db8:e::ffff
   mode: ip6ip6
   ttl: 42
-  ip6tun_flags:
-    - cap_xmit
-    - cap_rcv"#;
+  ip6tun-flags:
+    - cap-xmit
+    - cap-rcv"#;
 
 const EXPECTED_IPIP6_INFO: &str = r#"---
 name: ipip60
-iface_type: ip_tunnel
-ip_tunnel:
+type: ip-tunnel
+ip-tunnel:
   local: 2001:db8:f::1
   remote: 2001:db8:f::ffff
   mode: ipip6

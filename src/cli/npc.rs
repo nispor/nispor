@@ -683,20 +683,13 @@ fn get_routes(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
 
     if let Some(scope) = matches.get_one::<String>("scope") {
         if scope != "a" && scope != "all" {
-            let rt_scope = RouteScope::from(scope.as_str());
-            if rt_scope == RouteScope::Unknown {
-                return Err(format!("Invalid scope {scope}").into());
-            }
-            route_filter.scope = Some(rt_scope);
+            route_filter.scope = Some(RouteScope::try_from(scope.as_str())?);
         }
     }
 
     if let Some(protocol) = matches.get_one::<String>("protocol") {
-        let rt_protocol = RouteProtocol::from(protocol.as_str());
-        if rt_protocol == RouteProtocol::Unknown {
-            return Err(format!("Invalid protocol {protocol}").into());
-        }
-        route_filter.protocol = Some(rt_protocol);
+        route_filter.protocol =
+            Some(RouteProtocol::try_from(protocol.as_str())?);
     }
 
     if let Some(table) = matches.get_one::<String>("table") {

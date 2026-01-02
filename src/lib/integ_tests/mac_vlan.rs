@@ -10,10 +10,10 @@ use crate::NetState;
 const IFACE_NAME: &str = "mac0";
 
 const EXPECTED_MAC_VLAN_STATE: &str = r#"---
-base_iface: eth1
+base-iface: eth1
 mode: source
 flags: 0
-allowed_mac_addresses:
+allowed-mac-addresses:
   - "00:23:45:67:89:1d"
   - "00:23:45:67:89:1c""#;
 

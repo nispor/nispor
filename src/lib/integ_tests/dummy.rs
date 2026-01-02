@@ -9,13 +9,13 @@ use crate::{NetConf, NetState};
 const IFACE_NAME: &str = "dummy1";
 
 const DUMMY_CREATE_YML: &str = r#"---
-ifaces:
+interfaces:
   - name: dummy1
     type: dummy
     "#;
 
 const DUMMY_DELETE_YML: &str = r#"---
-ifaces:
+interfaces:
   - name: dummy1
     type: veth
     state: absent"#;

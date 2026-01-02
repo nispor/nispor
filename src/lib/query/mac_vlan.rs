@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use rtnetlink::packet_route::link::{InfoData, InfoMacVlan, InfoMacVtap};
+use rtnetlink::packet_route::link::{self, InfoData, InfoMacVlan, InfoMacVtap};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -10,45 +10,40 @@ use crate::{
     Iface, IfaceType, NisporError,
 };
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-#[serde(rename_all = "lowercase")]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum MacVlanMode {
-    /* don't talk to other macvlans */
+    #[default]
+    /// don't talk to other macvlans
     Private,
-    /* talk to other ports through ext bridge */
+    /// talk to other ports through ext bridge
     Vepa,
-    /* talk to bridge ports directly */
+    /// talk to bridge ports directly
     Bridge,
-    /* take over the underlying device */
+    /// take over the underlying device
     #[serde(rename = "passthru")]
     PassThrough,
-    /* use source MAC address list to assign */
+    /// use source MAC address list to assign
     Source,
     Other(u32),
-    #[default]
-    Unknown,
 }
 
-impl From<rtnetlink::packet_route::link::MacVlanMode> for MacVlanMode {
-    fn from(d: rtnetlink::packet_route::link::MacVlanMode) -> Self {
+impl From<link::MacVlanMode> for MacVlanMode {
+    fn from(d: link::MacVlanMode) -> Self {
         match d {
-            rtnetlink::packet_route::link::MacVlanMode::Private => {
-                Self::Private
-            }
-            rtnetlink::packet_route::link::MacVlanMode::Vepa => Self::Vepa,
-            rtnetlink::packet_route::link::MacVlanMode::Bridge => Self::Bridge,
-            rtnetlink::packet_route::link::MacVlanMode::Passthrough => {
-                Self::PassThrough
-            }
-            rtnetlink::packet_route::link::MacVlanMode::Source => Self::Source,
+            link::MacVlanMode::Private => Self::Private,
+            link::MacVlanMode::Vepa => Self::Vepa,
+            link::MacVlanMode::Bridge => Self::Bridge,
+            link::MacVlanMode::Passthrough => Self::PassThrough,
+            link::MacVlanMode::Source => Self::Source,
             _ => Self::Other(d.into()),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct MacVlanInfo {
     pub base_iface: String,

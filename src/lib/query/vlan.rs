@@ -10,15 +10,14 @@ use crate::{Iface, IfaceType};
 #[derive(
     Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
 )]
-#[serde(rename_all = "snake_case")]
 #[non_exhaustive]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub enum VlanProtocol {
     #[serde(rename = "802.1q")]
     #[default]
     Ieee8021Q,
     #[serde(rename = "802.1ad")]
     Ieee8021AD,
-    Unknown,
 }
 
 impl From<link::VlanProtocol> for VlanProtocol {
@@ -26,7 +25,7 @@ impl From<link::VlanProtocol> for VlanProtocol {
         match d {
             link::VlanProtocol::Ieee8021Q => Self::Ieee8021Q,
             link::VlanProtocol::Ieee8021Ad => Self::Ieee8021AD,
-            _ => Self::Unknown,
+            _ => Self::Ieee8021Q,
         }
     }
 }
@@ -36,12 +35,6 @@ impl From<VlanProtocol> for link::VlanProtocol {
         match v {
             VlanProtocol::Ieee8021Q => link::VlanProtocol::Ieee8021Q,
             VlanProtocol::Ieee8021AD => link::VlanProtocol::Ieee8021Ad,
-            VlanProtocol::Unknown => {
-                log::warn!(
-                    "Unknown vlan protocol {v:?}, treating it as 802.1q"
-                );
-                link::VlanProtocol::Ieee8021Q
-            }
         }
     }
 }
@@ -49,6 +42,7 @@ impl From<VlanProtocol> for link::VlanProtocol {
 #[derive(
     Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
 )]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct VlanQosMapping {
     pub from: u32,
     pub to: u32,
@@ -75,6 +69,7 @@ impl From<&VlanQosMapping> for rtnetlink::QosMapping {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct VlanInfo {
     pub vlan_id: u16,
     pub protocol: VlanProtocol,

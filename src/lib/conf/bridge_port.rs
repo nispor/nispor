@@ -9,7 +9,7 @@ use crate::{
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
-#[serde(deny_unknown_fields)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct BridgePortConf {
     /// Flush the FDB if set to `true`.
     #[serde(default)]

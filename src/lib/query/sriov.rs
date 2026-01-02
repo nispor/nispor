@@ -13,7 +13,7 @@ use crate::{
 const MAX_ADDR_LEN: usize = 32;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum VfLinkState {
     #[default]
@@ -21,7 +21,6 @@ pub enum VfLinkState {
     Enable,
     Disable,
     Other(u32),
-    Unknown,
 }
 
 impl From<link::VfLinkState> for VfLinkState {
@@ -36,6 +35,7 @@ impl From<link::VfLinkState> for VfLinkState {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Debug, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct VfState {
     pub rx_packets: u64,
@@ -49,6 +49,7 @@ pub struct VfState {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct SriovInfo {
     pub vfs: Vec<VfInfo>,
@@ -59,6 +60,7 @@ pub struct SriovInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct VfInfo {
     #[serde(skip_serializing_if = "Option::is_none")]

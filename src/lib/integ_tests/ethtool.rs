@@ -13,7 +13,7 @@ const IFACE_NAME1: &str = "sim1";
 const EXPECTED_PAUSE_INFO: &str = r#"---
 rx: true
 tx: true
-auto_negotiate: false"#;
+auto-negotiate: false"#;
 
 const EXPECTED_FEATURE_INFO: &str = r#"---
 fixed:
@@ -157,9 +157,9 @@ where
 
 const IFACE_TUN_NAME: &str = "tun1";
 const EXPECTED_ETHTOOL_COALESCE: &str = r#"---
-rx_max_frames: 60"#;
+rx-max-frames: 60"#;
 const EXPECTED_ETHTOOL_LINK_MODE: &str = r#"---
-auto_negotiate: false
+auto-negotiate: false
 ours: []
 duplex: full"#;
 

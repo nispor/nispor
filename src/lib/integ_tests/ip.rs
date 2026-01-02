@@ -24,112 +24,112 @@ where
 }
 
 const ADD_IP_CONF: &str = r#"---
-ifaces:
+interfaces:
   - name: veth1
     ipv4:
       addresses:
         - address: "192.0.2.1"
-          prefix_len: 24
+          prefix-len: 24
     ipv6:
       addresses:
         - address: "2001:db8:a::9"
-          prefix_len: 64"#;
+          prefix-len: 64"#;
 
 const ADD_IP_CONF_DYNAMIC: &str = r#"---
-ifaces:
+interfaces:
   - name: veth1
     ipv4:
       addresses:
         - address: "192.0.2.1"
-          prefix_len: 24
-          valid_lft: 120sec
-          preferred_lft: 60sec
+          prefix-len: 24
+          valid-lft: 120sec
+          preferred-lft: 60sec
     ipv6:
       addresses:
         - address: "2001:db8:a::9"
-          prefix_len: 64
-          valid_lft: 121sec
-          preferred_lft: 61sec"#;
+          prefix-len: 64
+          valid-lft: 121sec
+          preferred-lft: 61sec"#;
 
 const DEL_IP_CONF: &str = r#"---
-ifaces:
+interfaces:
   - name: veth1
     ipv4:
       addresses:
         - address: "192.0.2.1"
-          prefix_len: 24
+          prefix-len: 24
           remove: true
     ipv6:
       addresses:
         - address: "2001:db8:a::9"
-          prefix_len: 64
+          prefix-len: 64
           remove: true"#;
 
 const EXPECTED_IPV4_INFO: &str = r#"---
 addresses:
   - address: 192.0.2.1
-    prefix_len: 24
-    valid_lft: forever
-    preferred_lft: forever"#;
+    prefix-len: 24
+    valid-lft: forever
+    preferred-lft: forever"#;
 
 const EXPECTED_IPV4_INFO_WITH_FORWADRDING_ENABLED: &str = r#"---
 addresses:
   - address: 192.0.2.1
-    prefix_len: 24
-    valid_lft: forever
-    preferred_lft: forever
+    prefix-len: 24
+    valid-lft: forever
+    preferred-lft: forever
 forwarding: true"#;
 
 const EXPECTED_IPV4_INFO_WITH_FORWADRDING_DISABLED: &str = r#"---
 addresses:
   - address: 192.0.2.1
-    prefix_len: 24
-    valid_lft: forever
-    preferred_lft: forever
+    prefix-len: 24
+    valid-lft: forever
+    preferred-lft: forever
 forwarding: false"#;
 
 const EXPECTED_IPV4_DYNAMIC_INFO: &str = r#"---
 addresses:
   - address: 192.0.2.1
-    prefix_len: 24
-    valid_lft: 115sec
-    preferred_lft: 55sec"#;
+    prefix-len: 24
+    valid-lft: 115sec
+    preferred-lft: 55sec"#;
 
 const EXPECTED_IPV6_INFO: &str = r#"---
 addresses:
   - address: "2001:db8:a::9"
-    prefix_len: 64
-    valid_lft: forever
-    preferred_lft: forever
+    prefix-len: 64
+    valid-lft: forever
+    preferred-lft: forever
     flags:
     - permanent
   - address: "fe80::223:45ff:fe67:891a"
-    prefix_len: 64
-    valid_lft: forever
-    preferred_lft: forever
+    prefix-len: 64
+    valid-lft: forever
+    preferred-lft: forever
     flags:
     - permanent"#;
 
 const EXPECTED_IPV6_DYNAMIC_INFO: &str = r#"---
 addresses:
   - address: "2001:db8:a::9"
-    prefix_len: 64
-    valid_lft: 116sec
-    preferred_lft: 56sec
+    prefix-len: 64
+    valid-lft: 116sec
+    preferred-lft: 56sec
     flags: []
   - address: "fe80::223:45ff:fe67:891a"
-    prefix_len: 64
-    valid_lft: forever
-    preferred_lft: forever
+    prefix-len: 64
+    valid-lft: forever
+    preferred-lft: forever
     flags:
     - permanent"#;
 
 const EXPECTED_EMPTY_IPV6_INFO: &str = r#"---
 addresses:
   - address: "fe80::223:45ff:fe67:891a"
-    prefix_len: 64
-    valid_lft: forever
-    preferred_lft: forever"#;
+    prefix-len: 64
+    valid-lft: forever
+    preferred-lft: forever"#;
 
 #[test]
 fn test_add_and_remove_ip() {
@@ -248,17 +248,17 @@ where
 const EXPECTED_IPV6_P2P_INFO: &str = r#"---
 addresses:
   - address: "2001:db8:f::1"
-    prefix_len: 128
-    valid_lft: forever
-    preferred_lft: forever
+    prefix-len: 128
+    valid-lft: forever
+    preferred-lft: forever
     flags:
     - permanent
     peer: 2001:db8:f::2
-    peer_prefix_len: 64
+    peer-prefix-len: 64
   - address: "fe80::223:45ff:fe67:891a"
-    prefix_len: 64
-    valid_lft: forever
-    preferred_lft: forever
+    prefix-len: 64
+    valid-lft: forever
+    preferred-lft: forever
     flags:
     - permanent"#;
 

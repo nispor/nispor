@@ -13,7 +13,7 @@ const PORT2_NAME: &str = "dummy2";
 
 const EXPECTED_BOND_IFACE: &str = r#"---
 name: bond99
-iface_type: bond
+type: bond
 bond:
   ports:
   - dummy1
@@ -22,33 +22,33 @@ bond:
   miimon: 30
   updelay: 60
   downdelay: 90
-  use_carrier: true
-  arp_interval: 0
-  arp_all_targets: any
-  arp_validate: none
-  primary_reselect: always
-  resend_igmp: 1
-  all_ports_active: dropped
-  min_links: 0
-  lp_interval: 1
-  peer_notif_delay: 0
+  use-carrier: true
+  arp-interval: 0
+  arp-all-targets: any
+  arp-validate: none
+  primary-reselect: always
+  resend-igmp: 1
+  all-ports-active: dropped
+  min-links: 0
+  lp-interval: 1
+  peer-notif-delay: 0
   "#;
 
 const EXPECTED_PORT1_INFO: &str = r#"---
-port_state: active
-mii_status: link_up
-link_failure_count: 0
-perm_hwaddr: "00:23:45:67:89:1a"
+port-state: active
+mii-status: link-up
+link-failure-count: 0
+perm-hwaddr: "00:23:45:67:89:1a"
 prio: -10
-queue_id: 1"#;
+queue-id: 1"#;
 
 const EXPECTED_PORT2_INFO: &str = r#"---
-port_state: backup
-mii_status: link_up
-link_failure_count: 0
-perm_hwaddr: "00:23:45:67:89:1b"
+port-state: backup
+mii-status: link-up
+link-failure-count: 0
+perm-hwaddr: "00:23:45:67:89:1b"
 prio: -20
-queue_id: 2"#;
+queue-id: 2"#;
 
 const BOND_CREATE_YML: &str = r#"---
 interfaces:
@@ -59,23 +59,23 @@ interfaces:
       miimon: 30
       updelay: 60
       downdelay: 90
-      use_carrier: true
-      arp_interval: 0
-      arp_all_targets: any
-      arp_validate: none
-      primary_reselect: always
-      resend_igmp: 1
-      all_ports_active: dropped
-      min_links: 0
-      lp_interval: 1
-      peer_notif_delay: 0
+      use-carrier: true
+      arp-interval: 0
+      arp-all-targets: any
+      arp-validate: none
+      primary-reselect: always
+      resend-igmp: 1
+      all-ports-active: dropped
+      min-links: 0
+      lp-interval: 1
+      peer-notif-delay: 0
   - name: dummy1
     type: dummy
     controller: bond99
     mac-address: 00:23:45:67:89:1a
     bond-port:
       prio: -10
-      queue_id: 1
+      queue-id: 1
   - name: dummy2
     type: dummy
     state: up
@@ -83,7 +83,7 @@ interfaces:
     mac-address: 00:23:45:67:89:1b
     bond-port:
       prio: -20
-      queue_id: 2"#;
+      queue-id: 2"#;
 
 const BOND_PORT_REMOVE_YML: &str = r#"---
 interfaces:
@@ -109,7 +109,7 @@ interfaces:
     type: bond
     bond:
       miimon: 0
-      arp_interval: 30
+      arp-interval: 30
 "#;
 
 fn with_bond_iface<T>(test: T)

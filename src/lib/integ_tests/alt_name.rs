@@ -27,7 +27,7 @@ fn test_add_and_remove_alt_name_bulk() {
     with_veth_iface(|| {
         let conf: NetConf = serde_yaml::from_str(
             r#"---
-            ifaces:
+            interfaces:
               - name: veth1
                 alt-names:
                   - name: port1
@@ -44,7 +44,7 @@ fn test_add_and_remove_alt_name_bulk() {
 
         let conf: NetConf = serde_yaml::from_str(
             r#"---
-            ifaces:
+            interfaces:
               - name: veth1
                 alt-names:
                   - name: port1
@@ -65,7 +65,7 @@ fn test_add_and_remove_alt_name_mixed() {
     with_veth_iface(|| {
         let conf: NetConf = serde_yaml::from_str(
             r#"---
-            ifaces:
+            interfaces:
               - name: veth1
                 alt-names:
                   - name: port1
@@ -82,7 +82,7 @@ fn test_add_and_remove_alt_name_mixed() {
 
         let conf: NetConf = serde_yaml::from_str(
             r#"---
-            ifaces:
+            interfaces:
               - name: veth1
                 alt-names:
                   - name: internal

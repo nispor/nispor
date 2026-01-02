@@ -12,24 +12,24 @@ const IFACE_NAME: &str = "hsr0";
 // seq_nr has been excluded as it is non-deterministic
 const EXPECTED_HSR_INFO: &str = r#"---
 name: hsr0
-iface_type: hsr
+type: hsr
 hsr:
   port1: eth1
   port2: eth2
-  supervision_addr: 01:15:4e:00:01:2d
-  multicast_spec: 0
+  supervision-addr: 01:15:4e:00:01:2d
+  multicast-spec: 0
   version: 0
   protocol: prp"#;
 
 const EXPECTED_HSR_INTERLINK_INFO: &str = r#"---
 name: hsr0
-iface_type: hsr
+type: hsr
 hsr:
   port1: eth1
   port2: eth2
   interlink: eth3
-  supervision_addr: 01:15:4e:00:01:2d
-  multicast_spec: 0
+  supervision-addr: 01:15:4e:00:01:2d
+  multicast-spec: 0
   version: 0
   protocol: hsr"#;
 

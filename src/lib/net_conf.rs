@@ -11,8 +11,9 @@ use crate::{IfaceConf, NisporError, RouteConf};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct NetConf {
-    #[serde(alias = "interfaces")]
+    #[serde(rename = "interfaces")]
     pub ifaces: Option<Vec<IfaceConf>>,
     pub routes: Option<Vec<RouteConf>>,
 }

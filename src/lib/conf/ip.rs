@@ -13,6 +13,7 @@ use crate::{Iface, IfaceConf, IpFamily, Ipv4Info, Ipv6Info, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct IpConf {
     pub addresses: Vec<IpAddrConf>,
 }
@@ -56,6 +57,7 @@ impl From<&Ipv6Info> for IpConf {
 #[derive(
     Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone, Default,
 )]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct IpAddrConf {
     #[serde(default)]

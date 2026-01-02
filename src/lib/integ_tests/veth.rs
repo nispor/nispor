@@ -42,7 +42,7 @@ where
 }
 
 const VETH_CREATE_YML: &str = r#"---
-ifaces:
+interfaces:
   - name: veth1
     type: veth
     mac-address: 00:23:45:67:89:1a
@@ -53,19 +53,19 @@ ifaces:
     "#;
 
 const VETH_CHANGE_MAC_YML: &str = r#"---
-ifaces:
+interfaces:
   - name: veth1
     type: veth
     mac-address: 00:23:45:67:89:2a"#;
 
 const VETH_DOWN_YML: &str = r#"---
-ifaces:
+interfaces:
   - name: veth1
     type: veth
     state: down"#;
 
 const VETH_DELETE_YML: &str = r#"---
-ifaces:
+interfaces:
   - name: veth1
     type: veth
     state: absent"#;

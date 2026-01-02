@@ -23,6 +23,7 @@ const IFLA_TUN_NUM_DISABLED_QUEUES: u16 = 9;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct TunInfo {
     pub mode: TunMode,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -39,15 +40,14 @@ pub struct TunInfo {
     pub num_disabled_queues: Option<u32>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
-#[serde(rename_all = "snake_case")]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum TunMode {
+    #[default]
     Tun,
     Tap,
-    #[default]
-    Unknown,
+    Other(u8),
 }
 
 impl From<u8> for TunMode {
@@ -55,10 +55,7 @@ impl From<u8> for TunMode {
         match d {
             IFF_TUN => TunMode::Tun,
             IFF_TAP => TunMode::Tap,
-            _ => {
-                log::warn!("Unhandled TUN mode {d}");
-                TunMode::Unknown
-            }
+            _ => TunMode::Other(d),
         }
     }
 }

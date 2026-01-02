@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::{Iface, IfaceType};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct XfrmInfo {
     pub base_iface: String,

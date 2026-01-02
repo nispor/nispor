@@ -11,32 +11,32 @@ const IFACE_NAME: &str = "vxlan0";
 
 const EXPECTED_VXLAN_INFO: &str = r#"---
 remote: 8.8.8.8
-vxlan_id: 101
-base_iface: eth1
+vxlan-id: 101
+base-iface: eth1
 local: 1.1.1.1
 ttl: 0
 tos: 0
 learning: true
 ageing: 300
-max_address: 0
-src_port_min: 0
-src_port_max: 0
+max-address: 0
+src-port-min: 0
+src-port-max: 0
 proxy: false
 rsc: false
 l2miss: false
 l3miss: false
-dst_port: 4789
-udp_check_sum: true
-udp6_zero_check_sum_tx: false
-udp6_zero_check_sum_rx: false
-remote_check_sum_tx: false
-remote_check_sum_rx: false
+dst-port: 4789
+udp-check-sum: true
+udp6-zero-check-sum-tx: false
+udp6-zero-check-sum-rx: false
+remote-check-sum-tx: false
+remote-check-sum-rx: false
 gbp: false
-remote_check_sum_no_partial: false
-collect_metadata: false
+remote-check-sum-no-partial: false
+collect-metadata: false
 label: 0
 gpe: false
-ttl_inherit: false
+ttl-inherit: false
 df: 0"#;
 
 #[test]

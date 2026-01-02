@@ -32,7 +32,7 @@ mod vxlan;
 
 pub use self::{
     bond::{
-        BondAdInfo, BondAdSelect, BondAllPortsActive, BondArpValidate,
+        BondAdInfo, BondAdSelect, BondAllPortActive, BondArpValidate,
         BondFailOverMac, BondInfo, BondLacpRate, BondMiiStatus, BondMode,
         BondModeArpAllTargets, BondPortInfo, BondPortState,
         BondPrimaryReselect, BondXmitHashPolicy,

@@ -11,10 +11,10 @@ const IFACE_NAME: &str = "xfrm1";
 
 const EXPECTED_XFRM_INFO: &str = r#"---
 name: xfrm1
-iface_type: xfrm
+type: xfrm
 xfrm:
-  base_iface: eth1
-  iface_id: 99"#;
+  base-iface: eth1
+  iface-id: 99"#;
 
 #[test]
 fn test_get_xfrm_iface_yaml() {

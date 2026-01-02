@@ -2,15 +2,16 @@
 
 use std::collections::HashMap;
 
-use rtnetlink::packet_route::link::{InfoData, InfoIpVlan, IpVlanFlags};
+use rtnetlink::packet_route::link::{self, InfoData, InfoIpVlan, IpVlanFlags};
 use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceType};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-#[derive(Default)]
 pub enum IpVlanMode {
     L2,
     #[default]
@@ -19,19 +20,19 @@ pub enum IpVlanMode {
     Other(u16),
 }
 
-impl From<rtnetlink::packet_route::link::IpVlanMode> for IpVlanMode {
-    fn from(d: rtnetlink::packet_route::link::IpVlanMode) -> Self {
+impl From<link::IpVlanMode> for IpVlanMode {
+    fn from(d: link::IpVlanMode) -> Self {
         match d {
-            rtnetlink::packet_route::link::IpVlanMode::L2 => Self::L2,
-            rtnetlink::packet_route::link::IpVlanMode::L3 => Self::L3,
-            rtnetlink::packet_route::link::IpVlanMode::L3S => Self::L3S,
+            link::IpVlanMode::L2 => Self::L2,
+            link::IpVlanMode::L3 => Self::L3,
+            link::IpVlanMode::L3S => Self::L3S,
             _ => Self::Other(d.into()),
         }
     }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum IpVlanFlag {
     Private,
@@ -50,6 +51,7 @@ impl From<IpVlanFlags> for IpVlanFlag {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct IpVlanInfo {
     pub base_iface: String,

@@ -6,18 +6,14 @@ use rtnetlink::packet_core::DecodeError;
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "snake_case")]
+#[non_exhaustive]
+#[serde(rename_all = "kebab-case")]
 pub enum ErrorKind {
     IfaceNotFound,
     InvalidArgument,
     NetlinkError,
-    NisporBug,
+    Bug,
     PermissionDeny,
-}
-
-impl ErrorKind {
-    #[allow(non_upper_case_globals)]
-    pub const Bug: Self = Self::NisporBug;
 }
 
 impl std::fmt::Display for ErrorKind {
@@ -40,7 +36,7 @@ impl NisporError {
 
     pub(crate) fn bug(message: String) -> NisporError {
         NisporError {
-            kind: ErrorKind::NisporBug,
+            kind: ErrorKind::Bug,
             msg: message,
         }
     }
@@ -104,7 +100,7 @@ impl From<EthtoolError> for NisporError {
 impl From<std::ffi::FromBytesWithNulError> for NisporError {
     fn from(e: std::ffi::FromBytesWithNulError) -> Self {
         NisporError {
-            kind: ErrorKind::NisporBug,
+            kind: ErrorKind::Bug,
             msg: format!("FromBytesWithNulError: {e}"),
         }
     }
@@ -113,7 +109,7 @@ impl From<std::ffi::FromBytesWithNulError> for NisporError {
 impl From<std::str::Utf8Error> for NisporError {
     fn from(e: std::str::Utf8Error) -> Self {
         NisporError {
-            kind: ErrorKind::NisporBug,
+            kind: ErrorKind::Bug,
             msg: format!("Utf8Error: {e}"),
         }
     }
@@ -131,7 +127,7 @@ impl From<DecodeError> for NisporError {
 impl From<std::io::Error> for NisporError {
     fn from(e: std::io::Error) -> Self {
         NisporError {
-            kind: ErrorKind::NisporBug,
+            kind: ErrorKind::Bug,
             msg: e.to_string(),
         }
     }

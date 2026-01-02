@@ -18,6 +18,7 @@ use serde::{Deserialize, Serialize};
 use crate::{Iface, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct Ipv4Info {
     pub addresses: Vec<Ipv4AddrInfo>,
@@ -26,6 +27,7 @@ pub struct Ipv4Info {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct Ipv4AddrInfo {
     pub address: String,
@@ -39,6 +41,7 @@ pub struct Ipv4AddrInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct Ipv6Info {
     pub addresses: Vec<Ipv6AddrInfo>,
@@ -47,6 +50,7 @@ pub struct Ipv6Info {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct Ipv6AddrInfo {
     pub address: String,
@@ -184,7 +188,7 @@ pub(crate) fn is_ipv6_addr(addr: &str) -> bool {
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Copy, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum Ipv6AddrFlag {
     Secondary,

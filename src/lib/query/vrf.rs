@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use crate::{ControllerType, Iface, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct VrfInfo {
     pub table_id: u32,
@@ -15,6 +16,7 @@ pub struct VrfInfo {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct VrfPortInfo {
     pub table_id: u32,

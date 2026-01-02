@@ -18,11 +18,12 @@ use rtnetlink::{
 use serde::{Deserialize, Serialize};
 
 use super::super::filter::{apply_kernel_route_filter, should_drop_by_filter};
-use crate::{NetStateRouteFilter, NisporError};
+use crate::{ErrorKind, NetStateRouteFilter, NisporError};
 
 const USER_HZ: u32 = 100;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct Route {
     pub address_family: AddressFamily,
@@ -118,21 +119,21 @@ pub struct Route {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+#[non_exhaustive]
 pub enum AddressFamily {
-    IPv4,
-    IPv6,
-    Other(u8),
     #[default]
-    Unknown,
+    Ipv4,
+    Ipv6,
+    Other(u8),
 }
 
 impl From<rtnetlink::packet_route::AddressFamily> for AddressFamily {
     fn from(d: rtnetlink::packet_route::AddressFamily) -> Self {
         match d {
-            rtnetlink::packet_route::AddressFamily::Inet => AddressFamily::IPv4,
+            rtnetlink::packet_route::AddressFamily::Inet => AddressFamily::Ipv4,
             rtnetlink::packet_route::AddressFamily::Inet6 => {
-                AddressFamily::IPv6
+                AddressFamily::Ipv6
             }
             _ => Self::Other(u8::from(d)),
         }
@@ -142,14 +143,11 @@ impl From<rtnetlink::packet_route::AddressFamily> for AddressFamily {
 impl From<AddressFamily> for rtnetlink::packet_route::AddressFamily {
     fn from(v: AddressFamily) -> Self {
         match v {
-            AddressFamily::IPv4 => rtnetlink::packet_route::AddressFamily::Inet,
-            AddressFamily::IPv6 => {
+            AddressFamily::Ipv4 => rtnetlink::packet_route::AddressFamily::Inet,
+            AddressFamily::Ipv6 => {
                 rtnetlink::packet_route::AddressFamily::Inet6
             }
             AddressFamily::Other(d) => d.into(),
-            AddressFamily::Unknown => {
-                rtnetlink::packet_route::AddressFamily::Unspec
-            }
         }
     }
 }
@@ -157,30 +155,31 @@ impl From<AddressFamily> for rtnetlink::packet_route::AddressFamily {
 #[derive(
     Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
 )]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+#[non_exhaustive]
 pub enum RouteProtocol {
     #[default]
     Unspec,
-    #[serde(rename = "icmp_redirect")]
+    #[serde(rename = "icmp-redirect")]
     IcmpRedirect,
     Kernel,
     Boot,
     Static,
     Gated,
     Ra,
-    #[serde(rename = "merit_mrt")]
+    #[serde(rename = "merit-mrt")]
     Mrt,
     Zebra,
     Bird,
-    #[serde(rename = "decnet_routing_daemon")]
+    #[serde(rename = "decnet-routing-daemon")]
     DnRouted,
     Xorp,
     #[serde(rename = "netsukuku")]
     Ntk,
     Dhcp,
-    #[serde(rename = "multicast_daemon")]
+    #[serde(rename = "multicast-daemon")]
     Mrouted,
-    #[serde(rename = "keepalived_daemon")]
+    #[serde(rename = "keepalived-daemon")]
     KeepAlived,
     Babel,
     Bgp,
@@ -188,7 +187,6 @@ pub enum RouteProtocol {
     Ospf,
     Rip,
     Eigrp,
-    Unknown,
     Other(u8),
 }
 
@@ -247,37 +245,41 @@ impl From<RouteProtocol> for rt::RouteProtocol {
             RouteProtocol::Ospf => rt::RouteProtocol::Ospf,
             RouteProtocol::Rip => rt::RouteProtocol::Rip,
             RouteProtocol::Eigrp => rt::RouteProtocol::Eigrp,
-            RouteProtocol::Unknown => rt::RouteProtocol::Unspec,
             RouteProtocol::Other(d) => d.into(),
         }
     }
 }
 
-impl From<&str> for RouteProtocol {
-    fn from(v: &str) -> Self {
+impl TryFrom<&str> for RouteProtocol {
+    type Error = NisporError;
+
+    fn try_from(v: &str) -> Result<Self, NisporError> {
         match v {
-            "icmp_redirect" => RouteProtocol::IcmpRedirect,
-            "kernel" => RouteProtocol::Kernel,
-            "boot" => RouteProtocol::Boot,
-            "static" => RouteProtocol::Static,
-            "gated" => RouteProtocol::Gated,
-            "ra" => RouteProtocol::Ra,
-            "merit_mrt" => RouteProtocol::Mrt,
-            "zebra" => RouteProtocol::Zebra,
-            "bird" => RouteProtocol::Bird,
-            "decnet_routing_daemon" => RouteProtocol::DnRouted,
-            "xorp" => RouteProtocol::Xorp,
-            "netsukuku" => RouteProtocol::Ntk,
-            "Dhcp" => RouteProtocol::Dhcp,
-            "multicast_daemon" => RouteProtocol::Mrouted,
-            "keepalived_daemon" => RouteProtocol::KeepAlived,
-            "babel" => RouteProtocol::Babel,
-            "bgp" => RouteProtocol::Bgp,
-            "isis" => RouteProtocol::Isis,
-            "ospf" => RouteProtocol::Ospf,
-            "rip" => RouteProtocol::Rip,
-            "eigrp" => RouteProtocol::Eigrp,
-            _ => RouteProtocol::Unknown,
+            "icmp-redirect" => Ok(RouteProtocol::IcmpRedirect),
+            "kernel" => Ok(RouteProtocol::Kernel),
+            "boot" => Ok(RouteProtocol::Boot),
+            "static" => Ok(RouteProtocol::Static),
+            "gated" => Ok(RouteProtocol::Gated),
+            "ra" => Ok(RouteProtocol::Ra),
+            "merit-mrt" => Ok(RouteProtocol::Mrt),
+            "zebra" => Ok(RouteProtocol::Zebra),
+            "bird" => Ok(RouteProtocol::Bird),
+            "decnet-routing-daemon" => Ok(RouteProtocol::DnRouted),
+            "xorp" => Ok(RouteProtocol::Xorp),
+            "netsukuku" => Ok(RouteProtocol::Ntk),
+            "Dhcp" => Ok(RouteProtocol::Dhcp),
+            "multicast-daemon" => Ok(RouteProtocol::Mrouted),
+            "keepalived-daemon" => Ok(RouteProtocol::KeepAlived),
+            "babel" => Ok(RouteProtocol::Babel),
+            "bgp" => Ok(RouteProtocol::Bgp),
+            "isis" => Ok(RouteProtocol::Isis),
+            "ospf" => Ok(RouteProtocol::Ospf),
+            "rip" => Ok(RouteProtocol::Rip),
+            "eigrp" => Ok(RouteProtocol::Eigrp),
+            _ => Err(NisporError::new(
+                ErrorKind::InvalidArgument,
+                format!("Invalid route protocol: {v}"),
+            )),
         }
     }
 }
@@ -294,16 +296,16 @@ impl From<&str> for RouteProtocol {
 #[derive(
     Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
 )]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+#[non_exhaustive]
 pub enum RouteScope {
+    #[default]
     Universe,
     Site,
     Link,
     Host,
-    #[serde(rename = "no_where")]
+    #[serde(rename = "no-where")]
     NoWhere,
-    #[default]
-    Unknown,
     Other(u8),
 }
 
@@ -328,8 +330,25 @@ impl From<RouteScope> for rt::RouteScope {
             RouteScope::Link => rt::RouteScope::Link,
             RouteScope::Host => rt::RouteScope::Host,
             RouteScope::NoWhere => rt::RouteScope::NoWhere,
-            RouteScope::Unknown => rt::RouteScope::Universe,
             RouteScope::Other(d) => d.into(),
+        }
+    }
+}
+
+impl TryFrom<&str> for RouteScope {
+    type Error = NisporError;
+
+    fn try_from(v: &str) -> Result<Self, Self::Error> {
+        match v {
+            "u" | "universe" | "g" | "global" => Ok(RouteScope::Universe),
+            "s" | "site" => Ok(RouteScope::Site),
+            "l" | "link" => Ok(RouteScope::Link),
+            "h" | "host" => Ok(RouteScope::Host),
+            "n" | "nowhere" | "no_where" => Ok(RouteScope::NoWhere),
+            _ => Err(NisporError::new(
+                ErrorKind::InvalidArgument,
+                format!("Unknown route scope {v}"),
+            )),
         }
     }
 }
@@ -341,28 +360,15 @@ impl std::fmt::Display for RouteScope {
             Self::Site => write!(f, "site"),
             Self::Link => write!(f, "link"),
             Self::Host => write!(f, "host"),
-            Self::NoWhere => write!(f, "no_where"),
-            Self::Unknown => write!(f, "unknown"),
+            Self::NoWhere => write!(f, "no-where"),
             Self::Other(s) => write!(f, "{s}"),
         }
     }
 }
 
-impl From<&str> for RouteScope {
-    fn from(v: &str) -> Self {
-        match v {
-            "u" | "universe" | "g" | "global" => RouteScope::Universe,
-            "s" | "site" => RouteScope::Site,
-            "l" | "link" => RouteScope::Link,
-            "h" | "host" => RouteScope::Host,
-            "n" | "nowhere" | "no_where" => RouteScope::NoWhere,
-            _ => RouteScope::Unknown,
-        }
-    }
-}
-
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+#[non_exhaustive]
 pub enum RouteType {
     #[default]
     Unspec,
@@ -377,7 +383,6 @@ pub enum RouteType {
     Throw,
     Nat,
     ExternalResolve,
-    Unknown,
     Other(u8),
 }
 
@@ -402,7 +407,7 @@ impl From<rt::RouteType> for RouteType {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct MultipathRoute {
     pub via: String,
@@ -412,14 +417,15 @@ pub struct MultipathRoute {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
+#[non_exhaustive]
 pub enum MultipathRouteFlags {
     Dead,
     Pervasive,
-    #[serde(rename = "on_link")]
+    #[serde(rename = "on-link")]
     OnLink,
     Offload,
-    #[serde(rename = "link_down")]
+    #[serde(rename = "link-down")]
     LinkDown,
     Unresolved,
     Trap,
@@ -709,7 +715,7 @@ fn _rt_addr_to_string(addr: &RouteAddress) -> String {
     Debug, PartialEq, Eq, Clone, Copy, Default, Serialize, Deserialize,
 )]
 #[non_exhaustive]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub enum RoutePreference {
     Low,
     #[default]
@@ -734,7 +740,7 @@ impl From<rt::RoutePreference> for RoutePreference {
 #[derive(
     Clone, Eq, PartialEq, Debug, Copy, Default, Serialize, Deserialize,
 )]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub struct RouteRealm {
     pub source: u16,
     pub destination: u16,
@@ -751,7 +757,7 @@ impl From<rt::RouteRealm> for RouteRealm {
 
 #[derive(Clone, Eq, PartialEq, Debug, Copy, Serialize, Deserialize)]
 #[non_exhaustive]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case", deny_unknown_fields)]
 pub enum RouteFlag {
     Dead,
     Pervasive,

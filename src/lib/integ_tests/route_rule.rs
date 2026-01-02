@@ -9,7 +9,7 @@ const TEST_TABLE_ID: u32 = 100;
 
 const EXPECTED_YAML_OUTPUT: &str = r#"---
 - action: blackhole
-  address_family: ipv6
+  address-family: ipv6
   flags: 0
   tos: 0
   table: 100
@@ -19,7 +19,7 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
   oif: eth2
   priority: 998
 - action: table
-  address_family: ipv6
+  address-family: ipv6
   flags: 0
   tos: 16
   table: 100
@@ -29,7 +29,7 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
   oif: eth2
   priority: 999
 - action: unreachable
-  address_family: ipv4
+  address-family: ipv4
   flags: 0
   tos: 0
   dst: 192.0.2.2/32
@@ -38,7 +38,7 @@ const EXPECTED_YAML_OUTPUT: &str = r#"---
   oif: eth2
   priority: 998
 - action: table
-  address_family: ipv4
+  address-family: ipv4
   flags: 0
   tos: 16
   table: 100
