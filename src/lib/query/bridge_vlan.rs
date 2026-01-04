@@ -36,10 +36,12 @@ pub(crate) fn parse_bridge_vlan_info(
             };
         }
     } else if iface_state.iface_type == IfaceType::Bridge {
-        let br_vlan = iface_state.bridge_vlan.get_or_insert(Vec::new());
-        // It's the VLAN of the bridge itself
-        if let Some(cur_vlans) = parse_af_spec_bridge_info(nlas)? {
-            br_vlan.extend(cur_vlans);
+        if let Some(br_conf) = iface_state.bridge.as_mut() {
+            let br_vlan = br_conf.vlans.get_or_insert(Vec::new());
+            // It's the VLAN of the bridge itself
+            if let Some(cur_vlans) = parse_af_spec_bridge_info(nlas)? {
+                br_vlan.extend(cur_vlans);
+            }
         }
     }
     Ok(())

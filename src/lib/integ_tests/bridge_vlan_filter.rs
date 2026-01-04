@@ -47,7 +47,14 @@ fn test_get_br_vlan_filter_iface_yaml() {
         if let Some(bridge_info) = &iface.bridge {
             assert_eq!(bridge_info.vlan_filtering, Some(true))
         }
-        assert_value_match(BR_SELF_VLAN, iface.bridge_vlan.as_ref().unwrap());
+        assert_value_match(
+            BR_SELF_VLAN,
+            iface
+                .bridge
+                .as_ref()
+                .and_then(|b| b.vlans.as_ref())
+                .unwrap(),
+        );
 
         let port1 = &state.ifaces[PORT1_NAME];
         let port2 = &state.ifaces[PORT2_NAME];
@@ -221,7 +228,11 @@ fn test_modify_bridge_vlan() {
         let iface = &state.ifaces[IFACE_NAME];
         assert_value_match(
             NEW_BR_SELF_VLAN,
-            iface.bridge_vlan.as_ref().unwrap(),
+            iface
+                .bridge
+                .as_ref()
+                .and_then(|b| b.vlans.as_ref())
+                .unwrap(),
         );
 
         let port1 = &state.ifaces[PORT1_NAME];
