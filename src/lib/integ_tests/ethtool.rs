@@ -188,11 +188,9 @@ fn test_get_ethtool_link_mode_yaml() {
             iface
                 .ethtool
                 .as_ref()
+                .and_then(|e| e.link_mode.as_ref())
+                .and_then(|l| l.speed)
                 .unwrap()
-                .link_mode
-                .as_ref()
-                .unwrap()
-                .speed
                 >= 10
         )
     });

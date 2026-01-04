@@ -103,8 +103,6 @@ pub struct EthtoolRingInfo {
     pub tx_max: Option<u32>,
 }
 
-const DUPLEX_UNKNOWN: u8 = 0xff;
-
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
@@ -112,17 +110,6 @@ pub enum EthtoolLinkModeDuplex {
     #[default]
     Half,
     Full,
-    Other(u8),
-}
-
-impl From<&ethtool::EthtoolLinkModeDuplex> for EthtoolLinkModeDuplex {
-    fn from(v: &ethtool::EthtoolLinkModeDuplex) -> Self {
-        match v {
-            ethtool::EthtoolLinkModeDuplex::Half => Self::Half,
-            ethtool::EthtoolLinkModeDuplex::Full => Self::Full,
-            _ => Self::Other(DUPLEX_UNKNOWN),
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
@@ -130,11 +117,14 @@ impl From<&ethtool::EthtoolLinkModeDuplex> for EthtoolLinkModeDuplex {
 #[non_exhaustive]
 pub struct EthtoolLinkModeInfo {
     pub auto_negotiate: bool,
-    pub ours: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ours: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub peer: Option<Vec<String>>,
-    pub speed: u32,
-    pub duplex: EthtoolLinkModeDuplex,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub speed: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub duplex: Option<EthtoolLinkModeDuplex>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub controller_port_cfg: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -572,17 +562,25 @@ async fn dump_link_mode_infos(
                         link_mode_info.auto_negotiate = *d
                     }
                     EthtoolLinkModeAttr::Ours(d) => {
-                        link_mode_info.ours.clone_from(d)
+                        link_mode_info.ours = Some(d.clone());
                     }
                     EthtoolLinkModeAttr::Peer(d) => {
                         link_mode_info.peer = Some(d.clone())
                     }
                     EthtoolLinkModeAttr::Speed(d) => {
                         link_mode_info.speed =
-                            if *d == u32::MAX { 0 } else { *d }
+                            if *d == u32::MAX { None } else { Some(*d) }
                     }
                     EthtoolLinkModeAttr::Duplex(d) => {
-                        link_mode_info.duplex = d.into()
+                        link_mode_info.duplex = match d {
+                            ethtool::EthtoolLinkModeDuplex::Half => {
+                                Some(EthtoolLinkModeDuplex::Half)
+                            }
+                            ethtool::EthtoolLinkModeDuplex::Full => {
+                                Some(EthtoolLinkModeDuplex::Full)
+                            }
+                            _ => None,
+                        }
                     }
                     EthtoolLinkModeAttr::ControllerSubordinateCfg(d) => {
                         link_mode_info.controller_port_cfg = Some(*d)
