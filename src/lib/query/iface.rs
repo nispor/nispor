@@ -30,11 +30,11 @@ use super::{
     xfrm::get_xfrm_info,
 };
 use crate::{
-    BondInfo, BondPortInfo, BridgeInfo, BridgePortInfo, BridgeVlanEntry,
-    ErrorKind, EthtoolInfo, HsrInfo, IpTunnelInfo, IpVlanInfo, IpoibInfo,
-    Ipv4Info, Ipv6Info, MacSecInfo, MacVlanInfo, MacVtapInfo, MptcpAddress,
-    NisporError, PciAddress, SriovInfo, TunInfo, VethInfo, VfInfo, VlanInfo,
-    VrfInfo, VrfPortInfo, VxlanInfo, WifiInfo, XfrmInfo,
+    BondInfo, BondPortInfo, BridgeInfo, BridgePortInfo, ErrorKind, EthtoolInfo,
+    HsrInfo, IpTunnelInfo, IpVlanInfo, IpoibInfo, Ipv4Info, Ipv6Info,
+    MacSecInfo, MacVlanInfo, MacVtapInfo, MptcpAddress, NisporError,
+    PciAddress, SriovInfo, TunInfo, VethInfo, VfInfo, VlanInfo, VrfInfo,
+    VrfPortInfo, VxlanInfo, WifiInfo, XfrmInfo,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -269,8 +269,6 @@ pub struct Iface {
     pub bond_port: Option<BondPortInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bridge: Option<BridgeInfo>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub bridge_vlan: Option<Vec<BridgeVlanEntry>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub bridge_port: Option<BridgePortInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]

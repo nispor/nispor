@@ -135,6 +135,8 @@ pub struct BridgeInfo {
     pub multicast_igmp_version: Option<u8>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub multicast_mld_version: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vlans: Option<Vec<BridgeVlanEntry>>,
 }
 
 #[derive(
