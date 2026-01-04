@@ -54,7 +54,7 @@ pub use self::{
     },
     ipoib::{IpoibInfo, IpoibMode},
     iptunnel::{
-        Ip6TunnelFlags, IpTunnelInfo, IpTunnelMode, TunnelEncapFlags,
+        Ip6TunnelFlag, IpTunnelInfo, IpTunnelMode, TunnelEncapFlag,
         TunnelEncapType,
     },
     ipvlan::{IpVlanFlag, IpVlanInfo, IpVlanMode},

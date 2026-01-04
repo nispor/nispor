@@ -12,32 +12,23 @@ use crate::{Iface, IfaceType};
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[non_exhaustive]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
-pub enum TunnelEncapFlags {
+pub enum TunnelEncapFlag {
     CSum,
     CSum6,
     RemCSum,
     Other(u16),
 }
 
-impl From<TunnelEncapFlags> for link::TunnelEncapFlags {
-    fn from(d: TunnelEncapFlags) -> Self {
-        match d {
-            TunnelEncapFlags::CSum => Self::CSum,
-            TunnelEncapFlags::CSum6 => Self::CSum6,
-            TunnelEncapFlags::RemCSum => Self::RemCSum,
-            TunnelEncapFlags::Other(d) => Self::from_bits_retain(d),
-        }
-    }
-}
-
-impl From<link::TunnelEncapFlags> for TunnelEncapFlags {
-    fn from(d: link::TunnelEncapFlags) -> Self {
-        match d {
-            link::TunnelEncapFlags::CSum => Self::CSum,
-            link::TunnelEncapFlags::CSum6 => Self::CSum6,
-            link::TunnelEncapFlags::RemCSum => Self::RemCSum,
-            _ => Self::Other(d.bits()),
-        }
+impl TunnelEncapFlag {
+    pub(crate) fn from_netlink(d: link::TunnelEncapFlags) -> Vec<Self> {
+        d.iter()
+            .map(|bit| match bit {
+                link::TunnelEncapFlags::CSum => Self::CSum,
+                link::TunnelEncapFlags::CSum6 => Self::CSum6,
+                link::TunnelEncapFlags::RemCSum => Self::RemCSum,
+                _ => Self::Other(bit.bits()),
+            })
+            .collect()
     }
 }
 
@@ -64,16 +55,14 @@ impl From<TunnelEncapType> for rtnetlink::packet_route::link::TunnelEncapType {
     }
 }
 
-impl From<rtnetlink::packet_route::link::TunnelEncapType> for TunnelEncapType {
-    fn from(d: rtnetlink::packet_route::link::TunnelEncapType) -> Self {
+impl From<link::TunnelEncapType> for TunnelEncapType {
+    fn from(d: link::TunnelEncapType) -> Self {
         match d {
-            rtnetlink::packet_route::link::TunnelEncapType::None => Self::None,
-            rtnetlink::packet_route::link::TunnelEncapType::Fou => Self::Fou,
-            rtnetlink::packet_route::link::TunnelEncapType::Gue => Self::Gue,
-            rtnetlink::packet_route::link::TunnelEncapType::Mpls => Self::Mpls,
-            rtnetlink::packet_route::link::TunnelEncapType::Other(d) => {
-                Self::Other(d)
-            }
+            link::TunnelEncapType::None => Self::None,
+            link::TunnelEncapType::Fou => Self::Fou,
+            link::TunnelEncapType::Gue => Self::Gue,
+            link::TunnelEncapType::Mpls => Self::Mpls,
+            link::TunnelEncapType::Other(d) => Self::Other(d),
             _ => Self::Other(d.into()),
         }
     }
@@ -82,7 +71,7 @@ impl From<rtnetlink::packet_route::link::TunnelEncapType> for TunnelEncapType {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[non_exhaustive]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
-pub enum Ip6TunnelFlags {
+pub enum Ip6TunnelFlag {
     IgnEncapLimit,
     UseOrigTclass,
     UseOrigFlowlabel,
@@ -96,41 +85,27 @@ pub enum Ip6TunnelFlags {
     Other(u32),
 }
 
-impl From<rtnetlink::packet_route::link::Ip6TunnelFlags> for Ip6TunnelFlags {
-    fn from(d: rtnetlink::packet_route::link::Ip6TunnelFlags) -> Self {
-        match d {
-            rtnetlink::packet_route::link::Ip6TunnelFlags::IgnEncapLimit => {
-                Self::IgnEncapLimit
-            }
-            rtnetlink::packet_route::link::Ip6TunnelFlags::UseOrigTclass => {
-                Self::UseOrigTclass
-            }
-            rtnetlink::packet_route::link::Ip6TunnelFlags::UseOrigFlowlabel => {
-                Self::UseOrigFlowlabel
-            }
-            rtnetlink::packet_route::link::Ip6TunnelFlags::Mip6Dev => {
-                Self::Mip6Dev
-            }
-            rtnetlink::packet_route::link::Ip6TunnelFlags::RcvDscpCopy => {
-                Self::RcvDscpCopy
-            }
-            rtnetlink::packet_route::link::Ip6TunnelFlags::UseOrigFwMark => {
-                Self::UseOrigFwMark
-            }
-            rtnetlink::packet_route::link::Ip6TunnelFlags::AllowLocalRemote => {
-                Self::AllowLocalRemote
-            }
-            rtnetlink::packet_route::link::Ip6TunnelFlags::CapXmit => {
-                Self::CapXmit
-            }
-            rtnetlink::packet_route::link::Ip6TunnelFlags::CapRcv => {
-                Self::CapRcv
-            }
-            rtnetlink::packet_route::link::Ip6TunnelFlags::CapPerPacket => {
-                Self::CapPerPacket
-            }
-            _ => Self::Other(d.bits()),
-        }
+impl Ip6TunnelFlag {
+    pub(crate) fn from_netlink(d: link::Ip6TunnelFlags) -> Vec<Self> {
+        d.iter()
+            .map(|bit| match bit {
+                link::Ip6TunnelFlags::IgnEncapLimit => Self::IgnEncapLimit,
+                link::Ip6TunnelFlags::UseOrigTclass => Self::UseOrigTclass,
+                link::Ip6TunnelFlags::UseOrigFlowlabel => {
+                    Self::UseOrigFlowlabel
+                }
+                link::Ip6TunnelFlags::Mip6Dev => Self::Mip6Dev,
+                link::Ip6TunnelFlags::RcvDscpCopy => Self::RcvDscpCopy,
+                link::Ip6TunnelFlags::UseOrigFwMark => Self::UseOrigFwMark,
+                link::Ip6TunnelFlags::AllowLocalRemote => {
+                    Self::AllowLocalRemote
+                }
+                link::Ip6TunnelFlags::CapXmit => Self::CapXmit,
+                link::Ip6TunnelFlags::CapRcv => Self::CapRcv,
+                link::Ip6TunnelFlags::CapPerPacket => Self::CapPerPacket,
+                _ => Self::Other(bit.bits()),
+            })
+            .collect()
     }
 }
 
@@ -170,7 +145,7 @@ pub struct IpTunnelInfo {
     pub tos: Option<u8>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub ip6tun_flags: Option<Vec<Ip6TunnelFlags>>,
+    pub ip6tun_flags: Option<Vec<Ip6TunnelFlag>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pmtu_disc: Option<bool>,
@@ -185,7 +160,7 @@ pub struct IpTunnelInfo {
     pub encap_type: Option<TunnelEncapType>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub encap_flags: Option<Vec<TunnelEncapFlags>>,
+    pub encap_flags: Option<Vec<TunnelEncapFlag>>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub encap_source_port: Option<u16>,
@@ -233,7 +208,7 @@ pub(crate) fn get_ip_tunnel_info(
                 }
                 InfoIpTunnel::Ipv6Flags(d) => {
                     ip_tunnel_info.ip6tun_flags =
-                        Some(d.iter().map(Ip6TunnelFlags::from).collect());
+                        Some(Ip6TunnelFlag::from_netlink(d));
                 }
                 InfoIpTunnel::Protocol(d) => {
                     protocol = Some(d);
@@ -249,7 +224,7 @@ pub(crate) fn get_ip_tunnel_info(
                 }
                 InfoIpTunnel::EncapFlags(d) => {
                     ip_tunnel_info.encap_flags =
-                        Some(d.iter().map(TunnelEncapFlags::from).collect());
+                        Some(TunnelEncapFlag::from_netlink(d));
                 }
                 InfoIpTunnel::EncapSPort(d) => {
                     ip_tunnel_info.encap_source_port = Some(d);
