@@ -3,8 +3,6 @@ interface for Linux network state querying.
 
 Currently providing:
  * Rust crate
- * Python binding
- * C binding
  * Command line tool -- `npc`
 
 ## Install
@@ -25,7 +23,7 @@ npc
 ### Print network status of certain NIC
 
 ```bash
-npc bond99
+npc iface bond99
 ```
 
 ### Print route entries
@@ -33,32 +31,6 @@ npc bond99
 ```bash
 npc route
 ```
-
-## Supported features
- * IPv4/IPv6 address
- * Bond
- * Linux Bridge
- * Linux Bridge VLAN filtering
- * VLAN
- * VxLAN
- * Route
- * Dummy
- * TUN/TAP
- * Veth
- * VRF(Virtual Routing and Forwarding)
- * SR-IOV
- * MacVlan
- * MacVtap
-
-## TODO:
- * Error handling instead of `unwrap()/panic!/etc`
- * SR-IOV VF-PF relation is possible
- * VLAN QoS
- * Route rule
- * Traffic control
- * Manpage for npc/npd
- * pkgconfig file for nispor C library
-
 ## What should nispor not do
 To make nispor only to small good things, this is the list of things
 could be done by nispor but should not do:
