@@ -470,7 +470,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                         IfaceType::Xfrm => {
                             iface_state.xfrm = get_xfrm_info(d);
                         }
-                        _ => log::warn!(
+                        _ => log::debug!(
                             "Unhandled IFLA_INFO_DATA for iface type {:?}",
                             iface_state.iface_type
                         ),
@@ -519,7 +519,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                                     Some(get_vrf_port_info(data)?);
                             }
                             InfoPortData::Other(_) => {
-                                log::warn!(
+                                log::info!(
                                     "Unknown controller type \
                                      {controller_type:?}"
                                 );

@@ -96,7 +96,7 @@ pub(crate) fn get_tun_info(data: &InfoData) -> Result<TunInfo, NisporError> {
                     tun_info.num_disabled_queues = Some(parse_as_u32(payload)?);
                 }
                 _ => {
-                    log::warn!(
+                    log::debug!(
                         "Unhandled TUN NLA {} {:?}",
                         nla.kind(),
                         payload
