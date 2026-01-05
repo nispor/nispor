@@ -1,4 +1,42 @@
 # Changelog
+## [2.0.0] - 2026-01-05
+### Breaking changes
+ - bridge vlan: merge `bridge-vlan` section into `bridge` section. (5f60dbc)
+ - iptunnel: Rename Ip6TunnelFlags to Ip6TunnelFlag. (dfbb407)
+ - iptunnel: Rename TunnelEncapFlags to TunnelEncapFlag. (dfbb407)
+ - route: Change `MultipathRouteFlags` to `MultipathRouteFlag`. (e658bd8)
+ - macvlan, macvtap: Change flags from u16 to Vec<enum>. (1f1042f)
+ - Change `RouteRule.flags` from u32 to Vec<RouteRuleFlag>. (85f8d62)
+ - Use `kebab-case` globally. (213cbc5)
+ - Remove deprecated C and python binding. (2a68f0a)
+ - Rename `Subordinate` to `Port`. (a37a066)
+
+### New features
+ - Support changing bond port configurations. (b4130f7)
+ - Support changing bridge port properties. (dbf9f56)
+ - Support changing bridge options. (af375b0)
+ - bridge: Add support of changing bridge VLAN filtering. (a79a150)
+ - cli: Create alias for `set` subcommand: `a` and `apply`. (ae695d8)
+ - conf: Support changing MTU on ethernet. (f4cc2dd)
+ - bond: Support changing bond mode. (63d906e)
+ - Support more bond options. (d0d8f73)
+ - iptunnel: add support for ipip, ip6ip6, ipip6, sit tunnels. (da57363)
+ - hsr: add support for interlink attribute. (e43ffa7)
+ - Support changing VLAN properties. (bdb8711)
+ - vlan: Support applying VLAN options. (2632657)
+ - wifi: Add mode and BSSID query support. (4302f42)
+ - conf: Support creating dummy interface. (fe6f1f6)
+
+### Bug fixes
+ - log: Change warn message to debug for unknown netlink attribute. (de5b93a)
+ - ethtool link_mode: Hide unknown data during query. (1909a9b)
+ - cargo, vlan: update rtnetlink to 0.19.0 and use new VlanFlags API. (936c576)
+ - wifi: Do not show SSID if not authorized. (a240b2c)
+ - wifi: Query SSID from scan result for 802.11g connection. (d68fe12)
+ - npc: Align WiFi signal percentage linear from 0 to 100. (f283877)
+ - npc: Align WiFi signal strength with Microsoft. (7ef056d)
+ - Move serde_json from runtime dependency to dev dependency. (4c0c9ae)
+
 ## [1.2.27] - 2025-09-09
 ### Breaking changes
  - N/A
