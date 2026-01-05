@@ -682,7 +682,7 @@ impl From<&[InfoBond]> for BondInfo {
                 }
                 InfoBond::NsIp6Target(v) => ret.ns_ip6_target = Some(v.clone()),
                 _ => {
-                    log::warn!("Unsupported InfoBond: {nla:?}");
+                    log::debug!("Unsupported InfoBond: {nla:?}");
                 }
             }
         }
