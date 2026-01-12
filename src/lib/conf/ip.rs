@@ -3,8 +3,8 @@
 use std::{net::IpAddr, str::FromStr};
 
 use rtnetlink::packet_route::{
-    address::{AddressAttribute, AddressMessage, CacheInfo},
     AddressFamily,
+    address::{AddressAttribute, AddressMessage, CacheInfo},
 };
 use serde::{Deserialize, Serialize};
 

@@ -6,8 +6,8 @@ use rtnetlink::packet_route::link::{self, LinkVfInfo};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    mac::{parse_as_mac, ETH_ALEN, INFINIBAND_ALEN},
     Iface, IfaceType, NisporError, VlanProtocol,
+    mac::{ETH_ALEN, INFINIBAND_ALEN, parse_as_mac},
 };
 
 const MAX_ADDR_LEN: usize = 32;

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use rtnetlink::{
-    packet_route::link::{InfoKind, VlanFlags},
     Handle, LinkMessageBuilder, LinkVlan,
+    packet_route::link::{InfoKind, VlanFlags},
 };
 use serde::{Deserialize, Serialize};
 

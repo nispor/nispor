@@ -7,13 +7,12 @@ use std::{
 
 use futures::stream::TryStreamExt;
 use rtnetlink::{
-    new_connection,
+    IpVersion, RouteMessageBuilder, new_connection,
     packet_route::route::{
         self as rt, RouteAddress, RouteAttribute, RouteMessage, RouteMetric,
         RouteVia,
     },
     sys::AsyncSocket,
-    IpVersion, RouteMessageBuilder,
 };
 use serde::{Deserialize, Serialize};
 

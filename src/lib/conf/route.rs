@@ -3,8 +3,8 @@
 use std::{collections::HashMap, net::IpAddr};
 
 use rtnetlink::{
-    packet_route::route::{self as rt},
     RouteMessageBuilder, RouteNextHopBuilder,
+    packet_route::route::{self as rt},
 };
 use serde::{Deserialize, Serialize};
 

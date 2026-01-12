@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use rtnetlink::{
-    packet_route::link::{BridgeVlanInfoFlags, LinkMessage},
     LinkBridgeVlan, LinkMessageBuilder,
+    packet_route::link::{BridgeVlanInfoFlags, LinkMessage},
 };
 
 use crate::{BridgeConf, BridgePortConf, BridgeVlanEntry, Iface};

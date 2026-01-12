@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use rtnetlink::{packet_route::link::InfoKind, LinkMessageBuilder, LinkVeth};
+use rtnetlink::{LinkMessageBuilder, LinkVeth, packet_route::link::InfoKind};
 
 use crate::{ErrorKind, Iface, IfaceConf, NisporError, VethInfo};
 
