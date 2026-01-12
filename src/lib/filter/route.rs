@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use rtnetlink::{packet_route::route::RouteAttribute, RouteGetRequest};
+use rtnetlink::{RouteGetRequest, packet_route::route::RouteAttribute};
 
 use crate::{NisporError, Route, RouteProtocol, RouteScope};
 

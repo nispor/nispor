@@ -12,11 +12,11 @@ tier = "2"
 all-features = true
 
 [workspace.package]
-rust-version = "1.77"
+rust-version = "1.85"
 version = "2.0.0"
 authors = ["Gris Ge <fge@redhat.com>"]
 description = "Unified interface for Linux network state querying"
-edition = "2021"
+edition = "2024"
 license = "Apache-2.0"
 documentation = "https://github.com/nispor/nispor"
 homepage = "https://github.com/nispor/nispor"

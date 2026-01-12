@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use rtnetlink::{packet_route::link::LinkMessage, LinkBridgePort};
+use rtnetlink::{LinkBridgePort, packet_route::link::LinkMessage};
 use serde::{Deserialize, Serialize};
 
 use crate::{

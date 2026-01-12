@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use futures::stream::TryStreamExt;
 use rtnetlink::{
     new_connection,
-    packet_route::{link::LinkExtentMask, AddressFamily},
+    packet_route::{AddressFamily, link::LinkExtentMask},
 };
 
 use super::{
@@ -191,8 +191,8 @@ fn ifaces_merge_ethool_infos(
     }
 }
 
-pub(crate) async fn get_iface_name2index(
-) -> Result<HashMap<String, u32>, NisporError> {
+pub(crate) async fn get_iface_name2index()
+-> Result<HashMap<String, u32>, NisporError> {
     let mut name2index: HashMap<String, u32> = HashMap::new();
     let (connection, handle, _) = new_connection()?;
     tokio::spawn(connection);

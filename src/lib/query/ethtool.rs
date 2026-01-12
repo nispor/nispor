@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::{hash_map::Entry, BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, hash_map::Entry};
 
 use ethtool::{
     EthtoolAttr, EthtoolCoalesceAttr, EthtoolFeatureAttr, EthtoolFeatureBit,
@@ -162,8 +162,8 @@ where
     ordered.serialize(serializer)
 }
 
-pub(crate) async fn get_ethtool_infos(
-) -> Result<HashMap<String, EthtoolInfo>, NisporError> {
+pub(crate) async fn get_ethtool_infos()
+-> Result<HashMap<String, EthtoolInfo>, NisporError> {
     let mut infos: HashMap<String, EthtoolInfo> = HashMap::new();
 
     let (connection, mut handle, _) = ethtool::new_connection()?;

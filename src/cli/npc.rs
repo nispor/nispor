@@ -4,7 +4,7 @@ use std::{
     collections::HashMap,
     fmt,
     fmt::Write as _FmtWrite,
-    io::{stderr, stdout, Write},
+    io::{Write, stderr, stdout},
     process,
 };
 
@@ -623,8 +623,8 @@ fn get_link_info(iface: &Iface) -> String {
         if let Some(ssid) = wifi.ssid.as_ref() {
             write!(ret, "ssid {ssid}").ok();
         }
-        if let Some(gen) = wifi.generation.as_ref() {
-            write!(ret, " gen {gen}").ok();
+        if let Some(generation) = wifi.generation.as_ref() {
+            write!(ret, " gen {generation}").ok();
         }
         if let Some(freq) = wifi.frequency.as_ref() {
             write!(ret, " freq {freq}").ok();

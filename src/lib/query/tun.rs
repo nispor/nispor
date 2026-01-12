@@ -4,8 +4,8 @@ use rtnetlink::{packet_core::Nla, packet_route::link::InfoData};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    netlink::{parse_as_u32, parse_as_u8},
     NisporError,
+    netlink::{parse_as_u8, parse_as_u32},
 };
 
 const IFF_TUN: u8 = 1;

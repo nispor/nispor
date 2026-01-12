@@ -6,8 +6,8 @@ use rtnetlink::packet_route::link::{self, InfoData, InfoMacVlan, InfoMacVtap};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    mac::{parse_as_mac, ETH_ALEN},
     Iface, IfaceType, NisporError,
+    mac::{ETH_ALEN, parse_as_mac},
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]

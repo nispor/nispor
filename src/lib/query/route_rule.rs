@@ -2,12 +2,11 @@
 
 use futures::stream::TryStreamExt;
 use rtnetlink::{
-    new_connection,
+    IpVersion, new_connection,
     packet_route::{
         route::RouteHeader,
         rule::{self, RuleAttribute, RuleMessage},
     },
-    IpVersion,
 };
 use serde::{Deserialize, Serialize};
 

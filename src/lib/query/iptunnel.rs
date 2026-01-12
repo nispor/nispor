@@ -2,8 +2,8 @@
 use std::{collections::HashMap, net::IpAddr};
 
 use rtnetlink::packet_route::{
-    link::{self, InfoData, InfoIpTunnel},
     IpProtocol,
+    link::{self, InfoData, InfoIpTunnel},
 };
 use serde::{Deserialize, Serialize};
 

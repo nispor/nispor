@@ -10,7 +10,7 @@ use wl_nl80211::{
     Nl80211StationInfo,
 };
 
-use crate::{mac::parse_as_mac, Iface, IfaceType, NisporError};
+use crate::{Iface, IfaceType, NisporError, mac::parse_as_mac};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]

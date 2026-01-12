@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use rtnetlink::{
-    packet_route::link::LinkMessage, LinkMessageBuilder, LinkUnspec,
+    LinkMessageBuilder, LinkUnspec, packet_route::link::LinkMessage,
 };
 
 use super::super::{mac::mac_str_to_raw, query::resolve_iface_index};

@@ -5,8 +5,8 @@ use rtnetlink::packet_route::link::{InfoData, InfoHsr};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    mac::{parse_as_mac, ETH_ALEN},
     Iface, IfaceType,
+    mac::{ETH_ALEN, parse_as_mac},
 };
 
 const HSR_PROTOCOL_HSR: u8 = 0;

@@ -8,8 +8,8 @@ use rtnetlink::packet_route::link::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    mac::{parse_as_mac, ETH_ALEN},
     BridgeVlanEntry, ControllerType, Iface, NisporError, VlanProtocol,
+    mac::{ETH_ALEN, parse_as_mac},
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]

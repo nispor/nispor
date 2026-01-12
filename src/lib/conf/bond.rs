@@ -6,11 +6,11 @@ use rtnetlink::{LinkBond, LinkMessageBuilder};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    mac::{mac_str_to_raw, ETH_ALEN},
-    query::resolve_iface_index,
     BondAdSelect, BondAllPortActive, BondArpValidate, BondFailOverMac,
     BondLacpRate, BondMode, BondModeArpAllTargets, BondPrimaryReselect,
     BondXmitHashPolicy, ErrorKind, Iface, IfaceConf, NisporError,
+    mac::{ETH_ALEN, mac_str_to_raw},
+    query::resolve_iface_index,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]

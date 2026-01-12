@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use rtnetlink::{packet_route::link::LinkMessage, LinkUnspec};
+use rtnetlink::{LinkUnspec, packet_route::link::LinkMessage};
 use serde::{Deserialize, Serialize};
 
 use super::{
