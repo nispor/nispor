@@ -806,25 +806,24 @@ pub(crate) fn bond_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
 fn gen_port_list_of_controller(iface_states: &mut HashMap<String, Iface>) {
     let mut controller_ports: HashMap<String, Vec<String>> = HashMap::new();
     for iface in iface_states.values() {
-        if iface.controller_type == Some(ControllerType::Bond) {
-            if let Some(controller) = &iface.controller {
-                match controller_ports.get_mut(controller) {
-                    Some(ports) => ports.push(iface.name.clone()),
-                    None => {
-                        let new_ports: Vec<String> = vec![iface.name.clone()];
-                        controller_ports.insert(controller.clone(), new_ports);
-                    }
-                };
-            }
+        if iface.controller_type == Some(ControllerType::Bond)
+            && let Some(controller) = &iface.controller
+        {
+            match controller_ports.get_mut(controller) {
+                Some(ports) => ports.push(iface.name.clone()),
+                None => {
+                    let new_ports: Vec<String> = vec![iface.name.clone()];
+                    controller_ports.insert(controller.clone(), new_ports);
+                }
+            };
         }
     }
     for (controller, ports) in controller_ports.iter_mut() {
         if let Some(ref mut controller_iface) = iface_states.get_mut(controller)
+            && let Some(ref mut bond_info) = controller_iface.bond
         {
-            if let Some(ref mut bond_info) = controller_iface.bond {
-                ports.sort();
-                bond_info.ports.clone_from(ports);
-            }
+            ports.sort();
+            bond_info.ports.clone_from(ports);
         }
     }
 }
@@ -838,12 +837,11 @@ fn primary_index_to_iface_name(iface_states: &mut HashMap<String, Iface>) {
         if iface.iface_type != IfaceType::Bond {
             continue;
         }
-        if let Some(ref mut bond_info) = iface.bond {
-            if let Some(index) = &bond_info.primary {
-                if let Some(iface_name) = index_to_name.get(index) {
-                    bond_info.primary = Some(iface_name.clone());
-                }
-            }
+        if let Some(ref mut bond_info) = iface.bond
+            && let Some(index) = &bond_info.primary
+            && let Some(iface_name) = index_to_name.get(index)
+        {
+            bond_info.primary = Some(iface_name.clone());
         }
     }
 }

@@ -65,13 +65,13 @@ pub(crate) async fn get_ifaces_with_handle(
         .and_then(|name| iface_states.get(name))
         .map(|i| i.index);
 
-    if iface_index.is_none() {
-        if let Some(iface_name) = filter.iface_name.as_ref() {
-            return Err(NisporError::invalid_argument(format!(
-                "Interface {} not found",
-                iface_name,
-            )));
-        }
+    if iface_index.is_none()
+        && let Some(iface_name) = filter.iface_name.as_ref()
+    {
+        return Err(NisporError::invalid_argument(format!(
+            "Interface {} not found",
+            iface_name,
+        )));
     }
 
     if filter.include_ip_address || filter.include_mptcp {
@@ -172,10 +172,10 @@ fn controller_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
         index_to_name.insert(format!("{}", iface.index), iface.name.clone());
     }
     for iface in iface_states.values_mut() {
-        if let Some(controller) = &iface.controller {
-            if let Some(name) = index_to_name.get(controller) {
-                iface.controller = Some(name.to_string());
-            }
+        if let Some(controller) = &iface.controller
+            && let Some(name) = index_to_name.get(controller)
+        {
+            iface.controller = Some(name.to_string());
         }
     }
 }

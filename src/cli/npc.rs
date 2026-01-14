@@ -362,10 +362,10 @@ fn parse_arg_output_format(matches: &clap::ArgMatches) -> CliOutputType {
 }
 
 fn _is_route_to_specified_dev(route: &Route, iface_name: &str) -> bool {
-    if let Some(oif) = &route.oif {
-        if oif == iface_name {
-            return true;
-        }
+    if let Some(oif) = &route.oif
+        && oif == iface_name
+    {
+        return true;
     }
     if let Some(mp_routes) = &route.multipath {
         for mp_route in mp_routes {
@@ -681,10 +681,11 @@ fn get_ifaces(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
 fn get_routes(matches: &clap::ArgMatches) -> Result<CliReply, CliError> {
     let mut route_filter = NetStateRouteFilter::default();
 
-    if let Some(scope) = matches.get_one::<String>("scope") {
-        if scope != "a" && scope != "all" {
-            route_filter.scope = Some(RouteScope::try_from(scope.as_str())?);
-        }
+    if let Some(scope) = matches.get_one::<String>("scope")
+        && scope != "a"
+        && scope != "all"
+    {
+        route_filter.scope = Some(RouteScope::try_from(scope.as_str())?);
     }
 
     if let Some(protocol) = matches.get_one::<String>("protocol") {

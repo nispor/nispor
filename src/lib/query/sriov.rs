@@ -241,10 +241,10 @@ fn read_folder(folder_path: &str) -> Vec<String> {
             }
         };
         let path = entry.path();
-        if let Ok(content) = path.strip_prefix(folder_path) {
-            if let Some(content_str) = content.to_str() {
-                folder_contents.push(content_str.to_string());
-            }
+        if let Ok(content) = path.strip_prefix(folder_path)
+            && let Some(content_str) = content.to_str()
+        {
+            folder_contents.push(content_str.to_string());
         }
     }
     folder_contents

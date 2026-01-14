@@ -82,12 +82,11 @@ pub(crate) async fn fill_wifi_info(
                 _ => (),
             }
         }
-        if info.mode == WifiMode::Ap {
-            if let Some(Nl80211Attr::Mac(mac)) =
+        if info.mode == WifiMode::Ap
+            && let Some(Nl80211Attr::Mac(mac)) =
                 attrs.iter().find(|a| matches!(a, Nl80211Attr::Mac(_)))
-            {
-                info.bssid = parse_as_mac(mac.len(), mac.as_slice()).ok();
-            }
+        {
+            info.bssid = parse_as_mac(mac.len(), mac.as_slice()).ok();
         }
         iface.wifi = Some(info);
         iface.iface_type = IfaceType::Wifi;

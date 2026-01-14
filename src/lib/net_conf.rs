@@ -29,11 +29,11 @@ impl NetConf {
             apply_ifaces_conf(ifaces).await?;
         }
 
-        if let Some(routes) = self.routes.as_ref() {
-            if !routes.is_empty() {
-                let cur_iface_name_2_index = get_iface_name2index().await?;
-                apply_routes_conf(routes, &cur_iface_name_2_index).await?;
-            }
+        if let Some(routes) = self.routes.as_ref()
+            && !routes.is_empty()
+        {
+            let cur_iface_name_2_index = get_iface_name2index().await?;
+            apply_routes_conf(routes, &cur_iface_name_2_index).await?;
         }
         Ok(())
     }

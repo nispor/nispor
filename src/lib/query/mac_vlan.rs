@@ -121,10 +121,10 @@ fn convert_base_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
             if let Some(base_iface_name) = index_to_name.get(&info.base_iface) {
                 info.base_iface.clone_from(base_iface_name);
             }
-        } else if let Some(ref mut info) = iface.mac_vtap {
-            if let Some(base_iface_name) = index_to_name.get(&info.base_iface) {
-                info.base_iface.clone_from(base_iface_name);
-            }
+        } else if let Some(ref mut info) = iface.mac_vtap
+            && let Some(base_iface_name) = index_to_name.get(&info.base_iface)
+        {
+            info.base_iface.clone_from(base_iface_name);
         }
     }
 }

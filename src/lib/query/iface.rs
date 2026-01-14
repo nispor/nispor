@@ -534,10 +534,9 @@ pub(crate) fn parse_nl_msg_to_iface(
         } else if let LinkAttribute::VfInfoList(nlas) = nla {
             if let Ok(info) =
                 get_sriov_info(&iface_state.name, nlas, &link_layer_type)
+                && sriov_is_enabled(&iface_state.name)
             {
-                if sriov_is_enabled(&iface_state.name) {
-                    iface_state.sriov = Some(info);
-                }
+                iface_state.sriov = Some(info);
             }
         } else if let LinkAttribute::LinkNetNsId(id) = nla {
             iface_state.link_netnsid = Some(*id);
@@ -547,20 +546,20 @@ pub(crate) fn parse_nl_msg_to_iface(
             // Place holder for paring more Nla
         }
     }
-    if let Some(ref mut vlan_info) = iface_state.vlan {
-        if let Some(base_iface_index) = link {
-            vlan_info.base_iface = format!("{base_iface_index}");
-        }
+    if let Some(ref mut vlan_info) = iface_state.vlan
+        && let Some(base_iface_index) = link
+    {
+        vlan_info.base_iface = format!("{base_iface_index}");
     }
-    if let Some(ref mut ib_info) = iface_state.ipoib {
-        if let Some(base_iface_index) = link {
-            ib_info.base_iface = Some(format!("{base_iface_index}"));
-        }
+    if let Some(ref mut ib_info) = iface_state.ipoib
+        && let Some(base_iface_index) = link
+    {
+        ib_info.base_iface = Some(format!("{base_iface_index}"));
     }
-    if let Some(ref mut macsec_info) = iface_state.macsec {
-        if let Some(base_iface_index) = link {
-            macsec_info.base_iface = Some(format!("{base_iface_index}"));
-        }
+    if let Some(ref mut macsec_info) = iface_state.macsec
+        && let Some(base_iface_index) = link
+    {
+        macsec_info.base_iface = Some(format!("{base_iface_index}"));
     }
     if let Some(iface_index) = link {
         match iface_state.iface_type {
@@ -667,10 +666,9 @@ pub(crate) async fn resolve_iface_index(
     while let Some(nl_msg) = links.try_next().await? {
         if let Some((cur_iface_name, iface_index)) =
             parse_nl_msg_to_name_and_index(&nl_msg)
+            && cur_iface_name == iface_name
         {
-            if cur_iface_name == iface_name {
-                return Ok(iface_index);
-            }
+            return Ok(iface_index);
         }
     }
     Err(NisporError::new(

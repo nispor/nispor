@@ -127,12 +127,11 @@ fn convert_base_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
         if iface.iface_type != IfaceType::Vxlan {
             continue;
         }
-        if let Some(ref mut vxlan_info) = iface.vxlan {
-            if let Some(base_iface_name) =
+        if let Some(ref mut vxlan_info) = iface.vxlan
+            && let Some(base_iface_name) =
                 index_to_name.get(&vxlan_info.base_iface)
-            {
-                vxlan_info.base_iface.clone_from(base_iface_name);
-            }
+        {
+            vxlan_info.base_iface.clone_from(base_iface_name);
         }
     }
 }

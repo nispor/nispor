@@ -35,13 +35,13 @@ pub(crate) fn parse_bridge_vlan_info(
                 None => port_info.vlans = Some(cur_vlans),
             };
         }
-    } else if iface_state.iface_type == IfaceType::Bridge {
-        if let Some(br_conf) = iface_state.bridge.as_mut() {
-            let br_vlan = br_conf.vlans.get_or_insert(Vec::new());
-            // It's the VLAN of the bridge itself
-            if let Some(cur_vlans) = parse_af_spec_bridge_info(nlas)? {
-                br_vlan.extend(cur_vlans);
-            }
+    } else if iface_state.iface_type == IfaceType::Bridge
+        && let Some(br_conf) = iface_state.bridge.as_mut()
+    {
+        let br_vlan = br_conf.vlans.get_or_insert(Vec::new());
+        // It's the VLAN of the bridge itself
+        if let Some(cur_vlans) = parse_af_spec_bridge_info(nlas)? {
+            br_vlan.extend(cur_vlans);
         }
     }
     Ok(())
@@ -53,10 +53,10 @@ fn parse_af_spec_bridge_info(
     let mut vlans = Vec::new();
 
     for nla in nlas {
-        if let AfSpecBridge::VlanInfo(nla_vlan_info) = nla {
-            if let Some(v) = parse_vlan_info(nla_vlan_info)? {
-                vlans.push(v);
-            }
+        if let AfSpecBridge::VlanInfo(nla_vlan_info) = nla
+            && let Some(v) = parse_vlan_info(nla_vlan_info)?
+        {
+            vlans.push(v);
         }
     }
 
