@@ -379,24 +379,24 @@ pub(crate) fn bridge_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
 fn gen_port_list_of_controller(iface_states: &mut HashMap<String, Iface>) {
     let mut controller_ports: HashMap<String, Vec<String>> = HashMap::new();
     for iface in iface_states.values() {
-        if iface.controller_type == Some(ControllerType::Bridge) {
-            if let Some(controller) = &iface.controller {
-                match controller_ports.get_mut(controller) {
-                    Some(ports) => ports.push(iface.name.clone()),
-                    None => {
-                        let new_ports: Vec<String> = vec![iface.name.clone()];
-                        controller_ports.insert(controller.clone(), new_ports);
-                    }
-                };
-            }
+        if iface.controller_type == Some(ControllerType::Bridge)
+            && let Some(controller) = &iface.controller
+        {
+            match controller_ports.get_mut(controller) {
+                Some(ports) => ports.push(iface.name.clone()),
+                None => {
+                    let new_ports: Vec<String> = vec![iface.name.clone()];
+                    controller_ports.insert(controller.clone(), new_ports);
+                }
+            };
         }
     }
     for (controller, ports) in controller_ports.iter_mut() {
-        if let Some(controller_iface) = iface_states.get_mut(controller) {
-            if let Some(ref mut bridge_info) = controller_iface.bridge {
-                ports.sort();
-                bridge_info.ports.clone_from(ports);
-            }
+        if let Some(controller_iface) = iface_states.get_mut(controller)
+            && let Some(ref mut bridge_info) = controller_iface.bridge
+        {
+            ports.sort();
+            bridge_info.ports.clone_from(ports);
         }
     }
 }
@@ -412,10 +412,10 @@ fn convert_back_port_index_to_name(iface_states: &mut HashMap<String, Iface>) {
         }
         if let Some(ref mut port_info) = iface.bridge_port {
             let index = &port_info.backup_port;
-            if !index.is_empty() {
-                if let Some(iface_name) = index_to_name.get(index) {
-                    port_info.backup_port = iface_name.into();
-                }
+            if !index.is_empty()
+                && let Some(iface_name) = index_to_name.get(index)
+            {
+                port_info.backup_port = iface_name.into();
             }
         }
     }

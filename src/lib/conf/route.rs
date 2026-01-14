@@ -135,18 +135,18 @@ async fn apply_route_conf(
 
     if route.remove {
         if let Err(e) = handle.route().del(builder.build()).execute().await {
-            if let rtnetlink::Error::NetlinkError(ref e) = e {
-                if e.raw_code() == -libc::ESRCH {
-                    return Ok(());
-                }
+            if let rtnetlink::Error::NetlinkError(ref e) = e
+                && e.raw_code() == -libc::ESRCH
+            {
+                return Ok(());
             }
             return Err(e.into());
         }
     } else if let Err(e) = handle.route().add(builder.build()).execute().await {
-        if let rtnetlink::Error::NetlinkError(ref e) = e {
-            if e.raw_code() == -libc::EEXIST {
-                return Ok(());
-            }
+        if let rtnetlink::Error::NetlinkError(ref e) = e
+            && e.raw_code() == -libc::EEXIST
+        {
+            return Ok(());
         }
         return Err(e.into());
     }

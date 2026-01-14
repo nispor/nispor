@@ -476,21 +476,19 @@ pub(crate) async fn get_routes(
         ifindex_to_name.insert(format!("{index}"), name.to_string());
     }
 
-    if let Some(filter) = filter {
-        if !filter.is_empty() {
-            if let Err(e) = connection
-                .socket_mut()
-                .socket_mut()
-                .set_netlink_get_strict_chk(true)
-            {
-                log::warn!(
-                    "Failed to set kernel space route filter: {e}, falling \
-                     back to user space route filtering which would lead to \
-                     performance penalty"
-                );
-                has_kernel_filter = false;
-            }
-        }
+    if let Some(filter) = filter
+        && !filter.is_empty()
+        && let Err(e) = connection
+            .socket_mut()
+            .socket_mut()
+            .set_netlink_get_strict_chk(true)
+    {
+        log::warn!(
+            "Failed to set kernel space route filter: {e}, falling back to \
+             user space route filtering which would lead to performance \
+             penalty"
+        );
+        has_kernel_filter = false;
     }
 
     tokio::spawn(connection);
@@ -501,24 +499,24 @@ pub(crate) async fn get_routes(
             IpVersion::V6 => RouteMessageBuilder::<Ipv6Addr>::new().build(),
         };
         let mut rt_handle = handle.route().get(rt_msg);
-        if let Some(filter) = filter {
-            if has_kernel_filter {
-                apply_kernel_route_filter(
-                    &mut rt_handle,
-                    filter,
-                    iface_name2index,
-                )?;
-            }
+        if let Some(filter) = filter
+            && has_kernel_filter
+        {
+            apply_kernel_route_filter(
+                &mut rt_handle,
+                filter,
+                iface_name2index,
+            )?;
         }
 
         let mut links = rt_handle.execute();
         while let Some(rt_msg) = links.try_next().await? {
             let route = get_route(rt_msg, &ifindex_to_name)?;
             // User space filter is required for RT_SCOPE_UNIVERSE and etc
-            if let Some(filter) = filter {
-                if should_drop_by_filter(&route, filter, has_kernel_filter) {
-                    continue;
-                }
+            if let Some(filter) = filter
+                && should_drop_by_filter(&route, filter, has_kernel_filter)
+            {
+                continue;
             }
             routes.push(route);
         }

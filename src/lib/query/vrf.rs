@@ -61,24 +61,24 @@ pub(crate) fn vrf_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
 fn gen_port_list_of_controller(iface_states: &mut HashMap<String, Iface>) {
     let mut controller_ports: HashMap<String, Vec<String>> = HashMap::new();
     for iface in iface_states.values() {
-        if iface.controller_type == Some(ControllerType::Vrf) {
-            if let Some(controller) = &iface.controller {
-                match controller_ports.get_mut(controller) {
-                    Some(ports) => ports.push(iface.name.clone()),
-                    None => {
-                        let new_ports: Vec<String> = vec![iface.name.clone()];
-                        controller_ports.insert(controller.clone(), new_ports);
-                    }
-                };
-            }
+        if iface.controller_type == Some(ControllerType::Vrf)
+            && let Some(controller) = &iface.controller
+        {
+            match controller_ports.get_mut(controller) {
+                Some(ports) => ports.push(iface.name.clone()),
+                None => {
+                    let new_ports: Vec<String> = vec![iface.name.clone()];
+                    controller_ports.insert(controller.clone(), new_ports);
+                }
+            };
         }
     }
     for (controller, ports) in controller_ports.iter_mut() {
-        if let Some(controller_iface) = iface_states.get_mut(controller) {
-            if let Some(ref mut vrf_info) = controller_iface.vrf {
-                ports.sort();
-                vrf_info.ports.clone_from(ports);
-            }
+        if let Some(controller_iface) = iface_states.get_mut(controller)
+            && let Some(ref mut vrf_info) = controller_iface.vrf
+        {
+            ports.sort();
+            vrf_info.ports.clone_from(ports);
         }
     }
 }

@@ -31,12 +31,12 @@ pub(crate) fn veth_iface_tidy_up(iface_states: &mut HashMap<String, Iface>) {
             continue;
         }
 
-        if let Some(VethInfo { peer }) = &iface.veth {
-            if let Some(peer_iface_name) = index_to_name.get(peer) {
-                iface.veth = Some(VethInfo {
-                    peer: peer_iface_name.clone(),
-                })
-            }
+        if let Some(VethInfo { peer }) = &iface.veth
+            && let Some(peer_iface_name) = index_to_name.get(peer)
+        {
+            iface.veth = Some(VethInfo {
+                peer: peer_iface_name.clone(),
+            })
         }
     }
 }

@@ -108,10 +108,9 @@ impl Iface {
                 .as_deref()
                 .and_then(Path::file_name)
                 .and_then(std::ffi::OsStr::to_str)
+            && let Ok(pci_addr) = PciAddress::from_str(dev_path)
         {
-            if let Ok(pci_addr) = PciAddress::from_str(dev_path) {
-                self.pci_address = Some(pci_addr);
-            }
+            self.pci_address = Some(pci_addr);
         }
     }
 }

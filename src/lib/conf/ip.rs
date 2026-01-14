@@ -104,10 +104,10 @@ async fn apply_ip_conf(
                 ip_addr_str_to_enum(&addr_conf.address)?,
             ));
             if let Err(e) = handle.address().del(nl_msg).execute().await {
-                if let rtnetlink::Error::NetlinkError(ref e) = e {
-                    if e.raw_code() == -libc::EADDRNOTAVAIL {
-                        return Ok(());
-                    }
+                if let rtnetlink::Error::NetlinkError(ref e) = e
+                    && e.raw_code() == -libc::EADDRNOTAVAIL
+                {
+                    return Ok(());
                 }
                 return Err(e.into());
             }

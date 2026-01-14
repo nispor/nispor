@@ -188,14 +188,13 @@ fn convert_base_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
         if iface.iface_type != IfaceType::MacSec {
             continue;
         }
-        if let Some(ref mut macsec_info) = iface.macsec {
-            if let Some(base_iface_name) = &macsec_info
+        if let Some(ref mut macsec_info) = iface.macsec
+            && let Some(base_iface_name) = &macsec_info
                 .base_iface
                 .as_ref()
                 .and_then(|i| index_to_name.get(i))
-            {
-                macsec_info.base_iface = Some(base_iface_name.to_string());
-            }
+        {
+            macsec_info.base_iface = Some(base_iface_name.to_string());
         }
     }
 }

@@ -45,22 +45,21 @@ impl IfaceConf {
     ///  * Change controller
     ///  * Change bond mode
     pub(crate) fn need_state_down_before_apply(&self, current: &Iface) -> bool {
-        if let Some(des_mac) = self.mac_address.as_ref() {
-            if des_mac.to_uppercase() != current.mac_address.to_uppercase() {
-                return true;
-            }
+        if let Some(des_mac) = self.mac_address.as_ref()
+            && des_mac.to_uppercase() != current.mac_address.to_uppercase()
+        {
+            return true;
         }
 
         if self.controller.is_some() && self.controller != current.controller {
             return true;
         }
 
-        if let Some(des_bond_mode) = self.bond.as_ref().and_then(|b| b.mode) {
-            if let Some(cur_bond_mode) = current.bond.as_ref().map(|b| b.mode) {
-                if des_bond_mode != cur_bond_mode {
-                    return true;
-                }
-            }
+        if let Some(des_bond_mode) = self.bond.as_ref().and_then(|b| b.mode)
+            && let Some(cur_bond_mode) = current.bond.as_ref().map(|b| b.mode)
+            && des_bond_mode != cur_bond_mode
+        {
+            return true;
         }
 
         false

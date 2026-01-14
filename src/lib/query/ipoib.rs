@@ -85,14 +85,13 @@ fn convert_base_iface_index_to_name(iface_states: &mut HashMap<String, Iface>) {
         if iface.iface_type != IfaceType::Ipoib {
             continue;
         }
-        if let Some(ref mut ib_info) = iface.ipoib {
-            if let Some(base_iface_name) = &ib_info
+        if let Some(ref mut ib_info) = iface.ipoib
+            && let Some(base_iface_name) = &ib_info
                 .base_iface
                 .as_ref()
                 .and_then(|i| index_to_name.get(i))
-            {
-                ib_info.base_iface = Some(base_iface_name.to_string());
-            }
+        {
+            ib_info.base_iface = Some(base_iface_name.to_string());
         }
     }
 }

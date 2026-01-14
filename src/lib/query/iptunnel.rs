@@ -269,12 +269,11 @@ fn fill_port_iface_names(iface_states: &mut HashMap<String, Iface>) {
     }
 
     for iface in iface_states.values_mut() {
-        if let Some(tun) = iface.ip_tunnel.as_mut() {
-            if let Some(parent_iface_name) =
+        if let Some(tun) = iface.ip_tunnel.as_mut()
+            && let Some(parent_iface_name) =
                 index_to_name.get(&tun._parent_ifindex.unwrap_or_default())
-            {
-                tun.parent = Some(parent_iface_name.to_string());
-            }
+        {
+            tun.parent = Some(parent_iface_name.to_string());
         }
     }
 }

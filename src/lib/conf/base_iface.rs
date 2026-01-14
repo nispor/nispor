@@ -15,30 +15,27 @@ pub(crate) async fn apply_base_link_changes<T>(
 ) -> Result<Vec<LinkMessage>, NisporError> {
     let mut ret: Vec<LinkMessage> = Vec::new();
 
-    if let Some(cur_iface) = cur_iface {
-        if des_iface.need_state_down_before_apply(cur_iface)
-            && cur_iface.flags.contains(&IfaceFlag::Up)
-        {
-            ret.push(
-                LinkUnspec::new_with_index(cur_iface.index).down().build(),
-            );
-        }
+    if let Some(cur_iface) = cur_iface
+        && des_iface.need_state_down_before_apply(cur_iface)
+        && cur_iface.flags.contains(&IfaceFlag::Up)
+    {
+        ret.push(LinkUnspec::new_with_index(cur_iface.index).down().build());
     }
 
     if let Some(mtu) = des_iface.mtu {
         builder = builder.mtu(mtu);
     }
 
-    if let Some(des_mac) = des_iface.mac_address.as_ref() {
-        if !des_mac.is_empty() {
-            let should_set = cur_iface
-                .as_ref()
-                .map(|c| c.mac_address.to_uppercase() != des_mac.to_uppercase())
-                .unwrap_or(true);
+    if let Some(des_mac) = des_iface.mac_address.as_ref()
+        && !des_mac.is_empty()
+    {
+        let should_set = cur_iface
+            .as_ref()
+            .map(|c| c.mac_address.to_uppercase() != des_mac.to_uppercase())
+            .unwrap_or(true);
 
-            if should_set {
-                builder = builder.address(mac_str_to_raw(des_mac)?);
-            }
+        if should_set {
+            builder = builder.address(mac_str_to_raw(des_mac)?);
         }
     }
 

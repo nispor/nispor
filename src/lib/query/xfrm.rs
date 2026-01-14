@@ -49,10 +49,10 @@ fn fill_port_iface_names(iface_states: &mut HashMap<String, Iface>) {
         .values_mut()
         .filter(|i| i.iface_type == IfaceType::Xfrm)
     {
-        if let Some(xfrm_info) = iface.xfrm.as_mut() {
-            if let Some(base_iface) = index_to_name.get(&xfrm_info.base_iface) {
-                xfrm_info.base_iface = base_iface.to_string();
-            }
+        if let Some(xfrm_info) = iface.xfrm.as_mut()
+            && let Some(base_iface) = index_to_name.get(&xfrm_info.base_iface)
+        {
+            xfrm_info.base_iface = base_iface.to_string();
         }
     }
 }
