@@ -9,7 +9,10 @@ use rtnetlink::packet_route::{
 use serde::{Deserialize, Serialize};
 
 use super::super::query::is_ipv6_addr;
-use crate::{Iface, IfaceConf, IpFamily, Ipv4Info, Ipv6Info, NisporError};
+use crate::{
+    AddressProtocol, Iface, IfaceConf, IpFamily, Ipv4Info, Ipv6Info,
+    NisporError,
+};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
@@ -29,6 +32,7 @@ impl From<&Ipv4Info> for IpConf {
                     prefix_len: addr_info.prefix_len,
                     preferred_lft: addr_info.preferred_lft.clone(),
                     valid_lft: addr_info.valid_lft.clone(),
+                    protocol: addr_info.protocol,
                 });
             }
         }
@@ -47,6 +51,7 @@ impl From<&Ipv6Info> for IpConf {
                     prefix_len: addr_info.prefix_len,
                     preferred_lft: addr_info.preferred_lft.clone(),
                     valid_lft: addr_info.valid_lft.clone(),
+                    protocol: addr_info.protocol,
                 });
             }
         }
@@ -68,6 +73,7 @@ pub struct IpAddrConf {
     pub valid_lft: String,
     #[serde(default)]
     pub preferred_lft: String,
+    pub protocol: Option<AddressProtocol>,
 }
 
 pub(crate) async fn change_ip_layer(
@@ -103,6 +109,11 @@ async fn apply_ip_conf(
             nl_msg.attributes.push(AddressAttribute::Address(
                 ip_addr_str_to_enum(&addr_conf.address)?,
             ));
+            if let Some(protocol) = addr_conf.protocol {
+                nl_msg
+                    .attributes
+                    .push(AddressAttribute::Protocol(protocol.into()));
+            }
             if let Err(e) = handle.address().del(nl_msg).execute().await {
                 if let rtnetlink::Error::NetlinkError(ref e) = e
                     && e.raw_code() == -libc::EADDRNOTAVAIL
@@ -120,6 +131,13 @@ async fn apply_ip_conf(
                     addr_conf.prefix_len,
                 )
                 .replace();
+
+            if let Some(protocol) = addr_conf.protocol {
+                req.message_mut()
+                    .attributes
+                    .push(AddressAttribute::Protocol(protocol.into()));
+            }
+
             if is_dynamic_ip(&addr_conf.preferred_lft, &addr_conf.valid_lft) {
                 handle_dynamic_ip(
                     req.message_mut(),

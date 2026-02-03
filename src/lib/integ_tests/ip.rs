@@ -30,10 +30,12 @@ interfaces:
       addresses:
         - address: "192.0.2.1"
           prefix-len: 24
+          protocol: 0xf3
     ipv6:
       addresses:
         - address: "2001:db8:a::9"
-          prefix-len: 64"#;
+          prefix-len: 64
+          protocol: 98"#;
 
 const ADD_IP_CONF_DYNAMIC: &str = r#"---
 interfaces:
@@ -70,7 +72,8 @@ addresses:
   - address: 192.0.2.1
     prefix-len: 24
     valid-lft: forever
-    preferred-lft: forever"#;
+    preferred-lft: forever
+    protocol: "0xf3""#;
 
 const EXPECTED_IPV4_INFO_WITH_FORWADRDING_ENABLED: &str = r#"---
 addresses:
@@ -101,6 +104,7 @@ addresses:
     prefix-len: 64
     valid-lft: forever
     preferred-lft: forever
+    protocol: "0x62"
     flags:
     - permanent
   - address: "fe80::223:45ff:fe67:891a"

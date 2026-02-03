@@ -10,12 +10,14 @@ use std::{
 
 use rtnetlink::packet_route::{
     address,
-    address::{AddressAttribute, AddressMessage},
+    address::{
+        AddressAttribute, AddressMessage, AddressProtocol as RtAddressProtocol,
+    },
     link::{AfSpecInet6, AfSpecUnspec},
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{Iface, NisporError};
+use crate::{ErrorKind, Iface, NisporError};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
@@ -38,6 +40,93 @@ pub struct Ipv4AddrInfo {
     pub valid_lft: String,
     // The renaming seonds for this address be preferred
     pub preferred_lft: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub protocol: Option<AddressProtocol>,
+}
+
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[serde(try_from = "&str", into = "String")]
+#[non_exhaustive]
+pub enum AddressProtocol {
+    Loopback,
+    RouterAnnouncement,
+    LinkLocal,
+    Other(u8),
+}
+
+impl From<AddressProtocol> for String {
+    fn from(v: AddressProtocol) -> Self {
+        v.to_string()
+    }
+}
+
+// Using iproute string here
+impl std::fmt::Display for AddressProtocol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Loopback => write!(f, "lo"),
+            Self::RouterAnnouncement => write!(f, "ra"),
+            Self::LinkLocal => write!(f, "kernel_ll"),
+            Self::Other(d) => write!(f, "0x{d:x}"),
+        }
+    }
+}
+
+impl std::convert::TryFrom<&str> for AddressProtocol {
+    type Error = NisporError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        Ok(match value {
+            "lo" => Self::Loopback,
+            "ra" => Self::RouterAnnouncement,
+            "kernel_ll" => Self::LinkLocal,
+            v => {
+                if let Some(s) = v.strip_prefix("0x") {
+                    Self::Other(u8::from_str_radix(s, 16).map_err(|e| {
+                        NisporError::new(
+                            ErrorKind::InvalidArgument,
+                            format!(
+                                "Invalid address protocol '{v}', should lo, \
+                                 ra, kernel_ll or integer: {e}"
+                            ),
+                        )
+                    })?)
+                } else {
+                    Self::Other(v.parse().map_err(|e| {
+                        NisporError::new(
+                            ErrorKind::InvalidArgument,
+                            format!(
+                                "Invalid address protocol '{v}', should lo, \
+                                 ra, kernel_ll or integer: {e}"
+                            ),
+                        )
+                    })?)
+                }
+            }
+        })
+    }
+}
+
+impl From<RtAddressProtocol> for AddressProtocol {
+    fn from(d: RtAddressProtocol) -> Self {
+        match d {
+            RtAddressProtocol::Loopback => Self::Loopback,
+            RtAddressProtocol::RouterAnnouncement => Self::RouterAnnouncement,
+            RtAddressProtocol::LinkLocal => Self::LinkLocal,
+            _ => Self::Other(u8::from(d)),
+        }
+    }
+}
+
+impl From<AddressProtocol> for RtAddressProtocol {
+    fn from(v: AddressProtocol) -> Self {
+        match v {
+            AddressProtocol::Loopback => Self::Loopback,
+            AddressProtocol::RouterAnnouncement => Self::RouterAnnouncement,
+            AddressProtocol::LinkLocal => Self::LinkLocal,
+            AddressProtocol::Other(d) => Self::Other(d),
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -65,6 +154,8 @@ pub struct Ipv6AddrInfo {
     pub peer: Option<Ipv6Addr>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub peer_prefix_len: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub protocol: Option<AddressProtocol>,
 }
 
 pub(crate) fn parse_ip_addr_str(
@@ -299,6 +390,8 @@ fn parse_ipv4_nlas(
         } else if let AddressAttribute::CacheInfo(v) = nla {
             addr.preferred_lft = left_time_to_string(v.ifa_preferred);
             addr.valid_lft = left_time_to_string(v.ifa_valid);
+        } else if let AddressAttribute::Protocol(v) = nla {
+            addr.protocol = Some((*v).into());
         }
     }
 
@@ -338,6 +431,8 @@ fn parse_ipv6_nlas(
             addr.valid_lft = left_time_to_string(v.ifa_valid);
         } else if let AddressAttribute::Flags(flags) = nla {
             addr.flags = flags.iter().map(Ipv6AddrFlag::from).collect();
+        } else if let AddressAttribute::Protocol(v) = nla {
+            addr.protocol = Some((*v).into());
         }
     }
 
