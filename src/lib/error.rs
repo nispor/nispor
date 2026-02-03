@@ -159,3 +159,12 @@ impl From<wl_nl80211::Nl80211Error> for NisporError {
         }
     }
 }
+
+impl From<nl_wireguard::WireguardError> for NisporError {
+    fn from(e: nl_wireguard::WireguardError) -> Self {
+        NisporError {
+            kind: ErrorKind::NetlinkError,
+            msg: e.to_string(),
+        }
+    }
+}

@@ -34,7 +34,7 @@ use crate::{
     HsrInfo, IpTunnelInfo, IpVlanInfo, IpoibInfo, Ipv4Info, Ipv6Info,
     MacSecInfo, MacVlanInfo, MacVtapInfo, MptcpAddress, NisporError,
     PciAddress, SriovInfo, TunInfo, VethInfo, VfInfo, VlanInfo, VrfInfo,
-    VrfPortInfo, VxlanInfo, WifiInfo, XfrmInfo,
+    VrfPortInfo, VxlanInfo, WifiInfo, WireguardInfo, XfrmInfo,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -67,6 +67,7 @@ pub enum IfaceType {
     Hsr,
     Xfrm,
     Wifi,
+    Wireguard,
     Other(String),
 }
 
@@ -98,6 +99,7 @@ impl std::fmt::Display for IfaceType {
                 Self::Hsr => "hsr",
                 Self::Xfrm => "xfrm",
                 Self::Wifi => "wifi",
+                Self::Wireguard => "wireguard",
                 Self::Other(s) => s,
             }
         )
@@ -309,6 +311,8 @@ pub struct Iface {
     pub ip_vlan: Option<IpVlanInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub wifi: Option<WifiInfo>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub wireguard: Option<WireguardInfo>,
 }
 
 // TODO: impl From Iface to IfaceConf
@@ -399,6 +403,7 @@ pub(crate) fn parse_nl_msg_to_iface(
                         InfoKind::MacSec => IfaceType::MacSec,
                         InfoKind::Hsr => IfaceType::Hsr,
                         InfoKind::Xfrm => IfaceType::Xfrm,
+                        InfoKind::Wireguard => IfaceType::Wireguard,
                         InfoKind::Other(s) => match s.as_ref() {
                             "openvswitch" => IfaceType::OpenvSwitch,
                             _ => IfaceType::Other(s.to_lowercase()),

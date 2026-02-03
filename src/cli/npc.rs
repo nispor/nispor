@@ -251,7 +251,7 @@ impl CliIfaceBrief {
                 alt_names: iface.alt_names.clone(),
             })
         }
-        ret.sort_by(|a, b| a.index.cmp(&b.index));
+        ret.sort_by_key(|a| a.index);
         ret
     }
 }

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use rtnetlink::{LinkUnspec, packet_route::link::LinkMessage};
+use rtnetlink::{
+    LinkMessageBuilder, LinkUnspec,
+    packet_route::link::{InfoKind, LinkMessage},
+};
 use serde::{Deserialize, Serialize};
 
 use super::{
@@ -10,7 +13,7 @@ use super::{
 use crate::{
     AltNameConf, BondConf, BondPortConf, BridgeConf, BridgePortConf, DummyConf,
     ErrorKind, Iface, IfaceState, IfaceType, IpConf, NetStateIfaceFilter,
-    NisporError, VethConf, VlanConf,
+    NisporError, VethConf, VlanConf, WireguardConf,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -37,6 +40,7 @@ pub struct IfaceConf {
     pub bond: Option<BondConf>,
     pub bond_port: Option<BondPortConf>,
     pub bridge_port: Option<BridgePortConf>,
+    pub wireguard: Option<WireguardConf>,
 }
 
 impl IfaceConf {
@@ -180,6 +184,28 @@ async fn gen_link_msg(
                 apply_base_link_changes(
                     handle,
                     DummyConf::gen_link_msg_builder(des_iface),
+                    des_iface,
+                    cur_iface,
+                )
+                .await?
+            } else {
+                apply_base_link_changes(
+                    handle,
+                    LinkUnspec::new_with_name(des_iface.name.as_str()),
+                    des_iface,
+                    cur_iface,
+                )
+                .await?
+            }
+        }
+        Some(IfaceType::Wireguard) => {
+            if cur_iface.is_none() {
+                apply_base_link_changes(
+                    handle,
+                    LinkMessageBuilder::<LinkUnspec>::new_with_info_kind(
+                        InfoKind::Wireguard,
+                    )
+                    .name(des_iface.name.clone()),
                     des_iface,
                     cur_iface,
                 )

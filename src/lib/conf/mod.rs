@@ -14,6 +14,7 @@ mod ip;
 mod route;
 mod veth;
 mod vlan;
+mod wireguard;
 
 pub use self::{
     alt_name::AltNameConf,
@@ -27,6 +28,7 @@ pub use self::{
     route::RouteConf,
     veth::VethConf,
     vlan::VlanConf,
+    wireguard::{WireguardConf, WireguardPeerConf},
 };
 pub(crate) use self::{
     inter_ifaces::apply_ifaces_conf, route::apply_routes_conf,
