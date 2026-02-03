@@ -26,6 +26,7 @@ futures = { workspace = true }
 libc = { workspace = true }
 log = { workspace = true }
 wl-nl80211 = { workspace = true }
+nl-wireguard = { workspace = true }
 
 [dev-dependencies]
 serde_yaml = { workspace = true }

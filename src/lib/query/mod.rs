@@ -9,6 +9,7 @@ mod iptunnel;
 mod mptcp;
 mod pci;
 mod wifi;
+mod wireguard;
 mod xfrm;
 // Disable `needless_pass_by_ref_mut` check due to upstream issue:
 // https://github.com/rust-netlink/ethtool/issues/12
@@ -75,6 +76,7 @@ pub use self::{
     vrf::{VrfInfo, VrfPortInfo},
     vxlan::VxlanInfo,
     wifi::WifiInfo,
+    wireguard::{WireguardInfo, WireguardIpAddress, WireguardPeerInfo},
     xfrm::XfrmInfo,
 };
 pub(crate) use self::{
