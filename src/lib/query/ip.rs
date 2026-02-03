@@ -129,6 +129,12 @@ impl From<AddressProtocol> for RtAddressProtocol {
     }
 }
 
+impl From<AddressProtocol> for u8 {
+    fn from(v: AddressProtocol) -> Self {
+        u8::from(RtAddressProtocol::from(v))
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
