@@ -7,11 +7,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::{IfaceConf, NisporError, WireguardIpAddress};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct WireguardConf {
-    /// Base64 encoded private key
+    /// Base64 encoded private key, will be shown as `<hidden>` for Debug and
+    /// excluded from Serialize
+    #[serde(skip_serializing)]
     pub private_key: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub listen_port: Option<u16>,
@@ -35,7 +37,24 @@ impl From<&WireguardConf> for WireguardParsed {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
+impl std::fmt::Debug for WireguardConf {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
+        f.debug_struct("WireguardConf")
+            .field(
+                "private_key",
+                &self.private_key.as_ref().map(|_| "<hidden>"),
+            )
+            .field("listen_port", &self.listen_port)
+            .field("fwmark", &self.fwmark)
+            .field("peers", &self.peers)
+            .finish()
+    }
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct WireguardPeerConf {
@@ -44,8 +63,9 @@ pub struct WireguardPeerConf {
     /// Base64 encoded public key
     #[serde(skip_serializing_if = "Option::is_none")]
     pub public_key: Option<String>,
-    /// Base64 encoded preshared key
-    #[serde(skip_serializing_if = "Option::is_none")]
+    /// Base64 encoded preshared key, will be shown as `<hidden>` for Debug and
+    /// excluded from Serialize
+    #[serde(skip_serializing)]
     pub preshared_key: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub persistent_keepalive: Option<u16>,
@@ -72,6 +92,25 @@ impl From<&WireguardPeerConf> for WireguardPeerParsed {
     }
 }
 
+impl std::fmt::Debug for WireguardPeerConf {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
+        f.debug_struct("WireguardPeerConf")
+            .field("endpoint", &self.endpoint)
+            .field("public_key", &self.public_key)
+            .field(
+                "preshared_key",
+                &self.preshared_key.as_ref().map(|_| "<hidden>"),
+            )
+            .field("persistent_keepalive", &self.persistent_keepalive)
+            .field("allowed_ips", &self.allowed_ips)
+            .field("protocol_version", &self.protocol_version)
+            .finish()
+    }
+}
+
 pub(crate) async fn apply_wg_conf(
     handle: &mut WireguardHandle,
     iface: &IfaceConf,
@@ -83,4 +122,45 @@ pub(crate) async fn apply_wg_conf(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_hide_secrets_wg_conf() {
+        let conf = WireguardConf {
+            private_key: Some("top_secrets".into()),
+            listen_port: Some(12123),
+            ..Default::default()
+        };
+
+        let debug_output = format!("{conf:?}");
+
+        assert!(debug_output.contains("WireguardConf"));
+        assert!(debug_output.contains("listen_port"));
+        assert!(debug_output.contains("12123"));
+        assert!(debug_output.contains("private_key"));
+        assert!(debug_output.contains("<hidden>"));
+        assert!(!debug_output.contains("top_secrets"));
+    }
+
+    #[test]
+    fn test_hide_secrets_wg_peer_conf() {
+        let conf = WireguardPeerConf {
+            preshared_key: Some("top_secrets".into()),
+            public_key: Some("ok_to_share".into()),
+            ..Default::default()
+        };
+
+        let debug_output = format!("{conf:?}");
+
+        assert!(debug_output.contains("WireguardPeerConf"));
+        assert!(debug_output.contains("public_key"));
+        assert!(debug_output.contains("ok_to_share"));
+        assert!(debug_output.contains("preshared_key"));
+        assert!(debug_output.contains("<hidden>"));
+        assert!(!debug_output.contains("top_secrets"));
+    }
 }
