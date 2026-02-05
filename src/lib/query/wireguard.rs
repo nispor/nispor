@@ -10,13 +10,17 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Iface, IfaceType, NisporError};
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct WireguardInfo {
     /// Base64 encoded public key
     #[serde(skip_serializing_if = "Option::is_none")]
     pub public_key: Option<String>,
+    /// Base64 encoded private key, will be shown as `<hidden>` for Debug and
+    /// excluded from Serialize
+    #[serde(skip_serializing)]
+    pub private_key: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub listen_port: Option<u16>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -25,10 +29,33 @@ pub struct WireguardInfo {
     pub peers: Option<Vec<WireguardPeerInfo>>,
 }
 
+// TODO: The more elegant way of hide secret during debug is using Derive like
+// `#[serde(skip)]`. But that is way require a isolated crate dedicated for
+// derive. I don't want to add new dependency even for internal crate.
+// Let's do the silly non-rust-idiom way for now.
+impl std::fmt::Debug for WireguardInfo {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
+        f.debug_struct("WireguardInfo")
+            .field("public_key", &self.public_key)
+            .field(
+                "private_key",
+                &self.private_key.as_ref().map(|_| "<hidden>"),
+            )
+            .field("listen_port", &self.listen_port)
+            .field("fwmark", &self.fwmark)
+            .field("peers", &self.peers)
+            .finish()
+    }
+}
+
 impl From<nl_wireguard::WireguardParsed> for WireguardInfo {
     fn from(nl_wg: nl_wireguard::WireguardParsed) -> Self {
         Self {
             public_key: nl_wg.public_key,
+            private_key: nl_wg.private_key,
             listen_port: nl_wg.listen_port,
             fwmark: nl_wg.fwmark,
             peers: nl_wg.peers.map(|nl_peers| {
@@ -38,7 +65,7 @@ impl From<nl_wireguard::WireguardParsed> for WireguardInfo {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Eq, PartialEq, Clone, Default)]
+#[derive(Serialize, Deserialize, Eq, PartialEq, Clone, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub struct WireguardPeerInfo {
@@ -47,8 +74,10 @@ pub struct WireguardPeerInfo {
     /// Base64 encoded public key
     #[serde(skip_serializing_if = "Option::is_none")]
     pub public_key: Option<String>,
-    /// Whether has pershared key configure or not
-    pub has_preshared_key: bool,
+    /// Base64 encoded preshared key, will be shown as `<hidden>` for Debug and
+    /// excluded from Serialize
+    #[serde(skip_serializing)]
+    pub preshared_key: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub persistent_keepalive: Option<u16>,
     /// Last handshake in a format of `32 seconds ago`
@@ -69,7 +98,7 @@ impl From<nl_wireguard::WireguardPeerParsed> for WireguardPeerInfo {
         Self {
             endpoint: nl_peer.endpoint.map(|e| e.to_string()),
             public_key: nl_peer.public_key,
-            has_preshared_key: nl_peer.preshared_key.is_some(),
+            preshared_key: nl_peer.preshared_key,
             persistent_keepalive: nl_peer.persistent_keepalive,
             last_handshake: nl_peer
                 .last_handshake
@@ -81,6 +110,28 @@ impl From<nl_wireguard::WireguardPeerParsed> for WireguardPeerInfo {
             }),
             protocol_version: nl_peer.protocol_version,
         }
+    }
+}
+
+impl std::fmt::Debug for WireguardPeerInfo {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
+        f.debug_struct("WireguardPeerInfo")
+            .field("endpoint", &self.endpoint)
+            .field("public_key", &self.public_key)
+            .field(
+                "preshared_key",
+                &self.preshared_key.as_ref().map(|_| "<hidden>"),
+            )
+            .field("persistent_keepalive", &self.persistent_keepalive)
+            .field("last_handshake", &self.last_handshake)
+            .field("rx_bytes", &self.rx_bytes)
+            .field("tx_bytes", &self.tx_bytes)
+            .field("allowed_ips", &self.allowed_ips)
+            .field("protocol_version", &self.protocol_version)
+            .finish()
     }
 }
 
@@ -148,5 +199,46 @@ fn last_handshake_to_human_str(last_handshake: Duration) -> Option<String> {
         None
     } else {
         Some(format!("{} seconds ago", (now - last_handshake).as_secs()))
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_hide_secrets_wg_info() {
+        let conf = WireguardInfo {
+            private_key: Some("top_secrets".into()),
+            listen_port: Some(12123),
+            ..Default::default()
+        };
+
+        let debug_output = format!("{conf:?}");
+
+        assert!(debug_output.contains("WireguardInfo"));
+        assert!(debug_output.contains("listen_port"));
+        assert!(debug_output.contains("12123"));
+        assert!(debug_output.contains("private_key"));
+        assert!(debug_output.contains("<hidden>"));
+        assert!(!debug_output.contains("top_secrets"));
+    }
+
+    #[test]
+    fn test_hide_secrets_wg_peer_info() {
+        let conf = WireguardPeerInfo {
+            preshared_key: Some("top_secrets".into()),
+            public_key: Some("ok_to_share".into()),
+            ..Default::default()
+        };
+
+        let debug_output = format!("{conf:?}");
+
+        assert!(debug_output.contains("WireguardPeerInfo"));
+        assert!(debug_output.contains("public_key"));
+        assert!(debug_output.contains("ok_to_share"));
+        assert!(debug_output.contains("preshared_key"));
+        assert!(debug_output.contains("<hidden>"));
+        assert!(!debug_output.contains("top_secrets"));
     }
 }

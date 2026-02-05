@@ -57,7 +57,6 @@ public-key: "JKossUAjywXuJ2YVcaeD6PaHs+afPmIthDuqEVlspwA="
 peers:
 - endpoint: 192.0.2.254:9999
   public-key: "8bdQrVLqiw3ZoHCucNh1YfH0iCWuyStniRr8t7H24Fk="
-  has-preshared-key: true
   persistent-keepalive: 360
   allowed-ips:
     - address: 0.0.0.0
@@ -71,7 +70,6 @@ public-key: "JKossUAjywXuJ2YVcaeD6PaHs+afPmIthDuqEVlspwA="
 peers:
 - endpoint: 192.0.2.253:9999
   public-key: "8bdQrVLqiw3ZoHCucNh1YfH0iCWuyStniRr8t7H24Fk="
-  has-preshared-key: true
   persistent-keepalive: 0
   allowed-ips:
     - address: 0.0.0.0
