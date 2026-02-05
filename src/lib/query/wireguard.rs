@@ -2,7 +2,7 @@
 
 use std::{
     collections::HashMap,
-    net::IpAddr,
+    net::{IpAddr, SocketAddr},
     time::{Duration, SystemTime},
 };
 
@@ -70,7 +70,7 @@ impl From<nl_wireguard::WireguardParsed> for WireguardInfo {
 #[non_exhaustive]
 pub struct WireguardPeerInfo {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub endpoint: Option<String>,
+    pub endpoint: Option<SocketAddr>,
     /// Base64 encoded public key
     #[serde(skip_serializing_if = "Option::is_none")]
     pub public_key: Option<String>,
@@ -96,7 +96,7 @@ pub struct WireguardPeerInfo {
 impl From<nl_wireguard::WireguardPeerParsed> for WireguardPeerInfo {
     fn from(nl_peer: nl_wireguard::WireguardPeerParsed) -> Self {
         Self {
-            endpoint: nl_peer.endpoint.map(|e| e.to_string()),
+            endpoint: nl_peer.endpoint,
             public_key: nl_peer.public_key,
             preshared_key: nl_peer.preshared_key,
             persistent_keepalive: nl_peer.persistent_keepalive,
