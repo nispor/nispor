@@ -44,7 +44,7 @@ pub use crate::{
         RouteRule, RouteRuleFlag, RouteScope, RouteType, RuleAction, SriovInfo,
         TunInfo, TunMode, TunnelEncapFlag, TunnelEncapType, VethInfo, VfInfo,
         VfLinkState, VfState, VlanInfo, VlanProtocol, VlanQosMapping, VrfInfo,
-        VrfPortInfo, VxlanInfo, WifiInfo, WireguardInfo, WireguardIpAddress,
-        WireguardPeerInfo, XfrmInfo,
+        VrfPortInfo, VxlanInfo, WifiInfo, WifiMode, WireguardInfo,
+        WireguardIpAddress, WireguardPeerInfo, XfrmInfo,
     },
 };

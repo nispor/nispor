@@ -76,7 +76,7 @@ pub use self::{
     vlan::{VlanInfo, VlanProtocol, VlanQosMapping},
     vrf::{VrfInfo, VrfPortInfo},
     vxlan::VxlanInfo,
-    wifi::WifiInfo,
+    wifi::{WifiInfo, WifiMode},
     wireguard::{WireguardInfo, WireguardIpAddress, WireguardPeerInfo},
     xfrm::XfrmInfo,
 };
