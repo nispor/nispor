@@ -84,6 +84,8 @@ pub struct Ipv4AddrInfo {
     pub valid_lft: String,
     // The renaming seonds for this address be preferred
     pub preferred_lft: String,
+    /// IPv4 Address Flags
+    pub flags: Vec<IpAddrFlag>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub protocol: Option<AddressProtocol>,
 }
@@ -200,7 +202,7 @@ pub struct Ipv6AddrInfo {
     // The renaming seonds for this address be preferred
     pub preferred_lft: String,
     /// IPv6 Address Flags
-    pub flags: Vec<Ipv6AddrFlag>,
+    pub flags: Vec<IpAddrFlag>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub peer: Option<Ipv6Addr>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -332,7 +334,7 @@ pub(crate) fn is_ipv6_addr(addr: &str) -> bool {
 #[derive(Clone, Eq, PartialEq, Debug, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
-pub enum Ipv6AddrFlag {
+pub enum IpAddrFlag {
     Secondary,
     Nodad,
     Optimistic,
@@ -348,7 +350,7 @@ pub enum Ipv6AddrFlag {
     Other(u32),
 }
 
-impl From<address::AddressFlags> for Ipv6AddrFlag {
+impl From<address::AddressFlags> for IpAddrFlag {
     fn from(d: address::AddressFlags) -> Self {
         match d {
             address::AddressFlags::Secondary => Self::Secondary,
@@ -444,6 +446,8 @@ fn parse_ipv4_nlas(
             addr.valid_lft = left_time_to_string(v.ifa_valid);
         } else if let AddressAttribute::Protocol(v) = nla {
             addr.protocol = Some((*v).into());
+        } else if let AddressAttribute::Flags(flags) = nla {
+            addr.flags = flags.iter().map(IpAddrFlag::from).collect();
         }
     }
 
@@ -483,7 +487,7 @@ fn parse_ipv6_nlas(
             addr.preferred_lft = left_time_to_string(v.ifa_preferred);
             addr.valid_lft = left_time_to_string(v.ifa_valid);
         } else if let AddressAttribute::Flags(flags) = nla {
-            addr.flags = flags.iter().map(Ipv6AddrFlag::from).collect();
+            addr.flags = flags.iter().map(IpAddrFlag::from).collect();
         } else if let AddressAttribute::Protocol(v) = nla {
             addr.protocol = Some((*v).into());
         }
