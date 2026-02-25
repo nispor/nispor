@@ -18,6 +18,49 @@ use rtnetlink::packet_route::{
 use serde::{Deserialize, Serialize};
 
 use crate::{ErrorKind, Iface, NisporError};
+#[derive(
+    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+)]
+#[serde(rename_all = "lowercase")]
+pub enum AddressScope {
+    #[default]
+    Universe,
+    Site,
+    Link,
+    Host,
+    Nowhere,
+    Other(u8),
+}
+
+impl From<rtnetlink::packet_route::address::AddressScope> for AddressScope {
+    fn from(d: rtnetlink::packet_route::address::AddressScope) -> Self {
+        match d {
+            rtnetlink::packet_route::address::AddressScope::Universe => {
+                Self::Universe
+            }
+            rtnetlink::packet_route::address::AddressScope::Site => Self::Site,
+            rtnetlink::packet_route::address::AddressScope::Link => Self::Link,
+            rtnetlink::packet_route::address::AddressScope::Host => Self::Host,
+            rtnetlink::packet_route::address::AddressScope::Nowhere => {
+                Self::Nowhere
+            }
+            _ => Self::Other(d.into()),
+        }
+    }
+}
+
+impl From<AddressScope> for rtnetlink::packet_route::address::AddressScope {
+    fn from(v: AddressScope) -> Self {
+        match v {
+            AddressScope::Universe => Self::Universe,
+            AddressScope::Site => Self::Site,
+            AddressScope::Link => Self::Link,
+            AddressScope::Host => Self::Host,
+            AddressScope::Nowhere => Self::Nowhere,
+            AddressScope::Other(d) => Self::Other(d),
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
@@ -34,6 +77,7 @@ pub struct Ipv4Info {
 pub struct Ipv4AddrInfo {
     pub address: String,
     pub prefix_len: u8,
+    pub scope: AddressScope,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub peer: Option<String>,
     // The renaming seonds for this address be valid
@@ -150,6 +194,7 @@ pub struct Ipv6Info {
 pub struct Ipv6AddrInfo {
     pub address: String,
     pub prefix_len: u8,
+    pub scope: AddressScope,
     // The renaming seonds for this address be valid
     pub valid_lft: String,
     // The renaming seonds for this address be preferred
@@ -385,6 +430,7 @@ fn parse_ipv4_nlas(
     let iface_index = nl_msg.header.index;
     let mut addr = Ipv4AddrInfo {
         prefix_len: nl_msg.header.prefix_len,
+        scope: nl_msg.header.scope.into(),
         ..Default::default()
     };
     let mut peer = String::new();
@@ -414,6 +460,7 @@ fn parse_ipv6_nlas(
     let iface_index = nl_msg.header.index;
     let mut addr = Ipv6AddrInfo {
         prefix_len: nl_msg.header.prefix_len,
+        scope: nl_msg.header.scope.into(),
         ..Default::default()
     };
 

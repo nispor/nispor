@@ -71,6 +71,7 @@ const EXPECTED_IPV4_INFO: &str = r#"---
 addresses:
   - address: 192.0.2.1
     prefix-len: 24
+    scope: universe
     valid-lft: forever
     preferred-lft: forever
     protocol: "0xf3""#;
@@ -79,6 +80,7 @@ const EXPECTED_IPV4_INFO_WITH_FORWADRDING_ENABLED: &str = r#"---
 addresses:
   - address: 192.0.2.1
     prefix-len: 24
+    scope: universe
     valid-lft: forever
     preferred-lft: forever
 forwarding: true"#;
@@ -87,6 +89,7 @@ const EXPECTED_IPV4_INFO_WITH_FORWADRDING_DISABLED: &str = r#"---
 addresses:
   - address: 192.0.2.1
     prefix-len: 24
+    scope: universe
     valid-lft: forever
     preferred-lft: forever
 forwarding: false"#;
@@ -95,6 +98,7 @@ const EXPECTED_IPV4_DYNAMIC_INFO: &str = r#"---
 addresses:
   - address: 192.0.2.1
     prefix-len: 24
+    scope: universe
     valid-lft: 115sec
     preferred-lft: 55sec"#;
 
@@ -102,6 +106,7 @@ const EXPECTED_IPV6_INFO: &str = r#"---
 addresses:
   - address: "2001:db8:a::9"
     prefix-len: 64
+    scope: universe
     valid-lft: forever
     preferred-lft: forever
     protocol: "0x62"
@@ -109,6 +114,7 @@ addresses:
     - permanent
   - address: "fe80::223:45ff:fe67:891a"
     prefix-len: 64
+    scope: link
     valid-lft: forever
     preferred-lft: forever
     flags:
@@ -118,6 +124,7 @@ const EXPECTED_IPV6_DYNAMIC_INFO: &str = r#"---
 addresses:
   - address: "2001:db8:a::9"
     prefix-len: 64
+    scope: universe
     valid-lft: 116sec
     preferred-lft: 56sec
     flags: []
