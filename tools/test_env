@@ -16,7 +16,7 @@ sudo sysctl -w net.ipv6.conf.all.disable_ipv6=0 1>/dev/null
 if [ "CHK$1" == "CHK" ];then
     echo 'Need argument: bond, br, brv, vlan, dummy, vxlan, veth, vrf, sriov,'
     echo 'rm, route, rule, sim, mptcp, bgp, macsec, ipv6token, ipv6p2p, hsr,'
-    echo 'xfrm, ipvlan, ipip, sit, ip6ip6, ipip6'
+    echo 'xfrm, ipvlan, ipip, sit, ip6ip6, ipip6, gretap'
     exit 1
 fi
 
@@ -44,6 +44,7 @@ function clean_up {
     sudo ip link del macsec0
     sudo ip link del hsr0
     sudo ip link del xfrm1
+    sudo ip link del gretap99
     sudo ip rule del priority 999
     sudo ip -6 rule del priority 999
     sudo modprobe -r netdevsim
@@ -307,6 +308,9 @@ elif [ "CHK$1" == "CHKip6ip6" ];then
 elif [ "CHK$1" == "CHKipip6" ];then
     create_nics
     sudo ip -6 tunnel add ipip60 mode ipip6 local 2001:db8:f::1 remote 2001:db8:f::ffff ttl 42
+    sleep $LINK_WAIT_TIME
+elif [ "CHK$1" == "CHKgretap" ];then
+    sudo ip link add gretap99 type gretap local 192.0.2.1 remote 192.0.2.2
     sleep $LINK_WAIT_TIME
 elif [ "CHK$1" == "CHKrm" ];then
     clean_up 2>/dev/null
