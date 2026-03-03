@@ -166,10 +166,10 @@ pub(crate) async fn fill_wifi_info(
                             }
                         }
                     }
-                    Nl80211StationInfo::StationFlags(v) => {
-                        if v.set.contains(Nl80211StationFlags::Authorized) {
-                            authorized = true;
-                        }
+                    Nl80211StationInfo::StationFlags(v)
+                        if v.set.contains(Nl80211StationFlags::Authorized) =>
+                    {
+                        authorized = true;
                     }
                     Nl80211StationInfo::RxBitrate(rates) => {
                         for rate in rates {
