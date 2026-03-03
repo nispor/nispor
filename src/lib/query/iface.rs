@@ -408,22 +408,15 @@ pub(crate) fn parse_nl_msg_to_iface(
                             "openvswitch" => IfaceType::OpenvSwitch,
                             _ => IfaceType::Other(s.to_lowercase()),
                         },
-                        _ => IfaceType::Other(
-                            format!("{t:?}").as_str().to_lowercase(),
-                        ),
+                        _ => IfaceType::Other(format!("{t:?}").to_lowercase()),
                     };
-                    if let IfaceType::Other(_) = iface_type {
-                        /* We did not find an explicit link type. Instead
-                         * it's just "Other(_)". If
-                         * we already determined a link type
-                         * above (ethernet or infiniband), keep that one. */
-                        if !matches!(&link_layer_type, &IfaceType::Other(_)) {
-                            iface_state.iface_type = link_layer_type.clone();
-                        }
-                    } else {
-                        /* We found a better link type based on the kind. Use
-                         * it. */
-                        iface_state.iface_type = iface_type
+                    // Always prefer InfoKind unless link type is loopback or
+                    // infiniband.
+                    if !matches!(
+                        iface_state.iface_type,
+                        IfaceType::Loopback | IfaceType::Infiniband
+                    ) {
+                        iface_state.iface_type = iface_type;
                     }
                 }
             }

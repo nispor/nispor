@@ -9,6 +9,7 @@ mod bridge;
 mod bridge_vlan_filter;
 mod dummy;
 mod ethtool;
+mod gre;
 mod hsr;
 mod ip;
 mod ip_vlan;
