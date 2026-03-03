@@ -179,46 +179,26 @@ async fn gen_link_msg(
             )
             .await?
         }
-        Some(IfaceType::Dummy) => {
-            if cur_iface.is_none() {
-                apply_base_link_changes(
-                    handle,
-                    DummyConf::gen_link_msg_builder(des_iface),
-                    des_iface,
-                    cur_iface,
-                )
-                .await?
-            } else {
-                apply_base_link_changes(
-                    handle,
-                    LinkUnspec::new_with_name(des_iface.name.as_str()),
-                    des_iface,
-                    cur_iface,
-                )
-                .await?
-            }
+        Some(IfaceType::Dummy) if cur_iface.is_none() => {
+            apply_base_link_changes(
+                handle,
+                DummyConf::gen_link_msg_builder(des_iface),
+                des_iface,
+                cur_iface,
+            )
+            .await?
         }
-        Some(IfaceType::Wireguard) => {
-            if cur_iface.is_none() {
-                apply_base_link_changes(
-                    handle,
-                    LinkMessageBuilder::<LinkUnspec>::new_with_info_kind(
-                        InfoKind::Wireguard,
-                    )
-                    .name(des_iface.name.clone()),
-                    des_iface,
-                    cur_iface,
+        Some(IfaceType::Wireguard) if cur_iface.is_none() => {
+            apply_base_link_changes(
+                handle,
+                LinkMessageBuilder::<LinkUnspec>::new_with_info_kind(
+                    InfoKind::Wireguard,
                 )
-                .await?
-            } else {
-                apply_base_link_changes(
-                    handle,
-                    LinkUnspec::new_with_name(des_iface.name.as_str()),
-                    des_iface,
-                    cur_iface,
-                )
-                .await?
-            }
+                .name(des_iface.name.clone()),
+                des_iface,
+                cur_iface,
+            )
+            .await?
         }
         _ => {
             apply_base_link_changes(

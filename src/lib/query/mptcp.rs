@@ -199,10 +199,8 @@ fn mptcp_msg_to_nispor(
                     MptcpPathManagerAddressAttr::IfIndex(i) => {
                         ret.iface_index = Some(*i);
                     }
-                    MptcpPathManagerAddressAttr::Port(i) => {
-                        if *i != 0 {
-                            ret.port = Some(*i);
-                        }
+                    MptcpPathManagerAddressAttr::Port(i) if *i != 0 => {
+                        ret.port = Some(*i);
                     }
                     MptcpPathManagerAddressAttr::Id(i) => {
                         ret.id = Some(*i);
