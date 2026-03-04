@@ -25,6 +25,8 @@ CODE_BASE_DIR=$(readlink -f "$(dirname -- "$0")/..");
 
 cd $CODE_BASE_DIR;
 
+cargo update
+
 CUR_VERSION=$(cargo pkgid nispor|cut -d@ -f2)
 CUR_MAJOR_VERSION=$(echo $CUR_VERSION|cut -f1 -d.)
 CUR_MINOR_VERSION=$(echo $CUR_VERSION|cut -f2 -d.)
