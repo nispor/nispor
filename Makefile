@@ -1,4 +1,4 @@
-VERSION=$(shell cat $(ROOT_DIR)/VERSION)
+VERSION=$(shell cargo pkgid nispor|cut -d@ -f2)
 ROOT_DIR?=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 RUST_DEBUG_BIN_DIR=./target/debug
 RUST_RELEASE_BIN_DIR=./target/release
