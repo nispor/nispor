@@ -143,7 +143,7 @@ done
 git branch bump_version || true
 git checkout bump_version
 git reset --hard upstream/$MAIN_BRANCH_NAME
-sed -i -e "s/$CUR_VERSION/$NEXT_VERSION/" VERSION Cargo.toml
+sed -i -e "s/$CUR_VERSION/$NEXT_VERSION/" Cargo.toml
 git commit -a --signoff -m "Bump version to $NEXT_VERSION"
 git push origin +bump_version
 hub pull-request -b $MAIN_BRANCH_NAME --no-edit
