@@ -25,7 +25,7 @@ pub use crate::{
     net_conf::NetConf,
     net_state::NetState,
     query::{
-        AddressFamily, AddressProtocol, BondAdInfo, BondAdSelect,
+        AddressFamily, AddressProtocol, AddressScope, BondAdInfo, BondAdSelect,
         BondAllPortActive, BondArpValidate, BondFailOverMac, BondInfo,
         BondLacpRate, BondMiiStatus, BondMode, BondModeArpAllTargets,
         BondPortInfo, BondPortState, BondPrimaryReselect, BondXmitHashPolicy,

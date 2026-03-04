@@ -51,8 +51,8 @@ pub use self::{
     hsr::{HsrInfo, HsrProtocol},
     iface::{ControllerType, Iface, IfaceFlag, IfaceState, IfaceType},
     ip::{
-        AddressProtocol, IpAddrFlag, IpFamily, Ipv4AddrInfo, Ipv4Info,
-        Ipv6AddrInfo, Ipv6Info,
+        AddressProtocol, AddressScope, IpAddrFlag, IpFamily, Ipv4AddrInfo,
+        Ipv4Info, Ipv6AddrInfo, Ipv6Info,
     },
     ipoib::{IpoibInfo, IpoibMode},
     iptunnel::{
