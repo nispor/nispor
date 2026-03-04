@@ -1,4 +1,22 @@
 # Changelog
+## [2.0.1] - 2026-03-04
+### Breaking changes
+ - Renamed Ipv6AddrFlag -> IpAddrFlag, expose flags for v4 addrs. (2023fe0)
+ - wireguard: Changed endpoint from String to SocketAddr. (139a1ad)
+ - Bump minimum supported rust version to 1.88. (72b2375)
+ - Bump to Rust Edition 2024. (59504ee)
+
+### New features
+ - ip: expose scope of ip addresses. (9f20373)
+ - Support convert AddressProtocol to u8. (583ef30)
+ - Support IP protocol querying and applying. (19132b9)
+ - Support wireguard query and apply. (94c0496)
+
+### Bug fixes
+ - Prefer `LinkInfo::Kind` as interface type. (5e13d3f)
+ - Export WifiMode. (8459d20)
+ - wireguard: Include private key but hide from Debug and Serialize. (cef4c63)
+
 ## [2.0.0] - 2026-01-05
 ### Breaking changes
  - bridge vlan: merge `bridge-vlan` section into `bridge` section. (5f60dbc)
