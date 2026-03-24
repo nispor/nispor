@@ -169,7 +169,7 @@ async fn gen_link_msg(
             )
             .await?
         }
-        Some(IfaceType::Vlan) => {
+        Some(IfaceType::Vlan) if des_iface.vlan.is_some() => {
             apply_base_link_changes(
                 handle,
                 VlanConf::gen_link_msg_builder(handle, des_iface, cur_iface)

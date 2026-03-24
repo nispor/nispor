@@ -52,6 +52,52 @@ interfaces:
       is-bridge-binding: false
 "#;
 
+const REGR_IFACE_NAME: &str = "dummy2.98";
+
+const REGR_VLAN_CREATE_YAML: &str = r#"
+interfaces:
+  - name: dummy2
+    type: dummy
+  - name: dummy2.98
+    type: vlan
+    vlan:
+      base-iface: dummy2
+      vlan-id: 98
+"#;
+
+// Regression test: modifying an existing VLAN's IP while omitting
+// immutable vlan attributes (as a well-behaved caller should).
+const REGR_VLAN_CHANGE_WITH_ATTRS_YAML: &str = r#"
+interfaces:
+  - name: dummy2.98
+    type: vlan
+    ipv4:
+      addresses:
+        - address: "192.0.2.1"
+          prefix-len: 24
+"#;
+
+// Regression test: modifying an existing VLAN's IP without any vlan section.
+const REGR_VLAN_CHANGE_IP_ONLY_YAML: &str = r#"
+interfaces:
+  - name: dummy2.98
+    type: vlan
+    ipv4:
+      addresses:
+        - address: "192.0.2.2"
+          prefix-len: 24
+"#;
+
+const REGR_VLAN_DELETE_YAML: &str = r#"---
+interfaces:
+  - name: dummy2.98
+    type: vlan
+    state: absent
+  - name: dummy2
+    type: dummy
+    state: absent
+"#;
+
 const VLAN_DELETE_YML: &str = r#"---
 interfaces:
   - name: dummy1.99
@@ -131,6 +177,43 @@ fn test_create_change_and_delete_vlan() {
     });
 }
 
+// Regression: modifying an existing VLAN should not cause EINVAL.
+// Tests both re-specifying immutable attrs and IP-only changes.
+#[test]
+fn test_modify_existing_vlan() {
+    with_regr_vlan_iface(|| {
+        // Changing IP while omitting immutable vlan attributes
+        let net_conf: NetConf =
+            serde_yaml::from_str(REGR_VLAN_CHANGE_WITH_ATTRS_YAML).unwrap();
+        net_conf.apply().unwrap();
+
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[REGR_IFACE_NAME];
+        assert_eq!(iface.iface_type, crate::IfaceType::Vlan);
+        let ipv4 = iface.ipv4.as_ref().unwrap();
+        assert!(
+            ipv4.addresses
+                .iter()
+                .any(|a| a.address == "192.0.2.1" && a.prefix_len == 24)
+        );
+
+        // Changing only the IP without any vlan section
+        let net_conf: NetConf =
+            serde_yaml::from_str(REGR_VLAN_CHANGE_IP_ONLY_YAML).unwrap();
+        net_conf.apply().unwrap();
+
+        let state = NetState::retrieve().unwrap();
+        let iface = &state.ifaces[REGR_IFACE_NAME];
+        assert_eq!(iface.iface_type, crate::IfaceType::Vlan);
+        let ipv4 = iface.ipv4.as_ref().unwrap();
+        assert!(
+            ipv4.addresses
+                .iter()
+                .any(|a| a.address == "192.0.2.2" && a.prefix_len == 24)
+        );
+    });
+}
+
 fn with_vlan_iface<T>(test: T)
 where
     T: FnOnce() + panic::UnwindSafe,
@@ -144,6 +227,25 @@ where
     });
 
     let net_conf: NetConf = serde_yaml::from_str(VLAN_DELETE_YML).unwrap();
+    net_conf.apply().unwrap();
+
+    assert!(result.is_ok())
+}
+
+fn with_regr_vlan_iface<T>(test: T)
+where
+    T: FnOnce() + panic::UnwindSafe,
+{
+    let net_conf: NetConf =
+        serde_yaml::from_str(REGR_VLAN_CREATE_YAML).unwrap();
+    net_conf.apply().unwrap();
+
+    let result = panic::catch_unwind(|| {
+        test();
+    });
+
+    let net_conf: NetConf =
+        serde_yaml::from_str(REGR_VLAN_DELETE_YAML).unwrap();
     net_conf.apply().unwrap();
 
     assert!(result.is_ok())
