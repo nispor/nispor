@@ -126,7 +126,9 @@ pub(crate) async fn get_ifaces_with_handle(
     }
 
     for iface in iface_states.values_mut() {
-        iface.fill_pci_address();
+        if iface.pci_address.is_none() {
+            iface.fill_pci_address_by_sysfs();
+        }
     }
 
     // The cfg80211 module might not exists or loaded in environments,

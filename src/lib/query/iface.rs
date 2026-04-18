@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{collections::HashMap, path::Path};
+use std::{collections::HashMap, path::Path, str::FromStr};
 
 use futures::stream::TryStreamExt;
 use rtnetlink::packet_route::link::{
@@ -370,6 +370,16 @@ pub(crate) fn parse_nl_msg_to_iface(
             iface_state.controller = Some(format!("{controller}"));
         } else if let LinkAttribute::Link(l) = nla {
             link = Some(*l);
+        } else if let LinkAttribute::ParentDevName(addr) = nla {
+            if nl_msg.attributes.as_slice().iter().any(|n| {
+                matches!(
+                    n,
+                    LinkAttribute::ParentDevBusName(bus_name)
+                    if bus_name == "pci"
+                )
+            }) {
+                iface_state.pci_address = PciAddress::from_str(addr).ok();
+            }
         } else if let LinkAttribute::PropList(prop_list) = nla {
             iface_state.alt_names = prop_list
                 .iter()
