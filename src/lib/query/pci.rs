@@ -96,11 +96,9 @@ impl FromStr for PciAddress {
 }
 
 impl Iface {
-    // The PCI address only available via ethtool IOCTL `ETHTOOL_GDRVINFO`,
-    // there is no netlink API for this yet. Hence using sysfs required.
     // The systemd `src/udev/udev-builtin-path_id.c` is also using this
-    // information for ID_PATH.
-    pub(crate) fn fill_pci_address(&mut self) {
+    // sysfs information for ID_PATH.
+    pub(crate) fn fill_pci_address_by_sysfs(&mut self) {
         if let Some(dev_path) =
             PathBuf::from(format!("/sys/class/net/{}/device", self.name))
                 .read_link()
