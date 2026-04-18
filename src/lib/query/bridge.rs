@@ -355,7 +355,7 @@ pub(crate) fn get_bridge_port_info(
             InfoBridgePort::MulticastMaxGroups(d) => {
                 ret.multicast_max_groups = Some(*d)
             }
-            InfoBridgePort::NeighVlanSupress(d) => {
+            InfoBridgePort::NeighVlanSuppress(d) => {
                 ret.neigh_vlan_suppress = Some(*d)
             }
             InfoBridgePort::BackupNextHopId(d) => {

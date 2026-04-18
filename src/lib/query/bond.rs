@@ -6,7 +6,8 @@ use std::{
 };
 
 use rtnetlink::packet_route::link::{
-    self, BondArpAllTargets as RtBondArpAllTargets,
+    self, BondAdSelect as RtBondAdSelect,
+    BondArpAllTargets as RtBondArpAllTargets,
     BondArpValidate as RtBondArpValidate, BondFailOverMac as RtBondFailOverMac,
     BondPrimaryReselect as RtBondPrimaryReselect,
     BondXmitHashPolicy as RtBondXmitHashPolicy, InfoBond, InfoBondPort,
@@ -392,10 +393,6 @@ impl From<BondLacpRate> for link::BondLacpRate {
     }
 }
 
-const BOND_AD_STABLE: u8 = 0;
-const BOND_AD_BANDWIDTH: u8 = 1;
-const BOND_AD_COUNT: u8 = 2;
-
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
@@ -406,24 +403,24 @@ pub enum BondAdSelect {
     Other(u8),
 }
 
-impl From<u8> for BondAdSelect {
-    fn from(d: u8) -> Self {
-        match d {
-            BOND_AD_STABLE => Self::Stable,
-            BOND_AD_BANDWIDTH => Self::Bandwidth,
-            BOND_AD_COUNT => Self::Count,
-            _ => Self::Other(d),
+impl From<RtBondAdSelect> for BondAdSelect {
+    fn from(v: RtBondAdSelect) -> Self {
+        match v {
+            RtBondAdSelect::Stable => Self::Stable,
+            RtBondAdSelect::Bandwidth => Self::Bandwidth,
+            RtBondAdSelect::Count => Self::Count,
+            _ => Self::Other(u8::from(v)),
         }
     }
 }
 
-impl From<BondAdSelect> for u8 {
-    fn from(v: BondAdSelect) -> u8 {
+impl From<BondAdSelect> for RtBondAdSelect {
+    fn from(v: BondAdSelect) -> RtBondAdSelect {
         match v {
-            BondAdSelect::Stable => BOND_AD_STABLE,
-            BondAdSelect::Bandwidth => BOND_AD_BANDWIDTH,
-            BondAdSelect::Count => BOND_AD_COUNT,
-            BondAdSelect::Other(d) => d,
+            BondAdSelect::Stable => RtBondAdSelect::Stable,
+            BondAdSelect::Bandwidth => RtBondAdSelect::Bandwidth,
+            BondAdSelect::Count => RtBondAdSelect::Count,
+            BondAdSelect::Other(d) => RtBondAdSelect::Other(d),
         }
     }
 }
