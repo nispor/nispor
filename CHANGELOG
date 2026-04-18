@@ -1,4 +1,15 @@
 # Changelog
+## [2.0.2] - 2026-04-18
+### Breaking changes
+ - N/A
+
+### New features
+ - lib: expose AddressScope enum. (3d1829a)
+
+### Bug fixes
+ - pci: Use `IFLA_PARENT_DEV_NAME` for PCI address. (fcaa432)
+ - Use rtnetlink 0.21.0. (b40df59)
+
 ## [2.0.1] - 2026-03-04
 ### Breaking changes
  - Renamed Ipv6AddrFlag -> IpAddrFlag, expose flags for v4 addrs. (2023fe0)
