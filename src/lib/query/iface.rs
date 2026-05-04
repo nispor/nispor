@@ -420,14 +420,23 @@ pub(crate) fn parse_nl_msg_to_iface(
                         },
                         _ => IfaceType::Other(format!("{t:?}").to_lowercase()),
                     };
-                    // Always prefer InfoKind unless link type is loopback or
-                    // infiniband.
-                    if !matches!(
-                        iface_state.iface_type,
-                        IfaceType::Loopback | IfaceType::Infiniband
-                    ) {
-                        iface_state.iface_type = iface_type;
+
+                    // We prefer LinkLayerType over InfoKind for loopback, as it
+                    // is more accurate in this case. We also prefer it for
+                    // infiniband, but only if we didn't detect a specific
+                    // InfoKind (we detected Other). For example, Ipoib is more
+                    // specific than Infiniband, but Other is not.
+                    if iface_state.iface_type == IfaceType::Loopback
+                        || (iface_state.iface_type == IfaceType::Infiniband
+                            && matches!(iface_type, IfaceType::Other(_)))
+                    {
+                        continue;
                     }
+
+                    // For any other case, we prefer InfoKind over LinkLayerType
+                    // as it is almost always more accurate. LinkLayerType is
+                    // set as ethernet for most device types.
+                    iface_state.iface_type = iface_type;
                 }
             }
             for info in infos {
