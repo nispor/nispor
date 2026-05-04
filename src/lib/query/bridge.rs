@@ -513,7 +513,7 @@ fn parse_bridge_info(infos: &[InfoBridge]) -> Result<BridgeInfo, NisporError> {
         } else if let InfoBridge::VlanStatsPerPort(d) = info {
             bridge_info.vlan_stats_per_port = Some(*d);
         } else {
-            log::debug!("Unknown NLA {:?}", &info);
+            log::debug!("Unknown NLA {:?}", info);
         }
     }
     Ok(bridge_info)
