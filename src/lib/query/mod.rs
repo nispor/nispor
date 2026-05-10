@@ -9,6 +9,7 @@ mod iptunnel;
 mod mptcp;
 mod pci;
 mod wifi;
+#[cfg(feature = "wireguard")]
 mod wireguard;
 mod xfrm;
 // Disable `needless_pass_by_ref_mut` check due to upstream issue:
@@ -31,6 +32,10 @@ mod vlan;
 mod vrf;
 mod vxlan;
 
+#[cfg(feature = "wireguard")]
+pub use self::wireguard::{
+    WireguardInfo, WireguardIpAddress, WireguardPeerInfo,
+};
 pub use self::{
     bond::{
         BondAdInfo, BondAdSelect, BondAllPortActive, BondArpValidate,
@@ -77,7 +82,6 @@ pub use self::{
     vrf::{VrfInfo, VrfPortInfo},
     vxlan::VxlanInfo,
     wifi::{WifiInfo, WifiMode},
-    wireguard::{WireguardInfo, WireguardIpAddress, WireguardPeerInfo},
     xfrm::XfrmInfo,
 };
 pub(crate) use self::{

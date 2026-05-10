@@ -29,12 +29,14 @@ use super::{
     vxlan::get_vxlan_info,
     xfrm::get_xfrm_info,
 };
+#[cfg(feature = "wireguard")]
+use crate::WireguardInfo;
 use crate::{
     BondInfo, BondPortInfo, BridgeInfo, BridgePortInfo, ErrorKind, EthtoolInfo,
     HsrInfo, IpTunnelInfo, IpVlanInfo, IpoibInfo, Ipv4Info, Ipv6Info,
     MacSecInfo, MacVlanInfo, MacVtapInfo, MptcpAddress, NisporError,
     PciAddress, SriovInfo, TunInfo, VethInfo, VfInfo, VlanInfo, VrfInfo,
-    VrfPortInfo, VxlanInfo, WifiInfo, WireguardInfo, XfrmInfo,
+    VrfPortInfo, VxlanInfo, WifiInfo, XfrmInfo,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -311,6 +313,7 @@ pub struct Iface {
     pub ip_vlan: Option<IpVlanInfo>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub wifi: Option<WifiInfo>,
+    #[cfg(feature = "wireguard")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub wireguard: Option<WireguardInfo>,
 }

@@ -16,6 +16,10 @@ name = "nispor"
 path = "lib.rs"
 crate-type = ["lib"]
 
+[features]
+default = []
+wireguard = ["dep:nl-wireguard"]
+
 [dependencies]
 serde = { workspace = true }
 rtnetlink = { workspace = true }
@@ -26,7 +30,7 @@ futures = { workspace = true }
 libc = { workspace = true }
 log = { workspace = true }
 wl-nl80211 = { workspace = true }
-nl-wireguard = { workspace = true }
+nl-wireguard = { workspace = true, optional = true }
 
 [dev-dependencies]
 serde_yaml = { workspace = true }

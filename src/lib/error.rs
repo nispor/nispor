@@ -160,6 +160,7 @@ impl From<wl_nl80211::Nl80211Error> for NisporError {
     }
 }
 
+#[cfg(feature = "wireguard")]
 impl From<nl_wireguard::WireguardError> for NisporError {
     fn from(e: nl_wireguard::WireguardError) -> Self {
         NisporError {

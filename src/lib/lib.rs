@@ -11,11 +11,15 @@ mod net_state;
 mod netlink;
 mod query;
 
+#[cfg(feature = "wireguard")]
+pub use crate::conf::{WireguardConf, WireguardPeerConf};
+#[cfg(feature = "wireguard")]
+pub use crate::query::{WireguardInfo, WireguardIpAddress, WireguardPeerInfo};
 pub use crate::{
     conf::{
         AltNameConf, BondConf, BondPortConf, BridgeConf, BridgePortConf,
         DummyConf, IfaceConf, IpAddrConf, IpConf, RouteConf, VethConf,
-        VlanConf, WireguardConf, WireguardPeerConf,
+        VlanConf,
     },
     error::{ErrorKind, NisporError},
     filter::{
@@ -44,7 +48,6 @@ pub use crate::{
         RouteRule, RouteRuleFlag, RouteScope, RouteType, RuleAction, SriovInfo,
         TunInfo, TunMode, TunnelEncapFlag, TunnelEncapType, VethInfo, VfInfo,
         VfLinkState, VfState, VlanInfo, VlanProtocol, VlanQosMapping, VrfInfo,
-        VrfPortInfo, VxlanInfo, WifiInfo, WifiMode, WireguardInfo,
-        WireguardIpAddress, WireguardPeerInfo, XfrmInfo,
+        VrfPortInfo, VxlanInfo, WifiInfo, WifiMode, XfrmInfo,
     },
 };

@@ -10,10 +10,12 @@ use super::{
     super::query::get_ifaces_with_handle, alt_name::change_iface_alt_name,
     base_iface::apply_base_link_changes, ip::change_ip_layer,
 };
+#[cfg(feature = "wireguard")]
+use crate::WireguardConf;
 use crate::{
     AltNameConf, BondConf, BondPortConf, BridgeConf, BridgePortConf, DummyConf,
     ErrorKind, Iface, IfaceState, IfaceType, IpConf, NetStateIfaceFilter,
-    NisporError, VethConf, VlanConf, WireguardConf,
+    NisporError, VethConf, VlanConf,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -40,6 +42,7 @@ pub struct IfaceConf {
     pub bond: Option<BondConf>,
     pub bond_port: Option<BondPortConf>,
     pub bridge_port: Option<BridgePortConf>,
+    #[cfg(feature = "wireguard")]
     pub wireguard: Option<WireguardConf>,
 }
 

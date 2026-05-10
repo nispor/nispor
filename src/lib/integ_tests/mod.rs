@@ -25,5 +25,6 @@ mod veth;
 mod vlan;
 mod vrf;
 mod vxlan;
+#[cfg(feature = "wireguard")]
 mod wireguard;
 mod xfrm;

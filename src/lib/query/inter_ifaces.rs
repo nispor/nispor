@@ -8,6 +8,8 @@ use rtnetlink::{
     packet_route::{AddressFamily, link::LinkExtentMask},
 };
 
+#[cfg(feature = "wireguard")]
+use super::wireguard::fill_wireguard;
 use super::{
     bond::bond_iface_tidy_up,
     bridge::bridge_iface_tidy_up,
@@ -29,7 +31,6 @@ use super::{
     vrf::vrf_iface_tidy_up,
     vxlan::vxlan_iface_tidy_up,
     wifi::fill_wifi_info,
-    wireguard::fill_wireguard,
     xfrm::xfrm_iface_tidy_up,
 };
 use crate::{EthtoolInfo, Iface, NetStateIfaceFilter, NisporError};
@@ -138,6 +139,7 @@ pub(crate) async fn get_ifaces_with_handle(
         log::warn!("Failed to query WIFI information {e}");
     }
 
+    #[cfg(feature = "wireguard")]
     fill_wireguard(&mut iface_states).await?;
 
     tidy_up(&mut iface_states);
