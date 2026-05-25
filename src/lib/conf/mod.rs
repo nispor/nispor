@@ -14,6 +14,7 @@ mod ip;
 mod route;
 mod veth;
 mod vlan;
+mod vxlan;
 mod wireguard;
 
 pub use self::{
@@ -28,6 +29,7 @@ pub use self::{
     route::RouteConf,
     veth::VethConf,
     vlan::VlanConf,
+    vxlan::VxlanConf,
     wireguard::{WireguardConf, WireguardPeerConf},
 };
 pub(crate) use self::{
