@@ -15,7 +15,7 @@ pub use crate::{
     conf::{
         AltNameConf, BondConf, BondPortConf, BridgeConf, BridgePortConf,
         DummyConf, IfaceConf, IpAddrConf, IpConf, RouteConf, VethConf,
-        VlanConf, WireguardConf, WireguardPeerConf,
+        VlanConf, VxlanConf, WireguardConf, WireguardPeerConf,
     },
     error::{ErrorKind, NisporError},
     filter::{

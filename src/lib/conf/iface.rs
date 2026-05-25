@@ -13,7 +13,7 @@ use super::{
 use crate::{
     AltNameConf, BondConf, BondPortConf, BridgeConf, BridgePortConf, DummyConf,
     ErrorKind, Iface, IfaceState, IfaceType, IpConf, NetStateIfaceFilter,
-    NisporError, VethConf, VlanConf, WireguardConf,
+    NisporError, VethConf, VlanConf, VxlanConf, WireguardConf,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -36,6 +36,7 @@ pub struct IfaceConf {
     pub veth: Option<VethConf>,
     pub bridge: Option<BridgeConf>,
     pub vlan: Option<VlanConf>,
+    pub vxlan: Option<VxlanConf>,
     #[serde(alias = "link-aggregation")]
     pub bond: Option<BondConf>,
     pub bond_port: Option<BondPortConf>,
@@ -178,6 +179,10 @@ async fn gen_link_msg(
                 cur_iface,
             )
             .await?
+        }
+        Some(IfaceType::Vxlan) => {
+            VxlanConf::gen_link_msg_builder(handle, des_iface, cur_iface)
+                .await?
         }
         Some(IfaceType::Dummy) if cur_iface.is_none() => {
             apply_base_link_changes(
