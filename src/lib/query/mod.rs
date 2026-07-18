@@ -66,8 +66,8 @@ pub use self::{
     mptcp::{Mptcp, MptcpAddress, MptcpAddressFlag},
     pci::PciAddress,
     route::{
-        AddressFamily, MultipathRoute, MultipathRouteFlag, Route,
-        RouteProtocol, RouteScope, RouteType,
+        AddressFamily, MultipathRoute, MultipathRouteFlag, Route, RouteFlag,
+        RouteProtocol, RouteRealm, RouteScope, RouteType,
     },
     route_rule::{RouteRule, RouteRuleFlag, RuleAction},
     sriov::{SriovInfo, VfInfo, VfLinkState, VfState},
