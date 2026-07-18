@@ -332,3 +332,99 @@ fn test_add_and_remove_ecmp_route() {
         assert_value_match(TEST_ECMP_ROUTES, &current_routes);
     })
 }
+
+const ADD_ONLINK_ROUTE_YML: &str = r#"---
+routes:
+- dst: 203.0.113.0/24
+  oif: veth1
+  via: 198.51.100.254
+  metric: 504
+  protocol: dhcp
+  table: 254
+  onlink: true
+- dst: 2001:db8:c::/64
+  oif: veth1
+  via: 2001:db8:b::254
+  metric: 505
+  protocol: dhcp
+  table: 254
+  onlink: true"#;
+
+const REMOVE_ONLINK_ROUTE_YML: &str = r#"---
+routes:
+- dst: 203.0.113.0/24
+  oif: veth1
+  via: 198.51.100.254
+  metric: 504
+  protocol: dhcp
+  table: 254
+  onlink: true
+  remove: true
+- dst: 2001:db8:c::/64
+  oif: veth1
+  via: 2001:db8:b::254
+  metric: 505
+  protocol: dhcp
+  table: 254
+  onlink: true
+  remove: true"#;
+
+const EXPECTED_ONLINK_YAML_OUTPUT: &str = r#"---
+- address-family: ipv4
+  table: 254
+  protocol: dhcp
+  scope: universe
+  route-type: unicast
+  flags:
+    - onlink
+  dst: 203.0.113.0/24
+  oif: veth1
+  gateway: 198.51.100.254
+  metric: 504
+- address-family: ipv6
+  table: 254
+  protocol: dhcp
+  scope: universe
+  route-type: unicast
+  flags:
+    - onlink
+  dst: "2001:db8:c::/64"
+  oif: veth1
+  gateway: "2001:db8:b::254"
+  metric: 505"#;
+
+#[test]
+fn test_add_remove_onlink_route() {
+    with_veth_static_ip(|| {
+        // The gateways are outside of veth1 connected subnets, kernel
+        // rejects these routes with ENETUNREACH unless onlink flag is set.
+        let net_conf: NetConf =
+            serde_yaml::from_str(ADD_ONLINK_ROUTE_YML).unwrap();
+        net_conf.apply().unwrap();
+        let state = NetState::retrieve().unwrap();
+        let mut current_routes = Vec::new();
+        for route in state.routes {
+            if RouteProtocol::Dhcp == route.protocol
+                && route.oif.as_deref() == Some("veth1")
+            {
+                current_routes.push(route)
+            }
+        }
+        current_routes.sort_unstable_by_key(|r| r.metric);
+        assert_value_match(EXPECTED_ONLINK_YAML_OUTPUT, &current_routes);
+
+        let net_conf: NetConf =
+            serde_yaml::from_str(REMOVE_ONLINK_ROUTE_YML).unwrap();
+        net_conf.apply().unwrap();
+        let state = NetState::retrieve().unwrap();
+        let mut current_routes = Vec::new();
+        for route in state.routes {
+            if RouteProtocol::Dhcp == route.protocol
+                && route.oif.as_deref() == Some("veth1")
+            {
+                current_routes.push(route)
+            }
+        }
+        assert!(current_routes.is_empty());
+    })
+}
