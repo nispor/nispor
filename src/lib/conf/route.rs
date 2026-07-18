@@ -25,6 +25,10 @@ pub struct RouteConf {
     pub protocol: Option<RouteProtocol>,
     /// ECMP(Equal-Cost Multipath Protocol) routes
     pub multipath: Option<Vec<RouteMulitpathConf>>,
+    /// Pretend the nexthop is directly attached to this link, even if it
+    /// does not match any interface prefix
+    #[serde(default)]
+    pub onlink: bool,
 }
 
 pub(crate) async fn apply_routes_conf(
@@ -88,6 +92,10 @@ async fn apply_route_conf(
                 format!("builder.gateway() failed on {ip}: {e}"),
             )
         })?;
+    }
+
+    if route.onlink {
+        builder = builder.onlink();
     }
 
     if let Some(mpaths) = route.multipath.as_ref() {
