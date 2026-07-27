@@ -83,29 +83,52 @@ impl VlanConf {
                 builder = builder.flags(flags, flags_mask);
             }
 
-            match (
-                vlan_conf.ingress_qos_map.as_ref(),
-                vlan_conf.egress_qos_map.as_ref(),
-            ) {
-                (Some(ingress), Some(egress)) => {
-                    builder = builder.qos(
-                        ingress.iter().map(|m| m.into()),
-                        egress.iter().map(|m| m.into()),
-                    );
-                }
-                (None, None) => (),
-                (Some(ingress), None) => {
-                    builder = builder.qos(
-                        ingress.iter().map(|m| m.into()),
-                        std::iter::empty(),
-                    );
-                }
-                (None, Some(egress)) => {
-                    builder = builder.qos(
-                        std::iter::empty(),
-                        egress.iter().map(|m| m.into()),
-                    );
-                }
+            let cur_vlan_info = cur_iface.and_then(|i| i.vlan.as_ref());
+
+            let effective_ingress: Vec<VlanQosMapping> =
+                if let Some(desired) = vlan_conf.ingress_qos_map.as_ref() {
+                    let mut result = desired.clone();
+                    // Kernel only sets/overwrites individual entries on
+                    // changelink; to remove an entry we must explicitly
+                    // set its `to` to 0.
+                    if let Some(cur_info) = cur_vlan_info {
+                        for cur_map in &cur_info.ingress_qos_map {
+                            if !desired.iter().any(|d| d.from == cur_map.from) {
+                                result.push(VlanQosMapping {
+                                    from: cur_map.from,
+                                    to: 0,
+                                });
+                            }
+                        }
+                    }
+                    result
+                } else {
+                    Vec::new()
+                };
+
+            let effective_egress: Vec<VlanQosMapping> =
+                if let Some(desired) = vlan_conf.egress_qos_map.as_ref() {
+                    let mut result = desired.clone();
+                    if let Some(cur_info) = cur_vlan_info {
+                        for cur_map in &cur_info.egress_qos_map {
+                            if !desired.iter().any(|d| d.from == cur_map.from) {
+                                result.push(VlanQosMapping {
+                                    from: cur_map.from,
+                                    to: 0,
+                                });
+                            }
+                        }
+                    }
+                    result
+                } else {
+                    Vec::new()
+                };
+
+            if !effective_ingress.is_empty() || !effective_egress.is_empty() {
+                builder = builder.qos(
+                    effective_ingress.iter().map(|m| m.into()),
+                    effective_egress.iter().map(|m| m.into()),
+                );
             }
         }
         Ok(builder)
