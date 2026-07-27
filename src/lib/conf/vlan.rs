@@ -83,19 +83,6 @@ impl VlanConf {
                 builder = builder.flags(flags, flags_mask);
             }
 
-            if cur_iface.is_some()
-                && (vlan_conf.ingress_qos_map.is_some()
-                    || vlan_conf.egress_qos_map.is_some())
-            {
-                return Err(NisporError::new(
-                    ErrorKind::InvalidArgument,
-                    format!(
-                        "Cannot change VLAN QoS after creation {}",
-                        iface.name
-                    ),
-                ));
-            }
-
             match (
                 vlan_conf.ingress_qos_map.as_ref(),
                 vlan_conf.egress_qos_map.as_ref(),
