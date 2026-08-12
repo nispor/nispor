@@ -94,16 +94,16 @@ pub(crate) fn get_vxlan_info(
                 vxlan_info.remote_check_sum_tx = d;
             } else if let InfoVxlan::RemCsumRX(d) = *info {
                 vxlan_info.remote_check_sum_rx = d;
-            } else if let InfoVxlan::Gpe(d) = *info {
-                vxlan_info.gpe = d;
-            } else if let InfoVxlan::Gbp(d) = *info {
-                vxlan_info.gbp = d;
+            } else if let InfoVxlan::Gpe = *info {
+                vxlan_info.gpe = true;
+            } else if let InfoVxlan::Gbp = *info {
+                vxlan_info.gbp = true;
             } else if let InfoVxlan::TtlInherit(d) = *info {
-                vxlan_info.ttl_inherit = d;
+                vxlan_info.ttl_inherit = d != 0;
             } else if let InfoVxlan::CollectMetadata(d) = *info {
                 vxlan_info.collect_metadata = d;
             } else if let InfoVxlan::Df(d) = *info {
-                vxlan_info.df = d;
+                vxlan_info.df = d.into();
             } else {
                 log::debug!("Unknown VXLAN info {info:?}")
             }
