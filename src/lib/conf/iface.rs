@@ -13,7 +13,7 @@ use super::{
 use crate::{
     AltNameConf, BondConf, BondPortConf, BridgeConf, BridgePortConf, DummyConf,
     ErrorKind, Iface, IfaceState, IfaceType, IpConf, NetStateIfaceFilter,
-    NisporError, VethConf, VlanConf, VxlanConf, WireguardConf,
+    NisporError, VethConf, VlanConf, VrfConf, VxlanConf, WireguardConf,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -36,6 +36,7 @@ pub struct IfaceConf {
     pub veth: Option<VethConf>,
     pub bridge: Option<BridgeConf>,
     pub vlan: Option<VlanConf>,
+    pub vrf: Option<VrfConf>,
     pub vxlan: Option<VxlanConf>,
     #[serde(alias = "link-aggregation")]
     pub bond: Option<BondConf>,
@@ -175,6 +176,19 @@ async fn gen_link_msg(
                 handle,
                 VlanConf::gen_link_msg_builder(handle, des_iface, cur_iface)
                     .await?,
+                des_iface,
+                cur_iface,
+            )
+            .await?
+        }
+        Some(IfaceType::Vrf) => {
+            // The Linux kernel does not support changing the route table
+            // ID of an existing VRF interface, nispor will not delete and
+            // recreate the VRF interface automatically, the caller should
+            // delete and recreate it when the table ID is changed.
+            apply_base_link_changes(
+                handle,
+                VrfConf::gen_link_msg_builder(des_iface, cur_iface)?,
                 des_iface,
                 cur_iface,
             )
