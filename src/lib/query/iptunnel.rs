@@ -232,8 +232,8 @@ pub(crate) fn get_ip_tunnel_info(
                 InfoIpTunnel::EncapDPort(d) => {
                     ip_tunnel_info.encap_destination_port = Some(d);
                 }
-                InfoIpTunnel::CollectMetadata(d) => {
-                    ip_tunnel_info.collect_metadata = Some(d);
+                InfoIpTunnel::CollectMetadata => {
+                    ip_tunnel_info.collect_metadata = Some(true);
                 }
                 InfoIpTunnel::FwMark(d) => {
                     ip_tunnel_info.fwmark = Some(d);

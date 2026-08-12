@@ -193,12 +193,11 @@ impl VxlanConf {
         }
 
         if let Some(true) = vxlan_conf.gbp {
-            builder = builder.append_info_data(InfoVxlan::Gbp(true));
+            builder = builder.append_info_data(InfoVxlan::Gbp);
         }
 
         if let Some(true) = vxlan_conf.remote_check_sum_no_partial {
-            builder =
-                builder.append_info_data(InfoVxlan::RemCsumNoPartial(true));
+            builder = builder.append_info_data(InfoVxlan::RemCsumNoPartial);
         }
 
         if let Some(d) = vxlan_conf.collect_metadata {
@@ -210,11 +209,11 @@ impl VxlanConf {
         }
 
         if let Some(true) = vxlan_conf.gpe {
-            builder = builder.append_info_data(InfoVxlan::Gpe(true));
+            builder = builder.append_info_data(InfoVxlan::Gpe);
         }
 
-        if let Some(d) = vxlan_conf.ttl_inherit {
-            builder = builder.append_info_data(InfoVxlan::TtlInherit(d));
+        if let Some(true) = vxlan_conf.ttl_inherit {
+            builder = builder.append_info_data(InfoVxlan::TtlInheritFlag);
         }
 
         Ok(builder)
