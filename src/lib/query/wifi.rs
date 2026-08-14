@@ -77,7 +77,9 @@ pub(crate) async fn fill_wifi_info(
         for attr in attrs {
             match attr {
                 Nl80211Attr::WiphyFreq(f) => info.frequency = Some(*f),
-                Nl80211Attr::Ssid(s) => info.ssid = Some(s.to_string()),
+                Nl80211Attr::Ssid(s) if !s.is_empty() => {
+                    info.ssid = Some(s.to_string())
+                }
                 Nl80211Attr::IfType(t) => info.mode = (*t).into(),
                 _ => (),
             }
@@ -114,7 +116,7 @@ pub(crate) async fn fill_wifi_info(
         // 802.11g connection in kernel does not have SSID stored in reply of
         // handle.interface().get()
         // We need to use station MAC and scan results instead
-        let mac_to_ssid = if wifi.ssid.is_none() {
+        let mac_to_ssid = if wifi.ssid.as_deref().is_none_or(str::is_empty) {
             get_mac_ssid_map(&handle, iface.index).await?
         } else {
             HashMap::new()
