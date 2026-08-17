@@ -234,8 +234,11 @@ async fn get_mac_ssid_map(
                     }
                     if let Nl80211BssInfo::Bssid(mac) = bss_info {
                         mac_str = Some(parse_as_mac(ETH_ALEN, mac)?);
-                    } else if let Nl80211BssInfo::InformationElements(ies) =
-                        bss_info
+                    } else if let Nl80211BssInfo::InformationElements(ies)
+                        | Nl80211BssInfo::BeaconInformationElements(ies)
+                        | Nl80211BssInfo::ProbeResponseInformationElements(
+                            ies,
+                        ) = bss_info
                     {
                         ssid = ies.iter().find_map(|ie| {
                             if let Nl80211Element::Ssid(s) = ie {
