@@ -5,9 +5,9 @@ use std::collections::HashMap;
 use futures::TryStreamExt;
 use serde::{Deserialize, Serialize};
 use wl_nl80211::{
-    Nl80211Attr, Nl80211BssInfo, Nl80211Element, Nl80211Handle,
-    Nl80211InterfaceType, Nl80211RateInfo, Nl80211StationFlags,
-    Nl80211StationInfo,
+    Ieee80211Element, Ieee80211Elements, Nl80211Attr, Nl80211BssInfo,
+    Nl80211Handle, Nl80211InterfaceType, Nl80211RateInfo, Nl80211StationFlags,
+    Nl80211StationInfo, packet_core::Parseable,
 };
 
 use crate::{Iface, IfaceType, NisporError, mac::parse_as_mac};
@@ -234,19 +234,23 @@ async fn get_mac_ssid_map(
                     }
                     if let Nl80211BssInfo::Bssid(mac) = bss_info {
                         mac_str = Some(parse_as_mac(ETH_ALEN, mac)?);
-                    } else if let Nl80211BssInfo::InformationElements(ies)
-                        | Nl80211BssInfo::BeaconInformationElements(ies)
-                        | Nl80211BssInfo::ProbeResponseInformationElements(
-                            ies,
+                    } else if let Nl80211BssInfo::RawInformationElements(raw)
+                        | Nl80211BssInfo::RawBeaconInformationElements(raw)
+                        | Nl80211BssInfo::RawProbeResponseInformationElements(
+                            raw,
                         ) = bss_info
                     {
-                        ssid = ies.iter().find_map(|ie| {
-                            if let Nl80211Element::Ssid(s) = ie {
-                                Some(s.to_string())
-                            } else {
-                                None
-                            }
-                        });
+                        ssid = Ieee80211Elements::parse(raw)
+                            .ok()
+                            .and_then(|elements| {
+                                elements.0.iter().find_map(|ie| {
+                                    if let Ieee80211Element::Ssid(s) = ie {
+                                        Some(s.to_string())
+                                    } else {
+                                        None
+                                    }
+                                })
+                            });
                     }
                 }
             }

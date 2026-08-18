@@ -156,6 +156,7 @@ impl From<WireguardIpAddress> for nl_wireguard::WireguardIpAddress {
         Self {
             ip_addr: ip.address,
             prefix_length: ip.prefix_length,
+            flags: None,
         }
     }
 }
