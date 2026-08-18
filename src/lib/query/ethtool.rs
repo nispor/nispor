@@ -7,7 +7,7 @@ use ethtool::{
     EthtoolFecAttr, EthtoolHandle, EthtoolHeader, EthtoolLinkModeAttr,
     EthtoolPauseAttr, EthtoolRingAttr,
 };
-use futures::stream::TryStreamExt;
+use futures::stream::StreamExt;
 use serde::{Deserialize, Serialize, Serializer};
 
 use crate::NisporError;
@@ -279,9 +279,9 @@ async fn dump_pause_infos(
     handle: &mut EthtoolHandle,
 ) -> Result<HashMap<String, EthtoolPauseInfo>, NisporError> {
     let mut infos = HashMap::new();
-    let mut pause_handle = handle.pause().get(None).execute().await;
-    while let Some(genl_msg) = pause_handle.try_next().await? {
-        let ethtool_msg = genl_msg.payload;
+    let mut pause_handle = handle.pause().get(None).execute().await?;
+    while let Some(genl_msg) = pause_handle.next().await {
+        let ethtool_msg = genl_msg?.payload;
         let mut iface_name = None;
         let mut pause_info = EthtoolPauseInfo::default();
 
@@ -309,9 +309,9 @@ async fn dump_feature_infos(
     handle: &mut EthtoolHandle,
 ) -> Result<HashMap<String, EthtoolFeatureInfo>, NisporError> {
     let mut infos = HashMap::new();
-    let mut feature_handle = handle.feature().get(None).execute().await;
-    while let Some(genl_msg) = feature_handle.try_next().await? {
-        let ethtool_msg = genl_msg.payload;
+    let mut feature_handle = handle.feature().get(None).execute().await?;
+    while let Some(genl_msg) = feature_handle.next().await {
+        let ethtool_msg = genl_msg?.payload;
         let mut iface_name = None;
         let mut fixed_features: HashMap<String, bool> = HashMap::new();
         let mut changeable_features: HashMap<String, bool> = HashMap::new();
@@ -411,9 +411,9 @@ async fn dump_coalesce_infos(
     handle: &mut EthtoolHandle,
 ) -> Result<HashMap<String, EthtoolCoalesceInfo>, NisporError> {
     let mut infos = HashMap::new();
-    let mut coalesce_handle = handle.coalesce().get(None).execute().await;
-    while let Some(genl_msg) = coalesce_handle.try_next().await? {
-        let ethtool_msg = genl_msg.payload;
+    let mut coalesce_handle = handle.coalesce().get(None).execute().await?;
+    while let Some(genl_msg) = coalesce_handle.next().await {
+        let ethtool_msg = genl_msg?.payload;
         let mut iface_name = None;
         let mut coalesce_info = EthtoolCoalesceInfo::default();
         for nla in ethtool_msg.nlas.as_slice() {
@@ -503,9 +503,9 @@ async fn dump_ring_infos(
     handle: &mut EthtoolHandle,
 ) -> Result<HashMap<String, EthtoolRingInfo>, NisporError> {
     let mut infos = HashMap::new();
-    let mut ring_handle = handle.ring().get(None).execute().await;
-    while let Some(genl_msg) = ring_handle.try_next().await? {
-        let ethtool_msg = genl_msg.payload;
+    let mut ring_handle = handle.ring().get(None).execute().await?;
+    while let Some(genl_msg) = ring_handle.next().await {
+        let ethtool_msg = genl_msg?.payload;
         let mut iface_name = None;
         let mut ring_info = EthtoolRingInfo::default();
         for nla in ethtool_msg.nlas.as_slice() {
@@ -545,9 +545,9 @@ async fn dump_link_mode_infos(
     handle: &mut EthtoolHandle,
 ) -> Result<HashMap<String, EthtoolLinkModeInfo>, NisporError> {
     let mut infos = HashMap::new();
-    let mut link_mode_handle = handle.link_mode().get(None).execute().await;
-    while let Some(genl_msg) = link_mode_handle.try_next().await? {
-        let ethtool_msg = genl_msg.payload;
+    let mut link_mode_handle = handle.link_mode().get(None).execute().await?;
+    while let Some(genl_msg) = link_mode_handle.next().await {
+        let ethtool_msg = genl_msg?.payload;
         let mut iface_name = None;
         let mut link_mode_info = EthtoolLinkModeInfo::default();
         for nla in ethtool_msg.nlas.as_slice() {
@@ -649,9 +649,9 @@ async fn dump_fec_infos(
     handle: &mut EthtoolHandle,
 ) -> Result<HashMap<String, EthtoolFecInfo>, NisporError> {
     let mut infos = HashMap::new();
-    let mut fec_handle = handle.fec().get(None).execute().await;
-    while let Some(genl_msg) = fec_handle.try_next().await? {
-        let ethtool_msg = genl_msg.payload;
+    let mut fec_handle = handle.fec().get(None).execute().await?;
+    while let Some(genl_msg) = fec_handle.next().await {
+        let ethtool_msg = genl_msg?.payload;
         let mut iface_name = None;
         let mut fec_info = EthtoolFecInfo::default();
 

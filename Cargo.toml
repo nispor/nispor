@@ -28,15 +28,15 @@ categories = ["network-programming", "os"]
 [workspace.dependencies]
 clap = { version = "4.2", features = ["cargo"] }
 env_logger = "0.11.0"
-ethtool = "0.2.8"
+ethtool = "0.3"
 futures = "0.3.21"
 libc = "0.2.155"
 log = "0.4.17"
-mptcp-pm = "0.1.4"
-rtnetlink = "0.22.0"
+mptcp-pm = "0.2"
+rtnetlink = "0.23.0"
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = "1.0.81"
 serde_yaml = "0.9"
 tokio = { version = "1.19.2", features = ["macros", "rt"] }
-wl-nl80211 = "0.4.0"
-nl-wireguard = { version = "0.1.0"}
+wl-nl80211 = "0.7.0"
+nl-wireguard = { version = "0.2.0"}
