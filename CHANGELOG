@@ -1,4 +1,23 @@
 # Changelog
+## [2.0.3] - 2026-08-19
+### Breaking changes
+ - N/A
+
+### New features
+ - Support applying VxLAN interface. (cc2247c)
+ - Support applying VRF interface. (b950a3f)
+ - Expose `RouteFlag` and `RouteRealm`. (2827161)
+ - Support of route onlink flag. (224b35b)
+ - Allow live changes on ingress-qos-map and egress-qos-map. (6836841)
+
+### Bug fixes
+ - Use latest rust-netlink crates. (212d17b)
+ - wifi: read hidden SSID from probe response IEs. (af325a3)
+ - wifi: query hidden SSID from scan results. (400007c)
+ - veth: do not fail if veth peer not changed. (73281c8)
+ - vlan: fix ingress_qos_map and egress_qos_map apply. (8ce4b1d)
+ - infiniband: restore detection of Ipoib iface type. (3b9ca8e)
+
 ## [2.0.2] - 2026-04-18
 ### Breaking changes
  - N/A
