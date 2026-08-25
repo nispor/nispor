@@ -27,7 +27,7 @@ pub use self::{
     dummy::DummyConf,
     iface::IfaceConf,
     ip::{IpAddrConf, IpConf},
-    route::RouteConf,
+    route::{RouteConf, RouteMultipathConf},
     veth::VethConf,
     vlan::VlanConf,
     vrf::VrfConf,
