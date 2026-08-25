@@ -14,8 +14,9 @@ mod query;
 pub use crate::{
     conf::{
         AltNameConf, BondConf, BondPortConf, BridgeConf, BridgePortConf,
-        DummyConf, IfaceConf, IpAddrConf, IpConf, RouteConf, VethConf,
-        VlanConf, VrfConf, VxlanConf, WireguardConf, WireguardPeerConf,
+        DummyConf, IfaceConf, IpAddrConf, IpConf, RouteConf,
+        RouteMultipathConf, VethConf, VlanConf, VrfConf, VxlanConf,
+        WireguardConf, WireguardPeerConf,
     },
     error::{ErrorKind, NisporError},
     filter::{

@@ -24,7 +24,7 @@ pub struct RouteConf {
     pub table: Option<u8>,
     pub protocol: Option<RouteProtocol>,
     /// ECMP(Equal-Cost Multipath Protocol) routes
-    pub multipath: Option<Vec<RouteMulitpathConf>>,
+    pub multipath: Option<Vec<RouteMultipathConf>>,
     /// Pretend the nexthop is directly attached to this link, even if it
     /// does not match any interface prefix
     #[serde(default)]
@@ -164,14 +164,14 @@ async fn apply_route_conf(
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[non_exhaustive]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
-pub struct RouteMulitpathConf {
+pub struct RouteMultipathConf {
     /// nexthop address
-    via: Option<String>,
+    pub via: Option<String>,
     /// weight on route path been selected, in the range of 1 - 256
-    weight: Option<u16>,
+    pub weight: Option<u16>,
     /// Output interface
-    iface: Option<String>,
+    pub iface: Option<String>,
     /// Pretend the nexthop is directly attached to this link
     #[serde(default)]
-    flags: Vec<MultipathRouteFlag>,
+    pub flags: Vec<MultipathRouteFlag>,
 }
