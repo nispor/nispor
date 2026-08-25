@@ -96,7 +96,7 @@ pub(crate) fn should_drop_by_filter(
     if Some(&RouteScope::Universe) == filter.scope.as_ref() {
         route.scope != RouteScope::Universe
     } else {
-        if !has_kernel_filter
+        !has_kernel_filter
             && ((filter.protocol.is_some()
                 && filter.protocol != Some(route.protocol))
                 || (filter.scope.is_some()
@@ -106,9 +106,5 @@ pub(crate) fn should_drop_by_filter(
                 || (filter.table.is_some()
                     && filter.table.as_ref().map(|i| (*i).into())
                         != Some(route.table)))
-        {
-            return true;
-        }
-        false
     }
 }
