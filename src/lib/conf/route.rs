@@ -116,6 +116,14 @@ async fn apply_route_conf(
                 })?;
             }
             if let Some(w) = mpath.weight.as_ref() {
+                if !(1..=256).contains(w) {
+                    let e = NisporError::invalid_argument(format!(
+                        "Invalid ECMP route weight {w}, must be in range \
+                         1..=256"
+                    ));
+                    log::error!("{e}");
+                    return Err(e);
+                }
                 np_builder = np_builder.weight((*w - 1) as u8);
             }
             if let Some(iface) = mpath.iface.as_ref() {

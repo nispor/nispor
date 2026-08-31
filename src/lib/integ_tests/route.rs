@@ -333,6 +333,58 @@ fn test_add_and_remove_ecmp_route() {
     })
 }
 
+#[test]
+fn test_ecmp_route_weight_zero_invalid() {
+    with_veth_static_ip(|| {
+        let state_str = r#"
+routes:
+- dst: 2001:db8:e::/64
+  multipath:
+    - via: 2001:db8:a::2
+      weight: 0
+      iface: veth1
+"#;
+        let net_conf: NetConf = serde_yaml::from_str(state_str).unwrap();
+        assert!(net_conf.apply().is_err());
+    })
+}
+
+#[test]
+fn test_ecmp_route_weight_256_valid() {
+    with_veth_static_ip(|| {
+        let state_str = r#"
+routes:
+- dst: 2001:db8:e::/64
+  metric: 506
+  protocol: dhcp
+  multipath:
+    - via: 2001:db8:a::2
+      weight: 256
+      iface: veth1
+      flags:
+        - onlink
+"#;
+        let net_conf: NetConf = serde_yaml::from_str(state_str).unwrap();
+        net_conf.apply().unwrap();
+    })
+}
+
+#[test]
+fn test_ecmp_route_weight_257_invalid() {
+    with_veth_static_ip(|| {
+        let state_str = r#"
+routes:
+- dst: 2001:db8:e::/64
+  multipath:
+    - via: 2001:db8:a::2
+      weight: 257
+      iface: veth1
+"#;
+        let net_conf: NetConf = serde_yaml::from_str(state_str).unwrap();
+        assert!(net_conf.apply().is_err());
+    })
+}
+
 const ADD_ONLINK_ROUTE_YML: &str = r#"---
 routes:
 - dst: 203.0.113.0/24
