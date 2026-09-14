@@ -39,4 +39,4 @@ serde_json = "1.0.81"
 serde_yaml = "0.9"
 tokio = { version = "1.19.2", features = ["macros", "rt"] }
 wl-nl80211 = "0.7.0"
-nl-wireguard = { version = "0.2.0"}
+nl-wireguard = { version = "0.3.0"}
