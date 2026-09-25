@@ -88,6 +88,9 @@ pub struct Ipv4AddrInfo {
     pub flags: Vec<IpAddrFlag>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub protocol: Option<AddressProtocol>,
+    /// Address label (e.g. "eth0:1"), IPv4 only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -468,6 +471,8 @@ fn parse_ipv4_nlas(
             addr.protocol = Some((*v).into());
         } else if let AddressAttribute::Flags(flags) = nla {
             addr.flags = flags.iter().map(IpAddrFlag::from).collect();
+        } else if let AddressAttribute::Label(l) = nla {
+            addr.label = Some(l.clone());
         }
     }
 
