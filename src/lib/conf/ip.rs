@@ -10,8 +10,8 @@ use serde::{Deserialize, Serialize};
 
 use super::super::query::is_ipv6_addr;
 use crate::{
-    AddressProtocol, Iface, IfaceConf, IpFamily, Ipv4Info, Ipv6Info,
-    NisporError,
+    AddressProtocol, AddressScope, Iface, IfaceConf, IpAddrFlag, IpFamily,
+    Ipv4Info, Ipv6Info, NisporError,
 };
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
@@ -33,6 +33,11 @@ impl From<&Ipv4Info> for IpConf {
                     preferred_lft: addr_info.preferred_lft.clone(),
                     valid_lft: addr_info.valid_lft.clone(),
                     protocol: addr_info.protocol,
+                    scope: Some(addr_info.scope),
+                    flags: addr_info.flags.clone(),
+                    label: None,
+                    peer: addr_info.peer.clone(),
+                    peer_prefix_len: None,
                 });
             }
         }
@@ -52,6 +57,11 @@ impl From<&Ipv6Info> for IpConf {
                     preferred_lft: addr_info.preferred_lft.clone(),
                     valid_lft: addr_info.valid_lft.clone(),
                     protocol: addr_info.protocol,
+                    scope: Some(addr_info.scope),
+                    flags: addr_info.flags.clone(),
+                    label: None,
+                    peer: addr_info.peer.map(|p| p.to_string()),
+                    peer_prefix_len: addr_info.peer_prefix_len,
                 });
             }
         }
@@ -74,6 +84,16 @@ pub struct IpAddrConf {
     #[serde(default)]
     pub preferred_lft: String,
     pub protocol: Option<AddressProtocol>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub scope: Option<AddressScope>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub flags: Vec<IpAddrFlag>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub peer: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub peer_prefix_len: Option<u8>,
 }
 
 pub(crate) async fn change_ip_layer(
@@ -136,6 +156,51 @@ async fn apply_ip_conf(
                 req.message_mut()
                     .attributes
                     .push(AddressAttribute::Protocol(protocol.into()));
+            }
+            if let Some(scope) = addr_conf.scope {
+                req.message_mut().header.scope = scope.into();
+            }
+            if !addr_conf.flags.is_empty() {
+                let mut bits =
+                    rtnetlink::packet_route::address::AddressFlags::empty();
+                for flag in &addr_conf.flags {
+                    bits |=
+                        rtnetlink::packet_route::address::AddressFlags::from(
+                            *flag,
+                        );
+                }
+                req.message_mut()
+                    .attributes
+                    .push(AddressAttribute::Flags(bits));
+            }
+            if let Some(label) = &addr_conf.label {
+                req.message_mut()
+                    .attributes
+                    .push(AddressAttribute::Label(label.clone()));
+            }
+            if let Some(peer) = &addr_conf.peer {
+                let peer_addr = ip_addr_str_to_enum(peer)?;
+                let prefix_len = addr_conf
+                    .peer_prefix_len
+                    .unwrap_or(addr_conf.prefix_len);
+                // IFA_ADDRESS carries the peer; IFA_LOCAL carries the
+                // local end.  Replace the builder-generated entries.
+                let local =
+                    ip_addr_str_to_enum(&addr_conf.address)?;
+                let msg = req.message_mut();
+                msg.header.prefix_len = prefix_len;
+                msg.attributes
+                    .retain(|a| {
+                        !matches!(
+                            a,
+                            AddressAttribute::Address(_)
+                                | AddressAttribute::Local(_)
+                        )
+                    });
+                msg.attributes
+                    .push(AddressAttribute::Local(local));
+                msg.attributes
+                    .push(AddressAttribute::Address(peer_addr));
             }
 
             if is_dynamic_ip(&addr_conf.preferred_lft, &addr_conf.valid_lft) {
