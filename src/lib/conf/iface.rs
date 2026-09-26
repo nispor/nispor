@@ -46,6 +46,27 @@ pub struct IfaceConf {
 }
 
 impl IfaceConf {
+    /// Returns `true` when the configuration carries changes that
+    /// require link-level (`RTM_SETLINK` / `RTM_NEWLINK`) netlink
+    /// messages — i.e. anything beyond pure IP address changes.
+    pub fn has_link_level_changes(&self) -> bool {
+        self.mtu.is_some()
+            || self.mac_address.is_some()
+            || self.controller.is_some()
+            || self.iface_type.is_some()
+            || !self.alt_names.is_empty()
+            || self.veth.is_some()
+            || self.bridge.is_some()
+            || self.vlan.is_some()
+            || self.vrf.is_some()
+            || self.vxlan.is_some()
+            || self.bond.is_some()
+            || self.bond_port.is_some()
+            || self.bridge_port.is_some()
+            || self.wireguard.is_some()
+            || matches!(self.state, IfaceState::Up | IfaceState::Down)
+    }
+
     /// Need interfaces to be down state for these changes:
     ///  * Change MAC address
     ///  * Change controller
@@ -98,9 +119,16 @@ pub(crate) async fn apply_iface_conf(
         let mut msgs =
             gen_link_msg(handle, des_iface, cur_iface.as_ref()).await?;
         if cur_iface.is_some() {
-            for msg in msgs {
-                send_change_netlink(handle, msg, des_iface.name.as_str())
-                    .await?;
+            // Skip link-level netlink messages when the interface
+            // already exists and only IP address changes are
+            // requested.  Sending a no-op RTM_SETLINK to a
+            // NetworkManager-managed interface can trigger NM to
+            // re-activate the connection profile.
+            if des_iface.has_link_level_changes() {
+                for msg in msgs {
+                    send_change_netlink(handle, msg, des_iface.name.as_str())
+                        .await?;
+                }
             }
         } else {
             if !msgs.is_empty() {

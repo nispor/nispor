@@ -180,27 +180,22 @@ async fn apply_ip_conf(
             }
             if let Some(peer) = &addr_conf.peer {
                 let peer_addr = ip_addr_str_to_enum(peer)?;
-                let prefix_len = addr_conf
-                    .peer_prefix_len
-                    .unwrap_or(addr_conf.prefix_len);
+                let prefix_len =
+                    addr_conf.peer_prefix_len.unwrap_or(addr_conf.prefix_len);
                 // IFA_ADDRESS carries the peer; IFA_LOCAL carries the
                 // local end.  Replace the builder-generated entries.
-                let local =
-                    ip_addr_str_to_enum(&addr_conf.address)?;
+                let local = ip_addr_str_to_enum(&addr_conf.address)?;
                 let msg = req.message_mut();
                 msg.header.prefix_len = prefix_len;
-                msg.attributes
-                    .retain(|a| {
-                        !matches!(
-                            a,
-                            AddressAttribute::Address(_)
-                                | AddressAttribute::Local(_)
-                        )
-                    });
-                msg.attributes
-                    .push(AddressAttribute::Local(local));
-                msg.attributes
-                    .push(AddressAttribute::Address(peer_addr));
+                msg.attributes.retain(|a| {
+                    !matches!(
+                        a,
+                        AddressAttribute::Address(_)
+                            | AddressAttribute::Local(_)
+                    )
+                });
+                msg.attributes.push(AddressAttribute::Local(local));
+                msg.attributes.push(AddressAttribute::Address(peer_addr));
             }
 
             if is_dynamic_ip(&addr_conf.preferred_lft, &addr_conf.valid_lft) {
