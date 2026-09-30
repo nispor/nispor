@@ -4,10 +4,10 @@ use serde::{Deserialize, Serialize};
 use tokio::runtime;
 
 use super::{
-    conf::{apply_ifaces_conf, apply_routes_conf},
+    conf::{apply_ifaces_conf, apply_routes_conf, apply_rules_conf},
     query::get_iface_name2index,
 };
-use crate::{IfaceConf, NisporError, RouteConf};
+use crate::{IfaceConf, NisporError, RouteConf, RouteRuleConf};
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
 #[non_exhaustive]
@@ -16,6 +16,7 @@ pub struct NetConf {
     #[serde(rename = "interfaces")]
     pub ifaces: Option<Vec<IfaceConf>>,
     pub routes: Option<Vec<RouteConf>>,
+    pub rules: Option<Vec<RouteRuleConf>>,
 }
 
 impl NetConf {
@@ -34,6 +35,12 @@ impl NetConf {
         {
             let cur_iface_name_2_index = get_iface_name2index().await?;
             apply_routes_conf(routes, &cur_iface_name_2_index).await?;
+        }
+
+        if let Some(rules) = self.rules.as_ref()
+            && !rules.is_empty()
+        {
+            apply_rules_conf(rules).await?;
         }
         Ok(())
     }
