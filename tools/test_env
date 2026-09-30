@@ -45,8 +45,11 @@ function clean_up {
     sudo ip link del hsr0
     sudo ip link del xfrm1
     sudo ip link del gretap99
-    sudo ip rule del priority 999
-    sudo ip -6 rule del priority 999
+    # Route rules created by the rule test and the route_rule integ tests
+    for rule_prio in 998 999 1000 1001 1002 1003; do
+        sudo ip rule del priority $rule_prio
+        sudo ip -6 rule del priority $rule_prio
+    done
     sudo modprobe -r netdevsim
     sudo ip mptcp endpoint flush
     sudo ip route flush table $TEST_ROUTE_TABLE_ID

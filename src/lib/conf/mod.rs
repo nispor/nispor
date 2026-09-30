@@ -12,6 +12,7 @@ mod iface;
 mod inter_ifaces;
 mod ip;
 mod route;
+mod route_rule;
 mod veth;
 mod vlan;
 mod vrf;
@@ -28,6 +29,7 @@ pub use self::{
     iface::IfaceConf,
     ip::{IpAddrConf, IpConf},
     route::{RouteConf, RouteMultipathConf},
+    route_rule::RouteRuleConf,
     veth::VethConf,
     vlan::VlanConf,
     vrf::VrfConf,
@@ -36,4 +38,5 @@ pub use self::{
 };
 pub(crate) use self::{
     inter_ifaces::apply_ifaces_conf, route::apply_routes_conf,
+    route_rule::apply_rules_conf,
 };
