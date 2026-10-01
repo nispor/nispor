@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{ErrorKind, Iface, NisporError};
 #[derive(
-    Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy, Default,
+    Serialize, Deserialize, Debug, PartialEq, Eq, Hash, Clone, Copy, Default,
 )]
 #[serde(rename_all = "lowercase")]
 pub enum AddressScope {
@@ -88,6 +88,9 @@ pub struct Ipv4AddrInfo {
     pub flags: Vec<IpAddrFlag>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub protocol: Option<AddressProtocol>,
+    /// Address label (e.g. "eth0:1"), IPv4 only.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
@@ -331,7 +334,7 @@ pub(crate) fn is_ipv6_addr(addr: &str) -> bool {
     addr.contains(':')
 }
 
-#[derive(Clone, Eq, PartialEq, Debug, Copy, Serialize, Deserialize)]
+#[derive(Clone, Eq, PartialEq, Hash, Debug, Copy, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case", deny_unknown_fields)]
 #[non_exhaustive]
 pub enum IpAddrFlag {
@@ -366,6 +369,26 @@ impl From<address::AddressFlags> for IpAddrFlag {
             address::AddressFlags::Mcautojoin => Self::Mcautojoin,
             address::AddressFlags::StablePrivacy => Self::StablePrivacy,
             _ => Self::Other(d.bits()),
+        }
+    }
+}
+
+impl From<IpAddrFlag> for address::AddressFlags {
+    fn from(d: IpAddrFlag) -> Self {
+        match d {
+            IpAddrFlag::Secondary => Self::Secondary,
+            IpAddrFlag::Nodad => Self::Nodad,
+            IpAddrFlag::Optimistic => Self::Optimistic,
+            IpAddrFlag::Dadfailed => Self::Dadfailed,
+            IpAddrFlag::Homeaddress => Self::Homeaddress,
+            IpAddrFlag::Deprecated => Self::Deprecated,
+            IpAddrFlag::Tentative => Self::Tentative,
+            IpAddrFlag::Permanent => Self::Permanent,
+            IpAddrFlag::Managetempaddr => Self::Managetempaddr,
+            IpAddrFlag::Noprefixroute => Self::Noprefixroute,
+            IpAddrFlag::Mcautojoin => Self::Mcautojoin,
+            IpAddrFlag::StablePrivacy => Self::StablePrivacy,
+            IpAddrFlag::Other(d) => Self::from_bits_retain(d),
         }
     }
 }
@@ -448,6 +471,8 @@ fn parse_ipv4_nlas(
             addr.protocol = Some((*v).into());
         } else if let AddressAttribute::Flags(flags) = nla {
             addr.flags = flags.iter().map(IpAddrFlag::from).collect();
+        } else if let AddressAttribute::Label(l) = nla {
+            addr.label = Some(l.clone());
         }
     }
 
