@@ -51,6 +51,11 @@ interfaces:
     state: absent
 "#;
 
+// The MAC address is set in the create config on purpose: providing
+// `IFLA_ADDRESS` in the creation message makes the kernel mark the interface
+// as NET_ADDR_SET, which stops systemd-udevd from applying its
+// `MACAddressPolicy=persistent` (99-default.link) to the kernel generated
+// random MAC afterwards and racing with `VXLAN_CHANGE_YAML` changing it.
 const VXLAN_CREATE_YAML: &str = r#"
 interfaces:
   - name: dummy1
@@ -60,6 +65,7 @@ interfaces:
   - name: vxlan1
     type: vxlan
     mtu: 1280
+    mac-address: 00:23:45:67:89:22
     vxlan:
       base-iface: dummy1
       vxlan-id: 102
@@ -86,6 +92,7 @@ fn test_create_and_delete_vxlan() {
         let iface = &state.ifaces[IFACE_NAME];
         assert_eq!(iface.iface_type, crate::IfaceType::Vxlan);
         assert_eq!(iface.mtu, 1280);
+        assert_eq!(iface.mac_address, "00:23:45:67:89:22");
         assert_value_match(EXPECTED_VXLAN_INFO, &iface.vxlan);
     });
 }
