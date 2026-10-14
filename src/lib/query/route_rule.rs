@@ -79,7 +79,7 @@ pub struct RouteRule {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub realm: Option<RouteRealm>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub tun_id: Option<u32>,
+    pub tun_id: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub suppress_ifgroup: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -112,7 +112,9 @@ pub(crate) async fn get_route_rules() -> Result<Vec<RouteRule>, NisporError> {
     Ok(rules)
 }
 
-fn get_rule(rule_msg: RuleMessage) -> Result<RouteRule, NisporError> {
+pub(crate) fn get_rule(
+    rule_msg: RuleMessage,
+) -> Result<RouteRule, NisporError> {
     let header = &rule_msg.header;
     let mut rl = RouteRule {
         address_family: header.family.into(),

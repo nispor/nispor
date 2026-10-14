@@ -86,5 +86,5 @@ pub(crate) use self::{
     ip::{is_ipv6_addr, parse_ip_addr_str, parse_ip_net_addr_str},
     mptcp::{get_mptcp, merge_mptcp_info},
     route::get_routes,
-    route_rule::get_route_rules,
+    route_rule::{get_route_rules, get_rule},
 };

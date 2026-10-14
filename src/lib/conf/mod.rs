@@ -13,6 +13,7 @@ mod inter_ifaces;
 mod ip;
 mod route;
 mod route_rule;
+mod route_rule_remove;
 mod veth;
 mod vlan;
 mod vrf;
@@ -30,6 +31,7 @@ pub use self::{
     ip::{IpAddrConf, IpConf},
     route::{RouteConf, RouteMultipathConf},
     route_rule::RouteRuleConf,
+    route_rule_remove::{RouteRuleRemoveError, remove_route_rules},
     veth::VethConf,
     vlan::VlanConf,
     vrf::VrfConf,
