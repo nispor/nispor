@@ -126,7 +126,7 @@ pub(crate) async fn fill_wifi_info(
 
         while let Some(msg) = station_handle.try_next().await? {
             if let Some(station_mac) =
-                msg.payload.attributes.as_slice().iter().find_map(|attr| {
+                msg.payload.attributes.iter().find_map(|attr| {
                     if let Nl80211Attr::Mac(m) = attr {
                         Some(m)
                     } else {
@@ -141,7 +141,7 @@ pub(crate) async fn fill_wifi_info(
                 }
             }
             let sta_infos = if let Some(sta_infos) =
-                msg.payload.attributes.as_slice().iter().find_map(|attr| {
+                msg.payload.attributes.iter().find_map(|attr| {
                     if let Nl80211Attr::StationInfo(infos) = attr {
                         Some(infos)
                     } else {
