@@ -40,3 +40,6 @@ serde_yaml = "0.9"
 tokio = { version = "1.19.2", features = ["macros", "rt"] }
 wl-nl80211 = "0.7.0"
 nl-wireguard = { version = "0.3.0"}
+
+[patch.crates-io]
+netlink-packet-route = { git = "https://github.com/pfeifferj/netlink-packet-route", rev = "27d7a2be693cdbacaf2f856ee1fdbd6feea09a68" }
