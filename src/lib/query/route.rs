@@ -249,6 +249,14 @@ impl From<RouteProtocol> for rt::RouteProtocol {
     }
 }
 
+impl std::str::FromStr for RouteProtocol {
+    type Err = NisporError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::try_from(value)
+    }
+}
+
 impl TryFrom<&str> for RouteProtocol {
     type Error = NisporError;
 
@@ -331,6 +339,14 @@ impl From<RouteScope> for rt::RouteScope {
             RouteScope::NoWhere => rt::RouteScope::NoWhere,
             RouteScope::Other(d) => d.into(),
         }
+    }
+}
+
+impl std::str::FromStr for RouteScope {
+    type Err = NisporError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::try_from(value)
     }
 }
 
