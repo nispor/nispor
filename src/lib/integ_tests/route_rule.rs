@@ -177,6 +177,191 @@ fn test_route_rules(state: &NetState) -> Vec<RouteRule> {
     rules
 }
 
+#[test]
+fn test_remove_route_rules_preserves_unselected_records() {
+    use rtnetlink::packet_route::{
+        AddressFamily,
+        rule::{RuleAction, RuleAttribute, RuleMessage},
+    };
+
+    with_route_rule_test_iface(|| {
+        let _cleanup = RuleRemovalTestCleanup;
+        let mut rules = Vec::new();
+        for family in [AddressFamily::Inet, AddressFamily::Inet6] {
+            for priority in [1000, 0] {
+                let mut rule = RuleMessage::default();
+                rule.header.family = family;
+                rule.header.action = RuleAction::ToTable;
+                rule.attributes = vec![
+                    RuleAttribute::Table(500),
+                    RuleAttribute::Priority(priority),
+                    RuleAttribute::FwMark(1),
+                    RuleAttribute::FwMask(255),
+                ];
+                rules.push(rule.clone());
+                rules.push(rule.clone());
+                rule.attributes[2] = RuleAttribute::FwMark(0);
+                rules.push(rule.clone());
+                rule.attributes = vec![
+                    RuleAttribute::Table(501),
+                    RuleAttribute::Priority(priority),
+                    RuleAttribute::TunId(0x1_0000_0001),
+                ];
+                rules.push(rule);
+            }
+        }
+        tokio::runtime::Builder::new_current_thread()
+            .enable_io()
+            .build()
+            .unwrap()
+            .block_on(async {
+                add_rule_removal_test_rules(rules).await;
+                let before = kernel_rules_json();
+                let expected: Vec<_> = before
+                    .iter()
+                    .filter(|rule| {
+                        kernel_rule_number(rule, "table") != Some(500)
+                            || kernel_rule_number(rule, "fwmark") != Some(0)
+                    })
+                    .cloned()
+                    .collect();
+                assert_eq!(before.len() - expected.len(), 4);
+                assert_eq!(
+                    expected
+                        .iter()
+                        .filter(|rule| {
+                            kernel_rule_number(rule, "fwmark") == Some(1)
+                        })
+                        .count(),
+                    8
+                );
+                assert_eq!(
+                    expected
+                        .iter()
+                        .filter(|rule| {
+                            kernel_rule_number(rule, "tun_id")
+                                == Some(0x1_0000_0001)
+                        })
+                        .count(),
+                    4
+                );
+                for _ in 0..2 {
+                    crate::remove_route_rules(|rule| {
+                        if rule.table == Some(501) {
+                            assert_eq!(rule.tun_id, Some(0x1_0000_0001));
+                        }
+                        let remove = rule.table == Some(500)
+                            && rule.fw_mark.unwrap_or(0) == 0;
+                        if remove {
+                            assert!(matches!(rule.priority, Some(0 | 1000)));
+                            assert_eq!(rule.fw_mask, Some(255));
+                        }
+                        remove
+                    })
+                    .await
+                    .unwrap();
+                    assert_eq!(kernel_rules_json(), expected);
+                }
+                crate::remove_route_rules(|rule| rule.table == Some(500))
+                    .await
+                    .unwrap();
+                assert_eq!(
+                    kernel_rules_json(),
+                    expected
+                        .into_iter()
+                        .filter(|rule| {
+                            kernel_rule_number(rule, "table") != Some(500)
+                        })
+                        .collect::<Vec<_>>()
+                );
+            });
+    });
+}
+
+async fn add_rule_removal_test_rules(
+    rules: Vec<rtnetlink::packet_route::rule::RuleMessage>,
+) {
+    use futures::{
+        StreamExt,
+        future::{Either, select},
+    };
+    use rtnetlink::{
+        packet_core::{
+            NLM_F_ACK, NLM_F_CREATE, NLM_F_REQUEST, NetlinkMessage,
+            NetlinkPayload,
+        },
+        packet_route::RouteNetlinkMessage,
+    };
+
+    let (mut connection, mut handle, _) = rtnetlink::new_connection().unwrap();
+    connection.set_forward_ack(true);
+    let add = async {
+        for rule in rules {
+            let mut request =
+                NetlinkMessage::from(RouteNetlinkMessage::NewRule(rule));
+            request.header.flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE;
+            let mut responses = handle.request(request).unwrap();
+            let mut acknowledged = false;
+            while let Some(response) = responses.next().await {
+                let NetlinkPayload::Error(error) = response.payload else {
+                    panic!("unexpected rule addition response {response:?}");
+                };
+                assert_eq!(error.code, None, "{error}");
+                acknowledged = true;
+            }
+            assert!(acknowledged);
+        }
+    };
+    assert!(matches!(
+        select(Box::pin(add), connection).await,
+        Either::Left(_)
+    ));
+}
+
+fn kernel_rules_json() -> Vec<serde_json::Value> {
+    let mut rules = Vec::new();
+    for family in ["-4", "-6"] {
+        let output = std::process::Command::new("ip")
+            .args([family, "-details", "-json", "rule"])
+            .output()
+            .unwrap();
+        assert!(output.status.success());
+        rules.extend(
+            serde_json::from_slice::<Vec<serde_json::Value>>(&output.stdout)
+                .unwrap(),
+        );
+    }
+    rules
+}
+
+fn kernel_rule_number(rule: &serde_json::Value, key: &str) -> Option<u64> {
+    match &rule[key] {
+        serde_json::Value::Number(number) => number.as_u64(),
+        serde_json::Value::String(number) => {
+            if let Some(hex) = number.strip_prefix("0x") {
+                u64::from_str_radix(hex, 16).ok()
+            } else {
+                number.parse().ok()
+            }
+        }
+        _ => None,
+    }
+}
+
+struct RuleRemovalTestCleanup;
+
+impl Drop for RuleRemovalTestCleanup {
+    fn drop(&mut self) {
+        for family in ["-4", "-6"] {
+            for table in ["500", "501"] {
+                let _ = std::process::Command::new("ip")
+                    .args([family, "rule", "flush", "table", table])
+                    .status();
+            }
+        }
+    }
+}
+
 fn with_route_rule_test_iface<T>(test: T)
 where
     T: FnOnce() + panic::UnwindSafe,
