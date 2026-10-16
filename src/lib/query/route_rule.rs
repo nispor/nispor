@@ -305,3 +305,52 @@ impl RouteRuleFlag {
             .collect()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use rtnetlink::packet_core::Parseable;
+
+    use super::*;
+
+    #[test]
+    fn query_preserves_full_width_tunnel_ids() {
+        for (family, expected_family) in
+            [(2, AddressFamily::Ipv4), (10, AddressFamily::Ipv6)]
+        {
+            for tun_id in [0x1_0000_0001_u64, 0x1122_3344_5566_7788, u64::MAX] {
+                let mut raw = vec![family, 0, 0, 0, 10, 0, 0, 1, 0, 0, 0, 0];
+                raw.extend_from_slice(&12_u16.to_ne_bytes());
+                raw.extend_from_slice(&12_u16.to_ne_bytes());
+                raw.extend_from_slice(&tun_id.to_be_bytes());
+
+                let rule = get_rule(RuleMessage::parse(&raw).unwrap()).unwrap();
+                assert_eq!(rule.address_family, expected_family);
+                assert_eq!(rule.tun_id, Some(tun_id));
+            }
+        }
+    }
+
+    #[test]
+    fn tunnel_ids_round_trip_through_json_and_yaml() {
+        for family in [AddressFamily::Ipv4, AddressFamily::Ipv6] {
+            for tun_id in [0, 0x1_0000_0001_u64, u64::MAX] {
+                let rule = RouteRule {
+                    address_family: family.clone(),
+                    tun_id: Some(tun_id),
+                    ..Default::default()
+                };
+                let json = serde_json::to_value(&rule).unwrap();
+                assert_eq!(json["tun-id"].as_u64(), Some(tun_id));
+                assert_eq!(
+                    serde_json::from_value::<RouteRule>(json).unwrap(),
+                    rule
+                );
+                let yaml = serde_yaml::to_string(&rule).unwrap();
+                assert_eq!(
+                    serde_yaml::from_str::<RouteRule>(&yaml).unwrap(),
+                    rule
+                );
+            }
+        }
+    }
+}
