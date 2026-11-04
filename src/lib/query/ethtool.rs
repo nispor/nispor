@@ -3,9 +3,9 @@
 use std::collections::{BTreeMap, HashMap, hash_map::Entry};
 
 use ethtool::{
-    EthtoolAttr, EthtoolCoalesceAttr, EthtoolFeatureAttr, EthtoolFeatureBit,
-    EthtoolFecAttr, EthtoolHandle, EthtoolHeader, EthtoolLinkModeAttr,
-    EthtoolPauseAttr, EthtoolRingAttr,
+    EthtoolAttr, EthtoolBit, EthtoolBitset, EthtoolBitsetValue,
+    EthtoolCoalesceAttr, EthtoolFeatureAttr, EthtoolFecAttr, EthtoolHandle,
+    EthtoolHeader, EthtoolLinkModeAttr, EthtoolRingAttr,
 };
 use futures::stream::StreamExt;
 use serde::{Deserialize, Serialize, Serializer};
@@ -280,26 +280,17 @@ async fn dump_pause_infos(
 ) -> Result<HashMap<String, EthtoolPauseInfo>, NisporError> {
     let mut infos = HashMap::new();
     let mut pause_handle = handle.pause().get(None).execute().await?;
-    while let Some(genl_msg) = pause_handle.next().await {
-        let ethtool_msg = genl_msg?.payload;
-        let mut iface_name = None;
-        let mut pause_info = EthtoolPauseInfo::default();
-
-        for nla in ethtool_msg.nlas.as_slice() {
-            if let EthtoolAttr::Pause(nla) = nla {
-                if let EthtoolPauseAttr::Header(hdrs) = nla {
-                    iface_name = get_iface_name_from_header(hdrs);
-                } else if let EthtoolPauseAttr::AutoNeg(v) = nla {
-                    pause_info.auto_negotiate = *v
-                } else if let EthtoolPauseAttr::Rx(v) = nla {
-                    pause_info.rx = *v
-                } else if let EthtoolPauseAttr::Tx(v) = nla {
-                    pause_info.tx = *v
-                }
-            }
-        }
-        if let Some(i) = iface_name {
-            infos.insert(i, pause_info);
+    while let Some(pause_info) = pause_handle.next().await {
+        let pause_info = pause_info?;
+        if let Some(iface_name) = pause_info.iface_name {
+            infos.insert(
+                iface_name,
+                EthtoolPauseInfo {
+                    rx: pause_info.rx.unwrap_or_default(),
+                    tx: pause_info.tx.unwrap_or_default(),
+                    auto_negotiate: pause_info.autoneg.unwrap_or_default(),
+                },
+            );
         }
     }
     Ok(infos)
@@ -321,8 +312,10 @@ async fn dump_feature_infos(
                 feature_bits,
             )) = nla
             {
-                for EthtoolFeatureBit { name, .. } in feature_bits {
-                    fixed_features.insert(name.to_string(), false);
+                for EthtoolBit { name, .. } in bitset_bits(feature_bits) {
+                    if !name.is_empty() {
+                        fixed_features.insert(name, false);
+                    }
                 }
             }
         }
@@ -339,13 +332,13 @@ async fn dump_feature_infos(
             if let EthtoolAttr::Feature(EthtoolFeatureAttr::Hw(feature_bits)) =
                 nla
             {
-                for feature_bit in feature_bits {
+                for feature_bit in bitset_bits(feature_bits) {
                     match feature_bit {
-                        EthtoolFeatureBit {
+                        EthtoolBit {
                             index: _,
                             name,
                             value: true,
-                        } => {
+                        } if !name.is_empty() => {
                             // Dummy interface show `tx-lockless` is
                             // changeable, but EthtoolFeatureAttr::NoChange()
                             // says otherwise. The
@@ -357,17 +350,17 @@ async fn dump_feature_infos(
                             {
                                 e.insert(false);
                             } else {
-                                changeable_features
-                                    .insert(name.to_string(), false);
+                                changeable_features.insert(name, false);
                             }
                         }
-                        EthtoolFeatureBit {
+                        EthtoolBit {
                             index: _,
                             name,
                             value: false,
-                        } => {
-                            fixed_features.insert(name.to_string(), false);
+                        } if !name.is_empty() => {
+                            fixed_features.insert(name, false);
                         }
+                        _ => {}
                     }
                 }
             }
@@ -378,7 +371,10 @@ async fn dump_feature_infos(
                 feature_bits,
             )) = nla
             {
-                for feature_bit in feature_bits {
+                for feature_bit in bitset_bits(feature_bits) {
+                    if feature_bit.name.is_empty() {
+                        continue;
+                    }
                     if let Entry::Occupied(mut e) =
                         fixed_features.entry(feature_bit.name.clone())
                     {
@@ -560,10 +556,10 @@ async fn dump_link_mode_infos(
                         link_mode_info.auto_negotiate = *d
                     }
                     EthtoolLinkModeAttr::Ours(d) => {
-                        link_mode_info.ours = Some(d.clone());
+                        link_mode_info.ours = Some(bitset_enabled_names(d));
                     }
                     EthtoolLinkModeAttr::Peer(d) => {
-                        link_mode_info.peer = Some(d.clone())
+                        link_mode_info.peer = Some(bitset_enabled_names(d))
                     }
                     EthtoolLinkModeAttr::Speed(d) => {
                         link_mode_info.speed =
@@ -599,6 +595,47 @@ async fn dump_link_mode_infos(
         }
     }
     Ok(infos)
+}
+
+fn bitset_bits(bitset: &EthtoolBitset) -> Vec<EthtoolBit> {
+    match &bitset.value {
+        EthtoolBitsetValue::Bits(bits) => bits.clone(),
+        EthtoolBitsetValue::Compact { value, mask } => {
+            let mut bits = Vec::new();
+            for (word_idx, word) in value.iter().enumerate() {
+                let word_mask = if mask.is_empty() {
+                    u32::MAX
+                } else {
+                    mask.get(word_idx).copied().unwrap_or_default()
+                };
+                for bit_idx in 0..u32::BITS {
+                    let bit_mask = 1u32 << bit_idx;
+                    if word_mask & bit_mask == 0 {
+                        continue;
+                    }
+                    let is_set = word & bit_mask != 0;
+                    if bitset.nomask && !is_set {
+                        continue;
+                    }
+                    bits.push(EthtoolBit {
+                        index: word_idx as u32 * u32::BITS + bit_idx,
+                        name: String::new(),
+                        value: is_set,
+                    });
+                }
+            }
+            bits
+        }
+    }
+}
+
+fn bitset_enabled_names(bitset: &EthtoolBitset) -> Vec<String> {
+    bitset_bits(bitset)
+        .into_iter()
+        .filter_map(|bit| {
+            (bit.value && !bit.name.is_empty()).then_some(bit.name)
+        })
+        .collect()
 }
 
 fn get_iface_name_from_header(hdrs: &[EthtoolHeader]) -> Option<String> {
@@ -662,8 +699,11 @@ async fn dump_fec_infos(
                 } else if let EthtoolFecAttr::Auto(true) = nla {
                     fec_info.auto = true;
                 } else if let EthtoolFecAttr::Modes(v) = nla {
-                    fec_info.configured =
-                        v.into_iter().map(EthtoolFecMode::from).collect();
+                    fec_info.configured = bitset_bits(&v)
+                        .into_iter()
+                        .map(|bit| ethtool::EthtoolFecMode::from(bit.index))
+                        .map(EthtoolFecMode::from)
+                        .collect();
                 } else if let EthtoolFecAttr::Active(m) = nla {
                     fec_info.active = m.into();
                 }

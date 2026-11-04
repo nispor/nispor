@@ -85,7 +85,7 @@ pub struct Route {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub quickack: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub cc_algo: Option<u32>,
+    pub cc_algo: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fastopen_no_cookie: Option<u32>,
 
@@ -633,7 +633,7 @@ fn get_route(
                             rt.quickack = Some(*d);
                         }
                         RouteMetric::CcAlgo(d) => {
-                            rt.cc_algo = Some(*d);
+                            rt.cc_algo = Some(d.clone());
                         }
                         RouteMetric::FastopenNoCookie(d) => {
                             rt.fastopen_no_cookie = Some(*d);
