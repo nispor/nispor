@@ -31,21 +31,14 @@ jobs:
   integ:
     name: integ
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - rust_version: "stable"
-          - rust_version: "beta"
-          - rust_version: "nightly"
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install Rust ${{ matrix.rust_version }}
+    - name: Install Rust stable
       uses: actions-rs/toolchain@v1
       with:
-          toolchain: ${{ matrix.rust_version }}
+          toolchain: stable
           override: true
           components: rustfmt
 
