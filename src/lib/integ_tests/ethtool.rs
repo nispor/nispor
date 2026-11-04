@@ -40,7 +40,6 @@ fixed:
   rx-vlan-hw-parse: false
   rx-vlan-stag-filter: false
   rx-vlan-stag-hw-parse: false
-  tls-hw-record: false
   tls-hw-rx-offload: false
   tls-hw-tx-offload: false
   tx-checksum-fcoe-crc: false
