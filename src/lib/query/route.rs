@@ -249,10 +249,10 @@ impl From<RouteProtocol> for rt::RouteProtocol {
     }
 }
 
-impl TryFrom<&str> for RouteProtocol {
-    type Error = NisporError;
+impl std::str::FromStr for RouteProtocol {
+    type Err = NisporError;
 
-    fn try_from(v: &str) -> Result<Self, NisporError> {
+    fn from_str(v: &str) -> Result<Self, Self::Err> {
         match v {
             "icmp-redirect" => Ok(RouteProtocol::IcmpRedirect),
             "kernel" => Ok(RouteProtocol::Kernel),
@@ -280,6 +280,14 @@ impl TryFrom<&str> for RouteProtocol {
                 format!("Invalid route protocol: {v}"),
             )),
         }
+    }
+}
+
+impl TryFrom<&str> for RouteProtocol {
+    type Error = NisporError;
+
+    fn try_from(v: &str) -> Result<Self, Self::Error> {
+        v.parse()
     }
 }
 
@@ -334,10 +342,10 @@ impl From<RouteScope> for rt::RouteScope {
     }
 }
 
-impl TryFrom<&str> for RouteScope {
-    type Error = NisporError;
+impl std::str::FromStr for RouteScope {
+    type Err = NisporError;
 
-    fn try_from(v: &str) -> Result<Self, Self::Error> {
+    fn from_str(v: &str) -> Result<Self, Self::Err> {
         match v {
             "u" | "universe" | "g" | "global" => Ok(RouteScope::Universe),
             "s" | "site" => Ok(RouteScope::Site),
@@ -349,6 +357,14 @@ impl TryFrom<&str> for RouteScope {
                 format!("Unknown route scope {v}"),
             )),
         }
+    }
+}
+
+impl TryFrom<&str> for RouteScope {
+    type Error = NisporError;
+
+    fn try_from(v: &str) -> Result<Self, Self::Error> {
+        v.parse()
     }
 }
 

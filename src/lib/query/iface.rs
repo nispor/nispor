@@ -371,7 +371,7 @@ pub(crate) fn parse_nl_msg_to_iface(
         } else if let LinkAttribute::Link(l) = nla {
             link = Some(*l);
         } else if let LinkAttribute::ParentDevName(addr) = nla {
-            if nl_msg.attributes.as_slice().iter().any(|n| {
+            if nl_msg.attributes.iter().any(|n| {
                 matches!(
                     n,
                     LinkAttribute::ParentDevBusName(bus_name)
