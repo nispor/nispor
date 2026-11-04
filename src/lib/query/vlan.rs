@@ -107,13 +107,11 @@ pub(crate) fn get_vlan_info(data: &InfoData) -> Option<VlanInfo> {
                     flags.contains(VlanFlags::BridgeBinding);
             } else if let InfoVlan::EgressQos(maps) = info {
                 vlan_info.egress_qos_map = maps
-                    .as_slice()
                     .iter()
                     .filter_map(VlanQosMapping::from_netlink)
                     .collect();
             } else if let InfoVlan::IngressQos(maps) = info {
                 vlan_info.ingress_qos_map = maps
-                    .as_slice()
                     .iter()
                     .filter_map(VlanQosMapping::from_netlink)
                     .collect();

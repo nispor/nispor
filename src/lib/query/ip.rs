@@ -118,6 +118,14 @@ impl std::fmt::Display for AddressProtocol {
     }
 }
 
+impl std::str::FromStr for AddressProtocol {
+    type Err = NisporError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        Self::try_from(value)
+    }
+}
+
 impl std::convert::TryFrom<&str> for AddressProtocol {
     type Error = NisporError;
 
