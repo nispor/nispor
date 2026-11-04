@@ -118,10 +118,10 @@ impl std::fmt::Display for AddressProtocol {
     }
 }
 
-impl std::convert::TryFrom<&str> for AddressProtocol {
-    type Error = NisporError;
+impl std::str::FromStr for AddressProtocol {
+    type Err = NisporError;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
         Ok(match value {
             "lo" => Self::Loopback,
             "ra" => Self::RouterAnnouncement,
@@ -150,6 +150,14 @@ impl std::convert::TryFrom<&str> for AddressProtocol {
                 }
             }
         })
+    }
+}
+
+impl std::convert::TryFrom<&str> for AddressProtocol {
+    type Error = NisporError;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        value.parse()
     }
 }
 

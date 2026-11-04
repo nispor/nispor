@@ -81,7 +81,7 @@ impl NetState {
                 None
             };
         if filter.iface.is_none() {
-            ifaces = HashMap::new();
+            ifaces.clear();
         }
         Ok(NetState {
             ifaces,
