@@ -10,7 +10,7 @@ use rtnetlink::packet_route::{
 use serde::{Deserialize, Serialize};
 
 use super::super::query::parse_ip_net_addr_str;
-use crate::{AddressFamily, NisporError, RuleAction};
+use crate::{AddressFamily, NisporError, RouteProtocol, RuleAction};
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[non_exhaustive]
@@ -45,6 +45,9 @@ pub struct RouteRuleConf {
     pub fw_mask: Option<u32>,
     /// Prefix length to suppress.
     pub suppress_prefix_len: Option<u32>,
+    /// Protocol tag to set or match. `None` omits the selector. `Unspec`
+    /// may match any protocol when deleting, depending on the kernel.
+    pub protocol: Option<RouteProtocol>,
 }
 
 pub(crate) async fn apply_rules_conf(
@@ -180,6 +183,10 @@ fn rule_conf_to_message(
         msg.attributes
             .push(RuleAttribute::SuppressPrefixLen(suppress_prefix_len));
     }
+    if let Some(protocol) = rule.protocol {
+        msg.attributes
+            .push(RuleAttribute::Protocol(protocol.into()));
+    }
 
     Ok(msg)
 }
@@ -218,6 +225,39 @@ mod tests {
 
     fn rule_conf_from_yaml(yaml: &str) -> RouteRuleConf {
         serde_yaml::from_str(yaml).unwrap()
+    }
+
+    #[test]
+    fn test_rule_conf_protocol_selector() {
+        for (protocol, expected) in [
+            ("static", RouteProtocol::Static),
+            ("keepalived-daemon", RouteProtocol::KeepAlived),
+            ("unspec", RouteProtocol::Unspec),
+        ] {
+            for remove in [false, true] {
+                let conf = rule_conf_from_yaml(&format!(
+                    "address-family: ipv4\naction: table\npriority: \
+                     0\nprotocol: {protocol}\nremove: {remove}\n"
+                ));
+                assert_eq!(conf.protocol, Some(expected));
+                let msg = rule_conf_to_message(&conf).unwrap();
+                assert!(
+                    msg.attributes
+                        .contains(&RuleAttribute::Protocol(expected.into()))
+                );
+            }
+        }
+        let conf = rule_conf_from_yaml(
+            "address-family: ipv4\naction: table\npriority: 0\n",
+        );
+        assert_eq!(conf.protocol, None);
+        assert!(
+            rule_conf_to_message(&conf)
+                .unwrap()
+                .attributes
+                .iter()
+                .all(|attr| !matches!(attr, RuleAttribute::Protocol(_)))
+        );
     }
 
     #[test]
