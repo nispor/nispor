@@ -3,7 +3,10 @@
 use std::panic;
 
 use super::utils::assert_value_match;
-use crate::{NetConf, NetState, RouteRule};
+use crate::{
+    AddressFamily, NetConf, NetState, NetStateFilter, NetStateRouteRuleFilter,
+    RouteProtocol, RouteRule, RouteRuleConf, RuleAction,
+};
 
 const TEST_TABLE_ID: u32 = 100;
 const TEST_RULE_PRIORITIES: [u32; 4] = [1000, 1001, 1002, 1003];
@@ -161,6 +164,66 @@ fn test_add_remove_route_rule_yaml() {
         let state = NetState::retrieve().unwrap();
         assert!(test_route_rules(&state).is_empty());
     })
+}
+
+#[test]
+fn test_remove_route_rule_protocol_preserves_other_protocols() {
+    for address_family in [AddressFamily::Ipv4, AddressFamily::Ipv6] {
+        for priority in [0, 2000] {
+            let mut rule = RouteRuleConf {
+                address_family: address_family.clone(),
+                action: RuleAction::Table,
+                table: Some(201),
+                priority,
+                protocol: Some(RouteProtocol::KeepAlived),
+                ..Default::default()
+            };
+            let mut rules = vec![rule.clone()];
+            rule.protocol = Some(RouteProtocol::Static);
+            rules.push(rule.clone());
+            let mut conf = NetConf {
+                rules: Some(rules),
+                ..Default::default()
+            };
+            let result = panic::catch_unwind(|| {
+                conf.apply().unwrap();
+                let mut filter = NetStateFilter::minimum();
+                filter.route_rule = Some(NetStateRouteRuleFilter::default());
+                let protocols = || {
+                    NetState::retrieve_with_filter(&filter)
+                        .unwrap()
+                        .rules
+                        .into_iter()
+                        .filter(|r| {
+                            r.address_family == address_family
+                                && r.table == Some(201)
+                                && r.priority.unwrap_or(0) == priority
+                        })
+                        .map(|r| r.protocol.unwrap())
+                        .collect::<Vec<_>>()
+                };
+                assert_eq!(
+                    protocols(),
+                    vec![RouteProtocol::KeepAlived, RouteProtocol::Static]
+                );
+                rule.remove = true;
+                let removal = NetConf {
+                    rules: Some(vec![rule]),
+                    ..Default::default()
+                };
+                for _ in 0..2 {
+                    removal.apply().unwrap();
+                    assert_eq!(protocols(), vec![RouteProtocol::KeepAlived]);
+                }
+            });
+
+            for rule in conf.rules.as_mut().unwrap() {
+                rule.remove = true;
+            }
+            conf.apply().unwrap();
+            assert!(result.is_ok());
+        }
+    }
 }
 
 fn test_route_rules(state: &NetState) -> Vec<RouteRule> {
