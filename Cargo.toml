@@ -28,6 +28,7 @@ clap = { version = "4.2", features = ["cargo"] }
 env_logger = "0.11.0"
 ethtool = "0.4"
 futures = "0.3.21"
+genetlink = "1.0.0-rc2"
 libc = "0.2.155"
 log = "0.4.17"
 mptcp-pm = "0.2.1"
@@ -38,3 +39,13 @@ serde_yaml = "0.9"
 tokio = { version = "1.19.2", features = ["macros", "rt"] }
 wl-nl80211 = "0.9.0"
 nl-wireguard = { version = "0.3.1"}
+
+[patch.crates-io.mptcp-pm]
+git = "https://github.com/rust-netlink/mptcp-pm"
+
+[patch.crates-io.rtnetlink]
+git = "https://github.com/rust-netlink/rtnetlink"
+
+[patch.crates-io.ethtool]
+git = "https://github.com/rust-netlink/ethtool"
+

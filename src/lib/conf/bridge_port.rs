@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use rtnetlink::{LinkBridgePort, packet_route::link::LinkMessage};
+use rtnetlink::{
+    LinkBridgePort,
+    packet_route::link::{BridgeGroupFwdMask, LinkMessage},
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -117,7 +120,8 @@ impl BridgePortConf {
         }
 
         if let Some(v) = self.group_fwd_mask {
-            builder = builder.group_fwd_mask(v);
+            builder =
+                builder.group_fwd_mask(BridgeGroupFwdMask::from_bits_retain(v));
         }
 
         if let Some(v) = self.neigh_suppress {

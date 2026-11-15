@@ -2,7 +2,7 @@
 
 use ethtool::EthtoolError;
 use libc::{EEXIST, EPERM};
-use rtnetlink::packet_core::DecodeError;
+use rtnetlink::packet_core::{DecodeError, EncodeError};
 use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
@@ -88,6 +88,15 @@ impl From<rtnetlink::Error> for NisporError {
     }
 }
 
+impl From<genetlink::GenetlinkError> for NisporError {
+    fn from(e: genetlink::GenetlinkError) -> Self {
+        NisporError {
+            kind: ErrorKind::NetlinkError,
+            msg: e.to_string(),
+        }
+    }
+}
+
 impl From<EthtoolError> for NisporError {
     fn from(e: EthtoolError) -> Self {
         NisporError {
@@ -119,6 +128,15 @@ impl From<DecodeError> for NisporError {
     fn from(e: DecodeError) -> Self {
         NisporError {
             kind: ErrorKind::NetlinkError,
+            msg: e.to_string(),
+        }
+    }
+}
+
+impl From<EncodeError> for NisporError {
+    fn from(e: EncodeError) -> Self {
+        NisporError {
+            kind: ErrorKind::Bug,
             msg: e.to_string(),
         }
     }

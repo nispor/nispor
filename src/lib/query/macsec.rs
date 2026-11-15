@@ -141,22 +141,22 @@ pub(crate) fn get_macsec_info(data: &InfoData) -> Option<MacSecInfo> {
                     macsec_info.encoding_sa = d;
                 }
                 InfoMacSec::Encrypt(d) => {
-                    macsec_info.encrypt = d > 0;
+                    macsec_info.encrypt = d;
                 }
                 InfoMacSec::Protect(d) => {
-                    macsec_info.protect = d > 0;
+                    macsec_info.protect = d;
                 }
                 InfoMacSec::IncSci(d) => {
-                    macsec_info.send_sci = d > 0;
+                    macsec_info.send_sci = d;
                 }
                 InfoMacSec::Es(d) => {
-                    macsec_info.end_station = d > 0;
+                    macsec_info.end_station = d;
                 }
                 InfoMacSec::Scb(d) => {
-                    macsec_info.scb = d > 0;
+                    macsec_info.scb = d;
                 }
                 InfoMacSec::ReplayProtect(d) => {
-                    macsec_info.replay_protect = d > 0;
+                    macsec_info.replay_protect = d;
                 }
                 InfoMacSec::Validation(d) => {
                     macsec_info.validate = u8::from(d).into();

@@ -79,7 +79,7 @@ pub(crate) fn get_hsr_info(data: &InfoData) -> Option<HsrInfo> {
                     hsr_info.multicast_spec = d;
                 }
                 InfoHsr::Version(d) => {
-                    hsr_info.version = d;
+                    hsr_info.version = d.into();
                 }
                 InfoHsr::Protocol(d) => {
                     hsr_info.protocol = u8::from(d).into();
