@@ -485,7 +485,7 @@ pub(crate) async fn get_routes(
 ) -> Result<Vec<Route>, NisporError> {
     let mut routes = Vec::new();
     let mut has_kernel_filter = true;
-    let (mut connection, handle, _) = new_connection()?;
+    let (connection, handle, _) = new_connection()?;
 
     let mut ifindex_to_name = HashMap::new();
     for (name, index) in iface_name2index.iter() {
@@ -495,8 +495,8 @@ pub(crate) async fn get_routes(
     if let Some(filter) = filter
         && !filter.is_empty()
         && let Err(e) = connection
-            .socket_mut()
-            .socket_mut()
+            .socket_ref()
+            .socket_ref()
             .set_netlink_get_strict_chk(true)
     {
         log::warn!(

@@ -19,6 +19,7 @@ crate-type = ["lib"]
 serde = { workspace = true }
 rtnetlink = { workspace = true }
 ethtool = { workspace = true }
+genetlink = { workspace = true }
 mptcp-pm = { workspace = true }
 tokio = { workspace = true }
 futures = { workspace = true }

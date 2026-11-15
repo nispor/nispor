@@ -64,8 +64,8 @@ pub(crate) fn get_tun_info(data: &InfoData) -> Result<TunInfo, NisporError> {
     let mut tun_info = TunInfo::default();
     if let InfoData::Tun(nlas) = data {
         for nla in nlas {
-            let mut payload = vec![0; nla.value_len()];
-            nla.emit_value(&mut payload);
+            let mut payload = Vec::new();
+            nla.emit_value(&mut payload)?;
             let payload = payload.as_slice();
             match nla.kind() {
                 IFLA_TUN_OWNER => {

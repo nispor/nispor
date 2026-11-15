@@ -335,7 +335,7 @@ pub(crate) fn get_bridge_port_info(
             }
             InfoBridgePort::VlanTunnel(d) => ret.vlan_tunnel = *d,
             InfoBridgePort::BroadcastFlood(d) => ret.broadcast_flood = *d,
-            InfoBridgePort::GroupFwdMask(d) => ret.group_fwd_mask = *d,
+            InfoBridgePort::GroupFwdMask(d) => ret.group_fwd_mask = d.bits(),
             InfoBridgePort::NeighSupress(d) => ret.neigh_suppress = *d,
             InfoBridgePort::Isolated(d) => ret.isolated = *d,
             InfoBridgePort::BackupPort(d) => ret.backup_port = d.to_string(),
@@ -442,7 +442,7 @@ fn parse_bridge_info(infos: &[InfoBridge]) -> Result<BridgeInfo, NisporError> {
         } else if let InfoBridge::VlanProtocol(d) = info {
             bridge_info.vlan_protocol = Some((*d).into());
         } else if let InfoBridge::GroupFwdMask(d) = info {
-            bridge_info.group_fwd_mask = Some(*d);
+            bridge_info.group_fwd_mask = Some(d.bits());
         } else if let InfoBridge::RootId(bridge_id) = info {
             bridge_info.root_id = Some(parse_bridge_id(bridge_id)?);
         } else if let InfoBridge::BridgeId(bridge_id) = info {
@@ -507,9 +507,9 @@ fn parse_bridge_info(infos: &[InfoBridge]) -> Result<BridgeInfo, NisporError> {
         } else if let InfoBridge::MulticastStatsEnabled(d) = info {
             bridge_info.multicast_stats_enabled = Some(*d);
         } else if let InfoBridge::MulticastIgmpVersion(d) = info {
-            bridge_info.multicast_igmp_version = Some(*d);
+            bridge_info.multicast_igmp_version = Some((*d).into());
         } else if let InfoBridge::MulticastMldVersion(d) = info {
-            bridge_info.multicast_mld_version = Some(*d);
+            bridge_info.multicast_mld_version = Some((*d).into());
         } else if let InfoBridge::VlanStatsPerPort(d) = info {
             bridge_info.vlan_stats_per_port = Some(*d);
         } else {

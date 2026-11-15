@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
-use rtnetlink::{LinkBridge, LinkMessageBuilder};
+use rtnetlink::{
+    LinkBridge, LinkMessageBuilder,
+    packet_route::link::{
+        BridgeGroupFwdMask, BridgeMulticastIgmpVersion,
+        BridgeMulticastMldVersion,
+    },
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -104,7 +110,8 @@ impl BridgeConf {
                 builder = builder.ageing_time(v);
             }
             if let Some(v) = br_conf.group_fwd_mask {
-                builder = builder.group_fwd_mask(v);
+                builder = builder
+                    .group_fwd_mask(BridgeGroupFwdMask::from_bits_retain(v));
             }
             if let Some(v) = br_conf.group_address {
                 builder = builder.group_address(v);
@@ -197,10 +204,12 @@ impl BridgeConf {
                 builder = builder.mcast_stats_enabled(v);
             }
             if let Some(v) = br_conf.mcast_igmp_version {
-                builder = builder.mcast_igmp_version(v);
+                builder = builder
+                    .mcast_igmp_version(BridgeMulticastIgmpVersion::from(v));
             }
             if let Some(v) = br_conf.mcast_mld_version {
-                builder = builder.mcast_mld_version(v);
+                builder = builder
+                    .mcast_mld_version(BridgeMulticastMldVersion::from(v));
             }
             if let Some(v) = br_conf.nf_call_iptables {
                 builder = builder.nf_call_iptables(v);

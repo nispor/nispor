@@ -99,7 +99,7 @@ pub(crate) fn get_vxlan_info(
             } else if let InfoVxlan::Gbp = *info {
                 vxlan_info.gbp = true;
             } else if let InfoVxlan::TtlInherit(d) = *info {
-                vxlan_info.ttl_inherit = d != 0;
+                vxlan_info.ttl_inherit = d;
             } else if let InfoVxlan::CollectMetadata(d) = *info {
                 vxlan_info.collect_metadata = d;
             } else if let InfoVxlan::Df(d) = *info {
